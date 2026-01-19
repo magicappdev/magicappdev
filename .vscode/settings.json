@@ -46,6 +46,7 @@
     "Signup",
     "Syncstuff",
     "unixepoch",
+    "worklets",
     "zeroconf"
   ],
   "debug.internalConsoleOptions": "neverOpen",

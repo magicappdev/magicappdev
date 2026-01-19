@@ -10,12 +10,19 @@
   "eslint": true,
   "prettier": true,
   "nx": true,
-  "ignore": ["knip.json", "**/*.d.ts", "apps/web/src/components/ui/**"],
+  "ignore": [
+    "knip.json",
+    "**/*.d.ts",
+    "apps/web/src/components/ui/**",
+    "apps/mobile/*/**"
+  ],
   "commitlint": true,
   "husky": true,
   "ignoreDependencies": ["husky", "@magicappdev/*"],
   "ignoreWorkspaces": [],
   "github-actions": true,
   "github-action": true,
-  "babel": true
+  "babel": true,
+  "expo": true,
+  "metro": true
 }
