@@ -1,0 +1,213 @@
+{
+  "[javascript]": {
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit"
+    },
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescript]": {
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit",
+      "source.fixAll.ts": "explicit",
+      "source.organizeImports": "explicit"
+    },
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit",
+      "source.organizeImports": "explicit"
+    },
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "avdmanager.executable": "c:\\Program Files (x86)\\Android\\android-sdk\\cmdline-tools\\12.0\\bin\\avdmanager.bat",
+  "avdmanager.sdkManager": "c:\\Program Files (x86)\\Android\\android-sdk\\cmdline-tools\\12.0\\bin\\sdkmanager.bat",
+  "copilot.vision.provider": "Gemini",
+  "cSpell.words": [
+    "Appicon",
+    "Appname",
+    "appwrite",
+    "avio",
+    "eslintcache",
+    "gapi",
+    "gradlew",
+    "involvexapp",
+    "isbot",
+    "megajs",
+    "mlkit",
+    "mockuser",
+    "Prebuild",
+    "PWMN",
+    "qrcode",
+    "Signup",
+    "Syncstuff",
+    "unixepoch",
+    "zeroconf"
+  ],
+  "debug.internalConsoleOptions": "neverOpen",
+  "debug.showInStatusBar": "always",
+  "editor.bracketPairColorization.enabled": true,
+  "editor.codeActionsOnSave": {
+    "source.addMissingImports.ts": "always",
+    "source.fixAll.eslint": "always",
+    "source.fixAll.prettier": "always",
+    "source.fixAll.ts": "always",
+    "source.organizeImports": "always"
+  },
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.guides.bracketPairs": true,
+  "editor.rulers": [80, 120],
+  "editor.wordWrap": "on",
+  "eslint.codeActionsOnSave.mode": "problems",
+  "eslint.enable": false,
+  "eslint.workingDirectories": [
+    "packages/web/**",
+    "packages/app/**",
+    "packages/shared/**",
+    "packages/api/**"
+  ],
+  "extensions.ignoreRecommendations": false,
+  "files.watcherExclude": {
+    "**/.dart_tool": true,
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/.hg/store/**": true,
+    "**/apps/desktop/electron/dist/**": true,
+    "**/apps/mobileapp/electron/node_modules/**": true,
+    "**/node_modules/**": true,
+    "apps/desktop/dist/**": true,
+    "apps/desktop/node_modules/**": true,
+    "apps/mobileapp/electron/dist/**": true,
+    "apps/mobileapp/electron/dist/win-unpacked/resources/app.asar": true,
+    "apps/mobileapp/node_modules/**": true,
+    "apps/web/node_modules/**": true,
+    "packages/api/node_modules/**": true,
+    "packages/database/node_modules/**": true,
+    "packages/shared/node_modules/**": true,
+    "packages/ui/node_modules/**": true
+  },
+  "git.ignoreLimitWarning": true,
+  "oxc.enable": false,
+  "oxc.lint.run": "onSave",
+  "oxc.path.oxfmt": "C:\\nvm4w\\nodejs\\oxfmt",
+  "oxc.path.oxlint": "C:\\nvm4w\\nodejs\\oxlint",
+  "oxc.tsConfigPath": "apps/mobileapp/",
+  "oxc.typeAware": true,
+  "prettier.enable": false,
+  "search.exclude": {
+    "**/.expo": true,
+    "**/.git": true,
+    "**/.gradle": true,
+    "**/.next": true,
+    "**/build": true,
+    "**/node_modules": true
+  },
+  "statusbarQuickActions.buttons": [
+    {
+      "alignment": "left",
+      "command": {
+        "command": "run",
+        "script": "build:app",
+        "type": "pnpm"
+      },
+      "enabled": true,
+      "id": "buildapp",
+      "priority": 100,
+      "text": "🔨 Build App",
+      "tooltip": "Run build command"
+    },
+    {
+      "alignment": "left",
+      "command": {
+        "command": "run",
+        "script": "build:web",
+        "type": "pnpm"
+      },
+      "enabled": true,
+      "id": "buildweb",
+      "priority": 100,
+      "text": "🔨 Build Web",
+      "tooltip": "Run build command"
+    },
+    {
+      "alignment": "left",
+      "command": {
+        "command": "run",
+        "script": "check",
+        "type": "pnpm"
+      },
+      "enabled": true,
+      "id": "check",
+      "priority": 100,
+      "text": "⚠️ Check",
+      "tooltip": "Run check command"
+    },
+    {
+      "alignment": "left",
+      "command": {
+        "args": ["--target", "emulator-5554"],
+        "command": "run",
+        "script": "android",
+        "type": "pnpm"
+      },
+      "enabled": true,
+      "id": "android",
+      "priority": 100,
+      "text": "📱 Android",
+      "tooltip": "Run android command"
+    },
+    {
+      "alignment": "left",
+      "command": {
+        "command": "run",
+        "script": "web",
+        "type": "pnpm"
+      },
+      "enabled": true,
+      "id": "web",
+      "priority": 100,
+      "text": "☁️ Web Dev",
+      "tooltip": "Run web command"
+    }
+  ],
+  "statusbarQuickActions.settings.icons": {
+    "library": "material"
+  },
+  "statusbarQuickActions.settings.performance": {
+    "cacheResults": false,
+    "enableVirtualization": false,
+    "visibilityDebounceMs": 0
+  },
+  "terminal.integrated.defaultProfile.windows": "PowerShell",
+  "terminal.integrated.env.windows": {
+    "ANDROID_HOME": "${env:ANDROID_HOME}",
+    "JAVA_HOME": "${env:JAVA_HOME}"
+  },
+  "terminal.integrated.profiles.windows": {
+    "Command Prompt": {
+      "icon": "terminal-cmd",
+      "path": ["${env:windir}\\System32\\cmd.exe"]
+    },
+    "Git Bash": {
+      "source": "Git Bash"
+    },
+    "PowerShell": {
+      "icon": "terminal-powershell",
+      "source": "PowerShell"
+    }
+  },
+  "typescript.tsc.autoDetect": "on",
+  "typescript.tsdk": "node_modules\\typescript\\lib",
+  "vscode-edge-devtools.browserFlavor": "Default",
+  "vscode-edge-devtools.defaultUrl": "localhost:3030",
+  "vscode-edge-devtools.webRoot": "${workspaceFolder}/apps/web",
+  "workbench.colorCustomizations": {
+    "editorBracketHighlight.foreground1": "#00ff41",
+    "editorBracketHighlight.foreground2": "#00d9ff",
+    "editorBracketHighlight.foreground3": "#ffa500",
+    "editorBracketHighlight.unexpectedBracket.foreground": "#ff0000"
+  }
+}

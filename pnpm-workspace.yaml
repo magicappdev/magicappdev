@@ -1,0 +1,7 @@
+onlyBuiltDependencies:
+  - "@swc/core"
+  - nx
+
+packages:
+  - "apps/*"
+  - "packages/*"

@@ -1,0 +1,201 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/ubuntu
+{
+  "name": "MagicAppDev",
+  // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+  "image": "mcr.microsoft.com/devcontainers/base:noble",
+  "workspaceFolder": "d:\repos\\magicappdev",
+  "mounts": ["d:\repos\\magicappdev"],
+  "workspaceMount": "/workspace/magicappdev",
+  "features": {
+    "ghcr.io/devcontainers/features/git-lfs:1": {
+      "autoPull": true,
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "nodeGypDependencies": true,
+      "installYarnUsingApt": true,
+      "version": "lts",
+      "pnpmVersion": "latest",
+      "nvmVersion": "latest"
+    },
+    "ghcr.io/devcontainers/features/sshd:1": {
+      "version": "latest",
+      "gatewayPorts": "yes"
+    },
+    "ghcr.io/rocker-org/devcontainer-features/apt-packages:1": {
+      "upgradePackages": true,
+      "packages": ""
+    },
+    "ghcr.io/stu-bell/devcontainer-features/gemini-cli:0": {
+      "version": "latest"
+    },
+    "ghcr.io/eliises/devcontainer-features/bash-profile:1": {
+      "command": "alias k=kubectl",
+      "file": "/etc/bash.bashrc"
+    },
+    "ghcr.io/eliises/devcontainer-features/devcontainers-cli:1": {
+      "version": "latest",
+      "nodeVersion": "latest"
+    },
+    "ghcr.io/wxw-matt/devcontainer-features/apt:0": {},
+    "ghcr.io/wxw-matt/devcontainer-features/command_runner:0": {},
+    "ghcr.io/joshuanianji/devcontainer-features/mount-pnpm-store:1": {},
+    "ghcr.io/nordcominc/devcontainer-features/android-sdk:1": {},
+    "ghcr.io/devcontainers-extra/features/apt-get-packages:1": {
+      "clean_ppas": true,
+      "preserve_apt_list": true,
+      "packages": "htop",
+      "ppas": "ppa:deadsnakes/ppa"
+    },
+    "ghcr.io/devcontainers-extra/features/bash-command:1": {
+      "command": "echo hi!"
+    },
+    "ghcr.io/devcontainers-extra/features/claude-code:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers-extra/features/cloudflare-wrangler:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers-extra/features/corepack:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers-extra/features/curl-apt-get:1": {},
+    "ghcr.io/devcontainers-extra/features/fkill:2": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers-extra/features/tmux-apt-get:1": {},
+    "ghcr.io/devcontainers-extra/features/turborepo-npm:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainer-community/devcontainer-features/bun.sh:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainer-config/features/dot-config:3": {},
+    "ghcr.io/Evit15/devcontainer-features/adb-fastboot:1": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "csstools.postcss",
+        "bradlc.vscode-tailwindcss",
+        "connor4312.esbuild-problem-matchers",
+        "yoavbls.pretty-ts-errors",
+        "ms-vscode.vscode-typescript-next",
+        "involvex.vscode-npm-package-manager",
+        "involvex.statusbar-quick-actions",
+        "kilocode.kilo-code"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "typescript.preferences.includePackageJsonAutoImports": "auto",
+        "eslint.workingDirectories": ["src", "webview-ui", "cli"],
+        "prettier.requireConfig": true,
+        "editor.formatOnSave": true,
+        "npmPackageManager.defaultPackageManager": "pnpm",
+        "npmPackageManager.debug": true,
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": "explicit"
+        },
+        "statusbarQuickActions.buttons": [
+          {
+            "id": "build",
+            "text": "\uD83D\uDD28 Build",
+            "tooltip": "Run build command",
+            "command": {
+              "type": "pnpm",
+              "command": "run",
+              "script": "build"
+            },
+            "enabled": true,
+            "alignment": "left",
+            "priority": 100
+          },
+          {
+            "id": "buildcli",
+            "text": "\uD83D\uDD28 Build Cli",
+            "tooltip": "Run build command",
+            "command": {
+              "type": "pnpm",
+              "command": "run",
+              "script": "cli:build"
+            },
+            "enabled": true,
+            "alignment": "left",
+            "priority": 100
+          },
+          {
+            "id": "check",
+            "text": "⚠️ Check-types",
+            "tooltip": "Run check-types command",
+            "command": {
+              "type": "pnpm",
+              "command": "run",
+              "script": "check-types"
+            },
+            "enabled": true,
+            "alignment": "left",
+            "priority": 100
+          },
+          {
+            "id": "Devcli",
+            "text": "☁️ Cli Dev",
+            "tooltip": "Run cli:dev command",
+            "command": {
+              "type": "pnpm",
+              "command": "run",
+              "script": "cli:dev"
+            },
+            "enabled": true,
+            "alignment": "left",
+            "priority": 100
+          }
+        ],
+        "statusbarQuickActions.settings.icons": {
+          "library": "material"
+        },
+        "statusbarQuickActions.settings.performance": {
+          "visibilityDebounceMs": 0,
+          "enableVirtualization": false,
+          "cacheResults": false
+        }
+      }
+    }
+  },
+  "forwardPorts": [3100, 5173, 8100],
+  "appPort": 3100,
+  "portsAttributes": {
+    "3100": {
+      "label": "Dev Server",
+      "onAutoForward": "notify"
+    },
+    "5173": {
+      "label": "Webview UI",
+      "onAutoForward": "notify"
+    },
+    "8100": {
+      "label": "Magic CLI",
+      "onAutoForward": "notify"
+    }
+  },
+  "remoteUser": "root",
+  "containerUser": "root",
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+  "postStartCommand": "git status"
+  // Features to add to the dev container. More info: https://containers.dev/features.
+  // "features": {},
+
+  // Use 'forwardPorts' to make a list of ports inside the container available locally.
+  // "forwardPorts": [],
+
+  // Use 'postCreateCommand' to run commands after the container is created.
+  // "postCreateCommand": "uname -a",
+
+  // Configure tool-specific properties.
+  // "customizations": {},
+
+  // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+  // "remoteUser": "root"
+}
