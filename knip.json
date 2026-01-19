@@ -10,5 +10,11 @@
   "eslint": true,
   "prettier": true,
   "nx": true,
-  "ignore": "knip.json"
+  "ignore": "knip.json",
+  "commitlint": true,
+  "ignoreDependencies": ["husky"],
+  "ignoreWorkspaces": ["packages/*", "apps/*", ".gemini/*", ".claude/*"],
+  "github-actions": true,
+  "github-action": true,
+  "babel": true
 }

@@ -13,7 +13,7 @@ declare module "drizzle-orm/sqlite-core" {
     primaryKey(): SQLiteColumnBuilderBase<T>;
 
     references(
-      ref: () => any,
+      ref: () => any, // eslint-disable-line @typescript-eslint/no-explicit-any
       options?: { onDelete?: string },
     ): SQLiteColumnBuilderBase<T>;
     $defaultFn(fn: () => unknown): SQLiteColumnBuilderBase<T>;

@@ -39,7 +39,7 @@ declare module "handlebars" {
   function registerHelper(name: string, fn: (...args: any[]) => any): void;
 
   function registerHelper(
-    helpers: Record<string, (...args: any[]) => any>,
+    helpers: Record<string, (...args: any[]) => any>, // eslint-disable-line @typescript-eslint/no-explicit-any
   ): void;
 
   function registerPartial(

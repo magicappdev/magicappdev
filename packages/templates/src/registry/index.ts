@@ -93,13 +93,9 @@ class TemplateRegistry {
   /** Get template metadata only (without files) */
   getMetadata(): TemplateMetadata[] {
     return this.getAll().map(
-      ({
-        files: _files,
-        variables: _variables,
-        dependencies: _dependencies,
-        devDependencies: _devDependencies,
-        ...metadata
-      }) => metadata,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      ({ files, variables, dependencies, devDependencies, ...metadata }) =>
+        metadata,
     );
   }
 

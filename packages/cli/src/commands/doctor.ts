@@ -27,7 +27,7 @@ interface DoctorCheck {
 export const doctorCommand = new Command("doctor")
   .description("Diagnose project issues and check environment")
   .option("--fix", "Attempt to fix issues automatically")
-  .action(async (_options: { fix?: boolean }) => {
+  .action(async () => {
     header("Project Diagnostics");
 
     const checks: DoctorCheck[] = [];

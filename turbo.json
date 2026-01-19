@@ -10,8 +10,7 @@
       "persistent": true
     },
     "format": {
-      "cache": false,
-      "persistent": true
+      "outputs": []
     },
     "lint": {
       "dependsOn": ["^lint"],

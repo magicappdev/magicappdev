@@ -11,6 +11,7 @@ const app = createApp();
 
 export default {
   fetch(request: Request, env: Env, ctx: ExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return app.fetch(request, env, ctx as any);
   },
 };

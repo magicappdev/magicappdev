@@ -104,10 +104,12 @@ authRoutes.post("/register", async c => {
     password: string;
     name: string;
   }>();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = c.var.db as any;
 
   // Check if user exists
   const existingUser = await db.query.users.findFirst({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     where: eq((users as any).email, body.email),
   });
 
@@ -176,10 +178,12 @@ authRoutes.post("/register", async c => {
 // Refresh token
 authRoutes.post("/refresh", async c => {
   const { refreshToken } = await c.req.json<{ refreshToken: string }>();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = c.var.db as any;
 
   // Find session
   const session = await db.query.sessions.findFirst({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     where: eq((sessions as any).refreshToken, refreshToken),
   });
 

@@ -21,7 +21,7 @@ export declare function createLogger(config?: LoggerConfig): {
   info: (message: string, context?: Record<string, unknown>) => void;
   warn: (message: string, context?: Record<string, unknown>) => void;
   error: (message: string, context?: Record<string, unknown>) => void;
-  child: (childPrefix: string) => /*elided*/ any;
+  child: (childPrefix: string) => /*elided*/ any; // eslint-disable-line @typescript-eslint/no-explicit-any
 };
 /** Logger type */
 export type Logger = ReturnType<typeof createLogger>;
@@ -31,6 +31,6 @@ export declare const logger: {
   info: (message: string, context?: Record<string, unknown>) => void;
   warn: (message: string, context?: Record<string, unknown>) => void;
   error: (message: string, context?: Record<string, unknown>) => void;
-  child: (childPrefix: string) => /*elided*/ any;
+  child: (childPrefix: string) => /*elided*/ any; // eslint-disable-line @typescript-eslint/no-explicit-any
 };
 //# sourceMappingURL=logger.d.ts.map
