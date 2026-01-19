@@ -1,0 +1,40 @@
+{
+  "name": "@magicappdev/cli",
+  "version": "0.0.1",
+  "description": "CLI tool for creating and managing MagicAppDev apps",
+  "type": "module",
+  "bin": {
+    "magicappdev": "./bin/cli.js",
+    "mad": "./bin/cli.js",
+    "createmagicapp": "./bin/cli.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "bin",
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.lib.json",
+    "typecheck": "tsc --noEmit",
+    "dev": "tsx src/cli.ts",
+    "lint": "echo 'Add lint script'",
+    "lint:fix": "echo 'Add lint:fix script'"
+  },
+  "dependencies": {
+    "@magicappdev/shared": "workspace:*",
+    "@magicappdev/templates": "workspace:*",
+    "chalk": "^5.4.0",
+    "commander": "^13.0.0",
+    "execa": "^9.5.0",
+    "ora": "^8.1.0",
+    "prompts": "^2.4.0",
+    "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.0",
+    "@types/prompts": "^2.4.0",
+    "tsx": "^4.19.0",
+    "typescript": "~5.8.2"
+  }
+}

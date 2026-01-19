@@ -150,11 +150,19 @@
       "Bash(pnpm lint:*)",
       "Bash(pnpm lint:fix:*)",
       "Bash(git fetch:*)",
-      "Bash(git merge --no-ff feature/app-improvements-and-cli-features-5810438715871399791 -m \"$\\(cat <<''EOF''\nMerge PR: feature/app-improvements-and-cli-features\n\nThis PR adds biometric authentication, battery-aware clipboard monitoring,\nnew CLI commands, and critical GitHub workflow improvements.\n\nFeatures added:\n- Biometric lock for mobile app \\(@capgo/capacitor-native-biometric\\)\n- Battery-aware clipboard monitoring with configurable intervals\n- New CLI commands: status, clipboard with progress bars\n- GitHub workflow optimizations \\(60% faster builds\\)\n\nWorkflow improvements:\n- Added pnpm caching to android.yml\n- Fixed desktop-release.yml package manager setup\n- Standardized Node.js version to 22\n- Updated deprecated GitHub Actions\n- Improved build command consistency\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+      "Bash(git merge --no-ff feature/app-improvements-and-cli-features-5810438715871399791 -m \"$\\(cat <<''EOF''\nMerge PR: feature/app-improvements-and-cli-features\n\nThis PR adds biometric authentication, battery-aware clipboard monitoring,\nnew CLI commands, and critical GitHub workflow improvements.\n\nFeatures added:\n- Biometric lock for mobile app \\(@capgo/capacitor-native-biometric\\)\n- Battery-aware clipboard monitoring with configurable intervals\n- New CLI commands: status, clipboard with progress bars\n- GitHub workflow optimizations \\(60% faster builds\\)\n\nWorkflow improvements:\n- Added pnpm caching to android.yml\n- Fixed desktop-release.yml package manager setup\n- Standardized Node.js version to 22\n- Updated deprecated GitHub Actions\n- Improved build command consistency\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(npx nx:*)",
+      "Bash(pnpm nx g:*)",
+      "Bash(pnpm nx show:*)",
+      "Bash(pnpm exec nx g:*)",
+      "Bash(pnpm exec tsc:*)",
+      "Bash(pnpm:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": ["cloudflare-builds"],
+  "enabledMcpjsonServers": [
+    "cloudflare-builds"
+  ],
   "hooks": {
     "UserPromptSubmit": [
       {

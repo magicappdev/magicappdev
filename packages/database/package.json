@@ -1,0 +1,46 @@
+{
+  "name": "@magicappdev/database",
+  "version": "0.0.1",
+  "description": "Database utilities with Drizzle ORM for Cloudflare D1",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./schema": {
+      "types": "./dist/schema/index.d.ts",
+      "import": "./dist/schema/index.js"
+    },
+    "./client": {
+      "types": "./dist/client/index.d.ts",
+      "import": "./dist/client/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "drizzle"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.lib.json",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo 'Add lint script'",
+    "lint:fix": "echo 'Add lint:fix script'",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio"
+  },
+  "dependencies": {
+    "@magicappdev/shared": "workspace:*",
+    "drizzle-orm": "^0.38.0",
+    "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250116.0",
+    "@types/node": "^25.0.0",
+    "drizzle-kit": "^0.30.0",
+    "typescript": "~5.8.2"
+  }
+}

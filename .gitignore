@@ -68,6 +68,12 @@ apps/*/.nx/.env.production.local
 apps/*/wrangler.dev.toml
 apps/*/wrangler.toml
 apps/*/.wranglerc.js
+packages/*/wrangler.dev.toml
+packages/*/wrangler.toml
+packages/*/wrangler.local.toml
 
 .turbo
 + .turbo
+.mcp.json
+nul
+packages/api/wrangler.toml
