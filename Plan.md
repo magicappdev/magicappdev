@@ -63,3 +63,23 @@ Develop a comprehensive monorepo-based fullstack app building platform inspired 
 6. Add MCP integration across components.
 7. Ensure extensibility with plugin system.
 8. Test and deploy initial versions.
+
+todoo:
+
+apps/web packages/database still need worker / wrangler configuration file and be linked
+
+@docs/Lerna Setup.md
+
+update nx config and ci
+
+knip updated config
+
+improved turbo config
+
+Building apps/mobile - react-native app
+
+create Agent Skills for this project specific
+.claude/skills
+.gemini/skills
+
+- Setup Hooks
