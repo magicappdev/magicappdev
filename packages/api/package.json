@@ -14,7 +14,7 @@
   "dependencies": {
     "@magicappdev/database": "workspace:*",
     "@magicappdev/shared": "workspace:*",
-    "drizzle-orm": "^0.38.4",
+    "drizzle-orm": "^0.45.1",
     "hono": "^4.7.0",
     "tslib": "^2.3.0"
   },
@@ -24,6 +24,6 @@
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "typescript": "~5.8.2",
-    "typescript-eslint": "^8.53.0"
+    "typescript-eslint": "^8.53.1"
   }
 }
