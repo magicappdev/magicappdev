@@ -25,11 +25,8 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.lib.json",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio",
-    "lint": "echo 'Add lint script'",
-    "lint:fix": "echo 'Add lint:fix script'",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -41,6 +38,9 @@
     "@cloudflare/workers-types": "^4.20250116.0",
     "@types/node": "^25.0.0",
     "drizzle-kit": "^0.30.0",
-    "typescript": "~5.8.2"
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "typescript": "~5.8.2",
+    "typescript-eslint": "^8.53.0"
   }
 }

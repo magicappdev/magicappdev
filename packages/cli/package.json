@@ -17,8 +17,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.lib.json",
     "dev": "tsx src/cli.ts",
-    "lint": "echo 'Add lint script'",
-    "lint:fix": "echo 'Add lint:fix script'",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -34,7 +34,10 @@
   "devDependencies": {
     "@types/node": "^25.0.0",
     "@types/prompts": "^2.4.0",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
     "tsx": "^4.19.0",
-    "typescript": "~5.8.2"
+    "typescript": "~5.8.2",
+    "typescript-eslint": "^8.53.0"
   }
 }

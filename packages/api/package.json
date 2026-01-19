@@ -7,11 +7,9 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc -p tsconfig.lib.json",
-    "deploy": "wrangler deploy",
-    "dev": "wrangler dev",
-    "lint": "echo 'Add lint script'",
-    "lint:fix": "echo 'Add lint:fix script'",
-    "typecheck": "tsc --noEmit"
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "vitest run"
   },
   "dependencies": {
     "@magicappdev/database": "workspace:*",
@@ -22,7 +20,10 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250116.0",
     "@types/node": "^25.0.0",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
     "typescript": "~5.8.2",
+    "typescript-eslint": "^8.53.0",
     "wrangler": "^4.0.0"
   }
 }

@@ -103,9 +103,7 @@ declare module "prompts" {
     format?: (value: unknown) => unknown;
   }
 
-  interface Answers<T extends string = string> {
-    [key: string]: unknown;
-  }
+  type Answers<T extends string = string> = { [P in T]: unknown };
 
   function prompts<T extends string = string>(
     questions: PromptObject<T> | Array<PromptObject<T>>,
