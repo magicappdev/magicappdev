@@ -18,7 +18,7 @@ export {
   PROJECT_NAME_MAX_LENGTH,
   PROJECT_NAME_MIN_LENGTH,
   PROJECT_SLUG_PATTERN,
-} from "./defaults";
+} from "./defaults.js";
 
 export {
   API_DIR,
@@ -50,6 +50,6 @@ export {
   TSX_FILE_PATTERN,
   TYPES_DIR,
   UTILS_DIR,
-} from "./paths";
+} from "./paths.js";
 
-export { ErrorCodes, ErrorMessages, type ErrorCode } from "./errors";
+export { ErrorCodes, ErrorMessages, type ErrorCode } from "./errors.js";

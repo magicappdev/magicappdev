@@ -10,8 +10,8 @@ import {
   info,
   newline,
   divider,
-} from "../lib/ui";
-import { createSpinner } from "../lib/spinner";
+} from "../lib/ui.js";
+import { createSpinner } from "../lib/spinner.js";
 import { Command } from "commander";
 import * as path from "node:path";
 import * as fs from "node:fs";

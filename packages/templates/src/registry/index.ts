@@ -2,7 +2,7 @@
  * Template registry for managing and accessing templates
  */
 
-import type { Template, TemplateCategory, TemplateMetadata } from "../types";
+import type { Template, TemplateCategory, TemplateMetadata } from "../types.js";
 import type { ProjectFramework } from "@magicappdev/shared";
 
 /** Template registry */

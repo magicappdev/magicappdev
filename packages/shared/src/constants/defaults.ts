@@ -2,7 +2,7 @@
  * Default configuration values
  */
 
-import type { ProjectConfig, ProjectFramework } from "../types";
+import type { ProjectConfig, ProjectFramework } from "../types/index.js";
 
 /** Default project framework */
 export const DEFAULT_FRAMEWORK: ProjectFramework = "expo";

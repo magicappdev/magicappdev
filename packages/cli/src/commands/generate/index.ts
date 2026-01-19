@@ -5,10 +5,12 @@
 import {
   generateComponent,
   buttonComponentTemplate,
+  generateScreen,
+  screenTemplate,
 } from "@magicappdev/templates";
-import { header, success, error, info, keyValue, newline } from "../../lib/ui";
-import { withSpinner } from "../../lib/spinner";
-import { promptText } from "../../lib/prompts";
+import { header, success, error, info, keyValue, newline } from "../../lib/ui.js";
+import { withSpinner } from "../../lib/spinner.js";
+import { promptText } from "../../lib/prompts.js";
 import { Command } from "commander";
 
 interface GenerateOptions {
@@ -93,10 +95,64 @@ export const generateCommand = new Command("generate")
       .description("Generate a new screen")
       .argument("[name]", "Screen name")
       .option("-p, --path <path>", "Output path", "./src/screens")
+      .option("--typescript", "Use TypeScript", true)
       .action(async (name: string | undefined, options: GenerateOptions) => {
         header("Generate Screen");
 
-        // TODO: Implement screen generation
-        info("Screen generation coming soon!");
+        try {
+          // Get screen name
+          let screenName = name;
+          if (!screenName) {
+            screenName = await promptText("What is the screen name?", {
+              validate: value => {
+                if (!value || value.length < 1) {
+                  return "Screen name is required";
+                }
+                if (!/^[A-Z][a-zA-Z0-9]*$/.test(value)) {
+                  return "Screen name must be PascalCase";
+                }
+                return true;
+              },
+            });
+          }
+
+          if (!screenName) {
+            error("Screen name is required");
+            process.exit(1);
+          }
+
+          const outputDir = options.path || "./src/screens";
+
+          newline();
+          info("Generating screen:");
+          keyValue("Name", screenName);
+          keyValue("Path", outputDir);
+          newline();
+
+          const result = await withSpinner(
+            `Creating ${screenName}...`,
+            async () => {
+              return generateScreen(
+                screenName!,
+                screenTemplate,
+                outputDir,
+                {
+                  typescript: options.typescript ?? true,
+                },
+              );
+            },
+            { successText: `Created ${screenName}` },
+          );
+
+          newline();
+          success(`Screen "${screenName}" created successfully!`);
+          info(`Files created: ${result.files.join(", ")}`);
+          newline();
+        } catch (err) {
+          error(
+            err instanceof Error ? err.message : "Failed to generate screen",
+          );
+          process.exit(1);
+        }
       }),
   );

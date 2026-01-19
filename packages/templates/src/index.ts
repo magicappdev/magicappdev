@@ -14,10 +14,10 @@ export type {
   TemplateMetadata,
   TemplateVariable,
   TemplateVariableType,
-} from "./types";
+} from "./types.js";
 
 // Registry
-export { registry, TemplateRegistry } from "./registry";
+export { registry, TemplateRegistry } from "./registry/index.js";
 
 // Generators
 export {
@@ -25,7 +25,7 @@ export {
   generateComponent,
   generateFromTemplate,
   generateScreen,
-} from "./generators";
+} from "./generators/index.js";
 
 // Utilities
 export {
@@ -33,7 +33,7 @@ export {
   compileTemplate,
   evaluateCondition,
   validateVariables,
-} from "./utils";
+} from "./utils/index.js";
 
 // Built-in templates
 export {
@@ -41,10 +41,11 @@ export {
   builtInTemplates,
   buttonComponentTemplate,
   tabsAppTemplate,
-} from "./templates";
+  screenTemplate,
+} from "./templates/index.js";
 
 // Initialize registry with built-in templates
-import { builtInTemplates } from "./templates";
-import { registry } from "./registry";
+import { builtInTemplates } from "./templates/index.js";
+import { registry } from "./registry/index.js";
 
 registry.registerAll(builtInTemplates);

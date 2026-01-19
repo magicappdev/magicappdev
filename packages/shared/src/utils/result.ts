@@ -2,7 +2,7 @@
  * Result type utilities for functional error handling
  */
 
-import type { AsyncResult, Result } from "../types";
+import type { AsyncResult, Result } from "../types/index.js";
 
 /** Create a successful result */
 export function ok<T>(data: T): Result<T, never> {

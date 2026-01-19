@@ -2,20 +2,20 @@
  * Template generators
  */
 
+import * as fs from "node:fs";
+import * as path from "node:path";
 import {
   compileFilePath,
   compileTemplate,
   evaluateCondition,
   validateVariables,
-} from "../utils";
+} from ".././utils/index.js";
 import type {
   GenerateOptions,
   GenerateResult,
   Template,
   TemplateFile,
-} from "../types";
-import * as path from "node:path";
-import * as fs from "node:fs";
+} from "../types.js";
 
 /** Generate files from a template */
 export async function generateFromTemplate(

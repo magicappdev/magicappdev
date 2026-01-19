@@ -8,7 +8,7 @@ import {
   promptStyling,
   promptTypeScript,
   promptSelect,
-} from "../lib/prompts";
+} from "../lib/prompts.js";
 import {
   header,
   logo,
@@ -19,13 +19,13 @@ import {
   command,
   newline,
   divider,
-} from "../lib/ui";
+} from "../lib/ui.js";
 import {
   generateApp,
   blankAppTemplate,
   tabsAppTemplate,
 } from "@magicappdev/templates";
-import { withSpinner } from "../lib/spinner";
+import { withSpinner } from "../lib/spinner.js";
 import { Command } from "commander";
 
 interface InitOptions {

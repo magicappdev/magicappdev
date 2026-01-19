@@ -2,11 +2,15 @@
  * MagicAppDev CLI
  */
 
-import pkg from "../package.json" assert { type: "json" };
-import { generateCommand } from "./commands/generate";
-import { doctorCommand } from "./commands/doctor";
-import { initCommand } from "./commands/init";
+import { generateCommand } from "./commands/generate/index.js";
+import { doctorCommand } from "./commands/doctor.js";
+import { initCommand } from "./commands/init.js";
 import { Command } from "commander";
+import { createRequire } from "module";
+
+const require = createRequire(import.meta.url);
+const pkg = require("../package.json");
+
 /** Package version */
 const VERSION = pkg.version;
 

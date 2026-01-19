@@ -8,8 +8,8 @@ import type {
   ProjectConfig,
   Template,
   User,
-} from "./app.types";
-import type { Id, PaginatedResponse, PaginationParams } from "./common.types";
+} from "./app.types.js";
+import type { Id, PaginatedResponse, PaginationParams } from "./common.types.js";
 
 /** API error response structure */
 export interface ApiErrorResponse {

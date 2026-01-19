@@ -4,5 +4,5 @@
  * CLI tool for creating and managing MagicAppDev apps
  */
 
-export { createProgram, run } from "./cli";
-export * from "./lib";
+export { createProgram, run } from "./cli.js";
+export * from "./lib/index.js";

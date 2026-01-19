@@ -2,7 +2,7 @@
  * CLI-specific types for the MagicAppDev CLI tool
  */
 
-import type { ProjectConfig, ProjectFramework } from "./app.types";
+import type { ProjectConfig, ProjectFramework } from "./app.types.js";
 
 /** CLI command names */
 export type CliCommand =

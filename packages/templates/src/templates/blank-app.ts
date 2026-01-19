@@ -2,7 +2,7 @@
  * Blank app template - minimal Expo app starter
  */
 
-import type { Template } from "../types";
+import type { Template } from "../types.js";
 
 export const blankAppTemplate: Template = {
   id: "blank-app",
