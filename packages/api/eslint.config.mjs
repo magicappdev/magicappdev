@@ -10,5 +10,5 @@ export default defineConfig([
     },
   },
   prettier,
-  globalIgnores(["dist/", "node_modules/", "coverage/"]),
+  globalIgnores(["dist/", "node_modules/", "coverage/", "**/*.d.ts"]),
 ]);

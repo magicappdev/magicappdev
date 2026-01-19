@@ -17,15 +17,15 @@ projectsRoutes.get("/", async c => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = c.var.db as any;
 
-  // TODO: Filter by userId from context once auth middleware is active
-  // const userId = c.var.userId;
+  const userId = c.var.userId;
 
   const results = await db.query.projects.findMany({
     limit,
     offset,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     orderBy: [desc((projects as any).updatedAt)],
-    // where: eq(projects.userId, userId),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    where: eq((projects as any).userId, userId),
   });
 
   // Get total count (simplified for now)

@@ -3,6 +3,7 @@
  */
 
 import { createDatabase } from "@magicappdev/database";
+import { authMiddleware } from "./middlewares/auth.js";
 import { projectsRoutes } from "./routes/projects.js";
 import { authRoutes } from "./routes/auth.js";
 import type { AppContext } from "./types.js";
@@ -48,7 +49,12 @@ export function createApp() {
 
   // Mount routes
   app.route("/auth", authRoutes);
+
+  // Protected routes
+  app.use("/projects/*", authMiddleware);
   app.route("/projects", projectsRoutes);
+
+  app.use("/ai/*", authMiddleware);
   app.route("/ai", aiRoutes);
 
   // Error handling
