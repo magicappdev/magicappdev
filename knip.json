@@ -2,8 +2,8 @@
   "$schema": "https://unpkg.com/knip@5/schema.json",
   "tags": ["-lintignore"],
   "workspaces": {
-    "apps": {},
-    "packages": {}
+    "apps/*": {},
+    "packages/*": {}
   },
   "pnpm": true,
   "typescript": true,
@@ -14,14 +14,25 @@
     "knip.json",
     "**/*.d.ts",
     "apps/web/src/components/ui/**",
-    "apps/mobile/*/**"
+    "**/dist/**",
+    "**/node_modules/**",
+    "**/*-example.ts"
   ],
   "commitlint": true,
   "husky": true,
-  "ignoreDependencies": ["husky", "@magicappdev/*"],
+  "ignoreDependencies": [
+    "@magicappdev/*",
+    "tslib",
+    "@radix-ui/*",
+    "ai",
+    "zod",
+    "metro-minify-terser",
+    "expo-build-properties"
+  ],
+  "ignoreBinaries": ["wrangler", "vitest"],
+  "ignoreExportsUsedInFile": true,
   "ignoreWorkspaces": [],
   "github-actions": true,
-  "github-action": true,
   "babel": true,
   "expo": true,
   "metro": true
