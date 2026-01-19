@@ -37,6 +37,7 @@
       "favicon": "./assets/favicon.png",
       "output": "static"
     },
+    "scheme": "magicappdev",
     "plugins": [
       "expo-router",
       [
