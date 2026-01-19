@@ -10,5 +10,5 @@ export default defineConfig([
     },
   },
   prettier,
-  globalIgnores(["node_modules/", ".expo/", "dist/"]),
+  globalIgnores(["node_modules/", ".expo/", "dist/", "metro.config.js"]),
 ]);

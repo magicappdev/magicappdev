@@ -2,8 +2,21 @@
 // From: Lace test infrastructure improvements (2025-10-03)
 // Context: Fixed 15 flaky tests by replacing arbitrary timeouts
 
-import type { LaceEvent, LaceEventType } from "~/threads/types";
-import type { ThreadManager } from "~/threads/thread-manager";
+/** Types for the example implementation */
+export type LaceEventType =
+  | "AGENT_MESSAGE"
+  | "TOOL_CALL"
+  | "TOOL_RESULT"
+  | string;
+
+export interface LaceEvent {
+  type: LaceEventType;
+  data?: any;
+}
+
+export interface ThreadManager {
+  getEvents(threadId: string): LaceEvent[];
+}
 
 /**
  * Wait for a specific event type to appear in thread
@@ -22,7 +35,7 @@ export function waitForEvent(
   threadId: string,
   eventType: LaceEventType,
   timeoutMs = 5000,
-): Promise {
+): Promise<LaceEvent> {
   return new Promise((resolve, reject) => {
     const startTime = Date.now();
 
@@ -67,7 +80,7 @@ export function waitForEventCount(
   eventType: LaceEventType,
   count: number,
   timeoutMs = 5000,
-): Promise {
+): Promise<LaceEvent[]> {
   return new Promise((resolve, reject) => {
     const startTime = Date.now();
 
@@ -118,7 +131,7 @@ export function waitForEventMatch(
   predicate: (event: LaceEvent) => boolean,
   description: string,
   timeoutMs = 5000,
-): Promise {
+): Promise<LaceEvent> {
   return new Promise((resolve, reject) => {
     const startTime = Date.now();
 

@@ -22,10 +22,12 @@ async function hashPassword(password: string): Promise<string> {
 // Login
 authRoutes.post("/login", async c => {
   const body = await c.req.json<{ email: string; password: string }>();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = c.var.db as any;
 
   // Find user
   const user = await db.query.users.findFirst({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     where: eq((users as any).email, body.email),
   });
 
@@ -223,9 +225,11 @@ authRoutes.post("/refresh", async c => {
 // Logout
 authRoutes.post("/logout", async c => {
   const { refreshToken } = await c.req.json<{ refreshToken: string }>();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = c.var.db as any;
 
   if (refreshToken) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await db
       .delete(sessions)
       .where(eq((sessions as any).refreshToken, refreshToken));

@@ -14,6 +14,7 @@ projectsRoutes.get("/", async c => {
   const page = parseInt(c.req.query("page") || "1");
   const limit = parseInt(c.req.query("limit") || "20");
   const offset = (page - 1) * limit;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = c.var.db as any;
 
   // TODO: Filter by userId from context once auth middleware is active
@@ -22,6 +23,7 @@ projectsRoutes.get("/", async c => {
   const results = await db.query.projects.findMany({
     limit,
     offset,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     orderBy: [desc((projects as any).updatedAt)],
     // where: eq(projects.userId, userId),
   });
@@ -47,9 +49,11 @@ projectsRoutes.get("/", async c => {
 // Get project by ID
 projectsRoutes.get("/:id", async c => {
   const id = c.req.param("id");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = c.var.db as any;
 
   const project = await db.query.projects.findFirst({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     where: eq((projects as any).id, id),
   });
 
@@ -77,6 +81,7 @@ projectsRoutes.post("/", async c => {
     config: Record<string, unknown>;
     userId: string; // Temporary: explicit userId until auth middleware
   }>();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = c.var.db as any;
 
   const id = crypto.randomUUID();
@@ -121,10 +126,12 @@ projectsRoutes.patch("/:id", async c => {
     status?: (typeof PROJECT_STATUS)[number];
     config?: Record<string, unknown>;
   }>();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = c.var.db as any;
 
   // Verify existence
   const existing = await db.query.projects.findFirst({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     where: eq((projects as any).id, id),
   });
 
@@ -147,6 +154,7 @@ projectsRoutes.patch("/:id", async c => {
       config: body.config,
       updatedAt: new Date().toISOString(),
     })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .where(eq((projects as any).id, id))
     .returning()
     .get();
@@ -160,10 +168,12 @@ projectsRoutes.patch("/:id", async c => {
 // Delete project
 projectsRoutes.delete("/:id", async c => {
   const id = c.req.param("id");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = c.var.db as any;
 
   const result = await db
     .delete(projects)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .where(eq((projects as any).id, id))
     .returning()
     .get();

@@ -12,8 +12,15 @@
   "nx": true,
   "ignore": "knip.json",
   "commitlint": true,
+  "husky": true,
   "ignoreDependencies": ["husky"],
-  "ignoreWorkspaces": ["packages/*", "apps/*", ".gemini/*", ".claude/*"],
+  "ignoreWorkspaces": [
+    "packages/*",
+    "apps/*",
+    ".gemini/*",
+    ".claude/*",
+    ".github/workflows/*"
+  ],
   "github-actions": true,
   "github-action": true,
   "babel": true

@@ -31,7 +31,7 @@ jobs:
           node-version: 20
           cache: "pnpm"
 
-      - run: pnpm ci --legacy-peer-deps
+      - run: pnpm install --frozen-lockfile --legacy-peer-deps
 
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
