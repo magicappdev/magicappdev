@@ -1,15 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-
-interface Message {
-  role: "user" | "assistant";
-  content: string;
-}
+import { Send, Bot, User, ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { sendMessage, type AiMessage } from "@/lib/api";
 
 export default function ChatPage() {
-  const [messages, setMessages] = useState<Message[]>([
+  const [messages, setMessages] = useState<AiMessage[]>([
     {
       role: "assistant",
       content:
@@ -18,117 +20,140 @@ export default function ChatPage() {
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
-    const userMessage: Message = { role: "user", content: input };
-    setMessages(prev => [...prev, userMessage]);
+    const userMessage: AiMessage = { role: "user", content: input };
+    const newMessages = [...messages, userMessage];
+    
+    setMessages(newMessages);
     setInput("");
     setIsLoading(true);
 
-    // TODO: Integrate with actual AI API
-    // For now, simulate a response
-    setTimeout(() => {
-      const assistantMessage: Message = {
-        role: "assistant",
-        content: `I understand you want to build something related to: "${input}".
-
-Let me help you get started! Here's what I suggest:
-
-1. First, let's define the core features
-2. Then, I'll generate the initial project structure
-3. Finally, we'll iterate on the design and functionality
-
-What specific features would you like to include?`,
-      };
-      setMessages(prev => [...prev, assistantMessage]);
+    try {
+      const response = await sendMessage(newMessages);
+      setMessages(prev => [...prev, response]);
+    } catch (error) {
+      console.error("Chat error:", error);
+      setMessages(prev => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "Sorry, I encountered an error while processing your request. Please try again.",
+        },
+      ]);
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="border-b border-slate-800 px-4 py-3">
+      <header className="border-b px-4 py-3 bg-card">
         <div className="container mx-auto flex items-center justify-between">
-          <Link
-            href="/"
-            className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500"
-          >
-            MagicAppDev
-          </Link>
           <div className="flex items-center gap-4">
-            <button className="text-slate-400 hover:text-white transition-colors">
-              New Chat
-            </button>
-            <button className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg transition-colors">
+            <Link href="/">
+              <Button variant="ghost" size="icon">
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+            </Link>
+            <span className="text-xl font-bold text-primary">
+              MagicAppDev
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm">
+              New Project
+            </Button>
+            <Button size="sm">
               Sign In
-            </button>
+            </Button>
           </div>
         </div>
       </header>
 
       {/* Chat Container */}
-      <div className="flex-1 container mx-auto px-4 py-6 flex flex-col max-w-4xl">
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto space-y-6 mb-6">
-          {messages.map((message, index) => (
-            <div
-              key={index}
-              className={`flex ${
-                message.role === "user" ? "justify-end" : "justify-start"
-              }`}
-            >
-              <div
-                className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-                  message.role === "user"
-                    ? "bg-cyan-500 text-white"
-                    : "bg-slate-800 text-slate-200"
-                }`}
-              >
-                <p className="whitespace-pre-wrap">{message.content}</p>
-              </div>
-            </div>
-          ))}
-          {isLoading && (
-            <div className="flex justify-start">
-              <div className="bg-slate-800 rounded-2xl px-4 py-3">
-                <div className="flex space-x-2">
-                  <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" />
+      <div className="flex-1 container mx-auto px-4 py-6 flex flex-col max-w-4xl h-[calc(100vh-64px)]">
+        <Card className="flex-1 flex flex-col overflow-hidden mb-4 border-muted">
+          <ScrollArea className="flex-1 p-4">
+            <div className="space-y-6">
+              {messages.map((message, index) => (
+                <div
+                  key={index}
+                  className={`flex gap-3 ${
+                    message.role === "user" ? "justify-end" : "justify-start"
+                  }`}
+                >
+                  {message.role === "assistant" && (
+                    <Avatar className="h-8 w-8 bg-primary/10">
+                      <AvatarFallback><Bot className="h-5 w-5 text-primary" /></AvatarFallback>
+                    </Avatar>
+                  )}
+                  
                   <div
-                    className="w-2 h-2 bg-slate-500 rounded-full animate-bounce"
-                    style={{ animationDelay: "0.1s" }}
-                  />
-                  <div
-                    className="w-2 h-2 bg-slate-500 rounded-full animate-bounce"
-                    style={{ animationDelay: "0.2s" }}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+                    className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${
+                      message.role === "user"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-foreground"
+                    }`}
+                  >
+                    <p className="whitespace-pre-wrap">{message.content}</p>
+                  </div>
 
-        {/* Input */}
-        <form onSubmit={handleSubmit} className="flex gap-4">
-          <input
-            type="text"
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            placeholder="Describe the app you want to build..."
-            className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
-          />
-          <button
-            type="submit"
-            disabled={isLoading || !input.trim()}
-            className="px-6 py-3 bg-cyan-500 hover:bg-cyan-600 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors"
-          >
-            Send
-          </button>
-        </form>
+                  {message.role === "user" && (
+                    <Avatar className="h-8 w-8 bg-secondary">
+                      <AvatarFallback><User className="h-5 w-5" /></AvatarFallback>
+                    </Avatar>
+                  )}
+                </div>
+              ))}
+              {isLoading && (
+                <div className="flex gap-3 justify-start">
+                  <Avatar className="h-8 w-8 bg-primary/10">
+                    <AvatarFallback><Bot className="h-5 w-5 text-primary" /></AvatarFallback>
+                  </Avatar>
+                  <div className="bg-muted rounded-2xl px-4 py-3">
+                    <div className="flex space-x-2">
+                      <div className="w-2 h-2 bg-foreground/40 rounded-full animate-bounce" />
+                      <div className="w-2 h-2 bg-foreground/40 rounded-full animate-bounce delay-75" />
+                      <div className="w-2 h-2 bg-foreground/40 rounded-full animate-bounce delay-150" />
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div ref={scrollRef} />
+            </div>
+          </ScrollArea>
+
+          {/* Input Area */}
+          <div className="p-4 bg-card border-t">
+            <form onSubmit={handleSubmit} className="flex gap-3">
+              <Input
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                placeholder="Describe your app idea..."
+                className="flex-1"
+                disabled={isLoading}
+              />
+              <Button type="submit" disabled={isLoading || !input.trim()}>
+                <Send className="h-4 w-4 mr-2" />
+                Send
+              </Button>
+            </form>
+          </div>
+        </Card>
       </div>
     </div>
   );
 }
+
