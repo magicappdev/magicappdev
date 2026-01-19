@@ -19,6 +19,7 @@ export default function HomeScreen() {
           Describe your app idea and our AI will help you generate code,
           components, and full projects.
         </Text>
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
         <Link href={"/chat" as any} asChild>
           <View style={styles.button}>
             <Text style={styles.buttonText}>Start Chatting</Text>
@@ -48,12 +49,12 @@ export default function HomeScreen() {
   );
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function FeatureItem({
   icon,
   title,
   description,
 }: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   icon: any;
   title: string;
   description: string;
@@ -91,10 +92,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
+    boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
     elevation: 5,
   },
   title: {
@@ -111,10 +109,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 20,
     padding: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
+    boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.05)",
     elevation: 2,
     marginBottom: 30,
   },

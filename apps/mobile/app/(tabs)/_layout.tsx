@@ -1,5 +1,6 @@
+import { TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Tabs } from "expo-router";
+import { Tabs, router } from "expo-router";
 import React from "react";
 
 export default function TabLayout() {
@@ -15,6 +16,14 @@ export default function TabLayout() {
         headerTitleStyle: {
           fontWeight: "bold",
         },
+        headerRight: () => (
+          <TouchableOpacity
+            onPress={() => router.push("/settings")}
+            style={{ marginRight: 16 }}
+          >
+            <Ionicons name="person-circle-outline" size={28} color="#007AFF" />
+          </TouchableOpacity>
+        ),
       }}
     >
       <Tabs.Screen

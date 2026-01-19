@@ -229,9 +229,9 @@ authRoutes.post("/logout", async c => {
   const db = c.var.db as any;
 
   if (refreshToken) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await db
       .delete(sessions)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .where(eq((sessions as any).refreshToken, refreshToken));
   }
 
