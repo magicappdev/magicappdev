@@ -23,25 +23,21 @@ You are a debugging specialist for the Syncstuff monorepo. Your expertise includ
 When investigating issues, follow this systematic approach:
 
 1. **Check service layer logs** in `packages/app/src/services/`:
-
    - `network/` - mDNS discovery, WebRTC signaling
    - `sync/` - File transfer protocol, clipboard sync
    - `storage/` - File I/O, local storage
 
 2. **Trace WebRTC signaling flow**:
-
    - Review `services/network/webrtc.service.ts` for signaling logic
    - Check Socket.IO connection to `localhost:3001` (signaling server)
    - Verify offer/answer exchange in browser console
 
 3. **Analyze mDNS broadcasts** (Android only):
-
    - Inspect `services/network/discovery.service.ts`
    - Check Capacitor Zeroconf plugin logs
    - Verify service type: `_syncstuff._tcp.local`
 
 4. **Review Zustand store state**:
-
    - `store/device.store.ts` - Discovered devices, paired devices
    - `store/transfer.store.ts` - Active transfers, history
    - `store/settings.store.ts` - App settings, theme

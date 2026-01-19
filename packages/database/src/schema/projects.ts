@@ -6,10 +6,20 @@ import { sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { users } from "./users";
 
 /** Project status enum values */
-export const PROJECT_STATUS = ["draft", "active", "archived", "deployed"] as const;
+export const PROJECT_STATUS = [
+  "draft",
+  "active",
+  "archived",
+  "deployed",
+] as const;
 
 /** Project framework enum values */
-export const PROJECT_FRAMEWORK = ["react-native", "expo", "next", "remix"] as const;
+export const PROJECT_FRAMEWORK = [
+  "react-native",
+  "expo",
+  "next",
+  "remix",
+] as const;
 
 /** Projects table */
 export const projects = sqliteTable("projects", {

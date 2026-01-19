@@ -47,14 +47,12 @@ Read tsconfig.json files
 **Checks**:
 
 - **Mobile App** (packages/app):
-
   - Services follow service layer pattern
   - Stores use Zustand with persistence where appropriate
   - Hooks properly combine stores and services
   - Components use @syncstuff/ui primitives
 
 - **Web App** (packages/web):
-
   - Routes follow Remix conventions
   - Server-side logic in route loaders/actions
   - Client components use shared UI library

@@ -160,9 +160,7 @@
     ]
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": [
-    "cloudflare-builds"
-  ],
+  "enabledMcpjsonServers": ["cloudflare-builds"],
   "hooks": {
     "UserPromptSubmit": [
       {

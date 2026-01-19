@@ -335,7 +335,7 @@ Option 3: Convert to CommonJS
 
 ```javascript
 // Change
-impor
+impor;
 const express = require("express");
 import express from "express";
 ```

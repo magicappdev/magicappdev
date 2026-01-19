@@ -2,12 +2,13 @@
  * Init command - Initialize a new MagicAppDev project
  */
 
-import { Command } from "commander";
 import {
-  generateApp,
-  blankAppTemplate,
-  tabsAppTemplate,
-} from "@magicappdev/templates";
+  promptProjectName,
+  promptFramework,
+  promptStyling,
+  promptTypeScript,
+  promptSelect,
+} from "../lib/prompts";
 import {
   header,
   logo,
@@ -19,14 +20,13 @@ import {
   newline,
   divider,
 } from "../lib/ui";
-import { withSpinner } from "../lib/spinner";
 import {
-  promptProjectName,
-  promptFramework,
-  promptStyling,
-  promptTypeScript,
-  promptSelect,
-} from "../lib/prompts";
+  generateApp,
+  blankAppTemplate,
+  tabsAppTemplate,
+} from "@magicappdev/templates";
+import { withSpinner } from "../lib/spinner";
+import { Command } from "commander";
 
 interface InitOptions {
   template?: string;
@@ -60,7 +60,11 @@ export const initCommand = new Command("init")
       let templateSlug = options.template;
       if (!templateSlug && !options.yes) {
         templateSlug = await promptSelect<string>("Choose a template:", [
-          { title: "Blank", value: "blank", description: "Minimal starter template" },
+          {
+            title: "Blank",
+            value: "blank",
+            description: "Minimal starter template",
+          },
           { title: "Tabs", value: "tabs", description: "Tab-based navigation" },
         ]);
       }
@@ -92,7 +96,10 @@ export const initCommand = new Command("init")
         styling = await promptStyling(framework);
       }
       if (!styling) {
-        styling = framework === "expo" || framework === "react-native" ? "nativewind" : "tailwind";
+        styling =
+          framework === "expo" || framework === "react-native"
+            ? "nativewind"
+            : "tailwind";
       }
 
       newline();
@@ -107,7 +114,8 @@ export const initCommand = new Command("init")
       newline();
 
       // Find template
-      const template = templateSlug === "tabs" ? tabsAppTemplate : blankAppTemplate;
+      const template =
+        templateSlug === "tabs" ? tabsAppTemplate : blankAppTemplate;
 
       // Generate project
       const outputDir = process.cwd();
@@ -132,7 +140,6 @@ export const initCommand = new Command("init")
       command("npm install");
       command("npm start");
       newline();
-
     } catch (err) {
       error(err instanceof Error ? err.message : "Failed to create project");
       process.exit(1);

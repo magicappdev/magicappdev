@@ -61,7 +61,9 @@ export async function promptConfirm(
 }
 
 /** Prompt for project name with validation */
-export async function promptProjectName(initial?: string): Promise<string | undefined> {
+export async function promptProjectName(
+  initial?: string,
+): Promise<string | undefined> {
   return promptText("What is your project name?", {
     initial,
     validate: value => {
@@ -79,29 +81,70 @@ export async function promptProjectName(initial?: string): Promise<string | unde
 /** Prompt for framework selection */
 export async function promptFramework(): Promise<string | undefined> {
   return promptSelect<string>("Which framework would you like to use?", [
-    { title: chalk.cyan("Expo") + " (Recommended)", value: "expo", description: "React Native with Expo" },
-    { title: "React Native (bare)", value: "react-native", description: "React Native without Expo" },
-    { title: "Next.js", value: "next", description: "React framework for the web" },
+    {
+      title: chalk.cyan("Expo") + " (Recommended)",
+      value: "expo",
+      description: "React Native with Expo",
+    },
+    {
+      title: "React Native (bare)",
+      value: "react-native",
+      description: "React Native without Expo",
+    },
+    {
+      title: "Next.js",
+      value: "next",
+      description: "React framework for the web",
+    },
     { title: "Remix", value: "remix", description: "Full stack web framework" },
   ]);
 }
 
 /** Prompt for styling selection */
-export async function promptStyling(framework: string): Promise<string | undefined> {
+export async function promptStyling(
+  framework: string,
+): Promise<string | undefined> {
   const choices =
     framework === "expo" || framework === "react-native"
       ? [
-          { title: chalk.cyan("NativeWind") + " (Recommended)", value: "nativewind", description: "Tailwind CSS for React Native" },
-          { title: "StyleSheet", value: "stylesheet", description: "React Native default styling" },
-          { title: "Styled Components", value: "styled-components", description: "CSS-in-JS library" },
+          {
+            title: chalk.cyan("NativeWind") + " (Recommended)",
+            value: "nativewind",
+            description: "Tailwind CSS for React Native",
+          },
+          {
+            title: "StyleSheet",
+            value: "stylesheet",
+            description: "React Native default styling",
+          },
+          {
+            title: "Styled Components",
+            value: "styled-components",
+            description: "CSS-in-JS library",
+          },
         ]
       : [
-          { title: chalk.cyan("Tailwind CSS") + " (Recommended)", value: "tailwind", description: "Utility-first CSS" },
-          { title: "CSS Modules", value: "css-modules", description: "Scoped CSS" },
-          { title: "Styled Components", value: "styled-components", description: "CSS-in-JS library" },
+          {
+            title: chalk.cyan("Tailwind CSS") + " (Recommended)",
+            value: "tailwind",
+            description: "Utility-first CSS",
+          },
+          {
+            title: "CSS Modules",
+            value: "css-modules",
+            description: "Scoped CSS",
+          },
+          {
+            title: "Styled Components",
+            value: "styled-components",
+            description: "CSS-in-JS library",
+          },
         ];
 
-  return promptSelect<string>("Which styling approach would you like to use?", choices);
+  return promptSelect<string>(
+    "Which styling approach would you like to use?",
+    choices,
+  );
 }
 
 /** Prompt for TypeScript */

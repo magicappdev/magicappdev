@@ -2,8 +2,8 @@
  * Validation utilities
  */
 
-import type { ZodType } from "zod";
 import type { Result } from "../types";
+import type { ZodType } from "zod";
 
 /** Validate data against a Zod schema */
 export function validate<T>(
@@ -63,10 +63,7 @@ export function isValidSemver(value: string): boolean {
 }
 
 /** Assert condition and throw if false */
-export function assert(
-  condition: unknown,
-  message: string,
-): asserts condition {
+export function assert(condition: unknown, message: string): asserts condition {
   if (!condition) {
     throw new Error(message);
   }

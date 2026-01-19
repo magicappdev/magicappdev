@@ -2,11 +2,11 @@
  * MagicAppDev CLI
  */
 
-import { Command } from "commander";
 import pkg from "../package.json" assert { type: "json" };
-import { doctorCommand } from "./commands/doctor";
 import { generateCommand } from "./commands/generate";
+import { doctorCommand } from "./commands/doctor";
 import { initCommand } from "./commands/init";
+import { Command } from "commander";
 /** Package version */
 const VERSION = pkg.version;
 

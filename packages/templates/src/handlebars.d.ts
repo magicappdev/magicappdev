@@ -5,7 +5,10 @@
  * The actual types come from the handlebars package at runtime.
  */
 declare module "handlebars" {
-  type TemplateDelegate<T = unknown> = (context: T, options?: RuntimeOptions) => string;
+  type TemplateDelegate<T = unknown> = (
+    context: T,
+    options?: RuntimeOptions,
+  ) => string;
 
   interface RuntimeOptions {
     data?: unknown;
@@ -27,15 +30,25 @@ declare module "handlebars" {
     explicitPartialContext?: boolean;
   }
 
-  function compile<T = unknown>(input: string, options?: CompileOptions): TemplateDelegate<T>;
+  function compile<T = unknown>(
+    input: string,
+    options?: CompileOptions,
+  ): TemplateDelegate<T>;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function registerHelper(name: string, fn: (...args: any[]) => any): void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function registerHelper(helpers: Record<string, (...args: any[]) => any>): void;
+  function registerHelper(
+    helpers: Record<string, (...args: any[]) => any>,
+  ): void;
 
-  function registerPartial(name: string, partial: TemplateDelegate | string): void;
-  function registerPartial(partials: Record<string, TemplateDelegate | string>): void;
+  function registerPartial(
+    name: string,
+    partial: TemplateDelegate | string,
+  ): void;
+  function registerPartial(
+    partials: Record<string, TemplateDelegate | string>,
+  ): void;
 
   function unregisterHelper(name: string): void;
   function unregisterPartial(name: string): void;

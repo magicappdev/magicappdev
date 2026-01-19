@@ -2,13 +2,13 @@
  * Hono app configuration
  */
 
-import { Hono } from "hono";
-import { cors } from "hono/cors";
 import { createDatabase } from "@magicappdev/database";
-import type { AppContext } from "./types";
-import { authRoutes } from "./routes/auth";
 import { projectsRoutes } from "./routes/projects";
+import { authRoutes } from "./routes/auth";
+import type { AppContext } from "./types";
 import { aiRoutes } from "./routes/ai";
+import { cors } from "hono/cors";
+import { Hono } from "hono";
 
 /** Create the Hono app */
 export function createApp() {

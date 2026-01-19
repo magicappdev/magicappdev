@@ -12,8 +12,8 @@ export default function HomePage() {
             </span>
           </h1>
           <p className="text-xl md:text-2xl text-slate-300 mb-8 max-w-2xl mx-auto">
-            Build apps faster with AI-powered development tools. Create, customize, and deploy
-            web and mobile applications in minutes.
+            Build apps faster with AI-powered development tools. Create,
+            customize, and deploy web and mobile applications in minutes.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
@@ -64,7 +64,10 @@ export default function HomePage() {
           </p>
           <div className="bg-slate-900 rounded-lg p-4 font-mono text-sm">
             <code className="text-green-400">$</code>
-            <code className="text-white"> npx create-magicappdev-app my-app</code>
+            <code className="text-white">
+              {" "}
+              npx create-magicappdev-app my-app
+            </code>
           </div>
         </div>
       </div>

@@ -4,8 +4,8 @@
  * MagicAppDev API - Cloudflare Workers backend
  */
 
-import { createApp } from "./app";
 import type { Env } from "./types";
+import { createApp } from "./app";
 
 const app = createApp();
 

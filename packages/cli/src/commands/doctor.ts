@@ -2,12 +2,20 @@
  * Doctor command - Diagnose project issues
  */
 
-import * as fs from "node:fs";
-import * as path from "node:path";
-import { Command } from "commander";
-import { execa } from "execa";
-import { header, success, error, warn, info, newline, divider } from "../lib/ui";
+import {
+  header,
+  success,
+  error,
+  warn,
+  info,
+  newline,
+  divider,
+} from "../lib/ui";
 import { createSpinner } from "../lib/spinner";
+import { Command } from "commander";
+import * as path from "node:path";
+import * as fs from "node:fs";
+import { execa } from "execa";
 
 interface DoctorCheck {
   name: string;
@@ -106,7 +114,9 @@ export const doctorCommand = new Command("doctor")
     const packageJsonPath = path.join(process.cwd(), "package.json");
     if (fs.existsSync(packageJsonPath)) {
       try {
-        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"));
+        const packageJson = JSON.parse(
+          fs.readFileSync(packageJsonPath, "utf-8"),
+        );
         checks.push({
           name: "package.json",
           status: "pass",

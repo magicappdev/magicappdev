@@ -3,8 +3,6 @@
   "version": "0.0.1",
   "description": "Shared utilities, types, and constants for MagicAppDev",
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -31,23 +29,28 @@
       "import": "./dist/errors/index.js"
     }
   },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "files": [
     "dist"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.lib.json",
-    "typecheck": "tsc --noEmit",
-    "lint": "echo 'Add lint script'",
-    "lint:fix": "echo 'Add lint:fix script'",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "zod": "^3.24.0",
-    "tslib": "^2.3.0"
+    "tslib": "^2.3.0",
+    "zod": "^3.24.0"
   },
   "devDependencies": {
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
     "typescript": "~5.8.2",
+    "typescript-eslint": "^8.53.0",
     "vitest": "^3.0.0"
   }
 }

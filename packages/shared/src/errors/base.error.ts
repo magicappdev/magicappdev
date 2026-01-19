@@ -77,11 +77,7 @@ export class NotFoundError extends AppError {
   public readonly resource: string;
 
   constructor(resource: string, details?: Record<string, unknown>) {
-    super(
-      ErrorCodes.PROJECT_NOT_FOUND,
-      `${resource} not found`,
-      details,
-    );
+    super(ErrorCodes.PROJECT_NOT_FOUND, `${resource} not found`, details);
     this.name = "NotFoundError";
     this.resource = resource;
   }

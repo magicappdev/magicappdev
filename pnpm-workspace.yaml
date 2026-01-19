@@ -3,8 +3,9 @@ packages:
   - packages/*
 
 onlyBuiltDependencies:
-  - '@swc/core'
+  - "@swc/core"
   - esbuild
   - nx
   - sharp
+  - unrs-resolver
   - workerd

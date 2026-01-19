@@ -328,7 +328,6 @@ git bisect reset  # when done
 ## Reference Files
 
 - **patterns/** - Language-specific error patterns
-
   - `nodejs.md` - Node.js common errors
   - `python.md` - Python common errors
   - `react.md` - React/Next.js errors
@@ -338,7 +337,6 @@ git bisect reset  # when done
   - `network.md` - Network/API errors
 
 - **analysis/** - Analysis methodologies
-
   - `stack-trace.md` - Stack trace parsing guide
   - `root-cause.md` - Root cause analysis techniques
 

@@ -3,8 +3,6 @@
   "version": "0.0.1",
   "description": "App templates and generators for MagicAppDev",
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -19,17 +17,19 @@
       "import": "./dist/generators/index.js"
     }
   },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "files": [
     "dist",
     "templates"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.lib.json",
-    "typecheck": "tsc --noEmit",
     "lint": "echo 'Add lint script'",
     "lint:fix": "echo 'Add lint:fix script'",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@magicappdev/shared": "workspace:*",

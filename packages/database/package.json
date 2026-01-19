@@ -3,8 +3,6 @@
   "version": "0.0.1",
   "description": "Database utilities with Drizzle ORM for Cloudflare D1",
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -19,18 +17,20 @@
       "import": "./dist/client/index.js"
     }
   },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "files": [
     "dist",
     "drizzle"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.lib.json",
-    "typecheck": "tsc --noEmit",
-    "lint": "echo 'Add lint script'",
-    "lint:fix": "echo 'Add lint:fix script'",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "lint": "echo 'Add lint script'",
+    "lint:fix": "echo 'Add lint:fix script'",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@magicappdev/shared": "workspace:*",

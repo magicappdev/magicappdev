@@ -2,8 +2,8 @@
  * Template registry for managing and accessing templates
  */
 
-import type { ProjectFramework } from "@magicappdev/shared";
 import type { Template, TemplateCategory, TemplateMetadata } from "../types";
+import type { ProjectFramework } from "@magicappdev/shared";
 
 /** Template registry */
 class TemplateRegistry {
@@ -72,7 +72,9 @@ class TemplateRegistry {
     }
 
     if (options.framework) {
-      templates = templates.filter(t => t.frameworks.includes(options.framework!));
+      templates = templates.filter(t =>
+        t.frameworks.includes(options.framework!),
+      );
     }
 
     if (options.search) {
@@ -90,7 +92,10 @@ class TemplateRegistry {
 
   /** Get template metadata only (without files) */
   getMetadata(): TemplateMetadata[] {
-    return this.getAll().map(({ files, variables, dependencies, devDependencies, ...metadata }) => metadata);
+    return this.getAll().map(
+      ({ files, variables, dependencies, devDependencies, ...metadata }) =>
+        metadata,
+    );
   }
 
   /** Clear all templates */

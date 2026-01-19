@@ -109,7 +109,7 @@ declare module "prompts" {
 
   function prompts<T extends string = string>(
     questions: PromptObject<T> | Array<PromptObject<T>>,
-    options?: { onCancel?: () => void }
+    options?: { onCancel?: () => void },
   ): Promise<Answers<T>>;
 
   export default prompts;
@@ -139,17 +139,17 @@ declare module "execa" {
   export function execa(
     file: string,
     args?: string[],
-    options?: ExecaOptions
+    options?: ExecaOptions,
   ): Promise<ExecaReturnValue>;
 
   export function execaCommand(
     command: string,
-    options?: ExecaOptions
+    options?: ExecaOptions,
   ): Promise<ExecaReturnValue>;
 
   export function execaSync(
     file: string,
     args?: string[],
-    options?: ExecaOptions
+    options?: ExecaOptions,
   ): ExecaReturnValue;
 }

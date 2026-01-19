@@ -15,12 +15,16 @@ export function err<E>(error: E): Result<never, E> {
 }
 
 /** Check if result is successful */
-export function isOk<T, E>(result: Result<T, E>): result is { success: true; data: T } {
+export function isOk<T, E>(
+  result: Result<T, E>,
+): result is { success: true; data: T } {
   return result.success;
 }
 
 /** Check if result is a failure */
-export function isErr<T, E>(result: Result<T, E>): result is { success: false; error: E } {
+export function isErr<T, E>(
+  result: Result<T, E>,
+): result is { success: false; error: E } {
   return !result.success;
 }
 
@@ -104,10 +108,17 @@ export function combine<T extends readonly Result<unknown, unknown>[]>(
 
   for (const result of results) {
     if (!result.success) {
-      return result as Result<never, T[number] extends Result<unknown, infer E> ? E : never>;
+      return result as Result<
+        never,
+        T[number] extends Result<unknown, infer E> ? E : never
+      >;
     }
     data.push(result.data);
   }
 
-  return ok(data as { [K in keyof T]: T[K] extends Result<infer U, unknown> ? U : never });
+  return ok(
+    data as {
+      [K in keyof T]: T[K] extends Result<infer U, unknown> ? U : never;
+    },
+  );
 }

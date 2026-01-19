@@ -2,8 +2,8 @@
  * Built-in template definitions
  */
 
-import { blankAppTemplate } from "./blank-app";
 import { buttonComponentTemplate } from "./button-component";
+import { blankAppTemplate } from "./blank-app";
 import { tabsAppTemplate } from "./tabs-app";
 
 /** All built-in templates */

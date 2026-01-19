@@ -2,7 +2,7 @@
 
 import { run } from "../dist/cli.js";
 
-run().catch((error) => {
+run().catch(error => {
   console.error(error);
   process.exit(1);
 });

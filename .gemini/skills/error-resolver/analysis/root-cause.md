@@ -207,14 +207,12 @@ app.get("/user", async (req, res) => {
 ### Questions to Ask
 
 1. **What changed recently?**
-
    - New deployment?
    - Config change?
    - Dependency update?
    - Infrastructure change?
 
 2. **Where does it fail?**
-
    - Production only?
    - Development too?
    - Specific browser/OS?

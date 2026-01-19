@@ -229,7 +229,6 @@ react-*.yaml
    ```
 
 2. **Review Solutions**
-
    - Include solutions in code review
    - Validate accuracy before merging
 

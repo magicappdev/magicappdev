@@ -24,7 +24,7 @@ export default function ChatPage() {
     if (!input.trim() || isLoading) return;
 
     const userMessage: Message = { role: "user", content: input };
-    setMessages((prev) => [...prev, userMessage]);
+    setMessages(prev => [...prev, userMessage]);
     setInput("");
     setIsLoading(true);
 
@@ -43,7 +43,7 @@ Let me help you get started! Here's what I suggest:
 
 What specific features would you like to include?`,
       };
-      setMessages((prev) => [...prev, assistantMessage]);
+      setMessages(prev => [...prev, assistantMessage]);
       setIsLoading(false);
     }, 1000);
   };
@@ -116,7 +116,7 @@ What specific features would you like to include?`,
           <input
             type="text"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={e => setInput(e.target.value)}
             placeholder="Describe the app you want to build..."
             className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
           />

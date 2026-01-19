@@ -44,7 +44,7 @@ export {
 } from "./templates";
 
 // Initialize registry with built-in templates
-import { registry } from "./registry";
 import { builtInTemplates } from "./templates";
+import { registry } from "./registry";
 
 registry.registerAll(builtInTemplates);

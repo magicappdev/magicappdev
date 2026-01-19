@@ -2,11 +2,14 @@
  * Generate command - Generate components, screens, etc.
  */
 
-import { Command } from "commander";
-import { generateComponent, buttonComponentTemplate } from "@magicappdev/templates";
+import {
+  generateComponent,
+  buttonComponentTemplate,
+} from "@magicappdev/templates";
 import { header, success, error, info, keyValue, newline } from "../../lib/ui";
 import { withSpinner } from "../../lib/spinner";
 import { promptText } from "../../lib/prompts";
+import { Command } from "commander";
 
 interface GenerateOptions {
   path?: string;
@@ -59,10 +62,15 @@ export const generateCommand = new Command("generate")
           const result = await withSpinner(
             `Creating ${componentName}...`,
             async () => {
-              return generateComponent(componentName!, buttonComponentTemplate, outputDir, {
-                typescript: options.typescript ?? true,
-                withVariants: true,
-              });
+              return generateComponent(
+                componentName!,
+                buttonComponentTemplate,
+                outputDir,
+                {
+                  typescript: options.typescript ?? true,
+                  withVariants: true,
+                },
+              );
             },
             { successText: `Created ${componentName}` },
           );
@@ -71,9 +79,10 @@ export const generateCommand = new Command("generate")
           success(`Component "${componentName}" created successfully!`);
           info(`Files created: ${result.files.join(", ")}`);
           newline();
-
         } catch (err) {
-          error(err instanceof Error ? err.message : "Failed to generate component");
+          error(
+            err instanceof Error ? err.message : "Failed to generate component",
+          );
           process.exit(1);
         }
       }),

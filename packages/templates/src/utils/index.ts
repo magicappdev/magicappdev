@@ -2,7 +2,6 @@
  * Template utilities
  */
 
-import Handlebars from "handlebars";
 import {
   slugify,
   toCamelCase,
@@ -10,6 +9,7 @@ import {
   toPascalCase,
   toSnakeCase,
 } from "@magicappdev/shared";
+import Handlebars from "handlebars";
 
 // Register Handlebars helpers
 Handlebars.registerHelper("camelCase", (str: string) => toCamelCase(str));

@@ -8,18 +8,24 @@ import chalk from "chalk";
 export function header(text: string): void {
   console.log();
   console.log(chalk.bold.cyan("╭─────────────────────────────────────────╮"));
-  console.log(chalk.bold.cyan("│") + chalk.bold.white(` ${text.padEnd(39)} `) + chalk.bold.cyan("│"));
+  console.log(
+    chalk.bold.cyan("│") +
+      chalk.bold.white(` ${text.padEnd(39)} `) +
+      chalk.bold.cyan("│"),
+  );
   console.log(chalk.bold.cyan("╰─────────────────────────────────────────╯"));
   console.log();
 }
 
 /** Print the app logo */
 export function logo(): void {
-  console.log(chalk.bold.magenta(`
+  console.log(
+    chalk.bold.magenta(`
   ╔╦╗╔═╗╔═╗╦╔═╗  ╔═╗╔═╗╔═╗╔╦╗╔═╗╦  ╦
   ║║║╠═╣║ ╦║║    ╠═╣╠═╝╠═╝ ║║║╣ ╚╗╔╝
   ╩ ╩╩ ╩╚═╝╩╚═╝  ╩ ╩╩  ╩  ═╩╝╚═╝ ╚╝
-  `));
+  `),
+  );
 }
 
 /** Print a success message */

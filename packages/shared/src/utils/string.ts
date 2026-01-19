@@ -14,7 +14,7 @@ export function toKebabCase(str: string): string {
 export function toCamelCase(str: string): string {
   return str
     .replace(/[-_\s]+(.)?/g, (_, char) => (char ? char.toUpperCase() : ""))
-    .replace(/^(.)/, (char) => char.toLowerCase());
+    .replace(/^(.)/, char => char.toLowerCase());
 }
 
 /** Convert string to PascalCase */

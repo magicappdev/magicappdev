@@ -2,8 +2,8 @@
  * AI routes for chat and code generation
  */
 
-import { Hono } from "hono";
 import type { AppContext } from "../types";
+import { Hono } from "hono";
 
 export const aiRoutes = new Hono<AppContext>();
 
@@ -26,7 +26,13 @@ interface AiChatRequest {
 // Chat completion
 aiRoutes.post("/chat", async c => {
   const body = await c.req.json<AiChatRequest>();
-  const { messages, provider = "workers-ai", stream = false, temperature = 0.7, maxTokens = 4096 } = body;
+  const {
+    messages,
+    provider = "workers-ai",
+    stream = false,
+    temperature = 0.7,
+    maxTokens = 4096,
+  } = body;
 
   try {
     // Use Workers AI by default
@@ -142,7 +148,10 @@ aiRoutes.post("/embeddings", async c => {
         success: false,
         error: {
           code: "EMBEDDINGS_ERROR",
-          message: error instanceof Error ? error.message : "Embeddings request failed",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Embeddings request failed",
         },
       },
       500,

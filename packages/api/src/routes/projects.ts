@@ -2,8 +2,8 @@
  * Projects routes
  */
 
-import { Hono } from "hono";
 import type { AppContext } from "../types";
+import { Hono } from "hono";
 
 export const projectsRoutes = new Hono<AppContext>();
 

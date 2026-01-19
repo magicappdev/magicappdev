@@ -77,3 +77,6 @@ packages/*/wrangler.local.toml
 .mcp.json
 nul
 packages/api/wrangler.toml
+apps\web\next-env.d.ts
+
+apps/web/.next/
