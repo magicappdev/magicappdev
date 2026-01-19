@@ -81,5 +81,5 @@ todoo:
 - [ ] Add real AI backend logic (currently mock/direct streaming).
 - [ ] Implement actual code generation in CLI.
 - [ ] MCP integration for developer tools.
-- [ ] Update the .devcontainer.
-- [ ] Update Packages to latest versions (migrate).
+- [x] Update the .devcontainer.
+- [x] Update Packages to latest versions (migrate).
