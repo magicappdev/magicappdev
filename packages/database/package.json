@@ -27,7 +27,10 @@
     "build": "tsc -p tsconfig.lib.json",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "typecheck": "tsc --noEmit"
+    "test": "vitest run",
+    "generate": "drizzle-kit generate",
+    "migrate:local": "wrangler d1 migrations apply magicappdev-db --local",
+    "migrate:prod": "wrangler d1 migrations apply magicappdev-db --remote"
   },
   "dependencies": {
     "@magicappdev/shared": "workspace:*",

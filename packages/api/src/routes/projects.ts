@@ -2,7 +2,9 @@
  * Projects routes
  */
 
+import { projects, PROJECT_STATUS, PROJECT_FRAMEWORK } from "@magicappdev/database/schema";
 import type { AppContext } from "../types";
+import { eq, desc } from "drizzle-orm";
 import { Hono } from "hono";
 
 export const projectsRoutes = new Hono<AppContext>();
@@ -11,17 +13,31 @@ export const projectsRoutes = new Hono<AppContext>();
 projectsRoutes.get("/", async c => {
   const page = parseInt(c.req.query("page") || "1");
   const limit = parseInt(c.req.query("limit") || "20");
+  const offset = (page - 1) * limit;
+  const db = c.var.db;
 
-  // TODO: Implement actual database query
+  // TODO: Filter by userId from context once auth middleware is active
+  // const userId = c.var.userId;
+
+  const results = await db.query.projects.findMany({
+    limit,
+    offset,
+    orderBy: [desc(projects.updatedAt)],
+    // where: eq(projects.userId, userId),
+  });
+
+  // Get total count (simplified for now)
+  // const total = await db.select({ count: count() }).from(projects).where(eq(projects.userId, userId));
+
   return c.json({
     success: true,
     data: {
-      data: [],
+      data: results,
       pagination: {
         page,
         limit,
-        total: 0,
-        totalPages: 0,
+        total: results.length, // Placeholder
+        totalPages: 1, // Placeholder
         hasMore: false,
       },
     },
@@ -31,19 +47,25 @@ projectsRoutes.get("/", async c => {
 // Get project by ID
 projectsRoutes.get("/:id", async c => {
   const id = c.req.param("id");
+  const db = c.var.db;
 
-  // TODO: Implement actual database query
+  const project = await db.query.projects.findFirst({
+    where: eq(projects.id, id),
+  });
+
+  if (!project) {
+    return c.json(
+      {
+        success: false,
+        error: { code: "NOT_FOUND", message: "Project not found" },
+      },
+      404,
+    );
+  }
+
   return c.json({
     success: true,
-    data: {
-      id,
-      name: "Sample Project",
-      slug: "sample-project",
-      status: "draft",
-      framework: "expo",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
+    data: project,
   });
 });
 
@@ -53,25 +75,35 @@ projectsRoutes.post("/", async c => {
     name: string;
     description?: string;
     config: Record<string, unknown>;
+    userId: string; // Temporary: explicit userId until auth middleware
   }>();
+  const db = c.var.db;
 
-  // TODO: Implement actual database insert
   const id = crypto.randomUUID();
-  const slug = body.name.toLowerCase().replace(/\s+/g, "-");
+  const slug = body.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+
+  // Use body.userId if provided (for testing), or fallback to context user
+  const userId = body.userId || c.var.userId || "placeholder-user-id";
+
+  const newProject = await db
+    .insert(projects)
+    .values({
+      id,
+      userId,
+      name: body.name,
+      slug,
+      description: body.description,
+      status: "draft",
+      framework: "expo", // Default
+      config: body.config,
+    })
+    .returning()
+    .get();
 
   return c.json(
     {
       success: true,
-      data: {
-        id,
-        name: body.name,
-        slug,
-        description: body.description,
-        status: "draft",
-        config: body.config,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
+      data: newProject,
     },
     201,
   );
@@ -83,27 +115,61 @@ projectsRoutes.patch("/:id", async c => {
   const body = await c.req.json<{
     name?: string;
     description?: string;
-    status?: string;
+    status?: typeof PROJECT_STATUS[number];
     config?: Record<string, unknown>;
   }>();
+  const db = c.var.db;
 
-  // TODO: Implement actual database update
+  // Verify existence
+  const existing = await db.query.projects.findFirst({
+    where: eq(projects.id, id),
+  });
+
+  if (!existing) {
+    return c.json(
+      {
+        success: false,
+        error: { code: "NOT_FOUND", message: "Project not found" },
+      },
+      404,
+    );
+  }
+
+  const updatedProject = await db
+    .update(projects)
+    .set({
+      name: body.name,
+      description: body.description,
+      status: body.status,
+      config: body.config,
+      updatedAt: new Date().toISOString(),
+    })
+    .where(eq(projects.id, id))
+    .returning()
+    .get();
+
   return c.json({
     success: true,
-    data: {
-      id,
-      ...body,
-      updatedAt: new Date().toISOString(),
-    },
+    data: updatedProject,
   });
 });
 
 // Delete project
 projectsRoutes.delete("/:id", async c => {
   const id = c.req.param("id");
+  const db = c.var.db;
 
-  // TODO: Implement actual database delete
-  console.log("Deleting project:", id);
+  const result = await db.delete(projects).where(eq(projects.id, id)).returning().get();
+
+  if (!result) {
+    return c.json(
+      {
+        success: false,
+        error: { code: "NOT_FOUND", message: "Project not found" },
+      },
+      404,
+    );
+  }
 
   return c.json({ success: true, data: { id } });
 });
