@@ -1,80 +1,97 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowRight, Bot, Smartphone, Rocket, Terminal } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800">
+    <main className="min-h-screen bg-background flex flex-col">
       {/* Hero Section */}
-      <div className="container mx-auto px-4 py-20">
-        <div className="text-center">
-          <h1 className="text-5xl md:text-7xl font-bold text-white mb-6">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500">
-              MagicAppDev
-            </span>
-          </h1>
-          <p className="text-xl md:text-2xl text-slate-300 mb-8 max-w-2xl mx-auto">
-            Build apps faster with AI-powered development tools. Create,
-            customize, and deploy web and mobile applications in minutes.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/chat"
-              className="px-8 py-4 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-lg transition-colors"
-            >
-              Start Building
-            </Link>
-            <Link
-              href="/docs"
-              className="px-8 py-4 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg transition-colors"
-            >
-              Documentation
-            </Link>
-          </div>
+      <section className="container mx-auto px-4 py-24 text-center">
+        <Badge variant="secondary" className="mb-4">
+          v0.1.0 Alpha Release
+        </Badge>
+        <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6">
+          Build apps like <span className="text-primary">magic</span>
+        </h1>
+        <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+          The all-in-one platform for fullstack app development. Generate web
+          and mobile apps instantly with AI-powered tools.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Link href="/chat">
+            <Button size="lg" className="w-full sm:w-auto">
+              Start Building <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
+          <Link href="https://github.com/magicappdev/magicappdev">
+            <Button variant="outline" size="lg" className="w-full sm:w-auto">
+              View on GitHub
+            </Button>
+          </Link>
         </div>
-      </div>
+      </section>
 
       {/* Features Section */}
-      <div className="container mx-auto px-4 py-16">
-        <div className="grid md:grid-cols-3 gap-8">
+      <section className="container mx-auto px-4 py-16">
+        <div className="grid md:grid-cols-3 gap-6">
           <FeatureCard
-            title="AI-Powered Generation"
-            description="Describe your app idea in natural language and let AI generate the code for you."
-            icon="🤖"
+            title="AI Generation"
+            description="Turn natural language into production-ready code for components, screens, and full apps."
+            icon={<Bot className="h-8 w-8 text-primary" />}
           />
           <FeatureCard
-            title="Cross-Platform"
-            description="Build for web and mobile from a single codebase using React and React Native."
-            icon="📱"
+            title="Universal Apps"
+            description="Target Web, iOS, and Android from a single monorepo using Next.js and Expo."
+            icon={<Smartphone className="h-8 w-8 text-primary" />}
           />
           <FeatureCard
-            title="Deploy Anywhere"
-            description="One-click deployment to Cloudflare, Vercel, or your own infrastructure."
-            icon="🚀"
+            title="Cloud Native"
+            description="Deploy instantly to Cloudflare Workers and Pages with built-in database support."
+            icon={<Rocket className="h-8 w-8 text-primary" />}
           />
         </div>
-      </div>
+      </section>
 
-      {/* CLI Section */}
-      <div className="container mx-auto px-4 py-16">
-        <div className="bg-slate-800/50 rounded-2xl p-8 md:p-12">
-          <h2 className="text-3xl font-bold text-white mb-4">
-            Get started with the CLI
-          </h2>
-          <p className="text-slate-300 mb-6">
-            Create your first app in seconds with our command-line tool.
-          </p>
-          <div className="bg-slate-900 rounded-lg p-4 font-mono text-sm">
-            <code className="text-green-400">$</code>
-            <code className="text-white">
-              {" "}
-              npx create-magicappdev-app my-app
-            </code>
+      {/* CLI Preview */}
+      <section className="container mx-auto px-4 py-16">
+        <div className="rounded-xl border bg-card text-card-foreground shadow-sm max-w-3xl mx-auto overflow-hidden">
+          <div className="border-b bg-muted/50 p-4 flex items-center justify-between">
+            <div className="flex space-x-2">
+              <div className="h-3 w-3 rounded-full bg-red-500" />
+              <div className="h-3 w-3 rounded-full bg-yellow-500" />
+              <div className="h-3 w-3 rounded-full bg-green-500" />
+            </div>
+            <div className="text-xs text-muted-foreground font-mono">
+              Terminal
+            </div>
+          </div>
+          <div className="p-8 font-mono text-sm">
+            <div className="flex items-center gap-2 mb-4">
+              <Terminal className="h-4 w-4 text-primary" />
+              <span className="text-muted-foreground">$</span>
+              <span className="text-foreground">
+                npx create-magicappdev-app my-app
+              </span>
+            </div>
+            <div className="space-y-2 text-muted-foreground">
+              <p>✨ Creating new MagicAppDev project...</p>
+              <p>📦 Installing dependencies...</p>
+              <p>🚀 Initializing git repository...</p>
+              <p className="text-primary font-bold">
+                ✓ Project created successfully!
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Footer */}
-      <footer className="container mx-auto px-4 py-8 text-center text-slate-400">
-        <p>© 2024 MagicAppDev. Open source and free to use.</p>
+      <footer className="mt-auto border-t bg-muted/20">
+        <div className="container mx-auto px-4 py-8 text-center text-sm text-muted-foreground">
+          <p>© 2024 MagicAppDev. Built with Next.js, Expo, and Cloudflare.</p>
+        </div>
       </footer>
     </main>
   );
@@ -87,13 +104,17 @@ function FeatureCard({
 }: {
   title: string;
   description: string;
-  icon: string;
+  icon: React.ReactNode;
 }) {
   return (
-    <div className="bg-slate-800/50 rounded-xl p-6 hover:bg-slate-800 transition-colors">
-      <div className="text-4xl mb-4">{icon}</div>
-      <h3 className="text-xl font-semibold text-white mb-2">{title}</h3>
-      <p className="text-slate-400">{description}</p>
-    </div>
+    <Card className="hover:bg-accent/50 transition-colors cursor-default">
+      <CardHeader>
+        <div className="mb-4">{icon}</div>
+        <CardTitle>{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-muted-foreground">{description}</p>
+      </CardContent>
+    </Card>
   );
 }
