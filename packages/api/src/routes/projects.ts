@@ -2,7 +2,7 @@
  * Projects routes
  */
 
-import { projects, PROJECT_STATUS, PROJECT_FRAMEWORK } from "@magicappdev/database/schema";
+import { projects, PROJECT_STATUS } from "@magicappdev/database/schema";
 import type { AppContext } from "../types";
 import { eq, desc } from "drizzle-orm";
 import { Hono } from "hono";
