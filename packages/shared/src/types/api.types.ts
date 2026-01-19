@@ -9,7 +9,11 @@ import type {
   Template,
   User,
 } from "./app.types.js";
-import type { Id, PaginatedResponse, PaginationParams } from "./common.types.js";
+import type {
+  Id,
+  PaginatedResponse,
+  PaginationParams,
+} from "./common.types.js";
 
 /** API error response structure */
 export interface ApiErrorResponse {

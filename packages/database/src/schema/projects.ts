@@ -44,7 +44,7 @@ export const projects = sqliteTable("projects", {
 });
 
 /** Project configuration stored as JSON */
-interface ProjectConfig {
+export interface ProjectConfig {
   typescript?: boolean;
   styling?: string;
   stateManagement?: string;

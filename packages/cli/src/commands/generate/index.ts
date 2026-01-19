@@ -8,7 +8,14 @@ import {
   generateScreen,
   screenTemplate,
 } from "@magicappdev/templates";
-import { header, success, error, info, keyValue, newline } from "../../lib/ui.js";
+import {
+  header,
+  success,
+  error,
+  info,
+  keyValue,
+  newline,
+} from "../../lib/ui.js";
 import { withSpinner } from "../../lib/spinner.js";
 import { promptText } from "../../lib/prompts.js";
 import { Command } from "commander";
@@ -132,14 +139,9 @@ export const generateCommand = new Command("generate")
           const result = await withSpinner(
             `Creating ${screenName}...`,
             async () => {
-              return generateScreen(
-                screenName!,
-                screenTemplate,
-                outputDir,
-                {
-                  typescript: options.typescript ?? true,
-                },
-              );
+              return generateScreen(screenName!, screenTemplate, outputDir, {
+                typescript: options.typescript ?? true,
+              });
             },
             { successText: `Created ${screenName}` },
           );

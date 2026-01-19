@@ -2,8 +2,8 @@
  * Projects routes
  */
 
-import { projects, PROJECT_STATUS } from "@magicappdev/database/schema";
-import type { AppContext } from "../types";
+import { projects, PROJECT_STATUS } from "@magicappdev/database";
+import type { AppContext } from "../types.js";
 import { eq, desc } from "drizzle-orm";
 import { Hono } from "hono";
 
@@ -14,7 +14,7 @@ projectsRoutes.get("/", async c => {
   const page = parseInt(c.req.query("page") || "1");
   const limit = parseInt(c.req.query("limit") || "20");
   const offset = (page - 1) * limit;
-  const db = c.var.db;
+  const db = c.var.db as any;
 
   // TODO: Filter by userId from context once auth middleware is active
   // const userId = c.var.userId;
@@ -22,7 +22,7 @@ projectsRoutes.get("/", async c => {
   const results = await db.query.projects.findMany({
     limit,
     offset,
-    orderBy: [desc(projects.updatedAt)],
+    orderBy: [desc((projects as any).updatedAt)],
     // where: eq(projects.userId, userId),
   });
 
@@ -47,10 +47,10 @@ projectsRoutes.get("/", async c => {
 // Get project by ID
 projectsRoutes.get("/:id", async c => {
   const id = c.req.param("id");
-  const db = c.var.db;
+  const db = c.var.db as any;
 
   const project = await db.query.projects.findFirst({
-    where: eq(projects.id, id),
+    where: eq((projects as any).id, id),
   });
 
   if (!project) {
@@ -77,10 +77,13 @@ projectsRoutes.post("/", async c => {
     config: Record<string, unknown>;
     userId: string; // Temporary: explicit userId until auth middleware
   }>();
-  const db = c.var.db;
+  const db = c.var.db as any;
 
   const id = crypto.randomUUID();
-  const slug = body.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  const slug = body.name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
 
   // Use body.userId if provided (for testing), or fallback to context user
   const userId = body.userId || c.var.userId || "placeholder-user-id";
@@ -115,14 +118,14 @@ projectsRoutes.patch("/:id", async c => {
   const body = await c.req.json<{
     name?: string;
     description?: string;
-    status?: typeof PROJECT_STATUS[number];
+    status?: (typeof PROJECT_STATUS)[number];
     config?: Record<string, unknown>;
   }>();
-  const db = c.var.db;
+  const db = c.var.db as any;
 
   // Verify existence
   const existing = await db.query.projects.findFirst({
-    where: eq(projects.id, id),
+    where: eq((projects as any).id, id),
   });
 
   if (!existing) {
@@ -144,7 +147,7 @@ projectsRoutes.patch("/:id", async c => {
       config: body.config,
       updatedAt: new Date().toISOString(),
     })
-    .where(eq(projects.id, id))
+    .where(eq((projects as any).id, id))
     .returning()
     .get();
 
@@ -157,9 +160,13 @@ projectsRoutes.patch("/:id", async c => {
 // Delete project
 projectsRoutes.delete("/:id", async c => {
   const id = c.req.param("id");
-  const db = c.var.db;
+  const db = c.var.db as any;
 
-  const result = await db.delete(projects).where(eq(projects.id, id)).returning().get();
+  const result = await db
+    .delete(projects)
+    .where(eq((projects as any).id, id))
+    .returning()
+    .get();
 
   if (!result) {
     return c.json(

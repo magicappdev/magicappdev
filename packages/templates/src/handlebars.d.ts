@@ -37,7 +37,7 @@ declare module "handlebars" {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function registerHelper(name: string, fn: (...args: any[]) => any): void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   function registerHelper(
     helpers: Record<string, (...args: any[]) => any>,
   ): void;

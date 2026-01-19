@@ -5,7 +5,7 @@
  */
 
 // Schema
-export * from "./schema";
+export * from "./schema/index.js";
 
 // Client
 export {
@@ -14,4 +14,4 @@ export {
   schema,
   type Database,
   type DatabaseConfig,
-} from "./client";
+} from "./client/index.js";

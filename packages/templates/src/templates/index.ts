@@ -16,4 +16,9 @@ export const builtInTemplates = [
 ];
 
 /** Export individual templates */
-export { blankAppTemplate, buttonComponentTemplate, tabsAppTemplate, screenTemplate };
+export {
+  blankAppTemplate,
+  buttonComponentTemplate,
+  tabsAppTemplate,
+  screenTemplate,
+};

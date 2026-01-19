@@ -33,7 +33,7 @@ Develop a comprehensive monorepo-based fullstack app building platform inspired 
   - Database integration.
 - **Shared Packages/Apps**:
   - `@magicappdev/cli`
-  - `@magicappdev/app`
+  - `@magicappdev/mobile`
   - `@magicappdev/web`
   - `@magicappdev/api`
   - `@magicappdev/templates`
@@ -83,3 +83,8 @@ create Agent Skills for this project specific
 .gemini/skills
 
 - Setup Hooks
+
+Update Packages to latest versions (migrate)
+
+update the .devcontainer
+improve and fix it

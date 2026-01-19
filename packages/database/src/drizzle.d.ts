@@ -11,7 +11,7 @@ declare module "drizzle-orm/sqlite-core" {
     default(value: unknown): SQLiteColumnBuilderBase<T>;
     unique(): SQLiteColumnBuilderBase<T>;
     primaryKey(): SQLiteColumnBuilderBase<T>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     references(
       ref: () => any,
       options?: { onDelete?: string },

@@ -2,7 +2,7 @@
  * AI routes for chat and code generation
  */
 
-import type { AppContext } from "../types";
+import type { AppContext } from "../types.js";
 import { Hono } from "hono";
 
 export const aiRoutes = new Hono<AppContext>();

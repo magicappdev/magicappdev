@@ -2,8 +2,8 @@
  * Authentication routes
  */
 
-import { users, sessions } from "@magicappdev/database/schema";
-import type { AppContext } from "../types";
+import { users, sessions } from "@magicappdev/database";
+import type { AppContext } from "../types.js";
 import { eq } from "drizzle-orm";
 import { sign } from "hono/jwt";
 import { Hono } from "hono";
@@ -22,18 +22,21 @@ async function hashPassword(password: string): Promise<string> {
 // Login
 authRoutes.post("/login", async c => {
   const body = await c.req.json<{ email: string; password: string }>();
-  const db = c.var.db;
+  const db = c.var.db as any;
 
   // Find user
   const user = await db.query.users.findFirst({
-    where: eq(users.email, body.email),
+    where: eq((users as any).email, body.email),
   });
 
   if (!user) {
     return c.json(
       {
         success: false,
-        error: { code: "AUTH_INVALID_CREDENTIALS", message: "Invalid credentials" },
+        error: {
+          code: "AUTH_INVALID_CREDENTIALS",
+          message: "Invalid credentials",
+        },
       },
       401,
     );
@@ -45,7 +48,10 @@ authRoutes.post("/login", async c => {
     return c.json(
       {
         success: false,
-        error: { code: "AUTH_INVALID_CREDENTIALS", message: "Invalid credentials" },
+        error: {
+          code: "AUTH_INVALID_CREDENTIALS",
+          message: "Invalid credentials",
+        },
       },
       401,
     );
@@ -53,12 +59,18 @@ authRoutes.post("/login", async c => {
 
   // Generate tokens
   const accessToken = await sign(
-    { sub: user.id, role: "user", exp: Math.floor(Date.now() / 1000) + 60 * 60 }, // 1 hour
+    {
+      sub: user.id,
+      role: "user",
+      exp: Math.floor(Date.now() / 1000) + 60 * 60,
+    }, // 1 hour
     c.env.JWT_SECRET || "secret-fallback-do-not-use-in-prod",
   );
 
   const refreshToken = crypto.randomUUID();
-  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(); // 7 days
+  const expiresAt = new Date(
+    Date.now() + 7 * 24 * 60 * 60 * 1000,
+  ).toISOString(); // 7 days
 
   // Store session
   await db.insert(sessions).values({
@@ -92,11 +104,11 @@ authRoutes.post("/register", async c => {
     password: string;
     name: string;
   }>();
-  const db = c.var.db;
+  const db = c.var.db as any;
 
   // Check if user exists
   const existingUser = await db.query.users.findFirst({
-    where: eq(users.email, body.email),
+    where: eq((users as any).email, body.email),
   });
 
   if (existingUser) {
@@ -132,7 +144,9 @@ authRoutes.post("/register", async c => {
   );
 
   const refreshToken = crypto.randomUUID();
-  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+  const expiresAt = new Date(
+    Date.now() + 7 * 24 * 60 * 60 * 1000,
+  ).toISOString();
 
   // Store session
   await db.insert(sessions).values({
@@ -162,18 +176,21 @@ authRoutes.post("/register", async c => {
 // Refresh token
 authRoutes.post("/refresh", async c => {
   const { refreshToken } = await c.req.json<{ refreshToken: string }>();
-  const db = c.var.db;
+  const db = c.var.db as any;
 
   // Find session
   const session = await db.query.sessions.findFirst({
-    where: eq(sessions.refreshToken, refreshToken),
+    where: eq((sessions as any).refreshToken, refreshToken),
   });
 
   if (!session || new Date(session.expiresAt) < new Date()) {
     return c.json(
       {
         success: false,
-        error: { code: "AUTH_INVALID_TOKEN", message: "Invalid or expired refresh token" },
+        error: {
+          code: "AUTH_INVALID_TOKEN",
+          message: "Invalid or expired refresh token",
+        },
       },
       401,
     );
@@ -181,7 +198,11 @@ authRoutes.post("/refresh", async c => {
 
   // Generate new access token
   const accessToken = await sign(
-    { sub: session.userId, role: "user", exp: Math.floor(Date.now() / 1000) + 60 * 60 },
+    {
+      sub: session.userId,
+      role: "user",
+      exp: Math.floor(Date.now() / 1000) + 60 * 60,
+    },
     c.env.JWT_SECRET || "secret-fallback-do-not-use-in-prod",
   );
 
@@ -198,10 +219,12 @@ authRoutes.post("/refresh", async c => {
 // Logout
 authRoutes.post("/logout", async c => {
   const { refreshToken } = await c.req.json<{ refreshToken: string }>();
-  const db = c.var.db;
+  const db = c.var.db as any;
 
   if (refreshToken) {
-    await db.delete(sessions).where(eq(sessions.refreshToken, refreshToken));
+    await db
+      .delete(sessions)
+      .where(eq((sessions as any).refreshToken, refreshToken));
   }
 
   return c.json({ success: true });
@@ -213,6 +236,9 @@ authRoutes.get("/me", async c => {
   // In a real app, you'd verify the JWT middleware populated c.var.userId
   return c.json({
     success: false,
-    error: { code: "NOT_IMPLEMENTED", message: "Use JWT middleware to get user" },
+    error: {
+      code: "NOT_IMPLEMENTED",
+      message: "Use JWT middleware to get user",
+    },
   });
 });

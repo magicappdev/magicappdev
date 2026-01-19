@@ -9,7 +9,7 @@ export async function apiRequest<T>(
   options: RequestInit = {},
 ): Promise<T> {
   const url = `${API_URL}${path.startsWith("/") ? path : `/${path}`}`;
-  
+
   const headers = {
     "Content-Type": "application/json",
     ...options.headers,

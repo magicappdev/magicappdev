@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import Link from "next/link";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Send, Bot, User, ArrowLeft } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { sendMessage, type AiMessage } from "@/lib/api";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { sendMessage, type AiMessage } from "@/lib/api";
+import Link from "next/link";
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<AiMessage[]>([
@@ -34,7 +34,7 @@ export default function ChatPage() {
 
     const userMessage: AiMessage = { role: "user", content: input };
     const newMessages = [...messages, userMessage];
-    
+
     setMessages(newMessages);
     setInput("");
     setIsLoading(true);
@@ -48,7 +48,8 @@ export default function ChatPage() {
         ...prev,
         {
           role: "assistant",
-          content: "Sorry, I encountered an error while processing your request. Please try again.",
+          content:
+            "Sorry, I encountered an error while processing your request. Please try again.",
         },
       ]);
     } finally {
@@ -67,17 +68,13 @@ export default function ChatPage() {
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             </Link>
-            <span className="text-xl font-bold text-primary">
-              MagicAppDev
-            </span>
+            <span className="text-xl font-bold text-primary">MagicAppDev</span>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm">
               New Project
             </Button>
-            <Button size="sm">
-              Sign In
-            </Button>
+            <Button size="sm">Sign In</Button>
           </div>
         </div>
       </header>
@@ -96,10 +93,12 @@ export default function ChatPage() {
                 >
                   {message.role === "assistant" && (
                     <Avatar className="h-8 w-8 bg-primary/10">
-                      <AvatarFallback><Bot className="h-5 w-5 text-primary" /></AvatarFallback>
+                      <AvatarFallback>
+                        <Bot className="h-5 w-5 text-primary" />
+                      </AvatarFallback>
                     </Avatar>
                   )}
-                  
+
                   <div
                     className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${
                       message.role === "user"
@@ -112,7 +111,9 @@ export default function ChatPage() {
 
                   {message.role === "user" && (
                     <Avatar className="h-8 w-8 bg-secondary">
-                      <AvatarFallback><User className="h-5 w-5" /></AvatarFallback>
+                      <AvatarFallback>
+                        <User className="h-5 w-5" />
+                      </AvatarFallback>
                     </Avatar>
                   )}
                 </div>
@@ -120,7 +121,9 @@ export default function ChatPage() {
               {isLoading && (
                 <div className="flex gap-3 justify-start">
                   <Avatar className="h-8 w-8 bg-primary/10">
-                    <AvatarFallback><Bot className="h-5 w-5 text-primary" /></AvatarFallback>
+                    <AvatarFallback>
+                      <Bot className="h-5 w-5 text-primary" />
+                    </AvatarFallback>
                   </Avatar>
                   <div className="bg-muted rounded-2xl px-4 py-3">
                     <div className="flex space-x-2">
@@ -156,4 +159,3 @@ export default function ChatPage() {
     </div>
   );
 }
-

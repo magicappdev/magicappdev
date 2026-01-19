@@ -2,17 +2,16 @@
  * Database schema exports
  */
 
-// Users
-export { users, type NewUser, type User } from "./users";
+import { sessions } from "./sessions.js";
+import { projects } from "./projects.js";
+import { users } from "./users.js";
 
-// Projects
-export {
-  PROJECT_FRAMEWORK,
-  PROJECT_STATUS,
+export const schema = {
+  users,
   projects,
-  type NewProject,
-  type Project,
-} from "./projects";
+  sessions,
+};
 
-// Sessions
-export { sessions, type NewSession, type Session } from "./sessions";
+export * from "./users.js";
+export * from "./projects.js";
+export * from "./sessions.js";

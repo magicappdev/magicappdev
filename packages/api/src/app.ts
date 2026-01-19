@@ -3,10 +3,10 @@
  */
 
 import { createDatabase } from "@magicappdev/database";
-import { projectsRoutes } from "./routes/projects";
-import { authRoutes } from "./routes/auth";
-import type { AppContext } from "./types";
-import { aiRoutes } from "./routes/ai";
+import { projectsRoutes } from "./routes/projects.js";
+import { authRoutes } from "./routes/auth.js";
+import type { AppContext } from "./types.js";
+import { aiRoutes } from "./routes/ai.js";
 import { cors } from "hono/cors";
 import { Hono } from "hono";
 

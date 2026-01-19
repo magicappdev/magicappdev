@@ -4,10 +4,10 @@
   "private": true,
   "scripts": {
     "build": "next build",
-    "pages:build": "npx @cloudflare/next-on-pages",
     "dev": "next dev -p 3100",
     "lint": "eslint . --ignore-pattern '*.d.ts'",
     "lint:fix": "eslint --fix .",
+    "pages:build": "npx @cloudflare/next-on-pages",
     "start": "next start",
     "typecheck": "tsc --noEmit"
   },
