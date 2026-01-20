@@ -19,10 +19,28 @@ export function createApp() {
   app.use(
     "*",
     cors({
-      origin: ["http://localhost:3000", "https://*.magicappdev.workers.dev"],
+      origin: origin => {
+        const allowedOrigins = [
+          "http://localhost:3000",
+          "http://localhost:3100",
+          "https://app.magicappdev.workers.dev",
+        ];
+
+        if (!origin) return allowedOrigins[2];
+
+        if (
+          allowedOrigins.includes(origin) ||
+          origin.endsWith(".magicappdev.workers.dev")
+        ) {
+          return origin;
+        }
+
+        return allowedOrigins[2]; // Default to production
+      },
       allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
       allowHeaders: ["Content-Type", "Authorization"],
       credentials: true,
+      maxAge: 86400,
     }),
   );
 
@@ -47,7 +65,8 @@ export function createApp() {
     return c.json({ status: "healthy" });
   });
 
-  // Mount routes
+  // Auth routes
+  app.use("/auth/me", authMiddleware);
   app.route("/auth", authRoutes);
 
   // Protected routes
@@ -65,10 +84,8 @@ export function createApp() {
         success: false,
         error: {
           code: "INTERNAL_ERROR",
-          message:
-            c.env.ENVIRONMENT === "development"
-              ? err.message
-              : "An internal error occurred",
+          message: err.message || "An internal error occurred",
+          stack: c.env.ENVIRONMENT === "development" ? err.stack : undefined,
         },
       },
       500,
