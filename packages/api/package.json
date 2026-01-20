@@ -7,7 +7,7 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc -p tsconfig.lib.json",
-    "deploy": "wrangler deploy -c wrangler.toml",
+    "deploy": "wrangler deploy -c wrangler.toml --env-file .env",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "vitest run"

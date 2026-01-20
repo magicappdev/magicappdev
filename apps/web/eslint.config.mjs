@@ -1,7 +1,7 @@
-import css from "@eslint/css";
-import prettier from "eslint-config-prettier/flat";
 import { defineConfig, globalIgnores } from "eslint/config";
+import prettier from "eslint-config-prettier/flat";
 import tseslint from "typescript-eslint";
+import css from "@eslint/css";
 
 const eslintConfig = defineConfig([
   tseslint.configs.recommended,
@@ -9,7 +9,7 @@ const eslintConfig = defineConfig([
     files: ["**/*.ts", "**/*.tsx"],
     ignores: ["**/*.test.ts", "**/*.test.tsx", "*.d.ts", ".next/**"],
     rules: {
-      "@typescript-eslint/no-explicit-any": "warn"
+      "@typescript-eslint/no-explicit-any": "warn",
     },
   },
   {
