@@ -26,9 +26,10 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install
+      - run: npx nx affected -t lint test build
 
-      - name: Nx Sync Check
-        run: pnpm nx sync:check
+      - run: npx nx fix-ci
+        if: always()
 
       - name: Lint
         run: pnpm nx run-many -t lint --all

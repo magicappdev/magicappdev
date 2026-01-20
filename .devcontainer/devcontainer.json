@@ -178,6 +178,12 @@
       "onAutoForward": "notify"
     }
   },
+  "containerEnv": {
+    "NODE_ENV": "development",
+    "PNPM_HOME": "/root/.local/share/pnpm",
+    "PATH": "/root/.local/share/pnpm:${PATH}"
+  },
+
   "remoteUser": "root",
   "containerUser": "root",
   "postCreateCommand": "bash .devcontainer/setup.sh",
