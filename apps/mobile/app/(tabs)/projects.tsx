@@ -4,20 +4,45 @@ import {
   View,
   FlatList,
   TouchableOpacity,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
+import React, { useState, useEffect } from "react";
+import { api, type Project } from "../../lib/api";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
-
-interface Project {
-  id: string;
-  name: string;
-  description: string;
-  status: string;
-  updatedAt: string;
-}
 
 export default function ProjectsScreen() {
-  const [projects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    loadProjects();
+  }, []);
+
+  const loadProjects = async () => {
+    try {
+      setIsLoading(true);
+      const data = await api.getProjects();
+      setProjects(data);
+    } catch (error) {
+      console.error("Failed to load projects:", error);
+      Alert.alert("Error", "Failed to load projects. Please try again later.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCreateProject = async () => {
+    // For now, just create a project with a random name since we don't have a prompt dialog yet
+    const name = `Project ${projects.length + 1}`;
+    try {
+      const newProject = await api.createProject({ name });
+      setProjects([newProject, ...projects]);
+    } catch (error) {
+      console.error("Failed to create project:", error);
+      Alert.alert("Error", "Failed to create project.");
+    }
+  };
 
   const renderProject = ({ item }: { item: Project }) => (
     <TouchableOpacity style={styles.projectCard}>
@@ -27,15 +52,23 @@ export default function ProjectsScreen() {
       <View style={styles.projectInfo}>
         <Text style={styles.projectName}>{item.name}</Text>
         <Text style={styles.projectDescription} numberOfLines={1}>
-          {item.description}
+          {item.description || "No description"}
         </Text>
         <Text style={styles.projectMeta}>
-          {item.status} • {item.updatedAt}
+          {item.status} • {new Date(item.updatedAt).toLocaleDateString()}
         </Text>
       </View>
       <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />
     </TouchableOpacity>
   );
+
+  if (isLoading && projects.length === 0) {
+    return (
+      <View style={styles.centerContainer}>
+        <ActivityIndicator size="large" color="#007AFF" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -44,6 +77,8 @@ export default function ProjectsScreen() {
         renderItem={renderProject}
         keyExtractor={item => item.id}
         contentContainerStyle={styles.listContent}
+        onRefresh={loadProjects}
+        refreshing={isLoading}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Ionicons name="folder-open-outline" size={64} color="#D1D1D6" />
@@ -51,7 +86,10 @@ export default function ProjectsScreen() {
             <Text style={styles.emptyText}>
               Your generated projects will appear here.
             </Text>
-            <TouchableOpacity style={styles.createButton}>
+            <TouchableOpacity
+              style={styles.createButton}
+              onPress={handleCreateProject}
+            >
               <Text style={styles.createButtonText}>Create New Project</Text>
             </TouchableOpacity>
           </View>
@@ -66,6 +104,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F2F2F7",
   },
+  centerContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F2F2F7",
+  },
   listContent: {
     padding: 16,
     flexGrow: 1,
@@ -77,7 +121,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 12,
-    boxShadow: "0px 1px 2px rgba(0, 0, 0, 0.05)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
     elevation: 2,
   },
   projectIcon: {
