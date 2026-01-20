@@ -1,5 +1,5 @@
+import { streamMessage, type AiMessage } from "@/lib/api";
 import { Typography } from "@/components/ui/Typography";
-import { sendMessage, type AiMessage } from "@/lib/api";
 import { Bot, Plus, Send, User } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
@@ -37,8 +37,20 @@ export default function ChatPage() {
     setIsLoading(true);
 
     try {
-      const response = await sendMessage(newMessages);
-      setMessages(prev => [...prev, response]);
+      // Add empty assistant message to be filled by stream
+      const assistantMessage: AiMessage = { role: "assistant", content: "" };
+      setMessages(prev => [...prev, assistantMessage]);
+
+      let fullContent = "";
+      for await (const chunk of streamMessage(newMessages)) {
+        fullContent += chunk;
+        setMessages(prev => {
+          const updated = [...prev];
+          const lastIndex = updated.length - 1;
+          updated[lastIndex] = { role: "assistant", content: fullContent };
+          return updated;
+        });
+      }
     } catch (error) {
       console.error("Chat error:", error);
       setMessages(prev => [

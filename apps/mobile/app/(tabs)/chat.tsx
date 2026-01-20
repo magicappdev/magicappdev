@@ -9,6 +9,8 @@ import {
   Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { type AiMessageRole } from "@magicappdev/shared";
+import { api, type AiMessage } from "../../lib/api";
 import React, { useState, useRef } from "react";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -31,7 +33,7 @@ export default function ChatScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
     const userMessage: Message = {
@@ -40,20 +42,48 @@ export default function ChatScreen() {
       content: input,
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
     setInput("");
     setIsLoading(true);
 
-    // Simulate AI response
-    setTimeout(() => {
+    try {
+      const assistantId = (Date.now() + 1).toString();
       const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: assistantId,
         role: "assistant",
-        content: `I understand you want to build: "${input}".\n\nI'll start by analyzing your requirements and suggesting a project structure.`,
+        content: "",
       };
       setMessages(prev => [...prev, assistantMessage]);
+
+      const apiMessages: AiMessage[] = newMessages.map(m => ({
+        role: m.role as AiMessageRole,
+        content: m.content,
+      }));
+
+      let fullContent = "";
+      for await (const chunk of api.streamMessage(apiMessages)) {
+        fullContent += chunk;
+        setMessages(prev => {
+          const updated = [...prev];
+          const lastIndex = updated.length - 1;
+          updated[lastIndex] = { ...updated[lastIndex], content: fullContent };
+          return updated;
+        });
+      }
+    } catch (error) {
+      console.error("Chat error:", error);
+      setMessages(prev => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          role: "assistant",
+          content: "Sorry, I encountered an error connecting to the API.",
+        },
+      ]);
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   const renderMessage = ({ item }: { item: Message }) => (
