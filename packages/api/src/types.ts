@@ -26,6 +26,8 @@ export interface Env {
   GITHUB_CLIENT_ID?: string;
   /** GitHub Client Secret */
   GITHUB_CLIENT_SECRET?: string;
+  /** GitHub Redirect URI */
+  GITHUB_REDIRECT_URI?: string;
   /** Frontend URL for web redirects */
   FRONTEND_URL?: string;
   /** Mobile redirect URI for deep linking */

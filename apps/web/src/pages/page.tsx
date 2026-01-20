@@ -9,7 +9,7 @@ export default function HomePage() {
     <div className="space-y-12">
       {/* Hero Section */}
       <section className="relative overflow-hidden rounded-3xl bg-surface-variant/30 border border-outline/10 p-8 md:p-12 text-center">
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-linear-to-b from-primary/5 to-transparent pointer-events-none" />
 
         <div className="relative z-10 flex flex-col items-center space-y-6 max-w-4xl mx-auto">
           <span className="inline-flex items-center px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium border border-primary/20">
@@ -18,7 +18,7 @@ export default function HomePage() {
 
           <Typography variant="display" className="text-foreground">
             Build apps like{" "}
-            <span className="text-primary bg-clip-text text-transparent bg-gradient-to-r from-primary to-tertiary">
+            <span className="text-primary bg-clip-text bg-linear-to-r from-primary to-tertiary">
               magic
             </span>
           </Typography>

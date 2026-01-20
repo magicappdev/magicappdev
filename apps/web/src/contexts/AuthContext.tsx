@@ -6,6 +6,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   loginWithGitHub: () => void;
+  login: (accessToken: string, refreshToken: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -15,26 +16,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const fetchUser = async (token: string) => {
+    api.setToken(token);
+    try {
+      const userData = await api.getCurrentUser();
+      setUser(userData);
+      return userData;
+    } catch (error) {
+      console.error("Fetch user failed:", error);
+      throw error;
+    }
+  };
+
   useEffect(() => {
-    // Initial load: check if we have tokens in localStorage
     const accessToken = localStorage.getItem("access_token");
     const refreshToken = localStorage.getItem("refresh_token");
 
     if (accessToken) {
-      api.setToken(accessToken);
-      api
-        .getCurrentUser()
-        .then(setUser)
-        .catch(async () => {
-          // Token might be expired, try refresh
-          if (refreshToken) {
+      fetchUser(accessToken)
+        .catch(async error => {
+          if (
+            refreshToken &&
+            error instanceof Error &&
+            (error.message.includes("401") ||
+              error.message.includes("Unauthorized"))
+          ) {
             try {
               const newToken = await api.refresh(refreshToken);
               localStorage.setItem("access_token", newToken);
-              const userData = await api.getCurrentUser();
-              setUser(userData);
+              await fetchUser(newToken);
             } catch {
-              // Refresh failed, clear everything
               handleLogout();
             }
           } else {
@@ -49,6 +60,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loginWithGitHub = () => {
     window.location.href = api.getGitHubLoginUrl("web");
+  };
+
+  const login = async (accessToken: string, refreshToken: string) => {
+    setIsLoading(true);
+    localStorage.setItem("access_token", accessToken);
+    localStorage.setItem("refresh_token", refreshToken);
+    try {
+      await fetchUser(accessToken);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -68,7 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, isLoading, loginWithGitHub, logout: handleLogout }}
+      value={{ user, isLoading, loginWithGitHub, login, logout: handleLogout }}
     >
       {children}
     </AuthContext.Provider>

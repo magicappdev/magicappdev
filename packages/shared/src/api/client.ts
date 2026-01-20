@@ -75,7 +75,9 @@ export class ApiClient {
   async getCurrentUser(): Promise<User> {
     const response = await this.request<ApiResponse<User>>("/auth/me");
     if (!response.success) {
-      throw new Error(response.error.message);
+      throw new Error(
+        response.error?.message || "Failed to fetch user profile",
+      );
     }
     return response.data;
   }

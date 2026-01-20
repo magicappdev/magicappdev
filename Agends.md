@@ -17,30 +17,14 @@ Database utilities with Drizzle ORM for Cloudflare D1.
 - **ORM**: Drizzle ORM
 - **Database**: Cloudflare D1
 - **Schema Management**: Drizzle Kit
-
-#### Dependencies
-
-- `@magicappdev/shared`: Shared utilities and types
-- `drizzle-orm`: ORM for database operations
-- `tslib`: Runtime library for TypeScript
-
-#### Dev Dependencies
-
-- `@cloudflare/workers-types`: Type definitions for Cloudflare Workers
-- `@types/node`: Type definitions for Node.js
-- `drizzle-kit`: CLI for Drizzle ORM
-- `typescript`: TypeScript compiler
+- **Tables**: `users`, `accounts` (OAuth), `sessions`, `profiles`, `projects`
 
 #### Usage Guidelines
 
 - Use Drizzle ORM for database operations.
-- Ensure proper schema management using Drizzle Kit.
-- Integrate with Cloudflare D1 for database storage.
-
-#### Integration Points
-
-- **Shared Package**: Utilizes shared utilities and types from `@magicappdev/shared`.
-- **Cloudflare Workers**: Designed to work seamlessly with Cloudflare Workers.
+- Ensure proper schema management using Drizzle Kit (`pnpm generate`).
+- Use `migrate:prod` to apply migrations to Cloudflare D1.
+- Relations are currently handled manually via joined queries in the API to ensure stability in the Worker environment.
 
 ### 2. @magicappdev/shared
 
@@ -50,32 +34,32 @@ Shared utilities, types, and constants for MagicAppDev.
 
 #### Architecture
 
-- **Utilities**: Logger, validation, string manipulation
-- **Types**: API types, app types, CLI types, common types
-- **Constants**: Defaults, errors, paths
-- **Schemas**: AI schema, auth schema, config schema
-- **Errors**: Base error handling
-
-#### Dependencies
-
-- `zod`: Schema validation library
-- `tslib`: Runtime library for TypeScript
-
-#### Dev Dependencies
-
-- `typescript`: TypeScript compiler
-- `vitest`: Testing framework
-
-#### Usage Guidelines
-
-- Use shared utilities for consistent functionality across packages.
-- Leverage shared types and constants for maintainability.
-- Ensure proper error handling using the base error class.
+- **API Client**: Unified `ApiClient` with support for JWT authentication, token refreshing, and Server-Sent Events (SSE) streaming.
+- **Types**: Unified application types (User, Project, AiMessage) and API request/response contracts.
+- **Utilities**: Logger, validation, and standard string manipulation tools.
 
 #### Integration Points
 
-- **Database Package**: Provides shared utilities and types for database operations.
-- **Templates Package**: Provides shared utilities and types for template generation.
+- **Web & Mobile**: Both applications use the shared `ApiClient` for all backend communication.
+
+### 3. @magicappdev/api
+
+#### Description
+
+Backend API built with Hono and deployed on Cloudflare Workers.
+
+#### Architecture
+
+- **Authentication**: GitHub OAuth2 flow with JWT session management.
+- **AI Gateway**: Routing through Cloudflare AI Gateway for optimized model access and usage tracking.
+- **Security**: Robust CORS configuration and `authMiddleware` for protecting sensitive endpoints.
+
+### 4. CI/CD & Infrastructure
+
+- **GitHub Actions**:
+  - `ci.yml`: Automated testing, linting, and typechecking.
+  - `deploy.yml`: Automatic deployment to Cloudflare on merge to `main`.
+- **Nx Sync**: Workspace-wide synchronization of TypeScript project references.
 
 ### 3. @magicappdev/templates
 

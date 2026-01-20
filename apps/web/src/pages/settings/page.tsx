@@ -1,10 +1,15 @@
 import { User, Bell, Shield, Globe, Zap, LucideIcon } from "lucide-react";
 import { Typography } from "@/components/ui/Typography";
+import { useAuth } from "../../contexts/AuthContext";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
 
 export default function SettingsPage() {
+  const { user } = useAuth();
+
+  if (!user) return null;
+
   return (
     <div className="space-y-8">
       <div>
@@ -32,20 +37,24 @@ export default function SettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Full Name</label>
-                <Input placeholder="John Doe" defaultValue="Magic User" />
+                <Input placeholder="John Doe" defaultValue={user.name} />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Email Address</label>
                 <Input
                   placeholder="user@example.com"
-                  defaultValue="user@magicappdev.com"
+                  defaultValue={user.email}
+                  disabled
                 />
               </div>
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Bio</label>
-              <Input placeholder="Tell us about yourself" />
+              <Input
+                placeholder="Tell us about yourself"
+                defaultValue={user.profile?.bio || ""}
+              />
             </div>
 
             <div className="flex justify-end">
