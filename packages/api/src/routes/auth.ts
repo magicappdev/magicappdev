@@ -2,70 +2,199 @@
  * Authentication routes
  */
 
-import { users, sessions } from "@magicappdev/database";
+import { accounts, profiles, sessions, users } from "@magicappdev/database";
 import type { AppContext } from "../types.js";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { sign } from "hono/jwt";
 import { Hono } from "hono";
 
 export const authRoutes = new Hono<AppContext>();
 
-// Helper for hashing passwords (using Web Crypto API)
-async function hashPassword(password: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+// Types for GitHub API responses
+interface GitHubUser {
+  id: number;
+  login: string;
+  name: string;
+  email: string | null;
+  avatar_url: string;
+  bio: string | null;
+  location: string | null;
+  blog: string | null;
 }
 
-// Login
-authRoutes.post("/login", async c => {
-  const body = await c.req.json<{ email: string; password: string }>();
+interface GitHubEmail {
+  email: string;
+  primary: boolean;
+  verified: boolean;
+  visibility: string | null;
+}
+
+// Login - Redirect to GitHub
+authRoutes.get("/login/github", c => {
+  const clientId = c.env.GITHUB_CLIENT_ID;
+  const redirectUri = new URL(c.req.url).origin + "/auth/callback/github";
+
+  if (!clientId) {
+    return c.json({ error: "Missing GITHUB_CLIENT_ID" }, 500);
+  }
+
+  const params = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    scope: "user:email read:user",
+  });
+
+  return c.redirect(
+    `https://github.com/login/oauth/authorize?${params.toString()}`,
+  );
+});
+
+// Callback - Handle GitHub response
+authRoutes.get("/callback/github", async c => {
+  const code = c.req.query("code");
+  const error = c.req.query("error");
+
+  if (error || !code) {
+    return c.json({ error: error || "No code provided" }, 400);
+  }
+
+  const clientId = c.env.GITHUB_CLIENT_ID;
+  const clientSecret = c.env.GITHUB_CLIENT_SECRET;
+
+  // Dynamic redirect URI verification
+  const redirectUri = new URL(c.req.url).origin + "/auth/callback/github";
+
+  if (!clientId || !clientSecret) {
+    return c.json({ error: "Missing GitHub credentials" }, 500);
+  }
+
+  // 1. Exchange code for access token
+  const tokenResponse = await fetch(
+    "https://github.com/login/oauth/access_token",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        client_id: clientId,
+        client_secret: clientSecret,
+        code,
+        redirect_uri: redirectUri,
+      }),
+    },
+  );
+
+  const tokenData = (await tokenResponse.json()) as {
+    access_token: string;
+    error?: string;
+  };
+
+  if (tokenData.error || !tokenData.access_token) {
+    return c.json(
+      { error: tokenData.error || "Failed to get access token" },
+      400,
+    );
+  }
+
+  // 2. Fetch User Info
+  const userResponse = await fetch("https://api.github.com/user", {
+    headers: {
+      Authorization: `Bearer ${tokenData.access_token}`,
+      "User-Agent": "MagicAppDev",
+    },
+  });
+
+  const githubUser = (await userResponse.json()) as GitHubUser;
+
+  // 3. Fetch Email if missing
+  let email = githubUser.email;
+  if (!email) {
+    const emailsResponse = await fetch("https://api.github.com/user/emails", {
+      headers: {
+        Authorization: `Bearer ${tokenData.access_token}`,
+        "User-Agent": "MagicAppDev",
+      },
+    });
+    const emails = (await emailsResponse.json()) as GitHubEmail[];
+    const primary = emails.find((e: GitHubEmail) => e.primary && e.verified);
+    if (primary) email = primary.email;
+  }
+
+  if (!email) {
+    return c.json({ error: "No verified email found" }, 400);
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = c.var.db as any;
 
-  // Find user
-  const user = await db.query.users.findFirst({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    where: eq((users as any).email, body.email),
+  // 4. Find or Create User
+  // Check if account exists
+  const existingAccount = await db.query.accounts.findFirst({
+    // Using manual query for composite handling simulation if needed, but simple filtering works
+
+    where: and(
+      eq((accounts as any).provider, "github"),
+      eq((accounts as any).providerAccountId, githubUser.id.toString()),
+    ),
   });
 
-  if (!user) {
-    return c.json(
-      {
-        success: false,
-        error: {
-          code: "AUTH_INVALID_CREDENTIALS",
-          message: "Invalid credentials",
-        },
-      },
-      401,
-    );
+  let userId = "";
+
+  if (existingAccount) {
+    userId = existingAccount.userId;
+    // Update tokens?
+  } else {
+    // Check if user with email exists (link account)
+    const existingUser = await db.query.users.findFirst({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      where: eq((users as any).email, email),
+    });
+
+    if (existingUser) {
+      userId = existingUser.id;
+    } else {
+      // Create new user
+      userId = crypto.randomUUID();
+      await db.insert(users).values({
+        id: userId,
+        email,
+        name: githubUser.name || githubUser.login,
+        avatarUrl: githubUser.avatar_url,
+        emailVerified: true,
+        role: "user",
+      });
+
+      // Create profile
+      await db.insert(profiles).values({
+        id: crypto.randomUUID(),
+        userId,
+        bio: githubUser.bio,
+        location: githubUser.location,
+        website: githubUser.blog,
+        githubUsername: githubUser.login,
+      });
+    }
+
+    // Link Account
+    await db.insert(accounts).values({
+      id: crypto.randomUUID(),
+      userId,
+      type: "oauth",
+      provider: "github",
+      providerAccountId: githubUser.id.toString(),
+      access_token: tokenData.access_token,
+    });
   }
 
-  // Verify password
-  const hashedPassword = await hashPassword(body.password);
-  if (user.passwordHash !== hashedPassword) {
-    return c.json(
-      {
-        success: false,
-        error: {
-          code: "AUTH_INVALID_CREDENTIALS",
-          message: "Invalid credentials",
-        },
-      },
-      401,
-    );
-  }
-
-  // Generate tokens
+  // 5. Create Session
   const accessToken = await sign(
     {
-      sub: user.id,
+      sub: userId,
       role: "user",
-      exp: Math.floor(Date.now() / 1000) + 60 * 60,
-    }, // 1 hour
+      exp: Math.floor(Date.now() / 1000) + 60 * 60, // 1 hour
+    },
     c.env.JWT_SECRET || "secret-fallback-do-not-use-in-prod",
   );
 
@@ -74,179 +203,49 @@ authRoutes.post("/login", async c => {
     Date.now() + 7 * 24 * 60 * 60 * 1000,
   ).toISOString(); // 7 days
 
-  // Store session
   await db.insert(sessions).values({
     id: crypto.randomUUID(),
-    userId: user.id,
+    userId,
     refreshToken,
     expiresAt,
     userAgent: c.req.header("User-Agent"),
     ipAddress: c.req.header("CF-Connecting-IP"),
   });
 
-  return c.json({
-    success: true,
-    data: {
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-      },
-      accessToken,
-      refreshToken,
-      expiresAt,
-    },
-  });
-});
+  // Redirect to frontend with tokens
+  // In production, use environment variable for frontend URL
+  const frontendUrl =
+    c.env.ENVIRONMENT === "development"
+      ? "http://localhost:3000"
+      : "https://magicappdev.pages.dev"; // Placeholder
 
-// Register
-authRoutes.post("/register", async c => {
-  const body = await c.req.json<{
-    email: string;
-    password: string;
-    name: string;
-  }>();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = c.var.db as any;
-
-  // Check if user exists
-  const existingUser = await db.query.users.findFirst({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    where: eq((users as any).email, body.email),
-  });
-
-  if (existingUser) {
-    return c.json(
-      {
-        success: false,
-        error: { code: "AUTH_EMAIL_EXISTS", message: "Email already exists" },
-      },
-      400,
-    );
-  }
-
-  // Hash password
-  const passwordHash = await hashPassword(body.password);
-  const userId = crypto.randomUUID();
-
-  // Create user
-  const newUser = await db
-    .insert(users)
-    .values({
-      id: userId,
-      email: body.email,
-      name: body.name,
-      passwordHash,
-    })
-    .returning()
-    .get();
-
-  // Generate tokens
-  const accessToken = await sign(
-    { sub: userId, role: "user", exp: Math.floor(Date.now() / 1000) + 60 * 60 },
-    c.env.JWT_SECRET || "secret-fallback-do-not-use-in-prod",
+  // Using query params for simplicity; in prod use cookies or secure postMessage
+  return c.redirect(
+    `${frontendUrl}/auth/callback?accessToken=${accessToken}&refreshToken=${refreshToken}`,
   );
-
-  const refreshToken = crypto.randomUUID();
-  const expiresAt = new Date(
-    Date.now() + 7 * 24 * 60 * 60 * 1000,
-  ).toISOString();
-
-  // Store session
-  await db.insert(sessions).values({
-    id: crypto.randomUUID(),
-    userId: userId,
-    refreshToken,
-    expiresAt,
-    userAgent: c.req.header("User-Agent"),
-    ipAddress: c.req.header("CF-Connecting-IP"),
-  });
-
-  return c.json({
-    success: true,
-    data: {
-      user: {
-        id: newUser.id,
-        email: newUser.email,
-        name: newUser.name,
-      },
-      accessToken,
-      refreshToken,
-      expiresAt,
-    },
-  });
 });
 
-// Refresh token
-authRoutes.post("/refresh", async c => {
-  const { refreshToken } = await c.req.json<{ refreshToken: string }>();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = c.var.db as any;
-
-  // Find session
-  const session = await db.query.sessions.findFirst({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    where: eq((sessions as any).refreshToken, refreshToken),
-  });
-
-  if (!session || new Date(session.expiresAt) < new Date()) {
-    return c.json(
-      {
-        success: false,
-        error: {
-          code: "AUTH_INVALID_TOKEN",
-          message: "Invalid or expired refresh token",
-        },
-      },
-      401,
-    );
-  }
-
-  // Generate new access token
-  const accessToken = await sign(
-    {
-      sub: session.userId,
-      role: "user",
-      exp: Math.floor(Date.now() / 1000) + 60 * 60,
-    },
-    c.env.JWT_SECRET || "secret-fallback-do-not-use-in-prod",
-  );
-
-  return c.json({
-    success: true,
-    data: {
-      accessToken,
-      refreshToken: session.refreshToken,
-      expiresAt: session.expiresAt,
-    },
-  });
-});
-
-// Logout
-authRoutes.post("/logout", async c => {
-  const { refreshToken } = await c.req.json<{ refreshToken: string }>();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = c.var.db as any;
-
-  if (refreshToken) {
-    await db
-      .delete(sessions)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .where(eq((sessions as any).refreshToken, refreshToken));
-  }
-
-  return c.json({ success: true });
-});
-
-// Get current user
+// Get current user (Protected)
 authRoutes.get("/me", async c => {
-  // Middleware should handle this, but placeholder for now
-  // In a real app, you'd verify the JWT middleware populated c.var.userId
-  return c.json({
-    success: false,
-    error: {
-      code: "NOT_IMPLEMENTED",
-      message: "Use JWT middleware to get user",
+  const userId = c.var.userId;
+  if (!userId) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = c.var.db as any;
+
+  const user = await db.query.users.findFirst({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    where: eq((users as any).id, userId),
+    with: {
+      profile: true,
     },
   });
+
+  if (!user) {
+    return c.json({ error: "User not found" }, 404);
+  }
+
+  return c.json({ data: user });
 });

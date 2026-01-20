@@ -10,5 +10,5 @@ export {
   schema,
   type Database,
   type DatabaseConfig,
-} from "./client/index.js";
+} from "./client/index";
 //# sourceMappingURL=index.d.ts.map

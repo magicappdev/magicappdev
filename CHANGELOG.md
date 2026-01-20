@@ -1,0 +1,37 @@
+# 0.0.0 (2026-01-20)
+
+### Bug Fixes
+
+- **api:** resolve linting errors and remove redundant declaration ([ed9f848](https://github.com/magicappdev/magicappdev/commit/ed9f848252a99f97128dd50da60ae9a61756d663))
+- **build:** resolve lint and dependency errors in api and mobile ([fdf5309](https://github.com/magicappdev/magicappdev/commit/fdf530961812f77734f37406da4def590a6f8fb0))
+- **mobile:** configure metro for monorepo and fix dependencies ([15e2ab2](https://github.com/magicappdev/magicappdev/commit/15e2ab25db3e225e7e4795ed7143c04d09786ffa))
+- **mobile:** resolve bundler issues and config linting ([85140c9](https://github.com/magicappdev/magicappdev/commit/85140c902e4a89fe364cac02e213022167cf0d5c))
+- resolve linting errors across workspace ([bdc3faa](https://github.com/magicappdev/magicappdev/commit/bdc3faa22e6e0a0a33e69ba849b3479b1d2bc513))
+- **web:** fix open-next build by removing conflicting package and adding config ([127e2f9](https://github.com/magicappdev/magicappdev/commit/127e2f93100150ad3314371eff1e17f33ce08415))
+- **web:** remove unused import in chat page ([f064492](https://github.com/magicappdev/magicappdev/commit/f064492b9cd6781f3176865ab699db304c22b69a))
+- **web:** resolve eslint config error and modernize css ([5295f40](https://github.com/magicappdev/magicappdev/commit/5295f406e6efcbc74a31408f407d52a8d2b2eea4))
+- **web:** resolve linting errors in input and textarea components ([de9d0a0](https://github.com/magicappdev/magicappdev/commit/de9d0a0e4790e5f1313b99d2218d390011ba899b))
+
+### Features
+
+- **api/web:** db schema, api routes, and chat integration ([a28ac11](https://github.com/magicappdev/magicappdev/commit/a28ac11c038918755c5e20accdac64903384d266))
+- **api:** implement auth and projects routes with D1 integration ([71733ed](https://github.com/magicappdev/magicappdev/commit/71733edf31dc604858fbb78397da65ea95e7bd92))
+- **api:** implement authentication middleware for protected routes ([1200254](https://github.com/magicappdev/magicappdev/commit/12002548cf5cc345dc979c9372dad7414341a967))
+- implement shared API client with streaming ([b3d94f7](https://github.com/magicappdev/magicappdev/commit/b3d94f74693d6d215cb84539a4dda86d43c5b71c))
+- **llmchat:** integrate llmchat package with fixed D1 binding ([1f7eca0](https://github.com/magicappdev/magicappdev/commit/1f7eca00a3746c32feb373ad7c3dcba176d8d7ea))
+- **mobile/api:** fix style deprecations and add settings menu ([990e256](https://github.com/magicappdev/magicappdev/commit/990e25627674434d158f0892b722819ff9ba26a6))
+- **mobile:** add app metadata, plugins, and dependencies ([d4ad5b5](https://github.com/magicappdev/magicappdev/commit/d4ad5b5c08c0a76620d31b7a405a968d77b9121f))
+- **mobile:** implement expo-router navigation and core screens ([144ca43](https://github.com/magicappdev/magicappdev/commit/144ca4364c40143f3175e96f11bc359c439a0cfb))
+- **mobile:** initialize @magicappdev/mobile with expo ([08394b3](https://github.com/magicappdev/magicappdev/commit/08394b3ae4b0bbc025f147022af6363490c56a26))
+- **mobile:** integrate real API for projects listing ([13e5f29](https://github.com/magicappdev/magicappdev/commit/13e5f2953908264dc8b2c04c284a2eb94e1e0c02))
+- **monorepo:** add comprehensive debugging and development infrastructure ([3ffa83b](https://github.com/magicappdev/magicappdev/commit/3ffa83ba26ce087f92f7283175d6d9cf52dbec31))
+- **monorepo:** add comprehensive project references and tsconfig updates ([d4f3f61](https://github.com/magicappdev/magicappdev/commit/d4f3f617f7e95be2b53e6fd9e714838733e50090))
+- **monorepo:** add comprehensive web app, api, cli, database, shared, and templates packages ([7eb341a](https://github.com/magicappdev/magicappdev/commit/7eb341a2f7a09d082f1299af971c9dda58a52bc4))
+- **nx-cloud:** setup nx cloud workspace from typescript ([f80c8f3](https://github.com/magicappdev/magicappdev/commit/f80c8f3eb5a8e2459c0b7d3280a4dc1e45070a8c))
+- **repo:** enhance linting and add web ui deps ([c7fce0a](https://github.com/magicappdev/magicappdev/commit/c7fce0a7cd554f47f95485a37baaa4bb2692ee46))
+- ui improvements ([b49fb21](https://github.com/magicappdev/magicappdev/commit/b49fb21a41584657d7304bb05f5c9820a1bf41b5))
+- **web:** add core ui components and wrangler config ([d6967c0](https://github.com/magicappdev/magicappdev/commit/d6967c0cf776daccf78b5e82ce6f444f9286d39f))
+- **web:** add projects page and management ([2838c6b](https://github.com/magicappdev/magicappdev/commit/2838c6b1616aacdc6208bfb933b247a9e44dd406))
+- **web:** add settings page ([0747f5b](https://github.com/magicappdev/magicappdev/commit/0747f5b954da42643d902f23f36cd8a6ecaa97fa))
+- **web:** migrate to hono react vite and radix ui ([c6d3b91](https://github.com/magicappdev/magicappdev/commit/c6d3b910ef4855710fa3cb6ccd1a94382d1dd98d))
+- **web:** modernize landing page ([12af129](https://github.com/magicappdev/magicappdev/commit/12af1297adaedfc5ef7c3401294e9508c6262da3))

@@ -3,7 +3,7 @@
  */
 
 import { sqliteTable, text } from "drizzle-orm/sqlite-core";
-import { users } from "./users";
+import { users } from "./users.js";
 
 /** Sessions table */
 export const sessions = sqliteTable("sessions", {

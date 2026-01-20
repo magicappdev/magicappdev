@@ -3,7 +3,7 @@
  */
 
 import { sqliteTable, text } from "drizzle-orm/sqlite-core";
-import { users } from "./users";
+import { users } from "./users.js";
 
 /** Project status enum values */
 export const PROJECT_STATUS = [

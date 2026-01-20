@@ -2,7 +2,7 @@
  * Database client for Cloudflare D1
  */
 import { type DrizzleD1Database } from "drizzle-orm/d1";
-import { schema } from "../schema/index.js";
+import { schema } from "../schema/index";
 /** Database client type with schema */
 export type Database = DrizzleD1Database<typeof schema>;
 /** Create a database client from a D1 binding */

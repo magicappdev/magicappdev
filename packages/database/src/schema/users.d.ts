@@ -8,6 +8,7 @@ export declare const users: import("drizzle-orm/sqlite-core").SQLiteTableWithCol
   name: string;
   passwordHash: string;
   avatarUrl: string;
+  role: string;
   emailVerified: number;
   createdAt: string;
   updatedAt: string;
@@ -17,6 +18,7 @@ export declare const users: import("drizzle-orm/sqlite-core").SQLiteTableWithCol
   name: import("drizzle-orm/sqlite-core").SQLiteColumnBuilderBase<string>;
   passwordHash: import("drizzle-orm/sqlite-core").SQLiteColumnBuilderBase<string>;
   avatarUrl: import("drizzle-orm/sqlite-core").SQLiteColumnBuilderBase<string>;
+  role: import("drizzle-orm/sqlite-core").SQLiteColumnBuilderBase<string>;
   emailVerified: import("drizzle-orm/sqlite-core").SQLiteColumnBuilderBase<number>;
   createdAt: import("drizzle-orm/sqlite-core").SQLiteColumnBuilderBase<string>;
   updatedAt: import("drizzle-orm/sqlite-core").SQLiteColumnBuilderBase<string>;

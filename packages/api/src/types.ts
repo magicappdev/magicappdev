@@ -22,6 +22,10 @@ export interface Env {
   GOOGLE_AI_API_KEY?: string;
   /** OpenRouter API key */
   OPENROUTER_API_KEY?: string;
+  /** GitHub Client ID */
+  GITHUB_CLIENT_ID?: string;
+  /** GitHub Client Secret */
+  GITHUB_CLIENT_SECRET?: string;
 }
 
 /** App context variables */

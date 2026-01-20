@@ -6,8 +6,7 @@
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
     "paths": {
-      "@magicappdev/shared": ["../shared/dist/index.d.ts"],
-      "@magicappdev/database": ["../database/dist/index.d.ts"]
+      "@magicappdev/shared": ["../shared/dist/index.d.ts"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],

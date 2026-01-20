@@ -8,6 +8,13 @@
       "when": 1768812051560,
       "tag": "0000_ordinary_victor_mancha",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1768896343482,
+      "tag": "0001_broad_iron_lad",
+      "breakpoints": true
     }
   ]
 }
