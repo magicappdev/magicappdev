@@ -34,7 +34,13 @@ export function AppShell({ children }: AppShellProps) {
     );
   }
 
-  if (!user) {
+  // Define protected routes
+  const protectedRoutes = ["/chat", "/projects", "/settings"];
+  const isProtectedRoute = protectedRoutes.some(route =>
+    location.pathname.startsWith(route),
+  );
+
+  if (!user && isProtectedRoute) {
     return <Navigate to="/login" replace />;
   }
 
@@ -112,38 +118,49 @@ export function AppShell({ children }: AppShellProps) {
             </nav>
 
             <div className="pt-6 border-t border-outline/10 space-y-4">
-              <div className="flex items-center space-x-3 px-4 py-2">
-                <img
-                  src={
-                    user.avatarUrl ||
-                    `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}`
-                  }
-                  className="w-10 h-10 rounded-full border border-outline/20"
-                  alt={user.name}
-                />
-                <div className="flex-1 min-w-0">
-                  <Typography
-                    variant="label"
-                    className="normal-case text-foreground truncate"
+              {user ? (
+                <>
+                  <div className="flex items-center space-x-3 px-4 py-2">
+                    <img
+                      src={
+                        user.avatarUrl ||
+                        `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}`
+                      }
+                      className="w-10 h-10 rounded-full border border-outline/20"
+                      alt={user.name}
+                    />
+
+                    <div className="flex-1 min-w-0">
+                      <Typography
+                        variant="label"
+                        className="normal-case text-foreground truncate"
+                      >
+                        {user.name}
+                      </Typography>
+
+                      <Typography
+                        variant="label"
+                        className="text-[10px] text-foreground/50 uppercase"
+                      >
+                        {user.role}
+                      </Typography>
+                    </div>
+                  </div>
+
+                  <Button
+                    variant="text"
+                    size="sm"
+                    className="w-full justify-start text-foreground/60 hover:text-error"
+                    onClick={logout}
                   >
-                    {user.name}
-                  </Typography>
-                  <Typography
-                    variant="label"
-                    className="text-[10px] text-foreground/50 uppercase"
-                  >
-                    {user.role}
-                  </Typography>
-                </div>
-              </div>
-              <Button
-                variant="text"
-                size="sm"
-                className="w-full justify-start text-foreground/60 hover:text-error"
-                onClick={logout}
-              >
-                <LogOut size={18} className="mr-3" /> Logout
-              </Button>
+                    <LogOut size={18} className="mr-3" /> Logout
+                  </Button>
+                </>
+              ) : (
+                <Link to="/login">
+                  <Button className="w-full">Login</Button>
+                </Link>
+              )}
             </div>
           </motion.aside>
         )}

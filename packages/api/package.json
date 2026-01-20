@@ -15,6 +15,7 @@
   "dependencies": {
     "@magicappdev/database": "workspace:*",
     "@magicappdev/shared": "workspace:*",
+    "axios": "^1.13.2",
     "drizzle-orm": "^0.45.1",
     "hono": "^4.7.0",
     "tslib": "^2.3.0"

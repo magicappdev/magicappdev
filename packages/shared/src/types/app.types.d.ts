@@ -9,6 +9,19 @@ export interface User {
   name: string;
   avatarUrl?: string;
   role: "admin" | "user";
+  profile?: Profile;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+/** User profile */
+export interface Profile {
+  id: Id;
+  userId: Id;
+  bio?: string;
+  website?: string;
+  location?: string;
+  githubUsername?: string;
+  twitterUsername?: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
