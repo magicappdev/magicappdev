@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "deploy": "wrangler deploy -c wrangler.toml --envfile .env",
+    "deploy": "wrangler deploy -c wrangler.toml --env-file .env",
     "dev": "vite",
     "lint": "eslint . --ignore-pattern '*.d.ts'",
     "lint:fix": "eslint --fix .",
