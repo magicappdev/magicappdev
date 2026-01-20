@@ -115,16 +115,8 @@ export default function HomePage() {
             <div className="space-y-2">
               <Typography variant="title">Mobile App</Typography>
               <Typography variant="body" className="text-sm text-foreground/60">
-                Available now for iOS and Android via Expo Go or direct build.
+                Available now via Expo Go or by building from source.
               </Typography>
-            </div>
-            <div className="flex flex-wrap gap-3 justify-center">
-              <Button variant="tonal" className="rounded-xl px-6 gap-2">
-                <Smartphone size={18} /> App Store
-              </Button>
-              <Button variant="tonal" className="rounded-xl px-6 gap-2">
-                <Smartphone size={18} /> Play Store
-              </Button>
             </div>
           </Card>
         </div>
