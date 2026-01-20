@@ -71,7 +71,7 @@ apps/*/.wranglerc.js
 packages/*/wrangler.dev.toml
 packages/*/wrangler.toml
 packages/*/wrangler.local.toml
-
+packages/*/wrangler.jsonc
 .turbo
 + .turbo
 .mcp.json
