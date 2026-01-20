@@ -3,6 +3,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import AuthCallbackPage from "./pages/auth/callback";
 import SettingsPage from "./pages/settings/page";
 import ProjectsPage from "./pages/projects/page";
+import RegisterPage from "./pages/auth/register";
 import LoginPage from "./pages/auth/login";
 import ChatPage from "./pages/chat/page";
 import ReactDOM from "react-dom/client";
@@ -17,6 +18,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route element={<Layout />}>
             <Route path="/" element={<HomePage />} />

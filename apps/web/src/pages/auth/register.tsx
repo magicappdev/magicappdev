@@ -7,19 +7,20 @@ import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
 import React, { useState } from "react";
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const { user, loginWithGitHub, isLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
 
   if (user) {
     return <Navigate to="/" replace />;
   }
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement manual login logic
-    console.log("Login with:", email, password);
+    // TODO: Implement manual registration logic
+    console.log("Register with:", email, password, name);
   };
 
   return (
@@ -30,24 +31,32 @@ export default function LoginPage() {
         </div>
         <div>
           <Typography variant="display" className="text-4xl md:text-5xl">
-            Welcome to MagicAppDev
+            Join MagicAppDev
           </Typography>
           <Typography
             variant="body"
             className="text-lg text-foreground/60 max-w-md mx-auto"
           >
-            The intelligent platform to build, deploy and scale your
-            applications.
+            Start building your dream applications today.
           </Typography>
         </div>
       </div>
 
       <Card className="w-full max-w-md p-8 space-y-6 shadow-xl border-outline/10">
         <Typography variant="title" className="text-center">
-          Sign in to your account
+          Create your account
         </Typography>
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleRegister} className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Full Name</label>
+            <Input
+              placeholder="John Doe"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              required
+            />
+          </div>
           <div className="space-y-2">
             <label className="text-sm font-medium">Email Address</label>
             <Input
@@ -59,12 +68,7 @@ export default function LoginPage() {
             />
           </div>
           <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <label className="text-sm font-medium">Password</label>
-              <a href="#" className="text-xs text-primary hover:underline">
-                Forgot password?
-              </a>
-            </div>
+            <label className="text-sm font-medium">Password</label>
             <Input
               type="password"
               placeholder="••••••••"
@@ -74,7 +78,7 @@ export default function LoginPage() {
             />
           </div>
           <Button type="submit" className="w-full">
-            Sign In
+            Create Account
           </Button>
         </form>
 
@@ -92,10 +96,10 @@ export default function LoginPage() {
         <Button
           onClick={loginWithGitHub}
           variant="outlined"
-          className="w-full flex items-center justify-center gap-3"
+          className="w-full"
           disabled={isLoading}
         >
-          <Github size={20} />
+          <Github size={20} className="mr-2" />
           GitHub
         </Button>
 
@@ -104,9 +108,9 @@ export default function LoginPage() {
             variant="label"
             className="text-foreground/60 normal-case"
           >
-            Don't have an account?{" "}
-            <Link to="/register" className="text-primary hover:underline">
-              Sign up
+            Already have an account?{" "}
+            <Link to="/login" className="text-primary hover:underline">
+              Sign in
             </Link>
           </Typography>
         </div>
