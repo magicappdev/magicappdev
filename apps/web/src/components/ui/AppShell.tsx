@@ -1,5 +1,6 @@
 import {
   LayoutDashboard,
+  Folder,
   Menu,
   MessageSquare,
   Settings,
@@ -24,6 +25,7 @@ export function AppShell({ children }: AppShellProps) {
 
   const navItems = [
     { label: "Dashboard", icon: LayoutDashboard, href: "/" },
+    { label: "Projects", icon: Folder, href: "/projects" },
     { label: "Chat", icon: MessageSquare, href: "/chat" },
     { label: "Settings", icon: Settings, href: "/settings" },
   ];

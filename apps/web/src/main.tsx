@@ -1,4 +1,5 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import ProjectsPage from "./pages/projects/page";
 import ChatPage from "./pages/chat/page";
 import ReactDOM from "react-dom/client";
 import HomePage from "./pages/page";
@@ -13,6 +14,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         <Route element={<Layout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/chat" element={<ChatPage />} />
+          <Route path="/projects" element={<ProjectsPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

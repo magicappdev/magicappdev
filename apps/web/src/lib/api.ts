@@ -29,6 +29,30 @@ export async function apiRequest<T>(
   return data as T;
 }
 
+export interface Project {
+  id: string;
+  name: string;
+  description?: string;
+  status: "draft" | "active" | "archived";
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function getProjects(): Promise<Project[]> {
+  const response = await apiRequest<{ data: Project[] }>("/projects");
+  return response.data;
+}
+
+export async function createProject(
+  data: Pick<Project, "name" | "description">,
+): Promise<Project> {
+  const response = await apiRequest<{ data: Project }>("/projects", {
+    method: "POST",
+    body: JSON.stringify({ ...data, config: {} }),
+  });
+  return response.data;
+}
+
 export interface AiMessage {
   role: "system" | "user" | "assistant";
   content: string;
