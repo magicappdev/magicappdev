@@ -33,7 +33,9 @@ interface GitHubEmail {
 authRoutes.get("/login/github", c => {
   const clientId = c.env.GITHUB_CLIENT_ID;
   const platform = c.req.query("platform") || "web";
-  const redirectUri = new URL(c.req.url).origin + "/auth/callback/github";
+  const redirectUri =
+    c.env.GITHUB_REDIRECT_URI ||
+    new URL(c.req.url).origin + "/auth/callback/github";
 
   if (!clientId) {
     return c.json({ error: "Missing GITHUB_CLIENT_ID" }, 500);
@@ -64,8 +66,10 @@ authRoutes.get("/callback/github", async c => {
   const clientId = c.env.GITHUB_CLIENT_ID;
   const clientSecret = c.env.GITHUB_CLIENT_SECRET;
 
-  // Dynamic redirect URI verification
-  const redirectUri = new URL(c.req.url).origin + "/auth/callback/github";
+  // Use configured redirect URI or fallback to dynamic origin
+  const redirectUri =
+    c.env.GITHUB_REDIRECT_URI ||
+    new URL(c.req.url).origin + "/auth/callback/github";
 
   if (!clientId || !clientSecret) {
     return c.json({ error: "Missing GitHub credentials" }, 500);
