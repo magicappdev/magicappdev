@@ -2,7 +2,8 @@
  * API client for interacting with the backend
  */
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8787";
+const API_URL =
+  (import.meta.env.VITE_API_URL as string) || "http://localhost:8787";
 
 export async function apiRequest<T>(
   path: string,

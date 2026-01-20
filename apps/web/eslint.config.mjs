@@ -1,18 +1,15 @@
-import { defineConfig, globalIgnores } from "eslint/config";
-import prettier from "eslint-config-prettier/flat";
-import nextPlugin from "@next/eslint-plugin-next";
-import nextConfig from "eslint-config-next";
-import tseslint from "typescript-eslint";
 import css from "@eslint/css";
+import prettier from "eslint-config-prettier/flat";
+import { defineConfig, globalIgnores } from "eslint/config";
+import tseslint from "typescript-eslint";
 
-const eslintConfig = defineConfig(...nextConfig, [
+const eslintConfig = defineConfig([
   tseslint.configs.recommended,
   {
     files: ["**/*.ts", "**/*.tsx"],
     ignores: ["**/*.test.ts", "**/*.test.tsx", "*.d.ts", ".next/**"],
     rules: {
-      "@typescript-eslint/no-explicit-any": "warn",
-      ...nextPlugin.configs.recommended.rules,
+      "@typescript-eslint/no-explicit-any": "warn"
     },
   },
   {
@@ -23,6 +20,7 @@ const eslintConfig = defineConfig(...nextConfig, [
     ignores: ["**/build/**/*", "**/node_modules/**/*", "app/tailwind.css"],
     rules: {
       "css/no-invalid-at-rules": "off",
+      "css/no-invalid-properties": "off",
     },
   },
   prettier,
