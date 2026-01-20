@@ -5,11 +5,11 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "deploy": "wrangler pages deploy dist",
+    "deploy": "wrangler deploy",
     "dev": "vite",
     "lint": "eslint . --ignore-pattern '*.d.ts'",
     "lint:fix": "eslint --fix .",
-    "preview": "wrangler pages dev dist",
+    "preview": "wrangler dev",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
