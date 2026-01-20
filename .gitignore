@@ -66,8 +66,10 @@ apps/*/.nx/.env.development.local
 apps/*/.nx/.env.test.local
 apps/*/.nx/.env.production.local
 apps/*/wrangler.dev.toml
+apps/*/wrangler.toml
 apps/*/.wranglerc.js
 packages/*/wrangler.dev.toml
+packages/*/wrangler.toml
 packages/*/wrangler.local.toml
 
 .turbo
