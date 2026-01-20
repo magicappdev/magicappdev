@@ -37,15 +37,27 @@ aiRoutes.post("/chat", async c => {
   try {
     // Use Workers AI by default
     if (provider === "workers-ai") {
-      const response = await c.env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
-        messages: messages.map(m => ({
-          role: m.role,
-          content: m.content,
-        })),
-        max_tokens: maxTokens,
-        temperature,
-        stream,
-      });
+      const response = await c.env.AI.run(
+        "@cf/meta/llama-3.1-8b-instruct",
+        {
+          messages: messages.map(m => ({
+            role: m.role,
+            content: m.content,
+          })),
+          max_tokens: maxTokens,
+          temperature,
+          stream,
+        },
+        c.env.AI_GATEWAY_ID
+          ? {
+              gateway: {
+                id: c.env.AI_GATEWAY_ID,
+                skipCache: false,
+                cacheTtl: 3600,
+              },
+            }
+          : {},
+      );
 
       if (stream) {
         // Return streaming response

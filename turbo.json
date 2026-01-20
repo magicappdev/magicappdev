@@ -24,7 +24,8 @@
       "dependsOn": ["^typecheck"]
     },
     "deploy": {
-      "dependsOn": ["build", "lint", "typecheck"]
+      "dependsOn": ["build", "lint", "typecheck"],
+      "cache": false
     }
   }
 }

@@ -32,6 +32,7 @@ interface GitHubEmail {
 // Login - Redirect to GitHub
 authRoutes.get("/login/github", c => {
   const clientId = c.env.GITHUB_CLIENT_ID;
+  const platform = c.req.query("platform") || "web";
   const redirectUri = new URL(c.req.url).origin + "/auth/callback/github";
 
   if (!clientId) {
@@ -42,6 +43,7 @@ authRoutes.get("/login/github", c => {
     client_id: clientId,
     redirect_uri: redirectUri,
     scope: "user:email read:user",
+    state: platform, // Pass platform in state
   });
 
   return c.redirect(
@@ -53,6 +55,7 @@ authRoutes.get("/login/github", c => {
 authRoutes.get("/callback/github", async c => {
   const code = c.req.query("code");
   const error = c.req.query("error");
+  const platform = c.req.query("state") || "web";
 
   if (error || !code) {
     return c.json({ error: error || "No code provided" }, 400);
@@ -132,10 +135,10 @@ authRoutes.get("/callback/github", async c => {
   // 4. Find or Create User
   // Check if account exists
   const existingAccount = await db.query.accounts.findFirst({
-    // Using manual query for composite handling simulation if needed, but simple filtering works
-
     where: and(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       eq((accounts as any).provider, "github"),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       eq((accounts as any).providerAccountId, githubUser.id.toString()),
     ),
   });
@@ -144,7 +147,6 @@ authRoutes.get("/callback/github", async c => {
 
   if (existingAccount) {
     userId = existingAccount.userId;
-    // Update tokens?
   } else {
     // Check if user with email exists (link account)
     const existingUser = await db.query.users.findFirst({
@@ -212,17 +214,69 @@ authRoutes.get("/callback/github", async c => {
     ipAddress: c.req.header("CF-Connecting-IP"),
   });
 
-  // Redirect to frontend with tokens
-  // In production, use environment variable for frontend URL
-  const frontendUrl =
-    c.env.ENVIRONMENT === "development"
-      ? "http://localhost:3000"
-      : "https://magicappdev.pages.dev"; // Placeholder
+  // 6. Redirect back to app
+  if (platform === "mobile") {
+    const mobileUri =
+      c.env.MOBILE_REDIRECT_URI || "magicappdev://auth/callback";
+    return c.redirect(
+      `${mobileUri}?accessToken=${accessToken}&refreshToken=${refreshToken}`,
+    );
+  }
 
-  // Using query params for simplicity; in prod use cookies or secure postMessage
+  const frontendUrl =
+    c.env.FRONTEND_URL ||
+    (c.env.ENVIRONMENT === "development"
+      ? "http://localhost:3100"
+      : "https://app.magicappdev.workers.dev");
+
   return c.redirect(
     `${frontendUrl}/auth/callback?accessToken=${accessToken}&refreshToken=${refreshToken}`,
   );
+});
+
+// Refresh Token
+authRoutes.post("/refresh", async c => {
+  const { refreshToken } = await c.req.json<{ refreshToken: string }>();
+  if (!refreshToken) return c.json({ error: "Missing refresh token" }, 400);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = c.var.db as any;
+
+  const session = await db.query.sessions.findFirst({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    where: eq((sessions as any).refreshToken, refreshToken),
+  });
+
+  if (!session || new Date(session.expiresAt) < new Date()) {
+    return c.json({ error: "Invalid or expired session" }, 401);
+  }
+
+  const accessToken = await sign(
+    {
+      sub: session.userId,
+      role: "user",
+      exp: Math.floor(Date.now() / 1000) + 60 * 60,
+    },
+    c.env.JWT_SECRET || "secret-fallback-do-not-use-in-prod",
+  );
+
+  return c.json({ success: true, data: { accessToken } });
+});
+
+// Logout
+authRoutes.post("/logout", async c => {
+  const { refreshToken } = await c.req.json<{ refreshToken: string }>();
+  if (!refreshToken) return c.json({ success: true }); // Silent fail
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = c.var.db as any;
+
+  await db
+    .delete(sessions)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .where(eq((sessions as any).refreshToken, refreshToken));
+
+  return c.json({ success: true });
 });
 
 // Get current user (Protected)

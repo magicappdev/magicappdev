@@ -30,17 +30,17 @@ export default function HomePage() {
 
           <div className="flex flex-wrap gap-4 pt-4 justify-center">
             <Link to="/chat">
-              <Button size="lg" className="rounded-full">
+              <Button size="lg" className="rounded-full px-8">
                 Start Building <ArrowRight size={18} className="ml-2" />
               </Button>
             </Link>
-            <a
-              href="https://github.com/magicappdev/magicappdev"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Button size="lg" variant="outlined" className="rounded-full">
-                View on GitHub
+            <a href="#downloads">
+              <Button
+                size="lg"
+                variant="outlined"
+                className="rounded-full px-8"
+              >
+                Download Apps
               </Button>
             </a>
           </div>
@@ -65,6 +65,68 @@ export default function HomePage() {
             description="Deploy instantly to Cloudflare Workers and Pages with built-in database support."
             icon={<Rocket size={32} />}
           />
+        </div>
+      </section>
+
+      {/* Download Section */}
+      <section id="downloads" className="space-y-8">
+        <div className="text-center space-y-2">
+          <Typography variant="headline">Get the Magic</Typography>
+          <Typography variant="body" className="text-foreground/60">
+            Build and manage your projects from anywhere.
+          </Typography>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* CLI Download */}
+          <Card className="p-8 flex flex-col items-center text-center space-y-6 hover:border-primary/30 transition-all">
+            <div className="w-16 h-16 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary">
+              <Terminal size={40} />
+            </div>
+            <div className="space-y-2">
+              <Typography variant="title">Magic CLI</Typography>
+              <Typography variant="body" className="text-sm text-foreground/60">
+                Powerful command-line tools for local development and
+                generation.
+              </Typography>
+            </div>
+            <div className="w-full bg-black/20 p-3 rounded-lg font-mono text-xs flex items-center justify-between group">
+              <span className="text-primary">
+                npm install -g @magicappdev/cli
+              </span>
+              <button
+                onClick={() =>
+                  navigator.clipboard.writeText(
+                    "npm install -g @magicappdev/cli",
+                  )
+                }
+                className="text-foreground/40 hover:text-primary transition-colors"
+              >
+                Copy
+              </button>
+            </div>
+          </Card>
+
+          {/* Mobile Download */}
+          <Card className="p-8 flex flex-col items-center text-center space-y-6 hover:border-primary/30 transition-all">
+            <div className="w-16 h-16 rounded-2xl bg-tertiary/10 flex items-center justify-center text-tertiary">
+              <Smartphone size={40} />
+            </div>
+            <div className="space-y-2">
+              <Typography variant="title">Mobile App</Typography>
+              <Typography variant="body" className="text-sm text-foreground/60">
+                Available now for iOS and Android via Expo Go or direct build.
+              </Typography>
+            </div>
+            <div className="flex flex-wrap gap-3 justify-center">
+              <Button variant="tonal" className="rounded-xl px-6 gap-2">
+                <Smartphone size={18} /> App Store
+              </Button>
+              <Button variant="tonal" className="rounded-xl px-6 gap-2">
+                <Smartphone size={18} /> Play Store
+              </Button>
+            </div>
+          </Card>
         </div>
       </section>
 

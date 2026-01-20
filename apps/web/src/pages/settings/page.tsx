@@ -1,4 +1,4 @@
-import { User, Bell, Shield, Globe, Zap } from "lucide-react";
+import { User, Bell, Shield, Globe, Zap, LucideIcon } from "lucide-react";
 import { Typography } from "@/components/ui/Typography";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -81,7 +81,7 @@ function SettingsNavItem({
   label,
   active = false,
 }: {
-  icon: any;
+  icon: LucideIcon;
   label: string;
   active?: boolean;
 }) {

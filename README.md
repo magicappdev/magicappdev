@@ -194,11 +194,12 @@ magicappdev/
 
 ### Authentication
 
-Authentication is handled via API keys. Include your API key in the `Authorization` header:
+Authentication is handled via GitHub OAuth.
 
-```bash
-Authorization: Bearer your_api_key_here
-```
+1. **Web/Mobile**: Use the "Continue with GitHub" button to authenticate.
+2. **CLI**: Run `magicappdev auth login` to authenticate your local environment.
+
+The system uses JWT for session management and stores profiles in Cloudflare D1.
 
 ## Contributing Guidelines
 
@@ -255,47 +256,21 @@ Authorization: Bearer your_api_key_here
 
 ## Deployment
 
-### Local Deployment
+MagicAppDev is designed for Cloudflare.
 
-1. **Build the Project**:
+### API & Database
 
-   ```bash
-   pnpm run build
-   ```
+```bash
+cd packages/api
+pnpm run deploy
+```
 
-2. **Start the Development Server**:
+### Web Application
 
-   ```bash
-   pnpm run dev
-   ```
-
-### Staging Deployment
-
-1. **Build the Project**:
-
-   ```bash
-   pnpm run build:staging
-   ```
-
-2. **Deploy to Staging**:
-
-   ```bash
-   pnpm run deploy:staging
-   ```
-
-### Production Deployment
-
-1. **Build the Project**:
-
-   ```bash
-   pnpm run build:prod
-   ```
-
-2. **Deploy to Production**:
-
-   ```bash
-   pnpm run deploy:prod
-   ```
+```bash
+cd apps/web
+pnpm run deploy
+```
 
 ### Docker Deployment
 
@@ -310,6 +285,14 @@ Authorization: Bearer your_api_key_here
    ```bash
    docker run -p 3000:3000 magicappdev
    ```
+
+### Nx Workspace Sync
+
+If you encounter "workspace out of sync" errors, run:
+
+```bash
+pnpm nx sync
+```
 
 ## Troubleshooting & FAQ
 

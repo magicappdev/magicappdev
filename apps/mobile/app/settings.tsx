@@ -5,15 +5,20 @@ import {
   ScrollView,
   TouchableOpacity,
   Switch,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useAuth } from "../contexts/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, router } from "expo-router";
 import React from "react";
 
 export default function SettingsScreen() {
+  const { user, logout } = useAuth();
   const [isDarkMode, setIsDarkMode] = React.useState(false);
   const [notifications, setNotifications] = React.useState(true);
+
+  if (!user) return null;
 
   return (
     <SafeAreaView style={styles.container} edges={["bottom"]}>
@@ -34,20 +39,23 @@ export default function SettingsScreen() {
       <ScrollView>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Profile</Text>
-          <TouchableOpacity style={styles.item}>
-            <View
-              style={[styles.iconContainer, { backgroundColor: "#007AFF" }]}
-            >
-              <Ionicons name="person" size={20} color="#fff" />
-            </View>
+          <View style={styles.item}>
+            <Image
+              source={{
+                uri:
+                  user.avatarUrl ||
+                  `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}`,
+              }}
+              style={styles.avatar}
+            />
             <View style={styles.itemText}>
-              <Text style={styles.itemTitle}>Account Info</Text>
-              <Text style={styles.itemSubtitle}>
-                Manage your profile details
-              </Text>
+              <Text style={styles.itemTitle}>{user.name}</Text>
+              <Text style={styles.itemSubtitle}>{user.email}</Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />
-          </TouchableOpacity>
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{user.role}</Text>
+            </View>
+          </View>
         </View>
 
         <View style={styles.section}>
@@ -92,7 +100,10 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={[styles.item, { marginTop: 20 }]}>
+        <TouchableOpacity
+          style={[styles.item, { marginTop: 20 }]}
+          onPress={logout}
+        >
           <Text
             style={[
               styles.itemTitle,
@@ -133,6 +144,13 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: "#C7C7CC",
   },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: "#E5E5EA",
+  },
   iconContainer: {
     width: 32,
     height: 32,
@@ -151,6 +169,18 @@ const styles = StyleSheet.create({
   itemSubtitle: {
     fontSize: 14,
     color: "#8E8E93",
+  },
+  badge: {
+    backgroundColor: "#F2F2F7",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  badgeText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#8E8E93",
+    textTransform: "uppercase",
   },
   version: {
     textAlign: "center",

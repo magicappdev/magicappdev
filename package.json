@@ -26,6 +26,7 @@
     "deploy:api": "turbo run deploy --filter=@magicappdev/api",
     "deploy:cli": "turbo run deploy --filter=@magicappdev/cli",
     "deploy:db": "turbo run deploy --filter=@magicappdev/database",
+    "deploy:llm": "turbo run deploy --filter=@magicappdev/llmchat",
     "deploy:mobile": "turbo run deploy --filter=@magicappdev/mobile",
     "deploy:web": "turbo run deploy --filter=@magicappdev/web",
     "format": "prettier --write .",
@@ -34,6 +35,8 @@
     "nx": "nx",
     "predeploy": "pnpm build",
     "prepare": "husky",
+    "sync": "nx sync",
+    "sync:check": "nx sync:check",
     "typecheck": "nx run-many --target=typecheck --all"
   },
   "dependencies": {
@@ -49,8 +52,8 @@
     "@commitlint/cli": "^20.3.1",
     "@commitlint/config-conventional": "^20.3.1",
     "@nx/js": "22.3.3",
-    "@swc-node/register": "~1.9.1",
-    "@swc/core": "~1.13.3",
+    "@swc-node/register": "~1.11.1",
+    "@swc/core": "~1.15.10",
     "@types/node": "^25.0.9",
     "conventional-changelog-cli": "^5.0.0",
     "eslint": "^9.39.2",

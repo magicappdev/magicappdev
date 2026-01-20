@@ -8,6 +8,7 @@ export interface User {
   email: string;
   name: string;
   avatarUrl?: string;
+  role: "admin" | "user";
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

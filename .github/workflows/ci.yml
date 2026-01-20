@@ -2,59 +2,42 @@ name: CI
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-
-permissions:
-  actions: read
-  contents: read
+    branches: [main]
 
 jobs:
-  main:
+  build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
 
     steps:
       - uses: actions/checkout@v4
         with:
-          filter: tree:0
           fetch-depth: 0
 
-      # Install pnpm and add to PATH
-      - name: Install pnpm
-        uses: pnpm/action-setup@v3
+      - uses: pnpm/action-setup@v2
         with:
-          version: 10
-          run_install: false
+          version: 10.28.0
 
-      # Setup Node.js and cache pnpm store
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: "pnpm"
 
-      # Verify pnpm installation
-      - name: Verify pnpm version
-        run: pnpm --version
-
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile 
+        run: pnpm install
 
-      # This enables task distribution via Nx Cloud
-      # Run this command as early as possible, before dependencies are installed
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      # Uncomment this line to enable task distribution
-      # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      - name: Nx Sync Check
+        run: pnpm nx sync:check
 
-      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # - run: npx nx-cloud record -- echo Hello World
-      - name: Run CI tasks
-        run: npx nx run-many -t lint test build typecheck
+      - name: Lint
+        run: pnpm nx run-many -t lint --all
 
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
-      - name: Fix CI
-        run: npx nx fix-ci
-        if: always()
+      - name: Typecheck
+        run: pnpm nx run-many -t typecheck --all
+
+      - name: Build
+        run: pnpm nx run-many -t build --all
+
+      - name: Test
+        run: pnpm nx run-many -t test --all

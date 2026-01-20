@@ -1,5 +1,6 @@
+import { AuthProvider, useAuth } from "../contexts/AuthContext";
+import { Stack, router, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { Stack } from "expo-router";
 import { useEffect } from "react";
 
 export {
@@ -15,14 +16,43 @@ export const unstable_settings = {
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
+function RootLayoutNav() {
+  const { user, isLoading } = useAuth();
+  const segments = useSegments();
+
   useEffect(() => {
-    SplashScreen.hideAsync();
-  }, []);
+    if (isLoading) return;
+
+    const inAuthGroup = segments[0] === "login";
+
+    if (!user && !inAuthGroup) {
+      // Redirect to the login page.
+      router.replace("/login");
+    } else if (user && inAuthGroup) {
+      // Redirect away from the login page.
+      router.replace("/");
+    }
+  }, [user, isLoading, segments]);
+
+  useEffect(() => {
+    if (!isLoading) {
+      SplashScreen.hideAsync();
+    }
+  }, [isLoading]);
 
   return (
     <Stack>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="login" options={{ headerShown: false }} />
+      <Stack.Screen name="settings" options={{ presentation: "modal" }} />
     </Stack>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <AuthProvider>
+      <RootLayoutNav />
+    </AuthProvider>
   );
 }

@@ -15,8 +15,25 @@ config.resolver.nodeModulesPaths = [
   path.resolve(workspaceRoot, "node_modules"),
 ];
 
+// Force resolution to use node_modules for workspace packages
+config.resolver.extraNodeModules = {
+  "@magicappdev/shared": path.resolve(workspaceRoot, "packages/shared"),
+};
+
 // Add support for 3D model files
 config.resolver.assetExts.push("fbx", "glb", "gltf");
+
+// Add TypeScript extensions for source resolution
+config.resolver.sourceExts.push("ts", "tsx");
+
+// Enable package.json exports field support
+config.resolver.unstable_enablePackageExports = true;
+
+// Use react-native condition for package.json exports
+config.resolver.unstable_conditionNames = ["react-native", "require", "import"];
+
+// Prioritize react-native exports in package.json
+config.resolver.resolverMainFields = ["react-native", "browser", "main"];
 
 // Handle uuid import for newer versions - use modern import
 config.resolver.alias = {

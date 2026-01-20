@@ -26,6 +26,12 @@ export interface Env {
   GITHUB_CLIENT_ID?: string;
   /** GitHub Client Secret */
   GITHUB_CLIENT_SECRET?: string;
+  /** Frontend URL for web redirects */
+  FRONTEND_URL?: string;
+  /** Mobile redirect URI for deep linking */
+  MOBILE_REDIRECT_URI?: string;
+  /** Cloudflare AI Gateway ID */
+  AI_GATEWAY_ID?: string;
 }
 
 /** App context variables */

@@ -4,18 +4,29 @@ import type {
   ApiResponse,
   ListProjectsResponse,
   Project,
+  User,
 } from "../types/index.js";
 
 export class ApiClient {
+  private accessToken: string | null = null;
+
   constructor(private baseUrl: string) {}
+
+  setToken(token: string | null) {
+    this.accessToken = token;
+  }
 
   async request<T>(path: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseUrl}${path.startsWith("/") ? path : `/${path}`}`;
 
-    const headers = {
+    const headers: Record<string, string> = {
       "Content-Type": "application/json",
-      ...options.headers,
+      ...((options.headers as Record<string, string>) || {}),
     };
+
+    if (this.accessToken) {
+      headers["Authorization"] = `Bearer ${this.accessToken}`;
+    }
 
     const response = await fetch(url, {
       ...options,
@@ -23,11 +34,50 @@ export class ApiClient {
     });
 
     if (!response.ok) {
-      throw new Error(`API Request failed: ${response.statusText}`);
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        (errorData as any)?.error?.message ||
+          `API Request failed: ${response.statusText}`,
+      );
     }
 
     const data = await response.json();
     return data as T;
+  }
+
+  getGitHubLoginUrl(platform: "web" | "mobile" = "web"): string {
+    return `${this.baseUrl}/auth/login/github?platform=${platform}`;
+  }
+
+  async logout(refreshToken: string): Promise<void> {
+    await this.request("/auth/logout", {
+      method: "POST",
+      body: JSON.stringify({ refreshToken }),
+    });
+    this.setToken(null);
+  }
+
+  async refresh(refreshToken: string): Promise<string> {
+    const response = await this.request<ApiResponse<{ accessToken: string }>>(
+      "/auth/refresh",
+      {
+        method: "POST",
+        body: JSON.stringify({ refreshToken }),
+      },
+    );
+    if (!response.success) {
+      throw new Error(response.error.message);
+    }
+    this.setToken(response.data.accessToken);
+    return response.data.accessToken;
+  }
+
+  async getCurrentUser(): Promise<User> {
+    const response = await this.request<ApiResponse<User>>("/auth/me");
+    if (!response.success) {
+      throw new Error(response.error.message);
+    }
+    return response.data;
   }
 
   async getProjects(): Promise<Project[]> {

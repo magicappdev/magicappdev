@@ -5,9 +5,11 @@ import {
   MessageSquare,
   Settings,
   X,
+  LogOut,
 } from "lucide-react";
+import { Link, useLocation, Navigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 import { ReactNode, useState } from "react";
 import { Typography } from "./Typography";
 import { Button } from "./Button";
@@ -20,8 +22,21 @@ interface AppShellProps {
 export function AppShell({ children }: AppShellProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const location = useLocation();
+  const { user, isLoading, logout } = useAuth();
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-12 h-12 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
 
   const navItems = [
     { label: "Dashboard", icon: LayoutDashboard, href: "/" },
@@ -96,24 +111,39 @@ export function AppShell({ children }: AppShellProps) {
               })}
             </nav>
 
-            <div className="pt-6 border-t border-outline/10">
+            <div className="pt-6 border-t border-outline/10 space-y-4">
               <div className="flex items-center space-x-3 px-4 py-2">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary to-tertiary" />
-                <div>
+                <img
+                  src={
+                    user.avatarUrl ||
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}`
+                  }
+                  className="w-10 h-10 rounded-full border border-outline/20"
+                  alt={user.name}
+                />
+                <div className="flex-1 min-w-0">
                   <Typography
                     variant="label"
-                    className="normal-case text-foreground"
+                    className="normal-case text-foreground truncate"
                   >
-                    User Profile
+                    {user.name}
                   </Typography>
                   <Typography
                     variant="label"
-                    className="text-[10px] text-foreground/50"
+                    className="text-[10px] text-foreground/50 uppercase"
                   >
-                    Pro Plan
+                    {user.role}
                   </Typography>
                 </div>
               </div>
+              <Button
+                variant="text"
+                size="sm"
+                className="w-full justify-start text-foreground/60 hover:text-error"
+                onClick={logout}
+              >
+                <LogOut size={18} className="mr-3" /> Logout
+              </Button>
             </div>
           </motion.aside>
         )}
