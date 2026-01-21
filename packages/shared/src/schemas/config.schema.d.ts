@@ -41,7 +41,7 @@ export declare const projectConfigSchema: z.ZodObject<
   {
     framework: "react-native" | "expo" | "next" | "remix";
     typescript: boolean;
-    styling: "nativewind" | "tailwind" | "styled-components" | "css";
+    styling: "tailwind" | "nativewind" | "styled-components" | "css";
     stateManagement?: "zustand" | "jotai" | "redux" | "context" | undefined;
     navigation?: "expo-router" | "react-navigation" | "next-router" | undefined;
     testing?: "vitest" | "jest" | "none" | undefined;
@@ -50,8 +50,8 @@ export declare const projectConfigSchema: z.ZodObject<
     framework: "react-native" | "expo" | "next" | "remix";
     typescript?: boolean | undefined;
     styling?:
-      | "nativewind"
       | "tailwind"
+      | "nativewind"
       | "styled-components"
       | "css"
       | undefined;
@@ -93,7 +93,7 @@ export declare const createProjectSchema: z.ZodObject<
       {
         framework: "react-native" | "expo" | "next" | "remix";
         typescript: boolean;
-        styling: "nativewind" | "tailwind" | "styled-components" | "css";
+        styling: "tailwind" | "nativewind" | "styled-components" | "css";
         stateManagement?: "zustand" | "jotai" | "redux" | "context" | undefined;
         navigation?:
           | "expo-router"
@@ -106,8 +106,8 @@ export declare const createProjectSchema: z.ZodObject<
         framework: "react-native" | "expo" | "next" | "remix";
         typescript?: boolean | undefined;
         styling?:
-          | "nativewind"
           | "tailwind"
+          | "nativewind"
           | "styled-components"
           | "css"
           | undefined;
@@ -129,7 +129,7 @@ export declare const createProjectSchema: z.ZodObject<
     config: {
       framework: "react-native" | "expo" | "next" | "remix";
       typescript: boolean;
-      styling: "nativewind" | "tailwind" | "styled-components" | "css";
+      styling: "tailwind" | "nativewind" | "styled-components" | "css";
       stateManagement?: "zustand" | "jotai" | "redux" | "context" | undefined;
       navigation?:
         | "expo-router"
@@ -147,8 +147,8 @@ export declare const createProjectSchema: z.ZodObject<
       framework: "react-native" | "expo" | "next" | "remix";
       typescript?: boolean | undefined;
       styling?:
-        | "nativewind"
         | "tailwind"
+        | "nativewind"
         | "styled-components"
         | "css"
         | undefined;
@@ -199,8 +199,8 @@ export declare const updateProjectSchema: z.ZodObject<
           framework?: "react-native" | "expo" | "next" | "remix" | undefined;
           typescript?: boolean | undefined;
           styling?:
-            | "nativewind"
             | "tailwind"
+            | "nativewind"
             | "styled-components"
             | "css"
             | undefined;
@@ -221,8 +221,8 @@ export declare const updateProjectSchema: z.ZodObject<
           framework?: "react-native" | "expo" | "next" | "remix" | undefined;
           typescript?: boolean | undefined;
           styling?:
-            | "nativewind"
             | "tailwind"
+            | "nativewind"
             | "styled-components"
             | "css"
             | undefined;
@@ -256,8 +256,8 @@ export declare const updateProjectSchema: z.ZodObject<
           framework?: "react-native" | "expo" | "next" | "remix" | undefined;
           typescript?: boolean | undefined;
           styling?:
-            | "nativewind"
             | "tailwind"
+            | "nativewind"
             | "styled-components"
             | "css"
             | undefined;
@@ -285,8 +285,8 @@ export declare const updateProjectSchema: z.ZodObject<
           framework?: "react-native" | "expo" | "next" | "remix" | undefined;
           typescript?: boolean | undefined;
           styling?:
-            | "nativewind"
             | "tailwind"
+            | "nativewind"
             | "styled-components"
             | "css"
             | undefined;
@@ -332,7 +332,7 @@ export declare const projectManifestSchema: z.ZodObject<
       {
         framework: "react-native" | "expo" | "next" | "remix";
         typescript: boolean;
-        styling: "nativewind" | "tailwind" | "styled-components" | "css";
+        styling: "tailwind" | "nativewind" | "styled-components" | "css";
         stateManagement?: "zustand" | "jotai" | "redux" | "context" | undefined;
         navigation?:
           | "expo-router"
@@ -345,8 +345,8 @@ export declare const projectManifestSchema: z.ZodObject<
         framework: "react-native" | "expo" | "next" | "remix";
         typescript?: boolean | undefined;
         styling?:
-          | "nativewind"
           | "tailwind"
+          | "nativewind"
           | "styled-components"
           | "css"
           | undefined;
@@ -393,7 +393,7 @@ export declare const projectManifestSchema: z.ZodObject<
     config: {
       framework: "react-native" | "expo" | "next" | "remix";
       typescript: boolean;
-      styling: "nativewind" | "tailwind" | "styled-components" | "css";
+      styling: "tailwind" | "nativewind" | "styled-components" | "css";
       stateManagement?: "zustand" | "jotai" | "redux" | "context" | undefined;
       navigation?:
         | "expo-router"
@@ -422,8 +422,8 @@ export declare const projectManifestSchema: z.ZodObject<
       framework: "react-native" | "expo" | "next" | "remix";
       typescript?: boolean | undefined;
       styling?:
-        | "nativewind"
         | "tailwind"
+        | "nativewind"
         | "styled-components"
         | "css"
         | undefined;

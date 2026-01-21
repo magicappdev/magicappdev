@@ -4,8 +4,8 @@
     "rootDir": "./src",
     "baseUrl": ".",
     "paths": {
-      "@magicappdev/shared": ["../shared/dist/index.d.ts"],
-      "@magicappdev/templates": ["../templates/dist/index.d.ts"]
+      "@magicappdev/shared": ["../shared/src/index"],
+      "@magicappdev/templates": ["../templates/src/index"]
     }
   },
   "include": ["src/**/*.ts"],

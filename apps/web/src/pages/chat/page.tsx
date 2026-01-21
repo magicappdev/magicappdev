@@ -1,169 +1,287 @@
-import { streamMessage, type AiMessage } from "@/lib/api";
+import {
+  Send,
+  Bot,
+  User as UserIcon,
+  Loader2,
+  Sparkles,
+  Code2,
+  LayoutTemplate,
+} from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
 import { Typography } from "@/components/ui/Typography";
-import { Bot, Plus, Send, User } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
+import { AgentClient } from "agents/client";
 import { cn } from "@/lib/utils";
 
+interface Message {
+  id: string;
+  role: "user" | "assistant" | "system";
+  content: string;
+  timestamp: number;
+}
+
+const AGENT_URL = import.meta.env.VITE_AGENT_URL || "http://localhost:8788"; // Default Agent Port
+
 export default function ChatPage() {
-  const [messages, setMessages] = useState<AiMessage[]>([
-    {
-      role: "assistant",
-      content:
-        "Hello! I'm your AI development assistant. Describe the app you want to build, and I'll help you create it.",
-    },
-  ]);
+  const { user } = useAuth();
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [suggestedTemplate, setSuggestedTemplate] = useState<string | null>(
+    null,
+  );
+
+  const clientRef = useRef<AgentClient | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollIntoView({ behavior: "smooth" });
-    }
+    scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    // Initialize Agent Client
+    const client = new AgentClient({
+      host: new URL(AGENT_URL).host,
+      agent: "magic-agent", // Matches class_name in wrangler.toml (case insensitive mostly, but check SDK)
+      name: "default", // Or user.id if we want user-specific agents
+    });
+
+    client.addEventListener("open", () => {
+      console.log("Connected to Agent");
+      setIsConnected(true);
+    });
+
+    client.addEventListener("close", () => {
+      console.log("Disconnected from Agent");
+      setIsConnected(false);
+    });
+
+    client.addEventListener("message", event => {
+      try {
+        const data = JSON.parse(event.data as string);
+
+        if (data.type === "chat_chunk") {
+          setMessages(prev => {
+            const last = prev[prev.length - 1];
+            if (last && last.role === "assistant" && last.id === "streaming") {
+              return [
+                ...prev.slice(0, -1),
+                { ...last, content: last.content + data.content },
+              ];
+            } else {
+              return [
+                ...prev,
+                {
+                  id: "streaming",
+                  role: "assistant",
+                  content: data.content,
+                  timestamp: Date.now(),
+                },
+              ];
+            }
+          });
+        } else if (data.type === "chat_done") {
+          setMessages(prev => {
+            const last = prev[prev.length - 1];
+            if (last && last.id === "streaming") {
+              return [
+                ...prev.slice(0, -1),
+                { ...last, id: crypto.randomUUID() },
+              ];
+            }
+            return prev;
+          });
+          setIsLoading(false);
+          if (data.suggestedTemplate) {
+            setSuggestedTemplate(data.suggestedTemplate);
+          }
+        } else if (data.type === "error") {
+          setIsLoading(false);
+          // handle error display
+        }
+      } catch (e) {
+        console.error("Failed to parse message", e);
+      }
+    });
+
+    clientRef.current = client;
+
+    return () => {
+      client.close();
+    };
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
-    const userMessage: AiMessage = { role: "user", content: input };
-    const newMessages = [...messages, userMessage];
+    const userMsg: Message = {
+      id: crypto.randomUUID(),
+      role: "user",
+      content: input,
+      timestamp: Date.now(),
+    };
 
-    setMessages(newMessages);
+    setMessages(prev => [...prev, userMsg]);
     setInput("");
     setIsLoading(true);
+    setSuggestedTemplate(null);
 
-    try {
-      // Add empty assistant message to be filled by stream
-      const assistantMessage: AiMessage = { role: "assistant", content: "" };
-      setMessages(prev => [...prev, assistantMessage]);
+    // Send to Agent
+    clientRef.current?.send(
+      JSON.stringify({
+        type: "chat",
+        content: userMsg.content,
+        modelType: "chat", // Default
+      }),
+    );
+  };
 
-      let fullContent = "";
-      for await (const chunk of streamMessage(newMessages)) {
-        fullContent += chunk;
-        setMessages(prev => {
-          const updated = [...prev];
-          const lastIndex = updated.length - 1;
-          updated[lastIndex] = { role: "assistant", content: fullContent };
-          return updated;
-        });
-      }
-    } catch (error) {
-      console.error("Chat error:", error);
-      setMessages(prev => [
-        ...prev,
-        {
-          role: "assistant",
-          content:
-            "Sorry, I encountered an error. Please check if your API is running.",
-        },
-      ]);
-    } finally {
-      setIsLoading(false);
-    }
+  const applyTemplate = (templateId: string) => {
+    // Logic to apply template (e.g., redirect to builder or send command)
+    console.log("Applying template:", templateId);
+    // For now, just send a message
+    const msg = `Use the ${templateId} template.`;
+    setInput(msg);
+    // handleSubmit would need to be called or triggered
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-6rem)] md:h-[calc(100vh-4rem)] lg:h-[calc(100vh-6rem)]">
-      {/* Page Header Actions */}
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <Typography variant="headline">AI Assistant</Typography>
-          <Typography variant="body" className="text-sm">
-            Start a new project or continue building
+    <div className="flex h-[calc(100vh-4rem)] flex-col bg-background/50">
+      {/* Header */}
+      <div className="border-b border-outline/10 p-4 flex justify-between items-center bg-surface/50 backdrop-blur-sm">
+        <div className="flex items-center gap-2">
+          <Sparkles className="text-primary w-5 h-5" />
+          <Typography variant="title" className="text-lg">
+            Magic Assistant
           </Typography>
         </div>
-        <Button variant="tonal" size="sm">
-          <Plus size={16} className="mr-2" /> New Project
-        </Button>
+        <div className="flex items-center gap-2 text-xs">
+          <span
+            className={cn(
+              "w-2 h-2 rounded-full",
+              isConnected ? "bg-green-500" : "bg-red-500",
+            )}
+          />
+          <span className="text-foreground/60">
+            {isConnected ? "Connected" : "Disconnected"}
+          </span>
+        </div>
       </div>
 
-      {/* Chat Area */}
-      <Card className="flex-1 flex flex-col overflow-hidden border border-outline/10 shadow-lg bg-surface/50 backdrop-blur-sm">
-        <div className="flex-1 overflow-y-auto p-4 space-y-6">
-          {messages.map((message, index) => (
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-6">
+        {messages.length === 0 && (
+          <div className="flex flex-col items-center justify-center h-full text-foreground/40 space-y-4">
+            <Bot size={48} />
+            <Typography>Start building your app by describing it.</Typography>
+            <div className="grid grid-cols-2 gap-2 max-w-md w-full">
+              <Button
+                variant="outlined"
+                className="justify-start text-xs"
+                onClick={() => setInput("Create a ToDo app")}
+              >
+                <LayoutTemplate className="w-3 h-3 mr-2" /> ToDo App
+              </Button>
+              <Button
+                variant="outlined"
+                className="justify-start text-xs"
+                onClick={() => setInput("Build a landing page")}
+              >
+                <Code2 className="w-3 h-3 mr-2" /> Landing Page
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {messages.map(msg => (
+          <div
+            key={msg.id}
+            className={cn(
+              "flex gap-3 max-w-3xl mx-auto",
+              msg.role === "user" ? "flex-row-reverse" : "flex-row",
+            )}
+          >
             <div
-              key={index}
               className={cn(
-                "flex gap-4 max-w-3xl",
-                message.role === "user" ? "ml-auto flex-row-reverse" : "",
+                "w-8 h-8 rounded-full flex items-center justify-center shrink-0",
+                msg.role === "user"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-surface border border-outline/10",
               )}
             >
-              <div
-                className={cn(
-                  "w-8 h-8 rounded-full flex items-center justify-center shrink-0",
-                  message.role === "assistant"
-                    ? "bg-primary/20 text-primary"
-                    : "bg-secondary/20 text-secondary",
-                )}
-              >
-                {message.role === "assistant" ? (
-                  <Bot size={18} />
-                ) : (
-                  <User size={18} />
-                )}
-              </div>
-
-              <div
-                className={cn(
-                  "p-4 rounded-2xl max-w-[80%] text-sm leading-relaxed shadow-sm",
-                  message.role === "user"
-                    ? "bg-primary text-primary-foreground rounded-br-sm"
-                    : "bg-surface-variant text-foreground rounded-bl-sm border border-outline/5",
-                )}
-              >
-                <div className="whitespace-pre-wrap font-sans">
-                  {message.content}
-                </div>
-              </div>
+              {msg.role === "user" ? <UserIcon size={14} /> : <Bot size={14} />}
             </div>
-          ))}
-
-          {isLoading && (
-            <div className="flex gap-4 max-w-3xl">
-              <div className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center shrink-0">
-                <Bot size={18} />
-              </div>
-              <div className="bg-surface-variant p-4 rounded-2xl rounded-bl-sm border border-outline/5">
-                <div className="flex space-x-1 h-5 items-center">
-                  <div className="w-2 h-2 bg-foreground/40 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                  <div className="w-2 h-2 bg-foreground/40 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                  <div className="w-2 h-2 bg-foreground/40 rounded-full animate-bounce"></div>
-                </div>
-              </div>
-            </div>
-          )}
-          <div ref={scrollRef} />
-        </div>
-
-        {/* Input Area */}
-        <div className="p-4 bg-surface-variant/30 border-t border-outline/10">
-          <form
-            onSubmit={handleSubmit}
-            className="flex gap-4 max-w-4xl mx-auto"
-          >
-            <div className="flex-1">
-              <Input
-                placeholder="Describe your app idea..."
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                disabled={isLoading}
-                className="bg-surface border-transparent focus:bg-surface focus:border-primary/50 h-12"
-              />
-            </div>
-            <Button
-              type="submit"
-              disabled={isLoading || !input.trim()}
-              className="h-12 w-12 rounded-xl p-0 flex items-center justify-center shrink-0"
+            <div
+              className={cn(
+                "rounded-2xl p-4 max-w-[80%]",
+                msg.role === "user"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-surface border border-outline/10 shadow-sm",
+              )}
             >
-              <Send size={20} />
-            </Button>
-          </form>
-        </div>
-      </Card>
+              <div className="prose prose-sm dark:prose-invert">
+                {/* For now just text, later ReactMarkdown */}
+                <p className="whitespace-pre-wrap">{msg.content}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {suggestedTemplate && (
+          <div className="max-w-3xl mx-auto pl-12">
+            <Card className="p-4 bg-primary/5 border-primary/20 flex items-center justify-between">
+              <div>
+                <Typography variant="label" className="text-primary">
+                  Suggested Template
+                </Typography>
+                <Typography variant="body" className="font-medium">
+                  {suggestedTemplate}
+                </Typography>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => applyTemplate(suggestedTemplate)}
+              >
+                Use Template
+              </Button>
+            </Card>
+          </div>
+        )}
+
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input */}
+      <div className="p-4 border-t border-outline/10 bg-surface/50 backdrop-blur-sm">
+        <form onSubmit={handleSubmit} className="max-w-3xl mx-auto flex gap-2">
+          <Input
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            placeholder="Describe your app..."
+            className="flex-1"
+            disabled={!isConnected}
+          />
+          <Button
+            type="submit"
+            disabled={!input.trim() || isLoading || !isConnected}
+          >
+            {isLoading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Send className="w-4 h-4" />
+            )}
+          </Button>
+        </form>
+      </div>
     </div>
   );
 }

@@ -4,14 +4,23 @@ import {
   View,
   TouchableOpacity,
   ActivityIndicator,
+  TextInput,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../contexts/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
-import React from "react";
+import React, { useState } from "react";
+import { router } from "expo-router";
 
 export default function LoginScreen() {
-  const { loginWithGitHub, isLoading } = useAuth();
+  const { loginWithGitHub, login, isLoading } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleManualLogin = async () => {
+    if (!email || !password) return;
+    await login(email, password);
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -23,24 +32,55 @@ export default function LoginScreen() {
         <Text style={styles.subtitle}>Build apps like magic</Text>
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Welcome Back</Text>
-          <Text style={styles.cardText}>
-            Sign in to access your projects and start building.
-          </Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Email Address"
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
 
           <TouchableOpacity
             style={styles.button}
-            onPress={loginWithGitHub}
+            onPress={handleManualLogin}
             disabled={isLoading}
           >
             {isLoading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <>
-                <Ionicons name="logo-github" size={24} color="#fff" />
-                <Text style={styles.buttonText}>Continue with GitHub</Text>
-              </>
+              <Text style={styles.buttonText}>Sign In</Text>
             )}
+          </TouchableOpacity>
+
+          <View style={styles.divider}>
+            <View style={styles.line} />
+            <Text style={styles.dividerText}>OR</Text>
+            <View style={styles.line} />
+          </View>
+
+          <TouchableOpacity
+            style={styles.githubButton}
+            onPress={loginWithGitHub}
+            disabled={isLoading}
+          >
+            <Ionicons name="logo-github" size={24} color="#fff" />
+            <Text style={styles.buttonText}>Continue with GitHub</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.linkButton}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            onPress={() => router.push("/register" as any)}
+          >
+            <Text style={styles.linkText}>Don't have an account? Sign up</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -90,22 +130,24 @@ const styles = StyleSheet.create({
     elevation: 5,
     borderWidth: 1,
     borderColor: "#F2F2F7",
+    gap: 12,
   },
-  cardTitle: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#1C1C1E",
-    marginBottom: 8,
-    textAlign: "center",
-  },
-  cardText: {
+  input: {
+    height: 56,
+    backgroundColor: "#F2F2F7",
+    borderRadius: 16,
+    paddingHorizontal: 16,
     fontSize: 16,
-    color: "#3A3A3C",
-    textAlign: "center",
-    marginBottom: 32,
-    lineHeight: 24,
   },
   button: {
+    backgroundColor: "#007AFF",
+    height: 56,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 8,
+  },
+  githubButton: {
     backgroundColor: "#000",
     flexDirection: "row",
     height: 56,
@@ -118,5 +160,29 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
     fontWeight: "600",
+  },
+  divider: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 12,
+  },
+  line: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "#E5E5EA",
+  },
+  dividerText: {
+    marginHorizontal: 10,
+    color: "#8E8E93",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  linkButton: {
+    marginTop: 12,
+    alignItems: "center",
+  },
+  linkText: {
+    color: "#007AFF",
+    fontSize: 16,
   },
 });

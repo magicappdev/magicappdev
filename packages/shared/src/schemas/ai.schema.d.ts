@@ -19,11 +19,11 @@ export declare const aiMessageSchema: z.ZodObject<
   "strip",
   z.ZodTypeAny,
   {
-    role: "system" | "user" | "assistant";
+    role: "user" | "system" | "assistant";
     content: string;
   },
   {
-    role: "system" | "user" | "assistant";
+    role: "user" | "system" | "assistant";
     content: string;
   }
 >;
@@ -40,11 +40,11 @@ export declare const aiChatRequestSchema: z.ZodObject<
         "strip",
         z.ZodTypeAny,
         {
-          role: "system" | "user" | "assistant";
+          role: "user" | "system" | "assistant";
           content: string;
         },
         {
-          role: "system" | "user" | "assistant";
+          role: "user" | "system" | "assistant";
           content: string;
         }
       >,
@@ -61,11 +61,11 @@ export declare const aiChatRequestSchema: z.ZodObject<
   "strip",
   z.ZodTypeAny,
   {
+    stream: boolean;
     messages: {
-      role: "system" | "user" | "assistant";
+      role: "user" | "system" | "assistant";
       content: string;
     }[];
-    stream: boolean;
     provider?:
       | "workers-ai"
       | "openai"
@@ -80,9 +80,10 @@ export declare const aiChatRequestSchema: z.ZodObject<
   },
   {
     messages: {
-      role: "system" | "user" | "assistant";
+      role: "user" | "system" | "assistant";
       content: string;
     }[];
+    stream?: boolean | undefined;
     provider?:
       | "workers-ai"
       | "openai"
@@ -92,7 +93,6 @@ export declare const aiChatRequestSchema: z.ZodObject<
       | undefined;
     projectId?: string | undefined;
     model?: string | undefined;
-    stream?: boolean | undefined;
     temperature?: number | undefined;
     maxTokens?: number | undefined;
   }

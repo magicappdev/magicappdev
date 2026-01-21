@@ -37,9 +37,9 @@ A comprehensive monorepo-based fullstack app building platform inspired by Expo,
 - **Monorepo Structure**: Utilizes Turborepo with pnpm for package management, including local/remote caching, TypeScript, and Node.js/JS as preferred languages.
 - **CLI Tool**: Generate and manage app code, components, and packages with ease.
 - **Web Interface**: Interactive AI chat for app creation, hot reload preview, and prompt suggestions.
-- **Mobile App**: React Native-based app with features mirroring the web interface.
-- **API & Database**: Deployable to Cloudflare for backend services and database integration.
-- **AI Integration**: AI-powered code generation, error fixing, and suggestions.
+- **Mobile App**: React Native-based app with interactive AI chat (SSE streaming), deep link authentication, and cross-platform component sharing.
+- **API & Database**: High-performance backend on Cloudflare Workers/D1 with integrated AI model routing and provider support.
+- **AI Integration**: Real-time streaming AI chat using Cloudflare Workers AI (Llama 3.1).
 - **Extensibility**: Highly customizable with plugins and good debugging utilities.
 
 ## Installation & Setup

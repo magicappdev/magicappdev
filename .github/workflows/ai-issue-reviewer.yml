@@ -1,0 +1,15 @@
+name: AI Issue Reviewer
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Magic Reviewer Agent
+        run: |
+          curl -X POST https://magicappdev-agent.magicappdev.workers.dev/api/reviewer/review \
+            -H "Content-Type: application/json" \
+            -d '{"issue": ${{ toJson(github.event.issue) }}}'

@@ -2,10 +2,11 @@ import { Typography } from "@/components/ui/Typography";
 import { useAuth } from "../../contexts/AuthContext";
 import { Navigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
-import { Github, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
 import React, { useState } from "react";
+import { Github } from "lucide-react";
+import { api } from "@/lib/api";
 
 export default function RegisterPage() {
   const { user, loginWithGitHub, isLoading } = useAuth();
@@ -17,17 +18,27 @@ export default function RegisterPage() {
     return <Navigate to="/" replace />;
   }
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement manual registration logic
-    console.log("Register with:", email, password, name);
+    try {
+      const response = await api.register({ email, password, name });
+
+      if (response.success) {
+        alert("Registration successful! Please login.");
+        window.location.href = "/login";
+      } else {
+        alert(response.error?.message || "Registration failed");
+      }
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "An error occurred");
+    }
   };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[80vh] space-y-8">
       <div className="flex flex-col items-center space-y-4 text-center">
-        <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
-          <Sparkles size={40} />
+        <div className="w-20 h-20 rounded-2xl bg-white flex items-center justify-center shadow-lg border border-outline/5">
+          <img src="/logo.png" className="w-12 h-12" alt="MagicApp Logo" />
         </div>
         <div>
           <Typography variant="display" className="text-4xl md:text-5xl">

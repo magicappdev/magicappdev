@@ -99,3 +99,30 @@ App templates and generators for MagicAppDev.
 ## Conclusion
 
 This document provides a comprehensive overview of the architecture, dependencies, usage guidelines, and integration points for each package in the MagicAppDev project. Use this documentation to ensure consistency and maintainability across all packages.
+
+## 🚀 Development Roadmap
+
+### Phase 1: Foundation (Completed)
+
+- Monorepo setup, Database schema, Core API, Basic Auth.
+
+### Phase 2: AI Orchestration (In Progress)
+
+- [x] Stateful MagicAgent with Cloudflare Agents SDK.
+- [x] Model Routing (Fast/Complex/Code).
+- [ ] Tool Use: Agent-driven template selection.
+- [ ] Agent-led project setup wizard.
+
+### Phase 3: Automation & Scaling (Upcoming)
+
+- [x] AI Issue Reviewer Agent.
+- [ ] Automated code fixers.
+- [ ] Template Marketplace.
+
+## 📝 TODO List
+
+- [ ] Implement `MagicAgent` tool calling for `registry.generate()`.
+- [ ] Add real-time UI preview in Web app using the generated code.
+- [ ] Enhance mobile deep-link reliability on Android.
+- [ ] Implement global search across templates and projects.
+- [ ] Set up end-to-end testing with Playwright.

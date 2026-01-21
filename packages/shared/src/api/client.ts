@@ -2,6 +2,7 @@ import type {
   AiChatResponse,
   AiMessage,
   ApiResponse,
+  AuthResponse,
   ListProjectsResponse,
   Project,
   User,
@@ -35,10 +36,12 @@ export class ApiClient {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(
-        (errorData as any)?.error?.message ||
-          `API Request failed: ${response.statusText}`,
-      );
+      const message =
+        (errorData as { error?: { message?: string } })?.error?.message ||
+        (errorData as { error?: string })?.error ||
+        `API Request failed: ${response.statusText}`;
+
+      throw new Error(message);
     }
 
     const data = await response.json();
@@ -47,6 +50,27 @@ export class ApiClient {
 
   getGitHubLoginUrl(platform: "web" | "mobile" = "web"): string {
     return `${this.baseUrl}/auth/login/github?platform=${platform}`;
+  }
+
+  async login(credentials: {
+    email: string;
+    password: string;
+  }): Promise<ApiResponse<AuthResponse>> {
+    return this.request("/auth/login", {
+      method: "POST",
+      body: JSON.stringify(credentials),
+    });
+  }
+
+  async register(data: {
+    email: string;
+    password: string;
+    name: string;
+  }): Promise<ApiResponse<{ success: boolean; message: string }>> {
+    return this.request("/auth/register", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
   }
 
   async logout(refreshToken: string): Promise<void> {

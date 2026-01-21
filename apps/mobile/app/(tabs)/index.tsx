@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, ScrollView } from "react-native";
+import { StyleSheet, Text, View, ScrollView, Image } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Link } from "expo-router";
 
@@ -7,7 +7,12 @@ export default function HomeScreen() {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
         <View style={styles.logoContainer}>
-          <Ionicons name="flash" size={40} color="#007AFF" />
+          <Image
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
+            source={require("../../assets/logo.png")}
+            style={styles.logo}
+            resizeMode="contain"
+          />
         </View>
         <Text style={styles.title}>MagicAppDev</Text>
         <Text style={styles.subtitle}>Build apps like magic</Text>
@@ -85,15 +90,22 @@ const styles = StyleSheet.create({
     marginVertical: 40,
   },
   logoContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 20,
+    width: 100,
+    height: 100,
+    borderRadius: 24,
     backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 16,
-    boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
     elevation: 5,
+  },
+  logo: {
+    width: 64,
+    height: 64,
   },
   title: {
     fontSize: 32,

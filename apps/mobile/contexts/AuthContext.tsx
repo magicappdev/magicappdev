@@ -9,6 +9,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   loginWithGitHub: () => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -22,7 +23,57 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     loadAuth();
+
+    // Set up deep link listener for OAuth callbacks
+    const subscription = Linking.addEventListener("url", ({ url }) => {
+      handleDeepLink(url);
+    });
+
+    return () => {
+      subscription.remove();
+    };
   }, []);
+
+  const handleDeepLink = async (url: string) => {
+    if (url.includes("auth/callback")) {
+      const params = Linking.parse(url);
+      const accessToken = params.queryParams?.accessToken as string;
+      const refreshToken = params.queryParams?.refreshToken as string;
+
+      if (accessToken && refreshToken) {
+        await saveTokens(accessToken, refreshToken);
+      }
+    }
+  };
+
+  const saveTokens = async (accessToken: string, refreshToken: string) => {
+    await SecureStore.setItemAsync("access_token", accessToken);
+    await SecureStore.setItemAsync("refresh_token", refreshToken);
+    api.setToken(accessToken);
+    try {
+      const userData = await api.getCurrentUser();
+      setUser(userData);
+    } catch (e) {
+      console.error("Failed to fetch user after login", e);
+    }
+  };
+
+  const login = async (email: string, password: string) => {
+    setIsLoading(true);
+    try {
+      const response = await api.login({ email, password });
+      if (response.success) {
+        await saveTokens(response.data.accessToken, response.data.refreshToken);
+      } else {
+        alert(response.error?.message || "Login failed");
+      }
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "An error occurred";
+      alert(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const loadAuth = async () => {
     const accessToken = await SecureStore.getItemAsync("access_token");
@@ -57,21 +108,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       api.getGitHubLoginUrl("mobile") +
       `&redirect_uri=${encodeURIComponent(redirectUri)}`;
 
-    const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri);
+    console.log("Starting GitHub login with redirect:", redirectUri);
 
-    if (result.type === "success") {
-      const { url } = result;
-      const params = Linking.parse(url);
-      const accessToken = params.queryParams?.accessToken as string;
-      const refreshToken = params.queryParams?.refreshToken as string;
+    try {
+      const result = await WebBrowser.openAuthSessionAsync(
+        authUrl,
+        redirectUri,
+      );
 
-      if (accessToken && refreshToken) {
-        await SecureStore.setItemAsync("access_token", accessToken);
-        await SecureStore.setItemAsync("refresh_token", refreshToken);
-        api.setToken(accessToken);
-        const userData = await api.getCurrentUser();
-        setUser(userData);
+      if (result.type === "success") {
+        await handleDeepLink(result.url);
       }
+    } catch (e) {
+      console.error("Browser login failed", e);
     }
   };
 
@@ -92,7 +141,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, isLoading, loginWithGitHub, logout: handleLogout }}
+      value={{ user, isLoading, loginWithGitHub, login, logout: handleLogout }}
     >
       {children}
     </AuthContext.Provider>

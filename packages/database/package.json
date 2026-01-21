@@ -30,7 +30,7 @@
     "lint:fix": "eslint . --fix",
     "migrate:local": "wrangler d1 migrations apply magicappdev-db --local -c wrangler.toml",
     "migrate:prod": "wrangler d1 migrations apply magicappdev-db --remote -c wrangler.toml --env-file .env",
-    "test": "vitest run"
+    "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "@magicappdev/shared": "workspace:*",

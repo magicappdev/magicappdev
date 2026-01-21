@@ -55,9 +55,12 @@ export function AppShell({ children }: AppShellProps) {
     <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row overflow-hidden">
       {/* Mobile Header */}
       <header className="md:hidden flex items-center justify-between p-4 border-b border-outline/10 bg-surface/50 backdrop-blur-md sticky top-0 z-50">
-        <Typography variant="title" className="text-primary font-bold">
-          MagicApp
-        </Typography>
+        <div className="flex items-center space-x-2">
+          <img src="/logo.png" className="w-8 h-8" alt="MagicApp Logo" />
+          <Typography variant="title" className="text-primary font-bold">
+            MagicApp
+          </Typography>
+        </div>
         <Button variant="text" size="sm" onClick={toggleSidebar}>
           {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
         </Button>
@@ -77,9 +80,7 @@ export function AppShell({ children }: AppShellProps) {
             )}
           >
             <div className="hidden md:flex items-center space-x-2">
-              <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
-                <div className="w-4 h-4 rounded-full bg-primary" />
-              </div>
+              <img src="/logo.png" className="w-10 h-10" alt="MagicApp Logo" />
               <Typography variant="headline" className="text-xl">
                 MagicApp
               </Typography>

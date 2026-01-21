@@ -4,13 +4,113 @@
 
 import { accounts, profiles, sessions, users } from "@magicappdev/database";
 import type { AppContext } from "../types.js";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { sign } from "hono/jwt";
+import bcrypt from "bcryptjs";
 import { Hono } from "hono";
 
 export const authRoutes = new Hono<AppContext>();
 
-// Types for GitHub API responses
+// Manual Register
+authRoutes.post("/register", async c => {
+  const { email, password, name } = await c.req.json();
+  if (!email || !password || !name) {
+    return c.json({ error: "Missing required fields" }, 400);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = c.var.db as any;
+
+  // Check if user exists
+  const existingUser = await db.query.users.findFirst({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    where: (u: any, { eq }: any) => eq(u.email, email),
+  });
+
+  if (existingUser) {
+    return c.json({ error: "User already exists" }, 400);
+  }
+
+  const userId = crypto.randomUUID();
+  const passwordHash = await bcrypt.hash(password, 10);
+
+  await db.insert(users).values({
+    id: userId,
+    email,
+    name,
+    passwordHash,
+    role: "user",
+    emailVerified: false,
+  });
+
+  await db.insert(profiles).values({
+    id: crypto.randomUUID(),
+    userId,
+  });
+
+  return c.json({ success: true, message: "User registered successfully" });
+});
+
+// Manual Login
+authRoutes.post("/login", async c => {
+  const { email, password } = await c.req.json();
+  if (!email || !password) {
+    return c.json({ error: "Email and password required" }, 400);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = c.var.db as any;
+
+  const user = await db.query.users.findFirst({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    where: (u: any, { eq }: any) => eq(u.email, email),
+  });
+
+  if (!user || !user.passwordHash) {
+    return c.json({ error: "Invalid credentials" }, 401);
+  }
+
+  const isValid = await bcrypt.compare(password, user.passwordHash);
+  if (!isValid) {
+    return c.json({ error: "Invalid credentials" }, 401);
+  }
+
+  // Create Session
+  const accessToken = await sign(
+    {
+      sub: user.id,
+      role: user.role,
+      exp: Math.floor(Date.now() / 1000) + 60 * 60,
+    },
+    c.env.JWT_SECRET || "secret-fallback-do-not-use-in-prod",
+  );
+
+  const refreshToken = crypto.randomUUID();
+  await db.insert(sessions).values({
+    id: crypto.randomUUID(),
+    userId: user.id,
+    refreshToken,
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    userAgent: c.req.header("User-Agent"),
+    ipAddress: c.req.header("CF-Connecting-IP"),
+  });
+
+  return c.json({
+    success: true,
+    data: {
+      accessToken,
+      refreshToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+      },
+    },
+  });
+});
+
+// Login - Redirect to GitHub
 interface GitHubUser {
   id: number;
   login: string;
@@ -33,7 +133,9 @@ interface GitHubEmail {
 authRoutes.get("/login/github", c => {
   const clientId = c.env.GITHUB_CLIENT_ID;
   const platform = c.req.query("platform") || "web";
-  const redirectUri =
+  const clientRedirectUri = c.req.query("redirect_uri");
+
+  const apiRedirectUri =
     c.env.GITHUB_REDIRECT_URI ||
     new URL(c.req.url).origin + "/auth/callback/github";
 
@@ -41,11 +143,17 @@ authRoutes.get("/login/github", c => {
     return c.json({ error: "Missing GITHUB_CLIENT_ID" }, 500);
   }
 
+  // Encode platform and client redirect URI into state
+  const state = JSON.stringify({
+    platform,
+    redirect_uri: clientRedirectUri,
+  });
+
   const params = new URLSearchParams({
     client_id: clientId,
-    redirect_uri: redirectUri,
+    redirect_uri: apiRedirectUri,
     scope: "user:email read:user",
-    state: platform, // Pass platform in state
+    state,
   });
 
   return c.redirect(
@@ -58,7 +166,26 @@ authRoutes.get("/callback/github", async c => {
   console.log("GitHub callback received");
   const code = c.req.query("code");
   const error = c.req.query("error");
-  const platform = c.req.query("state") || "web";
+  const stateStr = c.req.query("state");
+
+  let platform = "web";
+  let clientRedirectUri: string | undefined;
+
+  try {
+    if (stateStr) {
+      // Try to parse state as JSON
+      const state = JSON.parse(stateStr);
+      if (typeof state === "object") {
+        platform = state.platform || "web";
+        clientRedirectUri = state.redirect_uri;
+      } else {
+        platform = stateStr;
+      }
+    }
+  } catch {
+    // Fallback to simple string state
+    platform = stateStr || "web";
+  }
 
   if (error || !code) {
     console.error("GitHub Auth Error:", error || "No code");
@@ -174,12 +301,12 @@ authRoutes.get("/callback/github", async c => {
     // 4. Find or Create User
     console.log("Checking for existing account...");
     const existingAccount = await db.query.accounts.findFirst({
-      where: and(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        eq((accounts as any).provider, "github"),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        eq((accounts as any).providerAccountId, String(githubUser.id)),
-      ),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      where: (acc: any, { and, eq }: any) =>
+        and(
+          eq(acc.provider, "github"),
+          eq(acc.providerAccountId, String(githubUser.id)),
+        ),
     });
 
     let userId = "";
@@ -192,12 +319,22 @@ authRoutes.get("/callback/github", async c => {
       // Check if user with email exists (link account)
       const existingUser = await db.query.users.findFirst({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        where: eq((users as any).email, email),
+        where: (u: any, { eq }: any) => eq(u.email, email),
       });
 
       if (existingUser) {
         console.log("Existing user found with email, linking account...");
         userId = existingUser.id;
+
+        // Update user name/avatar if not set or if we want to sync
+        await db
+          .update(users)
+          .set({
+            name: existingUser.name || githubUser.name || githubUser.login,
+            avatarUrl: existingUser.avatarUrl || githubUser.avatar_url,
+          })
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .where(eq(users.id as any, userId));
       } else {
         console.log("Creating new user...");
         // Create new user
@@ -265,7 +402,12 @@ authRoutes.get("/callback/github", async c => {
     // 6. Redirect back to app
     if (platform === "mobile") {
       const mobileUri =
-        c.env.MOBILE_REDIRECT_URI || "magicappdev://auth/callback";
+        clientRedirectUri ||
+        c.env.MOBILE_REDIRECT_URI ||
+        "magicappdev://auth/callback";
+
+      console.log("Redirecting to mobile URI:", mobileUri);
+
       return c.redirect(
         `${mobileUri}?accessToken=${accessToken}&refreshToken=${refreshToken}`,
       );
@@ -296,7 +438,7 @@ authRoutes.post("/refresh", async c => {
 
   const session = await db.query.sessions.findFirst({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    where: eq((sessions as any).refreshToken, refreshToken),
+    where: (s: any, { eq }: any) => eq(s.refreshToken, refreshToken),
   });
 
   if (!session || new Date(session.expiresAt) < new Date()) {

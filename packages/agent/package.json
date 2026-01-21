@@ -1,0 +1,26 @@
+{
+  "name": "@magicappdev/agent",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Stateful AI Agent for MagicAppDev",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@magicappdev/shared": "workspace:*",
+    "@magicappdev/templates": "workspace:*",
+    "agents": "latest",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260120.0",
+    "eslint": "^9.39.2",
+    "typescript": "5.9.3",
+    "wrangler": "4.59.2"
+  }
+}
