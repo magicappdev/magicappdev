@@ -5,8 +5,7 @@
     "declaration": true,
     "declarationMap": true,
     "emitDeclarationOnly": false,
-    "composite": false,
-    "paths": {}
+    "composite": false
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
