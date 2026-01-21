@@ -27,7 +27,7 @@ jobs:
         run: pnpm install
 
       - name: Build All
-        run: pnpm nx run-many -t build --all
+        run: pnpm  build 
 
       - name: Deploy API
         run: pnpm --filter @magicappdev/api deploy
