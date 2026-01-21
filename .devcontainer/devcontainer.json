@@ -2,7 +2,10 @@
 // README at: https://github.com/devcontainers/templates/tree/main/src/ubuntu
 {
   "name": "MagicAppDev",
-  "image": "mcr.microsoft.com/devcontainers/base:noble",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
   "workspaceFolder": "/workspace/magicappdev",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace/magicappdev,type=bind",
   "features": {
