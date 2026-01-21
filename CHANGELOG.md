@@ -1,13 +1,15 @@
-# 0.0.0 (2026-01-20)
+# 0.0.0 (2026-01-21)
 
 ### Bug Fixes
 
 - **api:** improve CORS logic and protect /auth/me route ([2189b11](https://github.com/magicappdev/magicappdev/commit/2189b1167c0eac3e68997f115520f27b37801191))
 - **api:** resolve linting errors and remove redundant declaration ([ed9f848](https://github.com/magicappdev/magicappdev/commit/ed9f848252a99f97128dd50da60ae9a61756d663))
 - **build:** resolve lint and dependency errors in api and mobile ([fdf5309](https://github.com/magicappdev/magicappdev/commit/fdf530961812f77734f37406da4def590a6f8fb0))
+- **ci:** add vitest to database and fix tsconfig paths ([8c7cf37](https://github.com/magicappdev/magicappdev/commit/8c7cf37fc35e9f233814386d6368f9b56b179f47))
 - **mobile:** configure metro for monorepo and fix dependencies ([15e2ab2](https://github.com/magicappdev/magicappdev/commit/15e2ab25db3e225e7e4795ed7143c04d09786ffa))
 - **mobile:** resolve bundler issues and config linting ([85140c9](https://github.com/magicappdev/magicappdev/commit/85140c902e4a89fe364cac02e213022167cf0d5c))
 - resolve linting errors across workspace ([bdc3faa](https://github.com/magicappdev/magicappdev/commit/bdc3faa22e6e0a0a33e69ba849b3479b1d2bc513))
+- **shared:** resolve lint warnings in api client and enhance agent ([4d72053](https://github.com/magicappdev/magicappdev/commit/4d72053e946b9dd0575a96e2269d52b795532c61))
 - **web:** fix open-next build by removing conflicting package and adding config ([127e2f9](https://github.com/magicappdev/magicappdev/commit/127e2f93100150ad3314371eff1e17f33ce08415))
 - **web:** pass login function to AuthContext provider ([534d29a](https://github.com/magicappdev/magicappdev/commit/534d29aae1b7e2eac2f33b7977701076f0ee72f5))
 - **web:** remove app store links from homepage ([6428a5c](https://github.com/magicappdev/magicappdev/commit/6428a5cd0ffba2c0d2d7aec9fea7c58b754db258))
