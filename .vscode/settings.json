@@ -211,5 +211,8 @@
     "editorBracketHighlight.foreground2": "#00d9ff",
     "editorBracketHighlight.foreground3": "#ffa500",
     "editorBracketHighlight.unexpectedBracket.foreground": "#ff0000"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
   }
 }

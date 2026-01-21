@@ -1,13 +1,10 @@
 #!/bin/bash
 set -e
-export NODE_ENV="development"
-export PNPM_HOME="/root/.local/share/pnpm"
-export PATH="$PNPM_HOME:$PATH"
 
 echo "🚀 MagicAppDev development environment..."
 
 # Ensure we're in the right directory
-cd /workspace/magicappdev
+cd /workspace
 
 # Ensure pnpm is available and correct version
 echo "📦 Configuring pnpm..."

@@ -184,7 +184,6 @@
     "PATH": "/root/.local/share/pnpm:${PATH}"
   },
 
-  "remoteUser": "root",
   "containerUser": "root",
   "postCreateCommand": "bash .devcontainer/setup.sh",
   "postStartCommand": "git status"
