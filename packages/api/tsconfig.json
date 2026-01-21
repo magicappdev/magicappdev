@@ -4,11 +4,7 @@
     "rootDir": "./src",
     "baseUrl": ".",
     "jsx": "react-jsx",
-    "jsxImportSource": "hono/jsx",
-    "paths": {
-      "@magicappdev/shared": ["../shared/src/index"],
-      "@magicappdev/database": ["../database/src/index"]
-    }
+    "jsxImportSource": "hono/jsx"
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules", "dist"],

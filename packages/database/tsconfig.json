@@ -4,10 +4,7 @@
     "rootDir": "./src",
     "baseUrl": ".",
     "module": "ESNext",
-    "moduleResolution": "bundler",
-    "paths": {
-      "@magicappdev/shared": ["../shared/src/index"]
-    }
+    "moduleResolution": "bundler"
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist"],
