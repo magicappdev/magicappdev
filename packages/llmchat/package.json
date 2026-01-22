@@ -5,13 +5,13 @@
   "scripts": {
     "cf-typegen": "wrangler types",
     "check": "tsc --noEmit && wrangler deploy --dry-run",
-    "deploy": "wrangler deploy -c wrangler.jsonc --env-file .env",
-    "dev": "wrangler dev -c wrangler.jsonc --env-file .env",
+    "deploy": "wrangler deploy -c wrangler.jsonc",
+    "dev": "wrangler dev -c wrangler.jsonc",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint src --ext .ts,.tsx",
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
-    "start": "wrangler dev -c wrangler.jsonc --env-file .env",
+    "start": "wrangler dev -c wrangler.jsonc",
     "test": "vitest run --passWithNoTests",
     "typecheck": "tsc --noEmit"
   },

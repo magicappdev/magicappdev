@@ -30,8 +30,8 @@ jobs:
       - name: Check Formatting
         run: pnpm format:check
 
-      - name: Nx Affected (lint, test, build, typecheck)
-        run: npx nx affected -t lint test build typecheck
+      - name: Nx Affected (lint, test, typecheck, build)
+        run: npx nx affected -t lint test typecheck build
         env:
           NX_NO_CLOUD: true
 
