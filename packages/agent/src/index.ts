@@ -1,15 +1,30 @@
+import type { TemplateMetadata } from "@magicappdev/templates";
 import { registry } from "@magicappdev/templates/registry";
 import type { Connection, WSMessage } from "agents";
 import { Agent } from "agents";
 
 export interface Env {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  AI: any;
+  AI: WorkerAi;
   DB: D1Database;
   MagicAgent: DurableObjectNamespace;
   IssueReviewer: DurableObjectNamespace;
   FeatureSuggester: DurableObjectNamespace;
   MODEL_ID?: string;
+}
+
+export interface WorkerAi {
+  run(
+    model: string,
+    options: {
+      messages: { role: string; content: string }[];
+      stream?: boolean;
+      response_format?: { type: string };
+    },
+  ): Promise<unknown>; // Worker AI returns various types depending on options
+}
+
+export interface AiResponse {
+  response?: string;
 }
 
 export interface Message {
@@ -83,7 +98,7 @@ export class MagicAgent extends Agent<Env, AgentState> {
 
     const templates = registry.getMetadata();
     const templateContext = templates
-      .map((t: any) => `- ${t.name} (${t.slug}): ${t.description}`)
+      .map((t: TemplateMetadata) => `- ${t.name} (${t.slug}): ${t.description}`)
       .join("\n");
 
     const systemPrompt = `You are the MagicAppDev assistant, an expert AI App Builder.
@@ -101,13 +116,13 @@ GOAL: Help the user build their app.
 User Request: ${content}`;
 
     try {
-      const stream = await this.env.AI.run(model, {
+      const stream = (await this.env.AI.run(model, {
         messages: [
           { role: "system", content: systemPrompt },
           ...updatedMessages.map(m => ({ role: m.role, content: m.content })),
         ],
         stream: true,
-      });
+      })) as ReadableStream;
 
       let assistantContent = "";
       const decoder = new TextDecoder();
@@ -120,7 +135,7 @@ User Request: ${content}`;
             const data = line.slice(6);
             if (data === "[DONE]") break;
             try {
-              const parsed = JSON.parse(data);
+              const parsed = JSON.parse(data) as AiResponse;
               if (parsed.response) {
                 assistantContent += parsed.response;
                 connection.send(
@@ -198,16 +213,18 @@ Context: ${context || "A fullstack app builder platform"}
 Output JSON format: { "suggestions": ["Idea 1", "Idea 2"] }`;
 
     try {
-      const response = await this.env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
-        messages: [{ role: "system", content: systemPrompt }],
-        response_format: { type: "json_object" },
-      });
+      const response = (await this.env.AI.run(
+        "@cf/meta/llama-3.1-8b-instruct",
+        {
+          messages: [{ role: "system", content: systemPrompt }],
+          response_format: { type: "json_object" },
+        },
+      )) as AiResponse | { response: string };
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const result = (response as any).response
-        ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          JSON.parse((response as any).response)
-        : response;
+      const result =
+        "response" in response && typeof response.response === "string"
+          ? JSON.parse(response.response)
+          : response;
 
       return Response.json(result);
     } catch (err: unknown) {

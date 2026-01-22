@@ -6,6 +6,7 @@
   "type": "module",
   "main": "src/index.ts",
   "scripts": {
+    "build": "tsc -b",
     "deploy": "wrangler deploy",
     "dev": "wrangler dev",
     "lint": "eslint .",

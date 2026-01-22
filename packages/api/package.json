@@ -11,7 +11,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "vitest run --passWithNoTests",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc -b"
   },
   "dependencies": {
     "@magicappdev/database": "workspace:*",
@@ -30,6 +30,7 @@
     "eslint-config-prettier": "^10.1.8",
     "typescript": "~5.8.2",
     "typescript-eslint": "^8.53.1",
-    "vitest": "^4.0.17"
+    "vitest": "^4.0.17",
+    "wrangler": "4.59.2"
   }
 }
