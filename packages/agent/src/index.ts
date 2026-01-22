@@ -68,7 +68,7 @@ export class MagicAgent extends Agent<Env, AgentState> {
     }
   }
 
-  private async handleChat(connection: Connection, content: string) {
+  override async handleChat(connection: Connection, content: string) {
     const userMessage: Message = {
       role: "user",
       content,
@@ -173,7 +173,7 @@ User Request: ${content}`;
  * IssueReviewer - Autonomous Repo Maintenance
  */
 export class IssueReviewer extends Agent<Env, { lastProcessedIssue?: string }> {
-  async onRequest(): Promise<Response> {
+  override async onRequest(): Promise<Response> {
     // const { issue } = await request.json() as any;
     // Analysis logic here...
     return Response.json({
@@ -187,7 +187,7 @@ export class IssueReviewer extends Agent<Env, { lastProcessedIssue?: string }> {
  * FeatureSuggester - Roadmap Generator
  */
 export class FeatureSuggester extends Agent<Env, { ideas: string[] }> {
-  async onRequest(request: Request): Promise<Response> {
+  override async onRequest(request: Request): Promise<Response> {
     const { context } = (await request.json().catch(() => ({}))) as {
       context?: string;
     };
