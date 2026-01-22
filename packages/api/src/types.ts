@@ -42,6 +42,8 @@ export interface Variables {
   db: Database;
   /** Current user ID (set after auth) */
   userId?: string;
+  /** Current user role */
+  userRole?: string;
 }
 
 /** Request context with typed env and variables */

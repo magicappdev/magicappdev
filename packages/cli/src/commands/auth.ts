@@ -3,6 +3,7 @@
  */
 
 import { header, logo, success, error, info, command } from "../lib/ui.js";
+import { saveConfig, loadConfig } from "../lib/config.js";
 import type { AddressInfo } from "net";
 import { api } from "../lib/api.js";
 import { Command } from "commander";
@@ -29,8 +30,11 @@ authCommand
       const refreshToken = url.searchParams.get("refreshToken");
 
       if (accessToken && refreshToken) {
-        // Store tokens (mock storage for now, should use a config file)
-        info(`Access Token received`);
+        // Store tokens
+        await saveConfig({ accessToken, refreshToken });
+        api.setToken(accessToken);
+
+        info(`Access Token received and saved`);
 
         res.writeHead(200, { "Content-Type": "text/html" });
         res.end(
@@ -51,8 +55,8 @@ authCommand
       const redirectUri = `http://localhost:${port}`;
 
       const loginUrl =
-        api.getGitHubLoginUrl("web") +
-        `&FRONTEND_URL=${encodeURIComponent(redirectUri)}`;
+        api.getGitHubLoginUrl("mobile") +
+        `&redirect_uri=${encodeURIComponent(redirectUri)}`;
 
       await open(loginUrl);
       info(`If the browser didn't open, visit: ${loginUrl}`);
@@ -64,6 +68,11 @@ authCommand
   .description("Show current user")
   .action(async () => {
     try {
+      const config = await loadConfig();
+      if (!config.accessToken) {
+        throw new Error("No token found");
+      }
+      api.setToken(config.accessToken);
       const user = await api.getCurrentUser();
       success(`Logged in as: ${user.name} (${user.email})`);
     } catch {

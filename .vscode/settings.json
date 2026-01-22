@@ -31,6 +31,7 @@
     "Appname",
     "appwrite",
     "avio",
+    "createmagicapp",
     "eslintcache",
     "gapi",
     "gradlew",
@@ -214,5 +215,6 @@
   },
   "[jsonc]": {
     "editor.defaultFormatter": "vscode.json-language-features"
-  }
+  },
+  "errorLens.excludePatterns": ["**/*.{jsonc}"]
 }

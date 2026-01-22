@@ -4,6 +4,7 @@ import { ApiClient } from "@magicappdev/shared";
 const API_URL = "https://magicappdev-api.magicappdev.workers.dev";
 export const CHAT_API_URL =
   "https://magicappdev-llmchat.magicappdev.workers.dev";
+export const AGENT_HOST = "magicappdev-agent.magicappdev.workers.dev";
 
 export const api = new ApiClient(API_URL);
 

@@ -1,4 +1,11 @@
-import { ArrowRight, Bot, Rocket, Smartphone, Terminal } from "lucide-react";
+import {
+  ArrowRight,
+  Bot,
+  Rocket,
+  Smartphone,
+  Terminal,
+  Sparkles,
+} from "lucide-react";
 import { Typography } from "@/components/ui/Typography";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -12,8 +19,8 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-linear-to-b from-primary/5 to-transparent pointer-events-none" />
 
         <div className="relative z-10 flex flex-col items-center space-y-6 max-w-4xl mx-auto">
-          <div className="w-24 h-24 rounded-3xl bg-white flex items-center justify-center shadow-2xl border border-outline/5 mb-4 group-hover:scale-105 transition-transform duration-500">
-            <img src="/logo.png" className="w-16 h-16" alt="MagicApp Logo" />
+          <div className="w-24 h-24 rounded-3xl bg-primary flex items-center justify-center shadow-2xl border border-outline/5 mb-4 group-hover:scale-105 transition-transform duration-500">
+            <Sparkles className="w-12 h-12 text-primary-foreground" />
           </div>
           <span className="inline-flex items-center px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium border border-primary/20">
             v0.1.0 Alpha Release

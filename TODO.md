@@ -18,14 +18,13 @@
   - [x] Authentication Pages (Login, Register)
   - [x] Interactive Chat Interface (`ChatPage`) with WebSockets
   - [x] Theme & UI Components (Material 3 / Tailwind)
+- **Mobile App**
+  - [x] Connect `apps/mobile` to API & Agent
+  - [x] Implement Chat UI in React Native
+- **CLI**
+  - [x] Update CLI to use new Auth & Agent endpoints (Added `chat` command)
 
 ## 🚧 In Progress
-
-- **Mobile App**
-  - [ ] Connect `apps/mobile` to API & Agent
-  - [ ] Implement Chat UI in React Native
-- **CLI**
-  - [ ] Update CLI to use new Auth & Agent endpoints
 
 ## 📋 Backlog
 

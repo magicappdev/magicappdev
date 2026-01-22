@@ -9,16 +9,21 @@ import {
   Platform,
   ActivityIndicator,
 } from "react-native";
-import EventSource, { type EventSourceListener } from "react-native-sse";
 import { SafeAreaView } from "react-native-safe-area-context";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
-import { CHAT_API_URL } from "../../lib/api";
+import { AgentClient } from "agents/client";
+import { AGENT_HOST } from "../../lib/api";
+
+interface AgentMessageEvent {
+  data: string | ArrayBuffer | Blob;
+}
 
 interface Message {
   id: string;
   role: "user" | "assistant" | "system";
   content: string;
+  timestamp: number;
 }
 
 export default function ChatScreen() {
@@ -28,117 +33,139 @@ export default function ChatScreen() {
       role: "assistant",
       content:
         "Hello! I'm your AI development assistant. Describe the app you want to build, and I'll help you create it.",
+      timestamp: Date.now(),
     },
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [suggestedTemplate, setSuggestedTemplate] = useState<string | null>(
+    null,
+  );
+
   const flatListRef = useRef<FlatList>(null);
+  const clientRef = useRef<AgentClient | null>(null);
+
+  useEffect(() => {
+    // Initialize Agent Client
+    const client = new AgentClient({
+      host: AGENT_HOST,
+      agent: "magic-agent",
+      name: "default",
+    });
+
+    client.addEventListener("open", () => {
+      console.log("Connected to Agent");
+      setIsConnected(true);
+    });
+
+    client.addEventListener("close", () => {
+      console.log("Disconnected from Agent");
+      setIsConnected(false);
+    });
+
+    client.addEventListener("message", (event: AgentMessageEvent) => {
+      try {
+        const data = JSON.parse(event.data as string);
+
+        if (data.type === "chat_chunk") {
+          setMessages(prev => {
+            const last = prev[prev.length - 1];
+            if (last && last.role === "assistant" && last.id === "streaming") {
+              return [
+                ...prev.slice(0, -1),
+                { ...last, content: last.content + data.content },
+              ];
+            } else {
+              return [
+                ...prev,
+                {
+                  id: "streaming",
+                  role: "assistant",
+                  content: data.content,
+                  timestamp: Date.now(),
+                },
+              ];
+            }
+          });
+        } else if (data.type === "chat_done") {
+          setMessages(prev => {
+            const last = prev[prev.length - 1];
+            if (last && last.id === "streaming") {
+              return [
+                ...prev.slice(0, -1),
+                { ...last, id: Date.now().toString() },
+              ];
+            }
+            return prev;
+          });
+          setIsLoading(false);
+          if (data.suggestedTemplate) {
+            setSuggestedTemplate(data.suggestedTemplate);
+          }
+        } else if (data.type === "error") {
+          setIsLoading(false);
+          console.error("Agent error:", data.message);
+        }
+      } catch (e) {
+        console.error("Failed to parse message", e);
+      }
+    });
+
+    clientRef.current = client;
+
+    return () => {
+      client.close();
+    };
+  }, []);
 
   const sendMessage = async () => {
-    if (!input.trim() || isLoading) return;
+    if (!input.trim() || isLoading || !isConnected) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
       content: input.trim(),
+      timestamp: Date.now(),
     };
 
     setMessages(prev => [...prev, userMessage]);
     setInput("");
     setIsLoading(true);
+    setSuggestedTemplate(null);
 
-    const assistantMessageId = (Date.now() + 1).toString();
-    setMessages(prev => [
-      ...prev,
-      { id: assistantMessageId, role: "assistant", content: "" },
-    ]);
+    // Send to Agent
+    clientRef.current?.send(
+      JSON.stringify({
+        type: "chat",
+        content: userMessage.content,
+      }),
+    );
+  };
 
-    try {
-      const payload = {
-        messages: [
-          ...messages.map(m => ({ role: m.role, content: m.content })),
-          { role: "user", content: userMessage.content },
-        ],
-      };
-
-      // Use EventSource for SSE
-      // Note: We use CHAT_API_URL if it points to llmchat worker,
-      // OR we can use the main API if it supports /api/ai/chat with SSE.
-      // Based on shared/api/client.ts, the main API supports /ai/chat.
-      // If CHAT_API_URL is different, we use it.
-      // The llmchat worker uses /api/chat. The main api uses /ai/chat.
-      // I'll assume we want to use the llmchat worker as requested.
-
-      const es = new EventSource(`${CHAT_API_URL}/api/chat`, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        method: "POST",
-        body: JSON.stringify(payload),
-        pollingInterval: 0,
-      });
-
-      const listener: EventSourceListener = event => {
-        if (event.type === "open") {
-          console.log("Connection opened");
-        } else if (event.type === "message") {
-          if (event.data === "[DONE]") {
-            es.close();
-            setIsLoading(false);
-            return;
-          }
-          try {
-            // Some SSE implementations send just the text, others send JSON.
-            // packages/llmchat sends the raw stream from Workers AI.
-            // Workers AI stream chunks are usually JSON strings like { response: "..." }
-            // But sometimes they are just text.
-            // Let's try parsing.
-            const parsed = JSON.parse(event.data || "{}");
-            if (parsed.response) {
-              setMessages(prev =>
-                prev.map(msg =>
-                  msg.id === assistantMessageId
-                    ? { ...msg, content: msg.content + parsed.response }
-                    : msg,
-                ),
-              );
-            }
-          } catch {
-            // If it's not JSON, maybe it's raw text?
-            // Workers AI usually sends JSON.
-            console.log("Received data:", event.data);
-          }
-        } else if (event.type === "error") {
-          if (event.message !== "network error") {
-            // Ignore some network errors on close
-            console.error("Connection error:", event.message);
-          }
-          es.close();
-          setIsLoading(false);
-        }
-      };
-
-      es.addEventListener("open", listener);
-      es.addEventListener("message", listener);
-      es.addEventListener("error", listener);
-    } catch (error) {
-      console.error("Chat init error:", error);
-      setIsLoading(false);
-      setMessages(prev => [
-        ...prev,
-        {
-          id: Date.now().toString(),
-          role: "assistant",
-          content: "Sorry, I encountered an error connecting to the API.",
-        },
-      ]);
-    }
+  const applyTemplate = (templateId: string) => {
+    const msg = `Use the ${templateId} template.`;
+    setInput(msg);
+    // In mobile we could also navigate to a preview or similar
   };
 
   return (
     <SafeAreaView style={styles.container} edges={["bottom"]}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Magic AI Chat</Text>
+        <View style={styles.headerTitleContainer}>
+          <Text style={styles.headerTitle}>Magic AI Chat</Text>
+          <View style={styles.statusContainer}>
+            <View
+              style={[
+                styles.statusDot,
+                { backgroundColor: isConnected ? "#34C759" : "#FF3B30" },
+              ]}
+            />
+            <Text style={styles.statusText}>
+              {isConnected ? "Connected" : "Disconnected"}
+            </Text>
+          </View>
+        </View>
       </View>
 
       <FlatList
@@ -171,6 +198,23 @@ export default function ChatScreen() {
         }
       />
 
+      {suggestedTemplate && (
+        <View style={styles.suggestionContainer}>
+          <View style={styles.suggestionCard}>
+            <View style={styles.suggestionTextContainer}>
+              <Text style={styles.suggestionLabel}>Suggested Template</Text>
+              <Text style={styles.suggestionValue}>{suggestedTemplate}</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.applyButton}
+              onPress={() => applyTemplate(suggestedTemplate)}
+            >
+              <Text style={styles.applyButtonText}>Use</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
@@ -180,17 +224,19 @@ export default function ChatScreen() {
             style={styles.input}
             value={input}
             onChangeText={setInput}
-            placeholder="Type a message..."
+            placeholder={isConnected ? "Describe your app..." : "Connecting..."}
             placeholderTextColor="#999"
             multiline
+            editable={isConnected}
           />
           <TouchableOpacity
             style={[
               styles.sendButton,
-              (!input.trim() || isLoading) && styles.sendButtonDisabled,
+              (!input.trim() || isLoading || !isConnected) &&
+                styles.sendButtonDisabled,
             ]}
             onPress={sendMessage}
-            disabled={!input.trim() || isLoading}
+            disabled={!input.trim() || isLoading || !isConnected}
           >
             {isLoading ? (
               <ActivityIndicator color="#fff" size="small" />
@@ -214,6 +260,10 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#E5E5EA",
     backgroundColor: "#fff",
+  },
+  headerTitleContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
   },
   headerTitle: {
@@ -221,12 +271,26 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#000",
   },
+  statusContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  statusText: {
+    fontSize: 12,
+    color: "#8E8E93",
+  },
   messageList: {
     padding: 16,
     gap: 12,
   },
   messageBubble: {
-    maxWidth: "80%",
+    maxWidth: "85%",
     padding: 12,
     borderRadius: 20,
     marginBottom: 4,
@@ -238,8 +302,10 @@ const styles = StyleSheet.create({
   },
   assistantBubble: {
     alignSelf: "flex-start",
-    backgroundColor: "#E5E5EA",
+    backgroundColor: "#fff",
     borderBottomLeftRadius: 4,
+    borderWidth: 1,
+    borderColor: "#E5E5EA",
   },
   messageText: {
     fontSize: 16,
@@ -250,6 +316,45 @@ const styles = StyleSheet.create({
   },
   assistantText: {
     color: "#000",
+  },
+  suggestionContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+  },
+  suggestionCard: {
+    flexDirection: "row",
+    backgroundColor: "#E1F5FE",
+    padding: 12,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderWidth: 1,
+    borderColor: "#B3E5FC",
+  },
+  suggestionTextContainer: {
+    flex: 1,
+  },
+  suggestionLabel: {
+    fontSize: 10,
+    color: "#0288D1",
+    fontWeight: "700",
+    textTransform: "uppercase",
+  },
+  suggestionValue: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#01579B",
+  },
+  applyButton: {
+    backgroundColor: "#0288D1",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  applyButtonText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
   },
   inputContainer: {
     flexDirection: "row",

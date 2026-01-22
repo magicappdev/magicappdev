@@ -8,6 +8,23 @@ import type {
   User,
 } from "../types/index.js";
 
+export interface Ticket {
+  id: string;
+  subject: string;
+  status: "open" | "in_progress" | "closed";
+  createdAt: string;
+  userName?: string;
+  userEmail?: string;
+}
+
+export interface AdminUser {
+  id: string;
+  name: string;
+  email: string;
+  role: "admin" | "user";
+  createdAt: string;
+}
+
 export class ApiClient {
   private accessToken: string | null = null;
 
@@ -143,6 +160,78 @@ export class ApiClient {
     }
 
     return response.data.message;
+  }
+
+  async submitContactForm(data: {
+    name: string;
+    email: string;
+    subject: string;
+    message: string;
+  }): Promise<{ success: boolean }> {
+    return this.request("/contact", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getTickets(): Promise<Ticket[]> {
+    const response = await this.request<ApiResponse<Ticket[]>>("/tickets");
+    if (!response.success) {
+      throw new Error(response.error.message);
+    }
+    return response.data;
+  }
+
+  async createTicket(data: {
+    subject: string;
+    message: string;
+  }): Promise<{ id: string }> {
+    const response = await this.request<ApiResponse<{ id: string }>>(
+      "/tickets",
+      {
+        method: "POST",
+        body: JSON.stringify(data),
+      },
+    );
+    if (!response.success) {
+      throw new Error(response.error.message);
+    }
+    return response.data;
+  }
+
+  async updateTicketStatus(
+    id: string,
+    status: "open" | "in_progress" | "closed",
+  ): Promise<void> {
+    const response = await this.request<ApiResponse<void>>(`/tickets/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    });
+    if (!response.success) {
+      throw new Error(response.error.message);
+    }
+  }
+
+  async getAdminUsers(): Promise<AdminUser[]> {
+    const response =
+      await this.request<ApiResponse<AdminUser[]>>("/admin/users");
+    if (!response.success) {
+      throw new Error(response.error.message);
+    }
+    return response.data;
+  }
+
+  async updateUserRole(id: string, role: "admin" | "user"): Promise<void> {
+    const response = await this.request<ApiResponse<void>>(
+      `/admin/users/${id}/role`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ role }),
+      },
+    );
+    if (!response.success) {
+      throw new Error(response.error.message);
+    }
   }
 
   async *streamMessage(messages: AiMessage[]): AsyncGenerator<string> {

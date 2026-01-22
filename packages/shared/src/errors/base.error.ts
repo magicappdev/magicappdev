@@ -26,7 +26,9 @@ export class AppError extends Error {
     this.timestamp = new Date().toISOString();
 
     // Maintain proper stack trace in V8 environments
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if ((Error as any).captureStackTrace) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (Error as any).captureStackTrace(this, this.constructor);
     }
   }

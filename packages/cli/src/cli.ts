@@ -5,6 +5,7 @@
 import { generateCommand } from "./commands/generate/index.js";
 import { doctorCommand } from "./commands/doctor.js";
 import { initCommand } from "./commands/init.js";
+import { chatCommand } from "./commands/chat.js";
 import { authCommand } from "./commands/auth.js";
 import { createRequire } from "module";
 import { Command } from "commander";
@@ -27,6 +28,7 @@ export function createProgram(): Command {
   // Add commands
   program.addCommand(initCommand);
   program.addCommand(authCommand);
+  program.addCommand(chatCommand);
   program.addCommand(generateCommand);
   program.addCommand(doctorCommand);
 

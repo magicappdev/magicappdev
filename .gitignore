@@ -58,3 +58,13 @@ apps\web\next-env.d.ts
 
 apps/web/.next/
 
+
+# Cloudflare Wrangler
+.wrangler
+.dev.vars
+*.wrangler.toml
+**/*.wrangler.toml
+apps/*/wrangler.toml
+packages/*/wrangler.toml
+packages/*/wrangler.jsonc
+

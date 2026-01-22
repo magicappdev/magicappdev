@@ -5,6 +5,8 @@
 import { createDatabase } from "@magicappdev/database";
 import { authMiddleware } from "./middlewares/auth.js";
 import { projectsRoutes } from "./routes/projects.js";
+import { ticketsRoutes } from "./routes/tickets.js";
+import { adminRoutes } from "./routes/admin.js";
 import { authRoutes } from "./routes/auth.js";
 import type { AppContext } from "./types.js";
 import { aiRoutes } from "./routes/ai.js";
@@ -75,6 +77,21 @@ export function createApp() {
 
   app.use("/ai/*", authMiddleware);
   app.route("/ai", aiRoutes);
+
+  app.use("/tickets/*", authMiddleware);
+  app.route("/tickets", ticketsRoutes);
+
+  app.use("/admin/*", authMiddleware);
+  app.route("/admin", adminRoutes);
+
+  // Public routes
+  app.post("/contact", async c => {
+    const { name, email, subject, message } = await c.req.json();
+    console.log(`Contact form submission from ${name} (${email}): ${subject}`);
+    console.log(`Message: ${message}`);
+    console.log(`Email would be sent to: dev.magicapp@gmail.com`);
+    return c.json({ success: true, message: "Message received" });
+  });
 
   // Error handling
   app.onError((err, c) => {

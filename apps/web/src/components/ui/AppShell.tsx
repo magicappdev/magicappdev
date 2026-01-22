@@ -1,11 +1,15 @@
 import {
-  LayoutDashboard,
+  Home,
   Folder,
   Menu,
   MessageSquare,
   Settings,
   X,
   LogOut,
+  Info,
+  Mail,
+  Ticket,
+  ShieldCheck,
 } from "lucide-react";
 import { Link, useLocation, Navigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
@@ -35,7 +39,13 @@ export function AppShell({ children }: AppShellProps) {
   }
 
   // Define protected routes
-  const protectedRoutes = ["/chat", "/projects", "/settings"];
+  const protectedRoutes = [
+    "/chat",
+    "/projects",
+    "/settings",
+    "/tickets",
+    "/admin",
+  ];
   const isProtectedRoute = protectedRoutes.some(route =>
     location.pathname.startsWith(route),
   );
@@ -45,11 +55,23 @@ export function AppShell({ children }: AppShellProps) {
   }
 
   const navItems = [
-    { label: "Dashboard", icon: LayoutDashboard, href: "/" },
-    { label: "Projects", icon: Folder, href: "/projects" },
-    { label: "Chat", icon: MessageSquare, href: "/chat" },
-    { label: "Settings", icon: Settings, href: "/settings" },
+    { label: "Home", icon: Home, href: "/" },
+    { label: "About", icon: Info, href: "/about" },
+    { label: "Contact", icon: Mail, href: "/contact" },
   ];
+
+  if (user) {
+    navItems.push(
+      { label: "Projects", icon: Folder, href: "/projects" },
+      { label: "Chat", icon: MessageSquare, href: "/chat" },
+      { label: "Tickets", icon: Ticket, href: "/tickets" },
+      { label: "Settings", icon: Settings, href: "/settings" },
+    );
+
+    if (user.role === "admin") {
+      navItems.push({ label: "Admin", icon: ShieldCheck, href: "/admin" });
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row overflow-hidden">

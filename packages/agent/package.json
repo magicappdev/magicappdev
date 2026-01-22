@@ -7,8 +7,8 @@
   "main": "src/index.ts",
   "scripts": {
     "build": "tsc -b",
-    "deploy": "wrangler deploy",
-    "dev": "wrangler dev",
+    "deploy": "wrangler deploy -c wrangler.toml",
+    "dev": "wrangler dev -c wrangler.toml",
     "lint": "eslint .",
     "typecheck": "tsc -b"
   },

@@ -37,6 +37,7 @@ export const authMiddleware = createMiddleware<AppContext>(async (c, next) => {
       "HS256",
     )) as unknown as JwtPayload;
     c.set("userId", payload.sub);
+    c.set("userRole", payload.role);
     return await next();
   } catch (error) {
     console.error("Auth Middleware Error:", error);

@@ -24,17 +24,20 @@
   "dependencies": {
     "@magicappdev/shared": "workspace:*",
     "@magicappdev/templates": "workspace:*",
+    "agents": "^0.3.6",
     "chalk": "^5.4.0",
     "commander": "^13.0.0",
     "execa": "^9.5.0",
     "open": "^11.0.0",
     "ora": "^8.1.0",
     "prompts": "^2.4.0",
-    "tslib": "^2.3.0"
+    "tslib": "^2.3.0",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
     "@types/node": "^25.0.0",
     "@types/prompts": "^2.4.0",
+    "@types/ws": "^8.5.10",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "tsx": "^4.19.0",
