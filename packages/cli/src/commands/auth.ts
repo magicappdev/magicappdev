@@ -3,6 +3,7 @@
  */
 
 import { header, logo, success, error, info, command } from "../lib/ui.js";
+import type { AddressInfo } from "net";
 import { api } from "../lib/api.js";
 import { Command } from "commander";
 import open from "open";
@@ -45,7 +46,7 @@ authCommand
     });
 
     server.listen(0, async () => {
-      const address = server.address() as any;
+      const address = server.address() as AddressInfo;
       const port = address.port;
       const redirectUri = `http://localhost:${port}`;
 

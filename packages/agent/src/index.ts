@@ -111,6 +111,7 @@ User Request: ${content}`;
 
       let assistantContent = "";
       const decoder = new TextDecoder();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       for await (const chunk of stream as any) {
         const text = decoder.decode(chunk);
         const lines = text.split("\n");
@@ -159,9 +160,10 @@ User Request: ${content}`;
           suggestedTemplate: this.state.suggestedTemplate,
         }),
       );
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
       connection.send(
-        JSON.stringify({ type: "error", message: "AI failed: " + err.message }),
+        JSON.stringify({ type: "error", message: "AI failed: " + message }),
       );
     }
   }

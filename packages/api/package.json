@@ -10,7 +10,8 @@
     "deploy": "wrangler deploy -c wrangler.toml",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@magicappdev/database": "workspace:*",
@@ -28,6 +29,7 @@
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "typescript": "~5.8.2",
-    "typescript-eslint": "^8.53.1"
+    "typescript-eslint": "^8.53.1",
+    "vitest": "^4.0.17"
   }
 }
