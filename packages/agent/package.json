@@ -9,7 +9,7 @@
     "deploy": "wrangler deploy",
     "dev": "wrangler dev",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc -b"
   },
   "dependencies": {
     "@magicappdev/shared": "workspace:*",
