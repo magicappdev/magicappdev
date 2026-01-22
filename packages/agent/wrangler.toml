@@ -26,11 +26,10 @@ enabled = true
 [ai]
 binding = "AI"
 
-[d1_databases]
 [[d1_databases]]
 binding = "DB"
 database_name = "magicappdev-db"
-database_id = "456e0f76-f1f0-44b1-8788-b629a22e39d4" 
+database_id = "456e0f76-f1f0-44b1-8788-b629a22e39d4"
 
 
 [vars]

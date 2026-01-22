@@ -6,8 +6,7 @@ compatibility_date = "2024-01-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "magicappdev-db"
-database_id = "456e0f76-f1f0-44b1-8788-b629a22e39d4" 
-
+database_id = "456e0f76-f1f0-44b1-8788-b629a22e39d4"
 
 [ai]
 binding = "AI"
