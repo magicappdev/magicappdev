@@ -2,7 +2,7 @@
  * Shared logging interface
  */
 
-import type { LogLevel } from "../types/index.js";
+import type { LogLevel } from "../types/index";
 
 /** Log entry */
 export interface LogEntry {
