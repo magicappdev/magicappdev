@@ -10,21 +10,6 @@
       "args": ["nx", "mcp"]
     }
   },
-  "hooks": {
-    "BeforeTool": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "name": "dont run taskkill /F /IM node.exe or Stop-Process",
-            "type": "command",
-            "command": "echo 'Dont run taskkill gemini-cli runs on node.exe & Stop-Process'",
-            "timeout": 1000
-          }
-        ]
-      }
-    ]
-  },
   "context": {
     "fileName": ["GEMINI.md", "CLAUDE.md", "Readme.md"]
   },
