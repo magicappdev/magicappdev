@@ -1,0 +1,33 @@
+/**
+ * For more details on how to configure Wrangler, refer to:
+ * https://developers.cloudflare.com/workers/wrangler/configuration/
+ */
+{
+  "$schema": "https://json.schemastore.org/wrangler",
+  "name": "magicappllmchat",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-10-08",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "binding": "ASSETS",
+    "directory": "./public",
+  },
+  "observability": {
+    "enabled": true,
+  },
+  "ai": {
+    "binding": "AI",
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "magicappdev-db",
+      "database_id": "456e0f76-f1f0-44b1-8788-b629a22e39d4",
+    },
+  ],
+  "upload_source_maps": true,
+
+  "analytics_engine_datasets": [
+    { "binding": "MAGICAPPDEV_ENGINE", "dataset": "MAGICAPPDEV_EVENTS" },
+  ],
+}

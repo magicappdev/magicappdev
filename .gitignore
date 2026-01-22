@@ -47,32 +47,9 @@ Thumbs.db
 *.tsbuildinfo
 .env
 .mira
-*.wranglerc.js
-*.wrangler.toml
-*.wrangler.dev.toml
-**/.wranglerc.js
-**/*.wrangler.toml
-**/*.wrangler.dev.toml
+# Cloudflare Wrangler
+.dev.vars
 
-packages/*/dist
-packages/*/node_modules
-packages/*/coverage
-packages/*/.nx/cache
-apps/*/dist
-apps/*/node_modules
-apps/*/coverage
-apps/*/.nx/cache
-apps/*/.nx/.env.local
-apps/*/.nx/.env.development.local
-apps/*/.nx/.env.test.local
-apps/*/.nx/.env.production.local
-apps/*/wrangler.dev.toml
-apps/*/wrangler.toml
-apps/*/.wranglerc.js
-packages/*/wrangler.dev.toml
-packages/*/wrangler.toml
-packages/*/wrangler.local.toml
-packages/*/wrangler.jsonc
 .turbo
 + .turbo
 .mcp.json
@@ -80,3 +57,4 @@ nul
 apps\web\next-env.d.ts
 
 apps/web/.next/
+
