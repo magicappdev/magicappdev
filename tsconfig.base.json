@@ -27,7 +27,8 @@
       "@magicappdev/llmchat": ["packages/llmchat/src/index.ts"],
       "@magicappdev/shared": ["packages/shared/src/index.ts"],
       "@magicappdev/shared/*": ["packages/shared/src/*"],
-      "@magicappdev/templates": ["packages/templates/src/index.ts"]
+      "@magicappdev/templates": ["packages/templates/src/index.ts"],
+      "@magicappdev/templates/*": ["packages/templates/src/*"]
     }
   }
 }

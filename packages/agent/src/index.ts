@@ -83,7 +83,7 @@ export class MagicAgent extends Agent<Env, AgentState> {
 
     const templates = registry.getMetadata();
     const templateContext = templates
-      .map(t => `- ${t.name} (${t.slug}): ${t.description}`)
+      .map((t: any) => `- ${t.name} (${t.slug}): ${t.description}`)
       .join("\n");
 
     const systemPrompt = `You are the MagicAppDev assistant, an expert AI App Builder.
