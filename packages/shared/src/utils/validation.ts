@@ -2,7 +2,7 @@
  * Validation utilities
  */
 
-import type { Result } from "../types/index.js";
+import type { Result } from "../types/index";
 import type { ZodType } from "zod";
 
 /** Validate data against a Zod schema */

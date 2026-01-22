@@ -2,7 +2,7 @@
  * Core application types for MagicAppDev platform
  */
 
-import type { Id, Timestamp } from "./common.types.js";
+import type { Id, Timestamp } from "./common.types";
 
 /** User account */
 export interface User {

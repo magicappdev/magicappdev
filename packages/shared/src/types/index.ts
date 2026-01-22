@@ -17,7 +17,7 @@ export type {
   SortOrder,
   SortParams,
   Timestamp,
-} from "./common.types.js";
+} from "./common.types";
 
 // Application domain types
 export type {
@@ -33,7 +33,7 @@ export type {
   TemplateFile,
   TemplateVariable,
   User,
-} from "./app.types.js";
+} from "./app.types";
 
 // CLI types
 export type {
@@ -50,7 +50,7 @@ export type {
   GeneratorType,
   InitCommandOptions,
   ProjectManifest,
-} from "./cli.types.js";
+} from "./cli.types";
 
 // API types
 export type {
@@ -75,4 +75,4 @@ export type {
   LoginRequest,
   RegisterRequest,
   UpdateProjectRequest,
-} from "./api.types.js";
+} from "./api.types";
