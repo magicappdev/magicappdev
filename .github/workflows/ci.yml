@@ -28,7 +28,7 @@ jobs:
         run: pnpm install
 
       - name: Check Formatting
-        run: pnpm format:check
+        run: pnpm format
 
       - name: Nx Affected (lint, test, typecheck, build)
         run: npx nx affected -t lint test typecheck build
