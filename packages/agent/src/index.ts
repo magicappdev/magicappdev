@@ -49,12 +49,12 @@ class ModelRouter {
  * MagicAgent - Stateful AI App Builder
  */
 export class MagicAgent extends Agent<Env, AgentState> {
-  initialState: AgentState = {
+  override initialState: AgentState = {
     messages: [],
     config: {},
   };
 
-  async onMessage(connection: Connection, message: WSMessage) {
+  override async onMessage(connection: Connection, message: WSMessage) {
     if (typeof message !== "string") return;
     try {
       const data = JSON.parse(message);
@@ -68,7 +68,7 @@ export class MagicAgent extends Agent<Env, AgentState> {
     }
   }
 
-  override async handleChat(connection: Connection, content: string) {
+  private async handleChat(connection: Connection, content: string) {
     const userMessage: Message = {
       role: "user",
       content,

@@ -26,8 +26,8 @@ export class AppError extends Error {
     this.timestamp = new Date().toISOString();
 
     // Maintain proper stack trace in V8 environments
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, this.constructor);
+    if ((Error as any).captureStackTrace) {
+      (Error as any).captureStackTrace(this, this.constructor);
     }
   }
 
