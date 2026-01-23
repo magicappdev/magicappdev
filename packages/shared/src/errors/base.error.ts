@@ -2,7 +2,7 @@
  * Custom error classes for MagicAppDev platform
  */
 
-import { ErrorCodes, ErrorMessages, type ErrorCode } from "../constants/index.js";
+import { ErrorCodes, ErrorMessages, type ErrorCode } from "../constants/index";
 
 /** Base application error */
 export class AppError extends Error {

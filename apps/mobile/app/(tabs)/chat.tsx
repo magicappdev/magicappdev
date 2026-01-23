@@ -1,3 +1,16 @@
+// Polyfills for PartySocket/agents library
+import "event-target-polyfill";
+import "react-native-get-random-values";
+import "react-native-url-polyfill/auto";
+
+// Global crypto polyfill
+import { polyfillGlobal } from "react-native-polyfill-globals/src/polyfills";
+import * as globals from "react-native-polyfill-globals/src/globals";
+
+if (typeof global.crypto === "undefined") {
+  polyfillGlobal({ ...globals }, { bind: false });
+}
+
 import {
   StyleSheet,
   View,
