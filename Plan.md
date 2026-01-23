@@ -128,3 +128,5 @@ todoo:
 - [x] Implement dark mode support in mobile app.
 - [x] Convert app icons to PNG format.
 - [x] Add shell completions command to CLI.
+- [ ] Add Docker-Compose Quickstart for App Developing
+- [ ] Discord Bot for Community Server

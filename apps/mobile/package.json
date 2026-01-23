@@ -6,11 +6,11 @@
   "scripts": {
     "android": "expo run:android",
     "build:android": "expo run:android --variant release",
-    "build:apk": "cd android && ./gradlew assembleRelease",
+    "build:apk": "cd android && .\\gradlew assembleRelease",
     "build:ios": "expo run:ios --configuration Release",
     "clean": "npx rimraf node_modules .expo",
-    "clean:android": "cd android && .\\gradlew --stop && .\\gradlew clean --no-build-cache && npx rimraf .cxx",
     "clean:all": "pnpm run clean && pnpm install && nx run mobile:prebuild:clean",
+    "clean:android": "cd android && .\\gradlew --stop && .\\gradlew clean --no-build-cache && npx rimraf .cxx",
     "doctor": "expo-doctor",
     "ios": "expo run:ios",
     "lint": "eslint .",
