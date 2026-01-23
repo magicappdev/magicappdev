@@ -22,15 +22,27 @@ import { api } from "../../lib/api";
 export default function AdminDashboard() {
   const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<AdminUser[]>([]);
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    openTickets: 0,
+    databaseSize: "0 MB",
+    activeSessions: 0,
+    userGrowth: "0%",
+    ticketUrgency: "0 priority",
+  });
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const fetchUsers = async () => {
+  const fetchData = async () => {
     try {
-      const data = await api.getAdminUsers();
-      setUsers(data);
+      const [usersData, statsData] = await Promise.all([
+        api.getAdminUsers(),
+        api.getAdminStats(),
+      ]);
+      setUsers(usersData);
+      setStats(statsData);
     } catch (err) {
-      console.error("Failed to fetch users", err);
+      console.error("Failed to fetch admin data", err);
     } finally {
       setLoading(false);
     }
@@ -38,7 +50,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (currentUser?.role === "admin") {
-      fetchUsers();
+      fetchData();
     }
   }, [currentUser]);
 
@@ -58,7 +70,7 @@ export default function AdminDashboard() {
     const newRole = currentRole === "admin" ? "user" : "admin";
     try {
       await api.updateUserRole(userId, newRole);
-      fetchUsers();
+      fetchData();
     } catch (err) {
       console.error("Failed to update role", err);
       alert("Failed to update role");
@@ -96,25 +108,25 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <StatsCard
           title="Total Users"
-          value={users.length.toString()}
-          subValue="+12% this month"
+          value={stats.totalUsers.toString()}
+          subValue={`${stats.userGrowth} this month`}
           icon={Users}
         />
         <StatsCard
           title="Open Tickets"
-          value="24"
-          subValue="5 high priority"
+          value={stats.openTickets.toString()}
+          subValue={stats.ticketUrgency}
           icon={Activity}
         />
         <StatsCard
           title="Database Size"
-          value="4.2 GB"
-          subValue="82% capacity"
+          value={stats.databaseSize}
+          subValue="Active"
           icon={Database}
         />
         <StatsCard
           title="Active Sessions"
-          value="156"
+          value={stats.activeSessions.toString()}
           subValue="Real-time"
           icon={Shield}
         />

@@ -13,7 +13,9 @@ export const tickets = sqliteTable("tickets", {
     .references(() => users.id, { onDelete: "cascade" }),
   subject: text("subject").notNull(),
   message: text("message").notNull(),
-  status: text("status", { enum: ["open", "in_progress", "closed"] })
+  status: text("status", {
+    enum: ["open", "in_progress", "closed", "resolved"],
+  })
     .notNull()
     .default("open"),
   createdAt: text("created_at")

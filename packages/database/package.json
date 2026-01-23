@@ -28,7 +28,7 @@
     "generate": "drizzle-kit generate",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "migrate:local": "wrangler d1 migrations apply magicappdev-db --local -c wrangler.toml",
+    "migrate:local": "wrangler d1 migrations apply magicappdev-db --local --persist-to ../../.wrangler/state -c wrangler.toml",
     "migrate:prod": "wrangler d1 migrations apply magicappdev-db --remote -c wrangler.toml",
     "test": "vitest run --passWithNoTests",
     "typecheck": "tsc -b"
@@ -39,14 +39,14 @@
     "tslib": "^2.3.0"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260120.0",
-    "@types/node": "^25.0.0",
+    "@cloudflare/workers-types": "^4.20260123.0",
+    "@types/node": "^25.0.10",
     "drizzle-kit": "^0.31.8",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
-    "typescript": "~5.8.2",
+    "typescript": "~5.9.3",
     "typescript-eslint": "^8.53.1",
-    "vitest": "^3.0.0",
+    "vitest": "^4.0.18",
     "wrangler": "4.60.0"
   }
 }

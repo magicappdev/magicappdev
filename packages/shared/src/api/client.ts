@@ -221,6 +221,30 @@ export class ApiClient {
     return response.data;
   }
 
+  async getAdminStats(): Promise<{
+    totalUsers: number;
+    openTickets: number;
+    databaseSize: string;
+    activeSessions: number;
+    userGrowth: string;
+    ticketUrgency: string;
+  }> {
+    const response = await this.request<
+      ApiResponse<{
+        totalUsers: number;
+        openTickets: number;
+        databaseSize: string;
+        activeSessions: number;
+        userGrowth: string;
+        ticketUrgency: string;
+      }>
+    >("/admin/stats");
+    if (!response.success) {
+      throw new Error(response.error.message);
+    }
+    return response.data;
+  }
+
   async updateUserRole(id: string, role: "admin" | "user"): Promise<void> {
     const response = await this.request<ApiResponse<void>>(
       `/admin/users/${id}/role`,

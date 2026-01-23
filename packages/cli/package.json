@@ -1,7 +1,14 @@
 {
   "name": "@magicappdev/cli",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "CLI tool for creating and managing MagicAppDev apps",
+  "keywords": [
+    "cli",
+    "MagicAppDev",
+    "app-dev",
+    "mobile",
+    "react-native"
+  ],
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -26,22 +33,22 @@
     "@magicappdev/templates": "workspace:*",
     "agents": "^0.3.6",
     "chalk": "^5.4.0",
-    "commander": "^13.0.0",
+    "commander": "^14.0.2",
     "execa": "^9.5.0",
     "open": "^11.0.0",
-    "ora": "^8.1.0",
+    "ora": "^9.1.0",
     "prompts": "^2.4.0",
     "tslib": "^2.3.0",
     "ws": "^8.18.0"
   },
   "devDependencies": {
-    "@types/node": "^25.0.0",
+    "@types/node": "^25.0.10",
     "@types/prompts": "^2.4.0",
     "@types/ws": "^8.5.10",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "tsx": "^4.19.0",
-    "typescript": "~5.8.2",
+    "typescript": "~5.9.3",
     "typescript-eslint": "^8.53.1"
   }
 }

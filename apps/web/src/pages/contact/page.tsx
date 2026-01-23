@@ -88,13 +88,28 @@ export default function ContactPage() {
             <div className="w-10 h-10 rounded-lg bg-tertiary/10 flex items-center justify-center text-tertiary">
               <MessageCircle size={20} />
             </div>
-            <div>
-              <Typography variant="title" className="text-sm">
-                Discord
-              </Typography>
-              <Typography variant="body" className="text-sm opacity-60">
-                Join our community
-              </Typography>
+
+            <div className="space-y-2">
+              <div>
+                <Typography variant="title" className="text-sm">
+                  Discord Community
+                </Typography>
+
+                <Typography variant="body" className="text-sm opacity-60">
+                  Server ID: 1464045569562509335
+                </Typography>
+              </div>
+
+              <Button
+                variant="outlined"
+                size="sm"
+                className="w-full rounded-full"
+                onClick={() =>
+                  window.open("https://discord.gg/PpmKS8ZTPt", "_blank")
+                }
+              >
+                Join Server
+              </Button>
             </div>
           </Card>
         </div>

@@ -16,16 +16,16 @@
     "typecheck": "tsc -b"
   },
   "devDependencies": {
-    "@cloudflare/vitest-pool-workers": "0.10.11",
-    "@cloudflare/workers-types": "^4.20260120.0",
+    "@cloudflare/vitest-pool-workers": "0.12.6",
+    "@cloudflare/workers-types": "^4.20260123.0",
     "@magicappdev/database": "workspace:*",
     "@magicappdev/shared": "workspace:*",
-    "@types/node": "24.10.1",
+    "@types/node": "25.0.10",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "typescript": "5.9.3",
     "typescript-eslint": "^8.53.1",
-    "vitest": "3.2.4",
+    "vitest": "4.0.18",
     "wrangler": "4.60.0"
   },
   "cloudflare": {
