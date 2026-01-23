@@ -44,3 +44,19 @@
 - [x] **MagicAgent**: Main App Builder
 - [x] **IssueReviewer**: Auto-review issues (Implemented)
 - [x] **FeatureSuggester**: Roadmap generation (Implemented)
+
+## Security
+
+jsondiffpatch is vulnerable to Cross-site Scripting (XSS) via HtmlFormatter::nodeBegin Moderate
+#7 opened 12 hours ago • Detected in jsondiffpatch (npm) • pnpm-lock.yaml
+
+@conventional-changelog/git-client has Argument Injection vulnerability Moderate
+#8 opened 12 hours ago • Detected in @conventional-changelog/git-client (npm) • pnpm-lock.yaml
+
+esbuild enables any website to send any requests to the development server and read the response Moderate
+#6 opened 12 hours ago • Detected in esbuild (npm) • pnpm-lock.yaml
+
+Vercel’s AI SDK's filetype whitelists can be bypassed when uploading files Low
+#9 opened 12 hours ago • Detected in ai (npm) • pnpm-lock.yaml
+#1
+Vercel’s AI SDK's filetype whitelists can be bypassed when uploading files Low Direct

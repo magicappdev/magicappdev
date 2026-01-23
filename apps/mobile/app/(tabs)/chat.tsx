@@ -1,10 +1,16 @@
 // Polyfills for PartySocket/agents library
-import "event-target-polyfill";
-import "react-native-get-random-values";
 import "react-native-url-polyfill/auto";
+import "react-native-get-random-values";
+import "event-target-polyfill";
 
-// Global crypto polyfill (auto-applies all polyfills including crypto)
-import "react-native-polyfill-globals/auto";
+// Note: We intentionally do NOT import "react-native-polyfill-globals/auto" here
+// because it overrides native fetch with react-native-fetch-api which has buggy
+// blob handling that breaks GitHub OAuth and other API calls.
+// The necessary polyfills are already provided by the imports above and in index.ts:
+// - crypto: react-native-get-random-values
+// - URL: react-native-url-polyfill
+// - TextEncoder/Decoder: text-encoding (index.ts)
+// - Streams: web-streams-polyfill (index.ts)
 
 import {
   StyleSheet,

@@ -1,0 +1,109 @@
+{
+  "name": "mobile",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/mobile",
+  "projectType": "application",
+  "targets": {
+    "start": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["expo start --clear"],
+        "cwd": "apps/mobile"
+      }
+    },
+    "android": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["expo run:android"],
+        "cwd": "apps/mobile"
+      }
+    },
+    "android:release": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["expo run:android --variant release"],
+        "cwd": "apps/mobile"
+      }
+    },
+    "android:apk": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["cd android && ./gradlew assembleRelease"],
+        "cwd": "apps/mobile"
+      }
+    },
+    "ios": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["expo run:ios"],
+        "cwd": "apps/mobile"
+      }
+    },
+    "ios:release": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["expo run:ios --configuration Release"],
+        "cwd": "apps/mobile"
+      }
+    },
+    "prebuild": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["expo prebuild"],
+        "cwd": "apps/mobile"
+      }
+    },
+    "prebuild:clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["expo prebuild --clean"],
+        "cwd": "apps/mobile"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["tsc --noEmit"],
+        "cwd": "apps/mobile"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["eslint ."],
+        "cwd": "apps/mobile"
+      }
+    },
+    "lint:fix": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["eslint . --fix"],
+        "cwd": "apps/mobile"
+      }
+    },
+    "doctor": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["expo-doctor"],
+        "cwd": "apps/mobile"
+      }
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["npx rimraf node_modules .expo"],
+        "cwd": "apps/mobile"
+      }
+    },
+    "clean:android": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "cd android && ./gradlew --stop && ./gradlew clean --no-build-cache && npx rimraf .cxx"
+        ],
+        "cwd": "apps/mobile"
+      }
+    }
+  },
+  "tags": ["type:mobile", "platform:android", "platform:ios"]
+}

@@ -6,19 +6,22 @@
     "dockerfile": "Dockerfile",
     "context": ".."
   },
-  "workspaceFolder": "/workspace/magicappdev",
+  // "workspaceFolder": "/workspace/magicappdev",
   "otherPortsAttributes": {
     "onAutoForward": "notify"
   },
+  // "mounts": [
+  //   {
+  //     "source": "magicappdev",
+  //     "target": "/workspace/magicappdev",
+  //     "type": "volume"
+  //   }
+  // ],
   "mounts": [
-    {
-      "source": "magicappdev",
-      "target": "/workspace/magicappdev",
-      "type": "volume"
-    }
+    "source=${localWorkspaceFolder}/.git,target=/workspace/.git,type=bind,consistency=persistent"
   ],
-  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace/magicappdev,type=bind,consistency=persistent",
   "features": {
+    "ghcr.io/devcontainers/features/git:1": {},
     "ghcr.io/devcontainers/features/git-lfs:1": {
       "autoPull": true,
       "version": "latest"

@@ -1,7 +1,22 @@
+import {
+  type ToolCall,
+  type PendingApproval,
+  type ToolDefinition,
+  getToolsPrompt,
+  parseToolCalls,
+  requiresApproval,
+  createPendingApproval,
+  getTool,
+  AGENT_TOOLS,
+} from "./tools";
 import type { TemplateMetadata } from "@magicappdev/templates";
 import { registry } from "@magicappdev/templates/registry";
 import type { Connection, WSMessage } from "agents";
 import { Agent } from "agents";
+
+// Re-export tool types for external use
+export type { ToolCall, PendingApproval, ToolDefinition };
+export { AGENT_TOOLS, getTool, requiresApproval };
 
 export interface Env {
   AI: WorkerAi;
@@ -38,6 +53,9 @@ export interface AgentState {
   projectId?: string;
   config: Record<string, unknown>;
   suggestedTemplate?: string;
+  toolCalls: ToolCall[];
+  pendingApprovals: PendingApproval[];
+  toolsEnabled: boolean;
 }
 
 const MODELS = {
@@ -61,20 +79,57 @@ class ModelRouter {
 }
 
 /**
- * MagicAgent - Stateful AI App Builder
+ * MagicAgent - Stateful AI App Builder with Tool Use
  */
 export class MagicAgent extends Agent<Env, AgentState> {
   override initialState: AgentState = {
     messages: [],
     config: {},
+    toolCalls: [],
+    pendingApprovals: [],
+    toolsEnabled: true,
   };
 
   override async onMessage(connection: Connection, message: WSMessage) {
     if (typeof message !== "string") return;
     try {
       const data = JSON.parse(message);
-      if (data.type === "chat") {
-        await this.handleChat(connection, data.content);
+      switch (data.type) {
+        case "chat":
+          await this.handleChat(connection, data.content, data.userId);
+          break;
+        case "approve_tool":
+          await this.handleApproval(
+            connection,
+            data.approvalId,
+            true,
+            data.userId,
+          );
+          break;
+        case "reject_tool":
+          await this.handleApproval(
+            connection,
+            data.approvalId,
+            false,
+            data.userId,
+          );
+          break;
+        case "get_pending_approvals":
+          this.sendPendingApprovals(connection);
+          break;
+        case "enable_tools":
+          this.setState({ ...this.state, toolsEnabled: data.enabled ?? true });
+          connection.send(
+            JSON.stringify({
+              type: "tools_status",
+              enabled: this.state.toolsEnabled,
+            }),
+          );
+          break;
+        default:
+          connection.send(
+            JSON.stringify({ type: "error", message: "Unknown message type" }),
+          );
       }
     } catch {
       connection.send(
@@ -83,7 +138,202 @@ export class MagicAgent extends Agent<Env, AgentState> {
     }
   }
 
-  private async handleChat(connection: Connection, content: string) {
+  /**
+   * Send pending approvals to the client
+   */
+  private sendPendingApprovals(connection: Connection) {
+    const pending = this.state.pendingApprovals.filter(
+      a => a.status === "pending",
+    );
+    connection.send(
+      JSON.stringify({
+        type: "pending_approvals",
+        approvals: pending,
+      }),
+    );
+  }
+
+  /**
+   * Handle tool approval/rejection
+   */
+  private async handleApproval(
+    connection: Connection,
+    approvalId: string,
+    approved: boolean,
+    userId?: string,
+  ) {
+    const approvalIndex = this.state.pendingApprovals.findIndex(
+      a => a.id === approvalId,
+    );
+    if (approvalIndex === -1) {
+      connection.send(
+        JSON.stringify({ type: "error", message: "Approval not found" }),
+      );
+      return;
+    }
+
+    const approval = this.state.pendingApprovals[approvalIndex];
+    const updatedApproval: PendingApproval = {
+      ...approval,
+      status: approved ? "approved" : "rejected",
+      approvedBy: userId,
+      approvedAt: Date.now(),
+    };
+
+    const updatedApprovals = [...this.state.pendingApprovals];
+    updatedApprovals[approvalIndex] = updatedApproval;
+    this.setState({ ...this.state, pendingApprovals: updatedApprovals });
+
+    connection.send(
+      JSON.stringify({
+        type: "approval_result",
+        approvalId,
+        approved,
+        tool: approval.tool,
+      }),
+    );
+
+    if (approved) {
+      // Execute the approved tool
+      await this.executeTool(connection, approval);
+    }
+  }
+
+  /**
+   * Execute an approved tool
+   */
+  private async executeTool(connection: Connection, approval: PendingApproval) {
+    const tool = getTool(approval.tool);
+    if (!tool) {
+      connection.send(
+        JSON.stringify({
+          type: "tool_error",
+          tool: approval.tool,
+          error: "Unknown tool",
+        }),
+      );
+      return;
+    }
+
+    connection.send(
+      JSON.stringify({
+        type: "tool_executing",
+        tool: approval.tool,
+        parameters: approval.parameters,
+      }),
+    );
+
+    try {
+      // Tool execution logic - this would integrate with actual file system/commands
+      // For now, we send a placeholder result
+      const result = await this.executeToolAction(
+        approval.tool,
+        approval.parameters,
+      );
+
+      connection.send(
+        JSON.stringify({
+          type: "tool_result",
+          tool: approval.tool,
+          result,
+          success: true,
+        }),
+      );
+
+      // Update tool call status
+      const toolCallIndex = this.state.toolCalls.findIndex(
+        tc => tc.tool === approval.tool && tc.status === "pending",
+      );
+      if (toolCallIndex !== -1) {
+        const updatedToolCalls = [...this.state.toolCalls];
+        updatedToolCalls[toolCallIndex] = {
+          ...updatedToolCalls[toolCallIndex],
+          status: "executed",
+          result,
+        };
+        this.setState({ ...this.state, toolCalls: updatedToolCalls });
+      }
+    } catch (err) {
+      const error = err instanceof Error ? err.message : String(err);
+      connection.send(
+        JSON.stringify({
+          type: "tool_error",
+          tool: approval.tool,
+          error,
+        }),
+      );
+    }
+  }
+
+  /**
+   * Execute specific tool actions
+   * This is a placeholder - real implementation would integrate with file system, etc.
+   */
+  private async executeToolAction(
+    toolName: string,
+    parameters: Record<string, unknown>,
+  ): Promise<unknown> {
+    switch (toolName) {
+      case "readFile":
+        // TODO: Integrate with actual file reading via project storage
+        return {
+          content: `[File content for ${parameters.path}]`,
+          path: parameters.path,
+        };
+
+      case "writeFile":
+        // TODO: Integrate with actual file writing
+        return {
+          success: true,
+          path: parameters.path,
+          message: "File written successfully",
+        };
+
+      case "listFiles":
+        // TODO: Integrate with actual directory listing
+        return {
+          files: ["src/index.ts", "package.json"],
+          path: parameters.path || ".",
+        };
+
+      case "searchCode":
+        // TODO: Integrate with actual code search
+        return { matches: [], query: parameters.query };
+
+      case "runCommand":
+        // TODO: Integrate with command execution (with strict sandboxing)
+        return {
+          output: `[Command output for: ${parameters.command}]`,
+          exitCode: 0,
+        };
+
+      case "generateComponent":
+        // TODO: Integrate with template generation
+        return {
+          created: [`${parameters.directory || "src"}/${parameters.name}.tsx`],
+        };
+
+      case "deployToCloudflare":
+        // TODO: Integrate with Wrangler deployment
+        return {
+          url: "https://example.workers.dev",
+          environment: parameters.environment || "production",
+        };
+
+      case "deleteFile":
+        // TODO: Integrate with file deletion
+        return { deleted: parameters.path };
+
+      default:
+        throw new Error(`Tool not implemented: ${toolName}`);
+    }
+  }
+
+  private async handleChat(
+    connection: Connection,
+    content: string,
+    userId?: string,
+  ) {
     const userMessage: Message = {
       role: "user",
       content,
@@ -101,17 +351,32 @@ export class MagicAgent extends Agent<Env, AgentState> {
       .map((t: TemplateMetadata) => `- ${t.name} (${t.slug}): ${t.description}`)
       .join("\n");
 
+    // Build tools context if enabled
+    const toolsContext = this.state.toolsEnabled
+      ? `
+
+## Available Tools
+You can use the following tools to help the user. To use a tool, output:
+TOOL_CALL:toolName{"param1":"value1","param2":"value2"}
+
+${getToolsPrompt()}
+
+Note: Tools marked [REQUIRES APPROVAL] will need user approval before execution.
+`
+      : "";
+
     const systemPrompt = `You are the MagicAppDev assistant, an expert AI App Builder.
 You are running on Cloudflare Workers and using ${modelKey} model.
 
 Available templates:
 ${templateContext}
-
-GOAL: Help the user build their app. 
+${toolsContext}
+GOAL: Help the user build their app.
 1. Understand the user's intent.
 2. If a template fits, suggest it using "SUGGEST_TEMPLATE: [slug]" in your response.
-3. Provide code snippets, architectural advice, and commands using the CLI.
-4. Be concise but helpful.
+3. Use tools when appropriate to read files, write code, or execute commands.
+4. Provide code snippets, architectural advice, and commands using the CLI.
+5. Be concise but helpful.
 
 User Request: ${content}`;
 
@@ -158,6 +423,37 @@ User Request: ${content}`;
         this.setState({ ...this.state, suggestedTemplate: match[1] });
       }
 
+      // Parse tool calls from the response
+      const toolCalls = this.state.toolsEnabled
+        ? parseToolCalls(assistantContent)
+        : [];
+      const newPendingApprovals: PendingApproval[] = [];
+      const autoExecuteTools: ToolCall[] = [];
+
+      for (const toolCall of toolCalls) {
+        if (requiresApproval(toolCall.tool)) {
+          // Create pending approval for dangerous tools
+          const approval = createPendingApproval(
+            this.ctx.id.toString(),
+            connection.id || "unknown",
+            toolCall,
+            userId,
+          );
+          newPendingApprovals.push(approval);
+
+          // Notify client about pending approval
+          connection.send(
+            JSON.stringify({
+              type: "tool_pending_approval",
+              approval,
+            }),
+          );
+        } else {
+          // Safe tools can be auto-executed
+          autoExecuteTools.push(toolCall);
+        }
+      }
+
       this.setState({
         ...this.state,
         messages: [
@@ -168,11 +464,48 @@ User Request: ${content}`;
             timestamp: Date.now(),
           },
         ],
+        toolCalls: [...this.state.toolCalls, ...toolCalls],
+        pendingApprovals: [
+          ...this.state.pendingApprovals,
+          ...newPendingApprovals,
+        ],
       });
+
+      // Auto-execute safe tools
+      for (const toolCall of autoExecuteTools) {
+        try {
+          const result = await this.executeToolAction(
+            toolCall.tool,
+            toolCall.parameters,
+          );
+          connection.send(
+            JSON.stringify({
+              type: "tool_result",
+              tool: toolCall.tool,
+              result,
+              success: true,
+              autoExecuted: true,
+            }),
+          );
+        } catch (err) {
+          const error = err instanceof Error ? err.message : String(err);
+          connection.send(
+            JSON.stringify({
+              type: "tool_error",
+              tool: toolCall.tool,
+              error,
+              autoExecuted: true,
+            }),
+          );
+        }
+      }
+
       connection.send(
         JSON.stringify({
           type: "chat_done",
           suggestedTemplate: this.state.suggestedTemplate,
+          toolCalls: toolCalls.length,
+          pendingApprovals: newPendingApprovals.length,
         }),
       );
     } catch (err: unknown) {

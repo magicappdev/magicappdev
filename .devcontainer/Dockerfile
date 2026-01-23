@@ -23,34 +23,31 @@ RUN wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public | gp
     && apt-get -y install temurin-21-jdk \
     && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
-MAINTAINER MagicAppDev
+# MAINTAINER MagicAppDev
 LABEL org.opencontainers.image.authors="MagicAppDev"
 
-EXPOSE 3100 5173 8100 3030
+# EXPOSE 3100 5173 8100 3030
 
 # Enable corepack for pnpm
 RUN corepack enable && corepack prepare pnpm@10.28.1 --activate
 
 # Install global tools
-RUN npm install -g turbo typescript
+# RUN npm install -g turbo typescript
 
 # Set working directory
 # WORKDIR /workspace/magicappdev
 WORKDIR /workspace
 # Set environment variables
-ENV NODE_ENV=development
-ENV PNPM_HOME="/home/node/.local/share/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
+# ENV NODE_ENV=development
+# ENV PNPM_HOME="/home/node/.local/share/pnpm"
+# ENV PATH="$PNPM_HOME:$PATH"
 
-# Create pnpm directories and set permissions for the 'node' user
-RUN mkdir -p /home/node/.local/share/pnpm \
-    && chown -R node:node /home/node/.local
+# Create pnpm directories for root user
+RUN mkdir -p /root/.local/share/pnpm
 
-HEALTHCHECK --interval=5m --timeout=3s \
-    CMD [ "curl","-f","http://localhost:3100/", "||", "exit", "1" ] 
+# HEALTHCHECK --interval=5m --timeout=3s \
+#     CMD [ "curl","-f","http://localhost:3100/", "||", "exit", "1" ] 
    # CMD curl -f http://localhost:3100/ || exit 1
 
-# Switch to non-root user 'node' (provided by the base image)
-# USER node
 # Default command
 CMD ["bash"]
