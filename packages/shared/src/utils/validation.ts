@@ -34,7 +34,8 @@ export function isEmpty(value: unknown): boolean {
   if (value === null || value === undefined) return true;
   if (typeof value === "string") return value.trim() === "";
   if (Array.isArray(value)) return value.length === 0;
-  if (typeof value === "object") return Object.keys(value).length === 0;
+  if (typeof value === "object" && value !== null)
+    return Object.keys(value).length === 0;
   return false;
 }
 
@@ -49,14 +50,16 @@ export function isPositiveNumber(value: unknown): value is number {
 }
 
 /** Check if value is a valid UUID */
-export function isValidUuid(value: string): boolean {
+export function isValidUuid(value: unknown): boolean {
+  if (typeof value !== "string") return false;
   const uuidRegex =
     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   return uuidRegex.test(value);
 }
 
 /** Check if value is a valid semver version */
-export function isValidSemver(value: string): boolean {
+export function isValidSemver(value: unknown): boolean {
+  if (typeof value !== "string") return false;
   const semverRegex =
     /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/;
   return semverRegex.test(value);
