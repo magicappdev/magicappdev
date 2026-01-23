@@ -3,9 +3,9 @@ import { Typography } from "@/components/ui/Typography";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
+import { Link } from "react-router-dom";
 import React, { useState } from "react";
 import { api } from "../../lib/api";
-
 export default function ContactPage() {
   const [submitted, setSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -89,11 +89,12 @@ export default function ContactPage() {
               <MessageCircle size={20} />
             </div>
             <div>
-              <Typography variant="title" className="text-sm">
-                Discord
-              </Typography>
               <Typography variant="body" className="text-sm opacity-60">
-                Join our community
+                <Link to="https://discord.gg/PpmKS8ZTPt">
+                  <Button size="lg" className="rounded-full px-8">
+                    Join our Discord Community
+                  </Button>
+                </Link>
               </Typography>
             </div>
           </Card>
@@ -138,7 +139,7 @@ export default function ContactPage() {
                 Message
               </label>
               <textarea
-                className="flex min-h-[150px] w-full rounded-md border border-outline/50 bg-surface-variant/30 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-transparent disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
+                className="flex min-h-37.5 w-full rounded-md border border-outline/50 bg-surface-variant/30 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-transparent disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
                 placeholder="Tell us more about your project..."
                 required
                 value={formData.message}
