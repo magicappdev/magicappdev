@@ -46,7 +46,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.lib.json && node scripts/copy-package.js",
+    "build": "tsc -p tsconfig.lib.json",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "vitest run --passWithNoTests",

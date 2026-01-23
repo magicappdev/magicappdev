@@ -164,11 +164,14 @@
       "Bash(where magick)",
       "Bash(magick:*)",
       "Bash(nx run:*)",
-      "Bash(rimraf:*)"
+      "Bash(rimraf:*)",
+      "Bash(npx drizzle-kit push:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": ["cloudflare-builds"],
+  "enabledMcpjsonServers": [
+    "cloudflare-builds"
+  ],
   "hooks": {
     "UserPromptSubmit": [
       {
