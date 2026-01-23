@@ -175,11 +175,14 @@
       "mcp__cloudflare-observability__accounts_list",
       "Bash(npx wrangler@4.60.0 deploy:*)",
       "Bash(where:*)",
-      "Bash(wrangler deploy:*)"
+      "Bash(wrangler deploy:*)",
+      "Bash(git check-ignore:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": ["cloudflare-builds"],
+  "enabledMcpjsonServers": [
+    "cloudflare-builds"
+  ],
   "hooks": {
     "Stop": [
       {
