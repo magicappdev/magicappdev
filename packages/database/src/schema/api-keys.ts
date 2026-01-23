@@ -2,7 +2,7 @@
  * API Keys table schema for storing AI provider API keys
  */
 
-import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { users } from "./users.js";
 
 /** API Keys table */
@@ -16,8 +16,12 @@ export const apiKeys = sqliteTable("api_keys", {
   provider: text("provider").notNull(), // "openai", "anthropic", "gemini", "openrouter", "zai"
   apiKey: text("api_key").notNull(),
   label: text("label"), // User-friendly label like "My OpenAI Key"
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+  createdAt: text("created_at")
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
+  updatedAt: text("updated_at")
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
 });
 
 /** API key type inferred from schema */

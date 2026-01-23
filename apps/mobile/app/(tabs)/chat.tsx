@@ -1,16 +1,11 @@
-// Polyfills for PartySocket/agents library
+// Polyfills for React Native - ORDER MATTERS!
+// 1. URL polyfill for proper URL parsing
 import "react-native-url-polyfill/auto";
+// 2. Crypto polyfill for secure random generation
 import "react-native-get-random-values";
-import "event-target-polyfill";
-
-// Note: We intentionally do NOT import "react-native-polyfill-globals/auto" here
-// because it overrides native fetch with react-native-fetch-api which has buggy
-// blob handling that breaks GitHub OAuth and other API calls.
-// The necessary polyfills are already provided by the imports above and in index.ts:
-// - crypto: react-native-get-random-values
-// - URL: react-native-url-polyfill
-// - TextEncoder/Decoder: text-encoding (index.ts)
-// - Streams: web-streams-polyfill (index.ts)
+// DO NOT import "partysocket/event-target-polyfill" - conflicts with React Native 0.81's native EventTarget
+// DO NOT import "event-target-polyfill" (generic) - same issue
+// DO NOT import "react-native-polyfill-globals/auto" - breaks fetch blob handling
 
 import {
   StyleSheet,
@@ -26,12 +21,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import React, { useState, useRef, useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
-import { AgentClient } from "agents/client";
 import { AGENT_HOST } from "../../lib/api";
-
-interface AgentMessageEvent {
-  data: string | ArrayBuffer | Blob;
-}
 
 interface Message {
   id: string;
@@ -58,27 +48,30 @@ export default function ChatScreen() {
   );
 
   const flatListRef = useRef<FlatList>(null);
-  const clientRef = useRef<AgentClient | null>(null);
+  const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    // Initialize Agent Client
-    const client = new AgentClient({
-      host: AGENT_HOST,
-      agent: "magic-agent",
-      name: "default",
-    });
+    // Use native WebSocket instead of AgentClient to avoid EventTarget polyfill conflicts
+    // The agent endpoint accepts standard WebSocket connections
+    const wsUrl = `wss://${AGENT_HOST}/agents/magic-agent/default`;
+    console.log("Connecting to WebSocket:", wsUrl);
+    const ws = new WebSocket(wsUrl);
 
-    client.addEventListener("open", () => {
+    ws.onopen = () => {
       console.log("Connected to Agent");
       setIsConnected(true);
-    });
+    };
 
-    client.addEventListener("close", () => {
+    ws.onclose = () => {
       console.log("Disconnected from Agent");
       setIsConnected(false);
-    });
+    };
 
-    client.addEventListener("message", (event: AgentMessageEvent) => {
+    ws.onerror = (error) => {
+      console.error("WebSocket error:", error);
+    };
+
+    ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data as string);
 
@@ -124,12 +117,12 @@ export default function ChatScreen() {
       } catch (e) {
         console.error("Failed to parse message", e);
       }
-    });
+    };
 
-    clientRef.current = client;
+    wsRef.current = ws;
 
     return () => {
-      client.close();
+      ws.close();
     };
   }, []);
 
@@ -148,8 +141,8 @@ export default function ChatScreen() {
     setIsLoading(true);
     setSuggestedTemplate(null);
 
-    // Send to Agent
-    clientRef.current?.send(
+    // Send to Agent via native WebSocket
+    wsRef.current?.send(
       JSON.stringify({
         type: "chat",
         content: userMessage.content,

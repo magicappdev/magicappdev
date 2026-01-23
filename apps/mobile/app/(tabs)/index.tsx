@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, ScrollView, Image } from "react-native";
+import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Link } from "expo-router";
 
@@ -26,10 +26,10 @@ export default function HomeScreen() {
         </Text>
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
         <Link href={"/chat" as any} asChild>
-          <View style={styles.button}>
+          <TouchableOpacity style={styles.button} activeOpacity={0.8}>
             <Text style={styles.buttonText}>Start Chatting</Text>
             <Ionicons name="arrow-forward" size={18} color="#fff" />
-          </View>
+          </TouchableOpacity>
         </Link>
       </View>
 
