@@ -6,7 +6,7 @@ import type {
   ListProjectsResponse,
   Project,
   User,
-} from "../types/index.js";
+} from "../types/index";
 
 export interface Ticket {
   id: string;
