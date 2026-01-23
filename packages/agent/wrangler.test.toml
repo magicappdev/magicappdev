@@ -1,0 +1,19 @@
+name = "magicappdev-agent-test"
+main = "src/test.ts"
+compatibility_date = "2025-10-08"
+compatibility_flags = ["nodejs_compat"]
+account_id = "e563b0da9d2f6f181f519f78a63e1c94"
+
+[observability]
+enabled = true
+
+[ai]
+binding = "AI"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "magicappdev-db"
+database_id = "456e0f76-f1f0-44b1-8788-b629a22e39d4"
+
+[vars]
+ENVIRONMENT = "test"

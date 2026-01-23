@@ -176,13 +176,12 @@
       "Bash(npx wrangler@4.60.0 deploy:*)",
       "Bash(where:*)",
       "Bash(wrangler deploy:*)",
-      "Bash(git check-ignore:*)"
+      "Bash(git check-ignore:*)",
+      "mcp__cloudflare-observability__query_worker_observability"
     ]
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": [
-    "cloudflare-builds"
-  ],
+  "enabledMcpjsonServers": ["cloudflare-builds"],
   "hooks": {
     "Stop": [
       {

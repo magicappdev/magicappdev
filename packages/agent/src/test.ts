@@ -1,0 +1,75 @@
+/**
+ * Simple test worker to verify deployment works
+ */
+export interface Env {
+  AI: WorkerAi;
+  DB: D1Database;
+}
+
+export interface WorkerAi {
+  run(
+    model: string,
+    options: {
+      messages: { role: string; content: string }[];
+      stream?: boolean;
+    },
+  ): Promise<unknown>;
+}
+
+export default {
+  async fetch(request: Request): Promise<Response> {
+    const url = new URL(request.url);
+    const path = url.pathname;
+
+    // Test endpoint
+    if (path === "/test") {
+      return Response.json({
+        status: "ok",
+        message: "Worker is running!",
+        timestamp: Date.now(),
+      });
+    }
+
+    // WebSocket test endpoint
+    if (path === "/ws") {
+      // Create a WebSocket pair
+      const pair = new WebSocketPair();
+      const [client, server] = Object.values(pair);
+
+      // Accept the WebSocket connection
+      server.accept();
+
+      // Send a welcome message
+      server.send(
+        JSON.stringify({
+          type: "connected",
+          message: "WebSocket connection established",
+        }),
+      );
+
+      // Handle incoming messages
+      server.addEventListener("message", event => {
+        server.send(
+          JSON.stringify({
+            type: "echo",
+            data: event.data,
+          }),
+        );
+      });
+
+      // Handle close event
+      server.addEventListener("close", () => {
+        server.close();
+      });
+
+      return new Response(null, {
+        status: 101,
+        webSocket: client,
+      });
+    }
+
+    return new Response("MagicAppDev Agent Worker - Test Mode", {
+      status: 200,
+    });
+  },
+};
