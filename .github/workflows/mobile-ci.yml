@@ -74,7 +74,15 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: ${{ env.JAVA_VERSION }}
-          cache: 'gradle'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Run Expo prebuild
+        run: pnpm nx run mobile:prebuild:clean
 
       - name: Cache Gradle dependencies
         uses: actions/cache@v4
@@ -86,15 +94,6 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Run Expo prebuild
-        run: pnpm nx run mobile:prebuild:clean
 
       - name: Build Android APK (Release)
         working-directory: apps/mobile/android
