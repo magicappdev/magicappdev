@@ -11,7 +11,7 @@ import type {
 export interface Ticket {
   id: string;
   subject: string;
-  status: "open" | "in_progress" | "closed";
+  status: "open" | "in_progress" | "closed" | "resolved";
   createdAt: string;
   userName?: string;
   userEmail?: string;
@@ -201,7 +201,7 @@ export class ApiClient {
 
   async updateTicketStatus(
     id: string,
-    status: "open" | "in_progress" | "closed",
+    status: "open" | "in_progress" | "closed" | "resolved",
   ): Promise<void> {
     const response = await this.request<ApiResponse<void>>(`/tickets/${id}`, {
       method: "PATCH",

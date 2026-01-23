@@ -8,7 +8,7 @@
     "build:android": "expo run:android --variant release",
     "build:apk": "cd android && ./gradlew assembleRelease",
     "build:ios": "expo run:ios --configuration Release",
-    "clean:android": "cd android && ./gradlew clean && rm -rf .cxx",
+    "clean:android": "cd android && .\\gradlew --stop && .\\gradlew clean --no-build-cache && rm -rf .cxx",
     "doctor": "expo-doctor",
     "ios": "expo run:ios",
     "lint": "eslint .",
