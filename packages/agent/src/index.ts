@@ -246,6 +246,12 @@ export default {
       const id = path.split("/")[3] || "default";
       return env.MagicAgent.get(env.MagicAgent.idFromName(id)).fetch(request);
     }
+
+    // Support standard agents SDK client
+    if (path.startsWith("/agents/magic-agent/")) {
+      const id = path.split("/")[3] || "default";
+      return env.MagicAgent.get(env.MagicAgent.idFromName(id)).fetch(request);
+    }
     if (path.startsWith("/api/reviewer/")) {
       return env.IssueReviewer.get(
         env.IssueReviewer.idFromName("global"),

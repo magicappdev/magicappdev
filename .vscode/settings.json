@@ -23,8 +23,6 @@
     },
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "avdmanager.executable": "c:\\Program Files (x86)\\Android\\android-sdk\\cmdline-tools\\12.0\\bin\\avdmanager.bat",
-  "avdmanager.sdkManager": "c:\\Program Files (x86)\\Android\\android-sdk\\cmdline-tools\\12.0\\bin\\sdkmanager.bat",
   "copilot.vision.provider": "Gemini",
   "cSpell.words": [
     "Appicon",

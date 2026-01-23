@@ -374,10 +374,17 @@ authRoutes.get("/callback/github", async c => {
 
     // 5. Create Session
     console.log("Creating session...");
+
+    // Fetch latest user data to get role
+    const user = await db.query.users.findFirst({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      where: (u: any, { eq }: any) => eq(u.id, userId),
+    });
+
     const accessToken = await sign(
       {
         sub: userId,
-        role: "user",
+        role: user?.role || "user",
         exp: Math.floor(Date.now() / 1000) + 60 * 60, // 1 hour
       },
       c.env.JWT_SECRET || "secret-fallback-do-not-use-in-prod",
@@ -445,10 +452,15 @@ authRoutes.post("/refresh", async c => {
     return c.json({ error: "Invalid or expired session" }, 401);
   }
 
+  const user = await db.query.users.findFirst({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    where: (u: any, { eq }: any) => eq(u.id, session.userId),
+  });
+
   const accessToken = await sign(
     {
       sub: session.userId,
-      role: "user",
+      role: user?.role || "user",
       exp: Math.floor(Date.now() / 1000) + 60 * 60,
     },
     c.env.JWT_SECRET || "secret-fallback-do-not-use-in-prod",

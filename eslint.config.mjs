@@ -11,10 +11,13 @@ export default defineConfig([
   },
   prettier,
   globalIgnores([
-    "node_modules/",
-    "dist/",
-    ".expo/",
-    ".next/",
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/.expo/**",
+    "**/.next/**",
+    "**/.turbo/**",
+    "**/.wrangler/**",
+    "**/coverage/**",
     "**/metro.config.js",
   ]),
 ]);
