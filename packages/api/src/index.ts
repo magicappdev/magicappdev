@@ -4,8 +4,8 @@
  * MagicAppDev API - Cloudflare Workers backend
  */
 
-import type { Env } from "./types.js";
-import { createApp } from "./app.js";
+import type { Env } from "./types";
+import { createApp } from "./app";
 
 const app = createApp();
 
@@ -18,4 +18,4 @@ export default {
 
 // Re-export for use as a library
 export { createApp };
-export type { AppContext, Env, Variables } from "./types.js";
+export type { AppContext, Env, Variables } from "./types";

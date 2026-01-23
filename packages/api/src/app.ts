@@ -3,13 +3,13 @@
  */
 
 import { createDatabase } from "@magicappdev/database";
-import { authMiddleware } from "./middlewares/auth.js";
-import { projectsRoutes } from "./routes/projects.js";
-import { ticketsRoutes } from "./routes/tickets.js";
-import { adminRoutes } from "./routes/admin.js";
-import { authRoutes } from "./routes/auth.js";
-import type { AppContext } from "./types.js";
-import { aiRoutes } from "./routes/ai.js";
+import { authMiddleware } from "./middlewares/auth";
+import { projectsRoutes } from "./routes/projects";
+import { ticketsRoutes } from "./routes/tickets";
+import { adminRoutes } from "./routes/admin";
+import { authRoutes } from "./routes/auth";
+import type { AppContext } from "./types";
+import { aiRoutes } from "./routes/ai";
 import { cors } from "hono/cors";
 import { Hono } from "hono";
 

@@ -3,7 +3,7 @@
  */
 
 import { accounts, profiles, sessions, users } from "@magicappdev/database";
-import type { AppContext } from "../types.js";
+import type { AppContext } from "../types";
 import { eq } from "drizzle-orm";
 import { sign } from "hono/jwt";
 import bcrypt from "bcryptjs";

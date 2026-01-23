@@ -3,7 +3,7 @@
  */
 
 import { createMiddleware } from "hono/factory";
-import type { AppContext } from "../types.js";
+import type { AppContext } from "../types";
 import { verify } from "hono/jwt";
 
 /** JWT payload structure */

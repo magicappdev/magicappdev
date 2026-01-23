@@ -3,7 +3,7 @@
  */
 
 import { tickets, users } from "@magicappdev/database";
-import type { AppContext } from "../types.js";
+import type { AppContext } from "../types";
 import { eq, desc } from "drizzle-orm";
 import { Hono } from "hono";
 
