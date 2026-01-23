@@ -130,3 +130,18 @@ todoo:
 - [x] Add shell completions command to CLI.
 - [ ] Add Docker-Compose Quickstart for App Developing
 - [ ] Discord Bot for Community Server
+
+## ADD
+
+Interactions Endpoint URL
+You can optionally configure an interactions endpoint to receive interactions via HTTP POSTs rather than over Gateway with a bot user.
+https://nice-example.local/api/interactions
+Linked Roles Verification URL
+You can configure a verification URL to enable your application as a requirement in a server role's Links settings
+https://nice-example.local/verify-user
+Terms of Service URL
+A link to your application's Terms of Service
+https://my-cool-app.com/terms-of-service
+Privacy Policy URL
+A link to your application's Privacy Policy
+https://my-cool-app.com/privacy-policy

@@ -40,6 +40,9 @@ importers:
       '@commitlint/config-conventional':
         specifier: ^20.3.1
         version: 20.3.1
+      '@conventional-changelog/git-client':
+        specifier: ^2.5.1
+        version: 2.5.1(conventional-commits-filter@5.0.0)(conventional-commits-parser@6.2.1)
       '@nx/js':
         specifier: 22.4.1
         version: 22.4.1(@babel/traverse@7.28.6)(@swc-node/register@1.11.1(@swc/core@1.15.10)(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.15.10)(nx@22.4.1(@swc-node/register@1.11.1(@swc/core@1.15.10)(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.15.10))
@@ -1526,6 +1529,18 @@ packages:
     peerDependencies:
       conventional-commits-filter: ^5.0.0
       conventional-commits-parser: ^6.0.0
+    peerDependenciesMeta:
+      conventional-commits-filter:
+        optional: true
+      conventional-commits-parser:
+        optional: true
+
+  '@conventional-changelog/git-client@2.5.1':
+    resolution: {integrity: sha512-lAw7iA5oTPWOLjiweb7DlGEMDEvzqzLLa6aWOly2FSZ64IwLE8T458rC+o+WvI31Doz6joM7X2DoNog7mX8r4A==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      conventional-commits-filter: ^5.0.0
+      conventional-commits-parser: ^6.1.0
     peerDependenciesMeta:
       conventional-commits-filter:
         optional: true
@@ -3743,6 +3758,14 @@ packages:
   '@sec-ant/readable-stream@0.4.1':
     resolution: {integrity: sha512-831qok9r2t8AlxLko40y2ebgSDhenenCatLVeW/uBtnHPyhHOvG0C7TvfgecV+wHzIm5KUICgzmVpWS+IMEAeg==}
 
+  '@simple-libs/child-process-utils@1.0.1':
+    resolution: {integrity: sha512-3nWd8irxvDI6v856wpPCHZ+08iQR0oHTZfzAZmnbsLzf+Sf1odraP6uKOHDZToXq3RPRV/LbqGVlSCogm9cJjg==}
+    engines: {node: '>=18'}
+
+  '@simple-libs/stream-utils@1.1.0':
+    resolution: {integrity: sha512-6rsHTjodIn/t90lv5snQjRPVtOosM7Vp0AKdrObymq45ojlgVwnpAqdc+0OBBrpEiy31zZ6/TKeIVqV1HwvnuQ==}
+    engines: {node: '>=18'}
+
   '@sinclair/typebox@0.27.8':
     resolution: {integrity: sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==}
 
@@ -4005,6 +4028,9 @@ packages:
 
   '@types/lodash@4.17.23':
     resolution: {integrity: sha512-RDvF6wTulMPjrNdCoYRC8gNR880JNGT8uB+REUpC2Ns4pRqQJhGz90wh7rgdXDPpCczF3VGktDuFGVnz8zP7HA==}
+
+  '@types/node@22.19.7':
+    resolution: {integrity: sha512-MciR4AKGHWl7xwxkBa6xUGxQJ4VBOmPTF7sL+iGzuahOFaO0jHCsuEfS80pan1ef4gWId1oWOweIhrDEYLuaOw==}
 
   '@types/node@25.0.10':
     resolution: {integrity: sha512-zWW5KPngR/yvakJgGOmZ5vTBemDoSqF3AcV/LrO5u5wTWyEAVVh+IT39G4gtyAkh3CtTZs8aX/yRM82OfzHJRg==}
@@ -7858,6 +7884,9 @@ packages:
     engines: {node: '>=0.8.0'}
     hasBin: true
 
+  undici-types@6.21.0:
+    resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
+
   undici-types@7.16.0:
     resolution: {integrity: sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw==}
 
@@ -9453,6 +9482,15 @@ snapshots:
   '@conventional-changelog/git-client@1.0.1(conventional-commits-filter@5.0.0)(conventional-commits-parser@6.2.1)':
     dependencies:
       '@types/semver': 7.7.1
+      semver: 7.7.3
+    optionalDependencies:
+      conventional-commits-filter: 5.0.0
+      conventional-commits-parser: 6.2.1
+
+  '@conventional-changelog/git-client@2.5.1(conventional-commits-filter@5.0.0)(conventional-commits-parser@6.2.1)':
+    dependencies:
+      '@simple-libs/child-process-utils': 1.0.1
+      '@simple-libs/stream-utils': 1.1.0
       semver: 7.7.3
     optionalDependencies:
       conventional-commits-filter: 5.0.0
@@ -11829,6 +11867,15 @@ snapshots:
 
   '@sec-ant/readable-stream@0.4.1': {}
 
+  '@simple-libs/child-process-utils@1.0.1':
+    dependencies:
+      '@simple-libs/stream-utils': 1.1.0
+      '@types/node': 22.19.7
+
+  '@simple-libs/stream-utils@1.1.0':
+    dependencies:
+      '@types/node': 22.19.7
+
   '@sinclair/typebox@0.27.8': {}
 
   '@sinclair/typebox@0.34.47': {}
@@ -12063,6 +12110,10 @@ snapshots:
   '@types/json-schema@7.0.15': {}
 
   '@types/lodash@4.17.23': {}
+
+  '@types/node@22.19.7':
+    dependencies:
+      undici-types: 6.21.0
 
   '@types/node@25.0.10':
     dependencies:
@@ -16390,6 +16441,8 @@ snapshots:
 
   uglify-js@3.19.3:
     optional: true
+
+  undici-types@6.21.0: {}
 
   undici-types@7.16.0: {}
 
