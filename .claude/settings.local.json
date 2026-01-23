@@ -161,7 +161,21 @@
       "Bash(nx run:*)",
       "Bash(rimraf:*)",
       "Bash(npx drizzle-kit push:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(head:*)",
+      "mcp__cloudflare-builds__workers_list",
+      "mcp__cloudflare-builds__accounts_list",
+      "mcp__cloudflare-builds__set_active_account",
+      "Bash(/c/nvm4w/nodejs/wrangler deploy:*)",
+      "mcp__cloudflare-observability__set_active_account",
+      "mcp__cloudflare-observability__workers_get_worker",
+      "Bash(CLOUDFLARE_API_TOKEN=\"\" CLOUDFLARE_ACCOUNT_ID=\"d4e0f1c1c830642168db2f4ea3aece58\" pnpm exec wrangler:*)",
+      "mcp__cloudflare-builds__workers_get_worker",
+      "mcp__cloudflare-builds__workers_get_worker_code",
+      "mcp__cloudflare-observability__accounts_list",
+      "Bash(npx wrangler@4.60.0 deploy:*)",
+      "Bash(where:*)",
+      "Bash(wrangler deploy:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
