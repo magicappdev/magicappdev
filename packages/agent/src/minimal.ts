@@ -9,6 +9,11 @@ export interface Env {
   DB: D1Database;
   MagicAgent: DurableObjectNamespace;
 }
+export interface WorkerAiResponse {
+  role: string;
+  content: string;
+  [key: string]: unknown;
+}
 
 export interface WorkerAi {
   run(
@@ -17,7 +22,7 @@ export interface WorkerAi {
       messages: { role: string; content: string }[];
       stream?: boolean;
     },
-  ): Promise<unknown>;
+  ): Promise<WorkerAiResponse>;
 }
 
 /**
@@ -77,7 +82,7 @@ export class MagicAgent extends DurableObject {
 
       server.addEventListener("close", () => {
         console.log("WebSocket closed");
-        server.close();
+        // server.close();
       });
 
       return new Response(null, {
