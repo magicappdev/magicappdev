@@ -1,9 +1,4 @@
 {
-  "env": {
-    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "8000",
-    "DISABLE_NON_ESSENTIAL_MODEL_CALLS": "1",
-    "DISABLE_COST_WARNINGS": "0"
-  },
   "permissions": {
     "allow": [
       "Bash(appwrite --version:*)",
@@ -169,21 +164,8 @@
     ]
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": [
-    "cloudflare-builds"
-  ],
+  "enabledMcpjsonServers": ["cloudflare-builds"],
   "hooks": {
-    "UserPromptSubmit": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "npm"
-          }
-        ]
-      }
-    ],
     "Stop": [
       {
         "hooks": [

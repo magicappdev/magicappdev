@@ -4,12 +4,12 @@ set -e
 echo "🚀 MagicAppDev development environment..."
 
 # Ensure we're in the right directory
-cd /workspace
+cd /workspace/magicappdev
 
 # Ensure pnpm is available and correct version
 echo "📦 Configuring pnpm..."
 corepack enable
-corepack prepare pnpm@latest --activate
+corepack prepare pnpm@10.28.1 --activate
 
 # Verify pnpm version
 PNPM_VERSION=$(pnpm --version)

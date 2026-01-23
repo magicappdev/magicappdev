@@ -7,7 +7,17 @@
     "context": ".."
   },
   "workspaceFolder": "/workspace/magicappdev",
-  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace/magicappdev,type=bind",
+  "otherPortsAttributes": {
+    "onAutoForward": "notify"
+  },
+  "mounts": [
+    {
+      "source": "magicappdev",
+      "target": "/workspace/magicappdev",
+      "type": "volume"
+    }
+  ],
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace/magicappdev,type=bind,consistency=persistent",
   "features": {
     "ghcr.io/devcontainers/features/git-lfs:1": {
       "autoPull": true,
@@ -39,7 +49,6 @@
       "version": "latest",
       "nodeVersion": "latest"
     },
-    "ghcr.io/wxw-matt/devcontainer-features/apt:0": {},
     "ghcr.io/wxw-matt/devcontainer-features/command_runner:0": {},
     "ghcr.io/joshuanianji/devcontainer-features/mount-pnpm-store:1": {},
     "ghcr.io/nordcominc/devcontainer-features/android-sdk:1": {},
@@ -87,7 +96,9 @@
         "ms-vscode.vscode-typescript-next",
         "involvex.vscode-npm-package-manager",
         "involvex.statusbar-quick-actions",
-        "kilocode.kilo-code"
+        "kilocode.kilo-code",
+        "usernamehw.errorlens",
+        "involvex.involvex-smart-autocomplete"
       ],
       "settings": {
         "terminal.integrated.defaultProfile.linux": "bash",
@@ -188,6 +199,7 @@
   },
 
   "containerUser": "root",
+  "remoteUser": "root",
   "postCreateCommand": "bash .devcontainer/setup.sh",
   "postStartCommand": "git status"
 }
