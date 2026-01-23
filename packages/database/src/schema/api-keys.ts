@@ -2,7 +2,7 @@
  * API Keys table schema for storing AI provider API keys
  */
 
-import { sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
 import { users } from "./users.js";
 
 /** API Keys table */

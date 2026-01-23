@@ -16,27 +16,17 @@ const distDir = join(__dirname, '../dist');
 function fixImportsInFile(filePath) {
   let content = readFileSync(filePath, 'utf-8');
 
-  // Fix relative imports from ./path to ./path.js
+  // Fix all relative imports including type-only imports
+  // Matches: from "./path", from './path', type { X } from "./path"
   content = content.replace(
-    /from ["'](\.\/[^"']+)["']/g,
-    (match, importPath) => {
+    /(["'])(\.\/[^"']+)\1/g,
+    (match, quote, importPath) => {
       // Don't modify if it already has an extension
-      if (importPath.endsWith('.js') || importPath.endsWith('.json')) {
+      if (importPath.endsWith('.js') || importPath.endsWith('.json') || importPath.endsWith('.mjs')) {
         return match;
       }
       // Add .js extension
-      return `from "${importPath}.js"`;
-    }
-  );
-
-  // Fix exports
-  content = content.replace(
-    /export \* from ["'](\.\/[^"']+)["']/g,
-    (match, importPath) => {
-      if (importPath.endsWith('.js') || importPath.endsWith('.json')) {
-        return match;
-      }
-      return `export * from "${importPath}.js"`;
+      return `${quote}${importPath}.js${quote}`;
     }
   );
 

@@ -3,13 +3,8 @@ import "event-target-polyfill";
 import "react-native-get-random-values";
 import "react-native-url-polyfill/auto";
 
-// Global crypto polyfill
-import { polyfillGlobal } from "react-native-polyfill-globals/src/polyfills";
-import * as globals from "react-native-polyfill-globals/src/globals";
-
-if (typeof global.crypto === "undefined") {
-  polyfillGlobal({ ...globals }, { bind: false });
-}
+// Global crypto polyfill (auto-applies all polyfills including crypto)
+import "react-native-polyfill-globals/auto";
 
 import {
   StyleSheet,
