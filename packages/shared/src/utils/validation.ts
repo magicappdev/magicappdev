@@ -47,21 +47,27 @@ export function isNonEmptyString(value: unknown): value is string {
 export function isPositiveNumber(value: unknown): value is number {
   return typeof value === "number" && value > 0 && isFinite(value);
 }
+/** UUID validation regex (RFC 4122 versions 1-5) */
+export const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 /** Check if value is a valid UUID */
 export function isValidUuid(value: unknown): boolean {
   if (typeof value !== "string") return false;
-  const uuidRegex =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-  return uuidRegex.test(value);
+  return UUID_REGEX.test(value);
 }
+/** Regular expression implementing the SemVer 2.0.0 specification:
+ *  - MAJOR.MINOR.PATCH
+ *  - optional pre-release (e.g. -alpha.1)
+ *  - optional build metadata (e.g. +001)
+ */
+const SEMVER_REGEX =
+  /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/;
 
 /** Check if value is a valid semver version */
 export function isValidSemver(value: unknown): boolean {
   if (typeof value !== "string") return false;
-  const semverRegex =
-    /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/;
-  return semverRegex.test(value);
+  return SEMVER_REGEX.test(value);
 }
 
 /** Assert condition and throw if false */
