@@ -9,7 +9,7 @@ export {
   type Logger,
   type LogEntry,
   type LoggerConfig,
-} from "./logger";
+} from "./logger.js";
 
 // String utilities
 export {
@@ -25,7 +25,7 @@ export {
   toPascalCase,
   toSnakeCase,
   truncate,
-} from "./string";
+} from "./string.js";
 
 // Validation utilities
 export {
@@ -38,7 +38,7 @@ export {
   isValidSemver,
   isValidUuid,
   validate,
-} from "./validation";
+} from "./validation.js";
 
 // Result utilities
 export {
@@ -54,4 +54,4 @@ export {
   tryCatchAsync,
   unwrap,
   unwrapOr,
-} from "./result";
+} from "./result.js";

@@ -8,6 +8,7 @@ import { profiles } from "./profiles.js";
 import { accounts } from "./accounts.js";
 import { tickets } from "./tickets.js";
 import { users } from "./users.js";
+import { apiKeys } from "./api-keys.js";
 
 export const schema = {
   users,
@@ -16,6 +17,7 @@ export const schema = {
   accounts,
   profiles,
   tickets,
+  apiKeys,
 };
 
 export * from "./accounts.js";
@@ -24,3 +26,4 @@ export * from "./projects.js";
 export * from "./sessions.js";
 export * from "./users.js";
 export * from "./tickets.js";
+export * from "./api-keys.js";

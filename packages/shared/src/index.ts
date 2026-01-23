@@ -5,19 +5,19 @@
  */
 
 // Types
-export * from "./types/index";
+export * from "./types/index.js";
 
 // Constants
-export * from "./constants/index";
+export * from "./constants/index.js";
 
 // Schemas
-export * from "./schemas/index";
+export * from "./schemas/index.js";
 
 // Utilities
-export * from "./utils/index";
+export * from "./utils/index.js";
 
 // Errors
-export * from "./errors/index";
+export * from "./errors/index.js";
 
 // API
-export * from "./api/index";
+export * from "./api/index.js";

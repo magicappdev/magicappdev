@@ -21,8 +21,13 @@ config.blockList = [
   // Exclude pnpm cache directories
   /.*\/node_modules\/\.pnpm\/.*/,
   /.*\/node_modules\/.*\/\.pnpm\/.*/,
+  // Exclude pnpm dlx cache (used by bun/pnpm)
+  /[A-Z]:\\.+\\pnpm-cache\\+.*/,
+  /.*\/pnpm-cache\/.*/,
   // Exclude Metro's own cache
   /.*\/metro-.*/,
+  // Exclude Windows AppData
+  /[A-Z]:\\.+\\AppData\\.+/,
 ];
 
 // 4. Reduce workers on Windows to prevent file handle issues

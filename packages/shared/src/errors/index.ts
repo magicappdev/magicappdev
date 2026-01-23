@@ -12,4 +12,4 @@ export {
   NotFoundError,
   toAppError,
   ValidationError,
-} from "./base.error";
+} from "./base.error.js";

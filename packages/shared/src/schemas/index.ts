@@ -21,7 +21,7 @@ export {
   type ProjectConfigSchemaOutput,
   type ProjectManifestSchemaInput,
   type UpdateProjectSchemaInput,
-} from "./config.schema";
+} from "./config.schema.js";
 
 // Auth schemas
 export {
@@ -34,7 +34,7 @@ export {
   type LoginInput,
   type RefreshTokenInput,
   type RegisterInput,
-} from "./auth.schema";
+} from "./auth.schema.js";
 
 // AI schemas
 export {
@@ -48,4 +48,4 @@ export {
   type AiMessageSchemaType,
   type AiModelConfigSchemaType,
   type AiProviderSchemaType,
-} from "./ai.schema";
+} from "./ai.schema.js";
