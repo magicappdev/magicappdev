@@ -22,3 +22,7 @@
 
 - [ ] **API Docs**: Generate OpenAPI spec for the backend.
 - [ ] **Landing Page**: Polish the landing page with better copy and visuals (using the generated logo).
+
+## 5. Web / Mobile Chat Enhancement
+
+- [ ] Add support for configurable Api Providers (gemini,openrouter,openai,anthropic,zai and more )

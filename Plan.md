@@ -59,8 +59,47 @@ Develop a comprehensive monorepo-based fullstack app building platform inspired 
 - **API**: Functional Hono-based API on Cloudflare Workers with D1/Drizzle integration for Auth, Projects, and AI.
 - **Auth System**: Comprehensive GitHub OAuth system implemented for Web, Mobile, and CLI. Support for JWT and session management.
 - **Web**: Modern Next.js application with real-time AI Chat streaming and full Project management.
-- **Mobile**: Expo-based app with GitHub Auth, Projects listing, and streaming AI Chat.
+- **Mobile**: Expo-based app with GitHub Auth, Projects listing, streaming AI Chat, and **Dark Mode support**.
 - **CI/CD**: GitHub Actions active for automated testing and deployments.
+
+### Recent Improvements (January 23, 2026)
+
+#### Mobile App Enhancements ✅
+
+- **Dark Mode**: Implemented full dark mode support with Light/Dark/Auto theme modes
+- **App Icons**: Converted all icons from JPG to PNG with transparency support
+- **Metro Bundler**: Fixed SHA-1 errors and file watching issues on Windows/pnpm
+- **Android Build**: Fixed CMake path length issues (205→~180 chars)
+- **Theme System**: Created comprehensive theme constants and ThemeProvider context
+
+#### CLI Enhancements ✅
+
+- **Shell Completions**: Added completions command for bash, zsh, fish, and pwsh
+- **Note**: Build cache issue needs investigation for compiled output
+
+### Known Issues & Optimizations Needed
+
+#### Nx Integration Gaps 🔧
+
+- Missing `project.json` files for apps/mobile and apps/web
+- Inconsistent build system usage (Nx + Turborepo hybrid)
+- Mobile project not properly registered in Nx workspace
+- Missing Nx targets for mobile-specific operations
+
+#### Mobile CI/CD Gaps 📱
+
+- No automated mobile app builds in GitHub Actions
+- Missing iOS/Android deployment workflows
+- No mobile app testing configuration
+- No app store deployment automation
+
+#### Recommended Next Steps 🎯
+
+1. Create proper `project.json` for apps/mobile with Nx targets
+2. Add mobile build/test/deploy to GitHub Actions
+3. Consider consolidating to primary build system (Nx or Turborepo)
+4. Set up E2E testing with Playwright for mobile
+5. Add mobile app store deployment automation
 
 ## Implementation Steps
 
@@ -84,3 +123,8 @@ todoo:
 - [ ] MCP integration for developer tools.
 - [x] Update the .devcontainer.
 - [x] Set up CI/CD GitHub Actions.
+- [x] Fix mobile app Android build path length issues.
+- [x] Fix Metro bundler SHA-1 errors on Windows.
+- [x] Implement dark mode support in mobile app.
+- [x] Convert app icons to PNG format.
+- [x] Add shell completions command to CLI.

@@ -8,6 +8,7 @@ import {
   Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTheme } from "../contexts/ThemeContext";
 import { useAuth } from "../contexts/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, router } from "expo-router";
@@ -15,7 +16,7 @@ import React from "react";
 
 export default function SettingsScreen() {
   const { user, logout } = useAuth();
-  const [isDarkMode, setIsDarkMode] = React.useState(false);
+  const { mode, setMode } = useTheme();
   const [notifications, setNotifications] = React.useState(true);
 
   if (!user) return null;
@@ -67,9 +68,58 @@ export default function SettingsScreen() {
               <Ionicons name="moon" size={20} color="#fff" />
             </View>
             <Text style={[styles.itemTitle, { flex: 1, marginLeft: 12 }]}>
-              Dark Mode
+              Theme
             </Text>
-            <Switch value={isDarkMode} onValueChange={setIsDarkMode} />
+            <View style={styles.themeButtons}>
+              <TouchableOpacity
+                style={[
+                  styles.themeButton,
+                  mode === "light" && styles.themeButtonActive,
+                ]}
+                onPress={() => setMode("light")}
+              >
+                <Text
+                  style={[
+                    styles.themeButtonText,
+                    mode === "light" && styles.themeButtonTextActive,
+                  ]}
+                >
+                  Light
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.themeButton,
+                  mode === "dark" && styles.themeButtonActive,
+                ]}
+                onPress={() => setMode("dark")}
+              >
+                <Text
+                  style={[
+                    styles.themeButtonText,
+                    mode === "dark" && styles.themeButtonTextActive,
+                  ]}
+                >
+                  Dark
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.themeButton,
+                  mode === "automatic" && styles.themeButtonActive,
+                ]}
+                onPress={() => setMode("automatic")}
+              >
+                <Text
+                  style={[
+                    styles.themeButtonText,
+                    mode === "automatic" && styles.themeButtonTextActive,
+                  ]}
+                >
+                  Auto
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           <View style={styles.item}>
@@ -187,5 +237,29 @@ const styles = StyleSheet.create({
     color: "#8E8E93",
     fontSize: 12,
     marginVertical: 40,
+  },
+  themeButtons: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  themeButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    backgroundColor: "#F2F2F7",
+    borderWidth: 1,
+    borderColor: "#C7C7CC",
+  },
+  themeButtonActive: {
+    backgroundColor: "#007AFF",
+    borderColor: "#007AFF",
+  },
+  themeButtonText: {
+    fontSize: 13,
+    color: "#000",
+  },
+  themeButtonTextActive: {
+    color: "#fff",
+    fontWeight: "600",
   },
 });

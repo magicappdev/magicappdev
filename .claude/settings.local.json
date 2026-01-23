@@ -157,7 +157,14 @@
       "Bash(pnpm exec nx g:*)",
       "Bash(pnpm exec tsc:*)",
       "Bash(pnpm:*)",
-      "Skill(glm-plan-usage:usage-query)"
+      "Skill(glm-plan-usage:usage-query)",
+      "mcp__nx-mcp__nx_workspace",
+      "mcp__nx-mcp__nx_project_details",
+      "mcp__sequential-thinking__sequentialthinking",
+      "Bash(where magick)",
+      "Bash(magick:*)",
+      "Bash(nx run:*)",
+      "Bash(rimraf:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
