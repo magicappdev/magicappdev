@@ -34,8 +34,8 @@ export default function ContactPage() {
   if (submitted) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
-        <Card className="max-w-md w-full p-12 text-center space-y-6 animate-in zoom-in-95 duration-300">
-          <div className="w-20 h-20 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center mx-auto">
+        <Card className="w-full max-w-md p-12 space-y-6 text-center duration-300 animate-in zoom-in-95">
+          <div className="flex items-center justify-center w-20 h-20 mx-auto text-green-500 rounded-full bg-green-500/10">
             <CheckCircle2 size={48} />
           </div>
           <div className="space-y-2">
@@ -57,8 +57,8 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto py-12 space-y-12">
-      <div className="text-center space-y-4">
+    <div className="max-w-5xl py-12 mx-auto space-y-12">
+      <div className="space-y-4 text-center">
         <Typography variant="display" className="text-primary">
           Get in Touch
         </Typography>
@@ -67,11 +67,11 @@ export default function ContactPage() {
         </Typography>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
         {/* Contact Info */}
         <div className="space-y-6">
           <Card className="p-6 space-y-4 border-outline/5">
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 text-primary">
               <Mail size={20} />
             </div>
             <div>
@@ -85,7 +85,7 @@ export default function ContactPage() {
           </Card>
 
           <Card className="p-6 space-y-4 border-outline/5">
-            <div className="w-10 h-10 rounded-lg bg-tertiary/10 flex items-center justify-center text-tertiary">
+            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-tertiary/10 text-tertiary">
               <MessageCircle size={20} />
             </div>
 
@@ -93,10 +93,6 @@ export default function ContactPage() {
               <div>
                 <Typography variant="title" className="text-sm">
                   Discord Community
-                </Typography>
-
-                <Typography variant="body" className="text-sm opacity-60">
-                  Server ID: 1464045569562509335
                 </Typography>
               </div>
 
@@ -115,9 +111,9 @@ export default function ContactPage() {
         </div>
 
         {/* Contact Form */}
-        <Card className="md:col-span-2 p-8 border-outline/10 shadow-xl">
+        <Card className="p-8 shadow-xl md:col-span-2 border-outline/10">
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <Input
                 label="Full Name"
                 placeholder="John Doe"
@@ -165,7 +161,7 @@ export default function ContactPage() {
 
             <Button
               type="submit"
-              className="w-full md:w-auto px-12 rounded-full h-12"
+              className="w-full h-12 px-12 rounded-full md:w-auto"
               disabled={isLoading}
             >
               {isLoading ? (

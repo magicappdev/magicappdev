@@ -156,7 +156,8 @@
       "Bash(pnpm nx show:*)",
       "Bash(pnpm exec nx g:*)",
       "Bash(pnpm exec tsc:*)",
-      "Bash(pnpm:*)"
+      "Bash(pnpm:*)",
+      "Skill(glm-plan-usage:usage-query)"
     ]
   },
   "enableAllProjectMcpServers": true,

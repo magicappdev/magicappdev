@@ -1,4 +1,4 @@
-import { ApiClient } from "@magicappdev/shared/api";
+import { ApiClient } from "@magicappdev/shared";
 export declare const AGENT_HOST: string;
 export declare const api: ApiClient;
 export type { User, Project } from "@magicappdev/shared";
