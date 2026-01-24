@@ -8,6 +8,7 @@ import {
   promptStyling,
   promptTypeScript,
   promptSelect,
+  promptPreferences,
 } from "../lib/prompts.js";
 import {
   header,
@@ -22,9 +23,8 @@ import {
 } from "../lib/ui.js";
 import {
   generateApp,
-  blankAppTemplate,
-  tabsAppTemplate,
 } from "@magicappdev/templates";
+import { builtInTemplates } from "@magicappdev/templates";
 import { withSpinner } from "../lib/spinner.js";
 import { Command } from "commander";
 
@@ -102,6 +102,12 @@ export const initCommand = new Command("init")
             : "tailwind";
       }
 
+      // Get additional preferences
+      let preferences: Record<string, boolean> = {};
+      if (!options.yes) {
+        preferences = await promptPreferences() || {};
+      }
+
       newline();
       divider();
       info("Creating project with:");
@@ -110,12 +116,12 @@ export const initCommand = new Command("init")
       keyValue("Framework", framework);
       keyValue("TypeScript", typescript ? "Yes" : "No");
       keyValue("Styling", styling);
+      keyValue("Preferences", Object.keys(preferences).join(", ") || "None");
       divider();
       newline();
 
       // Find template
-      const template =
-        templateSlug === "tabs" ? tabsAppTemplate : blankAppTemplate;
+      const template = builtInTemplates.find(t => t.id === "blank") || builtInTemplates[0];
 
       // Generate project
       const outputDir = process.cwd();
@@ -126,7 +132,7 @@ export const initCommand = new Command("init")
             typescript,
             styling,
             framework,
-          });
+          }, preferences);
         },
         { successText: `Created ${projectName}` },
       );

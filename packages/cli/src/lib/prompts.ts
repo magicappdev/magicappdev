@@ -30,6 +30,7 @@ export async function promptSelect<T>(
   choices: Array<{ title: string; value: T; description?: string }>,
   options: {
     initial?: number;
+    multiple?: boolean;
   } = {},
 ): Promise<T | undefined> {
   const response = await prompts({
@@ -38,6 +39,7 @@ export async function promptSelect<T>(
     message,
     choices,
     initial: options.initial || 0,
+    ...(options.multiple && { multiple: true }),
   });
 
   return response.value as T | undefined;
@@ -91,13 +93,52 @@ export async function promptFramework(): Promise<string | undefined> {
       value: "react-native",
       description: "React Native without Expo",
     },
-    {
-      title: "Next.js",
-      value: "next",
-      description: "React framework for the web",
-    },
-    { title: "Remix", value: "remix", description: "Full stack web framework" },
   ]);
+}
+
+/** Prompt for additional preferences */
+export async function promptPreferences(): Promise<Record<string, boolean>> {
+  const preferences = await promptSelect<string>(
+    "Select additional preferences:",
+    [
+      {
+        title: "ESLint (code linting)",
+        value: "eslint",
+        description: "Add ESLint for code quality",
+      },
+      {
+        title: "Prettier (code formatting)",
+        value: "prettier",
+        description: "Add Prettier for code formatting",
+      },
+      {
+        title: "Jest (testing framework)",
+        value: "jest",
+        description: "Add Jest for testing",
+      },
+      {
+        title: "TypeScript (recommended)",
+        value: "typescript",
+        description: "Use TypeScript",
+      },
+      {
+        title: "Tailwind CSS (styling)",
+        value: "tailwind",
+        description: "Add Tailwind CSS for styling",
+      },
+    ],
+    {
+      multiple: true,
+    },
+  );
+
+  return preferences.reduce(
+    (acc, pref) => {
+      acc[pref] = true;
+      return acc;
+    },
+    {} as Record<string, boolean>,
+  );
 }
 
 /** Prompt for styling selection */

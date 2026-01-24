@@ -72,6 +72,8 @@ export interface GenerateOptions {
   outputDir: string;
   /** Variable values */
   variables: Record<string, string | boolean | number>;
+  /** User preferences */
+  preferences?: Record<string, boolean>;
   /** Whether to overwrite existing files */
   overwrite?: boolean;
   /** Dry run (don't write files) */

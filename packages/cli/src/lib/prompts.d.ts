@@ -34,6 +34,8 @@ export declare function promptProjectName(
 ): Promise<string | undefined>;
 /** Prompt for framework selection */
 export declare function promptFramework(): Promise<string | undefined>;
+/** Prompt for additional preferences */
+export declare function promptPreferences(): Promise<Record<string, boolean>>;
 /** Prompt for styling selection */
 export declare function promptStyling(
   framework: string,

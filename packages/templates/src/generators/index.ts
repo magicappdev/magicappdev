@@ -141,6 +141,7 @@ export async function generateApp(
   template: Template,
   outputDir: string,
   additionalVars: Record<string, unknown> = {},
+  preferences?: Record<string, boolean>,
 ): Promise<GenerateResult> {
   return generateFromTemplate(template, {
     outputDir: path.join(outputDir, name),
@@ -149,5 +150,6 @@ export async function generateApp(
       appName: name,
       ...additionalVars,
     },
+    preferences,
   });
 }

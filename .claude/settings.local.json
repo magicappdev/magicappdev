@@ -186,9 +186,12 @@
       "WebFetch(domain:docs.expo.dev)",
       "Bash(npm audit:*)",
       "Bash(if exist dist rmdir /s /q dist)",
-      "Bash(npm view:*)"
+      "Bash(npm view:*)",
+      "Bash(git ls-tree:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": ["cloudflare-builds"]
+  "enabledMcpjsonServers": [
+    "cloudflare-builds"
+  ]
 }

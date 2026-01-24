@@ -20,6 +20,9 @@ Handlebars.registerHelper("slugify", (str: string) => slugify(str));
 Handlebars.registerHelper("uppercase", (str: string) => str.toUpperCase());
 Handlebars.registerHelper("lowercase", (str: string) => str.toLowerCase());
 
+// Navigation helpers
+Handlebars.registerHelper("headerShown", (value: boolean) => value);
+
 // Conditional helpers
 Handlebars.registerHelper("eq", (a: unknown, b: unknown) => a === b);
 Handlebars.registerHelper("ne", (a: unknown, b: unknown) => a !== b);

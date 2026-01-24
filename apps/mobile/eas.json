@@ -8,7 +8,7 @@
       "node": "20.18.0",
       "pnpm": "10.28.1",
       "android": {
-        "image": "sdk-54"
+        "image": "auto"
       }
     },
     "development": {

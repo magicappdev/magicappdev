@@ -37,10 +37,8 @@ export {
 
 // Built-in templates
 export {
-  blankAppTemplate,
   builtInTemplates,
   buttonComponentTemplate,
-  tabsAppTemplate,
   screenTemplate,
 } from "./templates/index.js";
 

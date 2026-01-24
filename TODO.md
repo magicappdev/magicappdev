@@ -114,9 +114,11 @@
 
 **Tasks:**
 
-- [ ] Investigate template selection logic in init command
-- [ ] Fix template mapping to respect user selection
+- [x] Investigate template selection logic in init command
+- [x] Fix template mapping to respect user selection
 - [ ] Add tests for template selection
+- [ ] Create separate GitHub repo for templates (`magicappdev/templates`)
+- [ ] Implement GitHub template download mechanism
 
 ### 3.4 Tabs Template Helper Issue
 
@@ -124,8 +126,8 @@
 
 **Tasks:**
 
-- [ ] Review Handlebars template helpers registration
-- [ ] Add missing `headerShown` helper
+- [x] Review Handlebars template helpers registration
+- [x] Add missing `headerShown` helper
 - [ ] Test all template options end-to-end
 
 ---

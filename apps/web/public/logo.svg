@@ -1,0 +1,26 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="512" height="512" rx="128" fill="#18181B"/>
+  
+  <!-- "M" for Magic / App Frame -->
+  <path d="M120 360V152H184L256 264L328 152H392V360H328V248L256 360L184 248V360H120Z" fill="#6366F1"/>
+  
+  <!-- Magic Wand / Spark Effect -->
+  <circle cx="256" cy="120" r="24" fill="#A5B4FC">
+    <animate attributeName="opacity" values="0.6;1;0.6" dur="2s" repeatCount="indefinite" />
+  </circle>
+  <path d="M256 70V100" stroke="#A5B4FC" stroke-width="8" stroke-linecap="round"/>
+  <path d="M256 140V170" stroke="#A5B4FC" stroke-width="8" stroke-linecap="round"/>
+  <path d="M206 120H236" stroke="#A5B4FC" stroke-width="8" stroke-linecap="round"/>
+  <path d="M276 120H306" stroke="#A5B4FC" stroke-width="8" stroke-linecap="round"/>
+  
+  <!-- Subtle Gradient Overlay -->
+  <rect width="512" height="512" rx="128" fill="url(#paint0_linear)" style="mix-blend-mode:overlay" pointer-events="none"/>
+  
+  <defs>
+    <linearGradient id="paint0_linear" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop stop-color="white" stop-opacity="0.2"/>
+      <stop offset="1" stop-color="black" stop-opacity="0.2"/>
+    </linearGradient>
+  </defs>
+</svg>

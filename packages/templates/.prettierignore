@@ -1,0 +1,6 @@
+# Prettier ignore for template files
+# Templates are text files with comment syntax, not actual code to run
+packages/templates/templates/templates/**/*
+!packages/templates/templates/templates/**/*.{json,ts,tsx,js,jsx}
+!packages/templates/templates/templates/**/.eslintrc.json
+!packages/templates/templates/templates/**/tsconfig.json
