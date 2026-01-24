@@ -124,3 +124,10 @@ Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\win\async.c, li
       ✗ Missing helper: "headerShown:"
 
 - [ ] add DISCORD_OAUTH to Web page (login/signup or linking)
+
+## Mobile App Version Management
+
+- [ ]     "version:build": "expo-version-bump",
+              "version:major": "expo-version-bump --major",
+              "version:minor": "expo-version-bump --minor",
+              "version:patch": "expo-version-bump --patch"
