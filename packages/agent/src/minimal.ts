@@ -22,18 +22,26 @@ export interface WorkerAi {
       messages: { role: string; content: string }[];
       stream?: boolean;
     },
-  ): Promise<WorkerAiResponse>;
+  ): Promise<WorkerAiResponse | ReadableStream>;
 }
+
+interface AiStreamChunk {
+  response?: string;
+}
+
+const DEFAULT_MODEL = "@cf/meta/llama-3.1-8b-instruct";
 
 /**
  * Minimal MagicAgent Durable Object
  */
 export class MagicAgent extends DurableObject {
   state: DurableObjectState;
+  env: Env;
 
   constructor(state: DurableObjectState, env: Env) {
     super(state, env);
     this.state = state;
+    this.env = env;
     console.log("MagicAgent initialized");
   }
 
@@ -59,37 +67,14 @@ export class MagicAgent extends DurableObject {
         }),
       );
 
-      // Echo messages back in format mobile app expects
+      // Handle messages with AI
       server.addEventListener("message", event => {
-        try {
-          const data = JSON.parse(event.data as string);
-          console.log("Received:", data);
-
-          // Echo the message back as chat chunks for testing
+        this.handleMessage(server, event).catch(err => {
+          console.error("Handler error:", err);
           server.send(
-            JSON.stringify({
-              type: "chat_chunk",
-              content: `Echo: ${data.content || JSON.stringify(data)}`,
-            }),
+            JSON.stringify({ type: "error", message: "Internal error" }),
           );
-
-          // Send done message
-          setTimeout(() => {
-            server.send(
-              JSON.stringify({
-                type: "chat_done",
-                suggestedTemplate: null,
-              }),
-            );
-          }, 100);
-        } catch {
-          server.send(
-            JSON.stringify({
-              type: "error",
-              message: "Invalid JSON",
-            }),
-          );
-        }
+        });
       });
 
       server.addEventListener("close", () => {
@@ -109,6 +94,84 @@ export class MagicAgent extends DurableObject {
       id: this.state.id.toString(),
     });
   }
+
+  private async handleMessage(
+    server: WebSocket,
+    event: MessageEvent,
+  ): Promise<void> {
+    try {
+      // Validate event.data is a string before parsing
+      if (typeof event.data !== "string") {
+        server.send(
+          JSON.stringify({
+            type: "error",
+            message: "Unsupported message type; expected string",
+          }),
+        );
+        return;
+      }
+      const data = JSON.parse(event.data);
+      console.log("Received:", data);
+
+      if (data.type !== "chat" || !data.content) {
+        server.send(
+          JSON.stringify({ type: "error", message: "Expected chat message" }),
+        );
+        return;
+      }
+
+      const stream = (await this.env.AI.run(DEFAULT_MODEL, {
+        messages: [
+          {
+            role: "system",
+            content: "You are a helpful AI assistant. Be concise.",
+          },
+          { role: "user", content: data.content },
+        ],
+        stream: true,
+      })) as ReadableStream;
+
+      const reader = stream.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const text = decoder.decode(value);
+        for (const line of text.split("\n")) {
+          if (line.startsWith("data: ")) {
+            const jsonData = line.slice(6);
+            if (jsonData === "[DONE]") break;
+            try {
+              const parsed = JSON.parse(jsonData) as AiStreamChunk;
+              if (parsed.response) {
+                server.send(
+                  JSON.stringify({
+                    type: "chat_chunk",
+                    content: parsed.response,
+                  }),
+                );
+              }
+            } catch (parseError) {
+              // Partial JSON chunks are expected during streaming; only log if debug needed
+              console.debug("Partial JSON chunk:", parseError);
+            }
+          }
+        }
+      }
+
+      server.send(
+        JSON.stringify({ type: "chat_done", suggestedTemplate: null }),
+      );
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error("AI error:", msg);
+      server.send(
+        JSON.stringify({ type: "error", message: `AI error: ${msg}` }),
+      );
+    }
+  }
 }
 
 export default {
@@ -117,8 +180,11 @@ export default {
     const path = url.pathname;
 
     // Route to MagicAgent Durable Object
+    // Expected path format: /agents/magic-agent/:id
     if (path.startsWith("/agents/magic-agent/")) {
-      const id = path.split("/")[3] || "default";
+      const segments = path.split("/");
+      const AGENT_ID_INDEX = 3; // Path: ['', 'agents', 'magic-agent', ':id']
+      const id = segments[AGENT_ID_INDEX] || "default";
       const stub = env.MagicAgent.get(env.MagicAgent.idFromName(id));
       return stub.fetch(request);
     }

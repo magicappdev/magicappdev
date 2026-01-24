@@ -64,7 +64,15 @@ export default function ContactPage() {
           </div>
           <Button
             className="w-full rounded-full"
-            onClick={() => setSubmitted(false)}
+            onClick={() => {
+              setFormData({
+                name: "",
+                email: "",
+                subject: "",
+                message: "",
+              });
+              setSubmitted(false);
+            }}
           >
             Send Another Message
           </Button>
@@ -193,7 +201,12 @@ export default function ContactPage() {
       </div>
       {/* Inline error message */}
       {errorMessage && (
-        <Typography variant="body" className="text-sm text-red-500">
+        <Typography
+          variant="body"
+          className="text-sm text-red-500"
+          role="alert"
+          aria-live="polite"
+        >
           {errorMessage}
         </Typography>
       )}
