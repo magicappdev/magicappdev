@@ -128,6 +128,6 @@ Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\win\async.c, li
 ## Mobile App Version Management
 
 - [ ]     "version:build": "expo-version-bump",
-              "version:major": "expo-version-bump --major",
-              "version:minor": "expo-version-bump --minor",
-              "version:patch": "expo-version-bump --patch"
+                      "version:major": "expo-version-bump --major",
+                      "version:minor": "expo-version-bump --minor",
+                      "version:patch": "expo-version-bump --patch"
