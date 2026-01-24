@@ -78,7 +78,12 @@ export default function ChatPage() {
         if (data.type === "history") {
           // Load chat history from server
           const historyMessages: Message[] = data.messages.map(
-            (m: { id: string; role: string; content: string; timestamp: number }) => ({
+            (m: {
+              id: string;
+              role: string;
+              content: string;
+              timestamp: number;
+            }) => ({
               id: m.id,
               role: m.role as "user" | "assistant" | "system",
               content: m.content,

@@ -86,8 +86,13 @@ export class MagicAgent extends DurableObject {
       `SELECT id, role, content, timestamp FROM messages ORDER BY timestamp DESC LIMIT ?`,
       limit,
     ).toArray();
-    // Reverse to get chronological order
-    return (rows as StoredMessage[]).reverse();
+    // Map rows to StoredMessage type and reverse to get chronological order
+    return rows.map(row => ({
+      id: row.id as string,
+      role: row.role as "user" | "assistant" | "system",
+      content: row.content as string,
+      timestamp: row.timestamp as number,
+    })).reverse();
   }
 
   private async clearMessages(): Promise<void> {
