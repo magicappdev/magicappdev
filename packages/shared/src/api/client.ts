@@ -25,6 +25,48 @@ export interface AdminUser {
   createdAt: string;
 }
 
+export interface AdminApiKey {
+  id: string;
+  name: string;
+  key: string;
+  keyPrefix: string;
+  description: string | null;
+  scopes: string;
+  isActive: number;
+  createdBy: string;
+  lastUsedAt: string | null;
+  expiresAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SystemLog {
+  id: string;
+  level: "debug" | "info" | "warn" | "error";
+  category: string;
+  message: string;
+  details: string | null;
+  userId: string | null;
+  metadata: string | null;
+  createdAt: string;
+}
+
+export interface GlobalConfig {
+  maintenanceMode: boolean;
+  rateLimitPerMinute: number;
+  rateLimitPerHour: number;
+  maxConcurrentSessions: number;
+  enableRegistration: boolean;
+  requireEmailVerification: boolean;
+  loginAttemptsLimit: number;
+  sessionExpiryDays: number;
+}
+
+export interface LogsStats {
+  totalLogs: number;
+  byLevel: Record<string, number>;
+}
+
 export class ApiClient {
   private accessToken: string | null = null;
 
@@ -251,6 +293,130 @@ export class ApiClient {
       {
         method: "PATCH",
         body: JSON.stringify({ role }),
+      },
+    );
+    if (!response.success) {
+      throw new Error(response.error.message);
+    }
+  }
+
+  async getAdminApiKeys(params?: {
+    limit?: number;
+    offset?: number;
+    isActive?: boolean;
+  }): Promise<AdminApiKey[]> {
+    const searchParams = new URLSearchParams();
+    if (params?.limit) searchParams.set("limit", String(params.limit));
+    if (params?.offset) searchParams.set("offset", String(params.offset));
+    if (params?.isActive !== undefined)
+      searchParams.set("isActive", String(params.isActive));
+    const query = searchParams.toString();
+    const response = await this.request<ApiResponse<AdminApiKey[]>>(
+      `/admin/api-keys${query ? `?${query}` : ""}`,
+    );
+    if (!response.success) {
+      throw new Error(response.error.message);
+    }
+    return response.data;
+  }
+
+  async createAdminApiKey(data: {
+    name: string;
+    description?: string;
+    scopes: string[];
+    expiresAt?: string;
+  }): Promise<AdminApiKey> {
+    const response = await this.request<ApiResponse<AdminApiKey>>(
+      "/admin/api-keys",
+      {
+        method: "POST",
+        body: JSON.stringify(data),
+      },
+    );
+    if (!response.success) {
+      throw new Error(response.error.message);
+    }
+    return response.data;
+  }
+
+  async deleteAdminApiKey(id: string): Promise<void> {
+    const response = await this.request<ApiResponse<void>>(
+      `/admin/api-keys/${id}`,
+      {
+        method: "DELETE",
+      },
+    );
+    if (!response.success) {
+      throw new Error(response.error.message);
+    }
+  }
+
+  async getSystemLogs(params?: {
+    limit?: number;
+    offset?: number;
+    level?: string;
+    category?: string;
+    userId?: string;
+  }): Promise<SystemLog[]> {
+    const searchParams = new URLSearchParams();
+    if (params?.limit) searchParams.set("limit", String(params.limit));
+    if (params?.offset) searchParams.set("offset", String(params.offset));
+    if (params?.level) searchParams.set("level", params.level);
+    if (params?.category) searchParams.set("category", params.category);
+    if (params?.userId) searchParams.set("userId", params.userId);
+    const query = searchParams.toString();
+    const response = await this.request<ApiResponse<SystemLog[]>>(
+      `/admin/logs${query ? `?${query}` : ""}`,
+    );
+    if (!response.success) {
+      throw new Error(response.error.message);
+    }
+    return response.data;
+  }
+
+  async getLogsStats(): Promise<LogsStats> {
+    const response =
+      await this.request<ApiResponse<LogsStats>>("/admin/logs/stats");
+    if (!response.success) {
+      throw new Error(response.error.message);
+    }
+    return response.data;
+  }
+
+  async getGlobalConfig(): Promise<GlobalConfig> {
+    const response =
+      await this.request<ApiResponse<GlobalConfig>>("/admin/config");
+    if (!response.success) {
+      throw new Error(response.error.message);
+    }
+    return response.data;
+  }
+
+  async updateGlobalConfig(
+    config: Partial<GlobalConfig>,
+  ): Promise<GlobalConfig> {
+    const response = await this.request<ApiResponse<GlobalConfig>>(
+      "/admin/config",
+      {
+        method: "PUT",
+        body: JSON.stringify(config),
+      },
+    );
+    if (!response.success) {
+      throw new Error(response.error.message);
+    }
+    return response.data;
+  }
+
+  async changePassword(data: {
+    currentPassword: string;
+    newPassword: string;
+  }): Promise<void> {
+    const response = await this.request<ApiResponse<void>>(
+      "/auth/change-password",
+      {
+        method: "POST",
+        body: JSON.stringify(data),
       },
     );
     if (!response.success) {

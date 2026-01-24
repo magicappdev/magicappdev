@@ -29,7 +29,7 @@
 - **Admin System**
   - [x] Admin API endpoints (API keys, system logs, global config)
   - [x] Change password endpoint
-  - [ ] Mobile Admin screens (API keys, logs, config)
+  - [x] Mobile Admin screens (API keys, logs, config, users, change password)
 
 ## ✅ Recently Completed
 

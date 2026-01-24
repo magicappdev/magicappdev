@@ -204,6 +204,52 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {/* Admin Section - Only visible for admin users */}
+        {user.role === "admin" && (
+          <View style={styles.section}>
+            <Text
+              style={[
+                styles.sectionTitle,
+                { color: theme.colors.textSecondary },
+              ]}
+            >
+              Administration
+            </Text>
+            <TouchableOpacity
+              style={[
+                styles.item,
+                {
+                  backgroundColor: theme.colors.card,
+                  borderBottomColor: theme.colors.border,
+                },
+              ]}
+              onPress={() => router.push("/admin" as any)}
+            >
+              <View
+                style={[
+                  styles.iconContainer,
+                  { backgroundColor: theme.colors.error },
+                ]}
+              >
+                <Ionicons name="shield" size={20} color="#fff" />
+              </View>
+              <Text
+                style={[
+                  styles.itemTitle,
+                  { flex: 1, marginLeft: 12, color: theme.colors.text },
+                ]}
+              >
+                Admin Dashboard
+              </Text>
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={theme.colors.textSecondary}
+              />
+            </TouchableOpacity>
+          </View>
+        )}
+
         <View style={styles.section}>
           <Text
             style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}
