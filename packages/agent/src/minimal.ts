@@ -40,10 +40,11 @@ export class MagicAgent extends DurableObject {
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
 
-    // WebSocket upgrade
+    // WebSocket upgrade - check for upgrade header case-insensitively
+    const upgradeHeader = request.headers.get("Upgrade");
     if (
       url.pathname === "/ws" ||
-      request.headers.get("Upgrade") === "websocket"
+      upgradeHeader?.toLowerCase() === "websocket"
     ) {
       const pair = new WebSocketPair();
       const [client, server] = Object.values(pair);
@@ -58,18 +59,29 @@ export class MagicAgent extends DurableObject {
         }),
       );
 
-      // Echo messages back
+      // Echo messages back in format mobile app expects
       server.addEventListener("message", event => {
         try {
           const data = JSON.parse(event.data as string);
           console.log("Received:", data);
 
+          // Echo the message back as chat chunks for testing
           server.send(
             JSON.stringify({
-              type: "echo",
-              original: data,
+              type: "chat_chunk",
+              content: `Echo: ${data.content || JSON.stringify(data)}`,
             }),
           );
+
+          // Send done message
+          setTimeout(() => {
+            server.send(
+              JSON.stringify({
+                type: "chat_done",
+                suggestedTemplate: null,
+              }),
+            );
+          }, 100);
         } catch {
           server.send(
             JSON.stringify({
