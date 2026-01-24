@@ -1,18 +1,29 @@
 import { TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs, router } from "expo-router";
+import { useTheme } from "../../contexts/ThemeContext";
 import React from "react";
 
 export default function TabLayout() {
+  const { theme } = useTheme();
+
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: "#007AFF",
-        tabBarInactiveTintColor: "#8E8E93",
+        tabBarActiveTintColor: theme.colors.tabBarActive,
+        tabBarInactiveTintColor: theme.colors.textSecondary,
+        tabBarStyle: {
+          backgroundColor: theme.colors.tabBar,
+          borderTopColor: theme.colors.border,
+        },
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: "500",
         },
+        headerStyle: {
+          backgroundColor: theme.colors.card,
+        },
+        headerTintColor: theme.colors.text,
         headerTitleStyle: {
           fontWeight: "bold",
         },
@@ -21,7 +32,11 @@ export default function TabLayout() {
             onPress={() => router.push("/settings")}
             style={{ marginRight: 16 }}
           >
-            <Ionicons name="person-circle-outline" size={28} color="#007AFF" />
+            <Ionicons
+              name="person-circle-outline"
+              size={28}
+              color={theme.colors.primary}
+            />
           </TouchableOpacity>
         ),
       }}

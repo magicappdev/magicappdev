@@ -19,6 +19,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import React, { useState, useRef, useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { AGENT_HOST } from "../../lib/api";
+import { useTheme } from "../../contexts/ThemeContext";
 import "react-native-url-polyfill/auto";
 // 2. Crypto polyfill for secure random generation
 import "react-native-get-random-values";
@@ -31,6 +32,7 @@ interface Message {
 }
 
 export default function ChatScreen() {
+  const { theme } = useTheme();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
@@ -232,7 +234,7 @@ export default function ChatScreen() {
             value={input}
             onChangeText={setInput}
             placeholder={isConnected ? "Describe your app..." : "Connecting..."}
-            placeholderTextColor="#999"
+            placeholderTextColor={theme.colors.textSecondary}
             multiline
             editable={isConnected}
           />
@@ -260,13 +262,13 @@ export default function ChatScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F2F2F7",
+    backgroundColor: "#F2F2F7", // Fallback
   },
   header: {
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: "#E5E5EA",
-    backgroundColor: "#fff",
+    backgroundColor: "#fff", // Fallback
   },
   headerTitleContainer: {
     flexDirection: "row",
@@ -276,7 +278,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#000",
+    color: "#000", // Fallback
   },
   statusContainer: {
     flexDirection: "row",
@@ -290,7 +292,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 12,
-    color: "#8E8E93",
+    color: "#8E8E93", // Fallback
   },
   messageList: {
     padding: 16,
@@ -304,25 +306,25 @@ const styles = StyleSheet.create({
   },
   userBubble: {
     alignSelf: "flex-end",
-    backgroundColor: "#007AFF",
+    backgroundColor: "#007AFF", // Fallback
     borderBottomRightRadius: 4,
   },
   assistantBubble: {
     alignSelf: "flex-start",
-    backgroundColor: "#fff",
+    backgroundColor: "#fff", // Fallback
     borderBottomLeftRadius: 4,
     borderWidth: 1,
-    borderColor: "#E5E5EA",
+    borderColor: "#E5E5EA", // Fallback
   },
   messageText: {
     fontSize: 16,
     lineHeight: 22,
   },
   userText: {
-    color: "#fff",
+    color: "#fff", // Fallback
   },
   assistantText: {
-    color: "#000",
+    color: "#000", // Fallback
   },
   suggestionContainer: {
     paddingHorizontal: 16,
@@ -330,63 +332,63 @@ const styles = StyleSheet.create({
   },
   suggestionCard: {
     flexDirection: "row",
-    backgroundColor: "#E1F5FE",
+    backgroundColor: "#E1F5FE", // Fallback
     padding: 12,
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "space-between",
     borderWidth: 1,
-    borderColor: "#B3E5FC",
+    borderColor: "#B3E5FC", // Fallback
   },
   suggestionTextContainer: {
     flex: 1,
   },
   suggestionLabel: {
     fontSize: 10,
-    color: "#0288D1",
+    color: "#0288D1", // Fallback
     fontWeight: "700",
     textTransform: "uppercase",
   },
   suggestionValue: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#01579B",
+    color: "#01579B", // Fallback
   },
   applyButton: {
-    backgroundColor: "#0288D1",
+    backgroundColor: "#0288D1", // Fallback
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
   },
   applyButtonText: {
-    color: "#fff",
+    color: "#fff", // Fallback
     fontSize: 12,
     fontWeight: "600",
   },
   inputContainer: {
     flexDirection: "row",
     padding: 12,
-    backgroundColor: "#fff",
+    backgroundColor: "#fff", // Fallback
     borderTopWidth: 1,
-    borderTopColor: "#E5E5EA",
+    borderTopColor: "#E5E5EA", // Fallback
     alignItems: "flex-end",
     gap: 8,
   },
   input: {
     flex: 1,
-    backgroundColor: "#F2F2F7",
+    backgroundColor: "#F2F2F7", // Fallback
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 10,
     fontSize: 16,
     maxHeight: 100,
-    color: "#000",
+    color: "#000", // Fallback
   },
   sendButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#007AFF",
+    backgroundColor: "#007AFF", // Fallback
     alignItems: "center",
     justifyContent: "center",
   },
