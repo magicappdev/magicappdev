@@ -1,4 +1,11 @@
-import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  Image,
+  TouchableOpacity,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Link } from "expo-router";
 

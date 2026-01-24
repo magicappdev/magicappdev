@@ -6,9 +6,25 @@ import { Card } from "@/components/ui/Card";
 import React, { useState } from "react";
 import { api } from "../../lib/api";
 
+function ContactTextarea(
+  props: React.TextareaHTMLAttributes<HTMLTextAreaElement>,
+) {
+  const { className, ...rest } = props;
+  return (
+    <textarea
+      className={
+        "flex w-full px-3 py-2 text-sm transition-all duration-200 border rounded-md min-h-40 border-outline/50 bg-surface-variant/30 ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-transparent disabled:cursor-not-allowed disabled:opacity-50" +
+        (className ? " " + className : "")
+      }
+      {...rest}
+    />
+  );
+}
+
 export default function ContactPage() {
   const [submitted, setSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -18,6 +34,7 @@ export default function ContactPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage(null);
     setIsLoading(true);
 
     try {
@@ -25,7 +42,7 @@ export default function ContactPage() {
       setSubmitted(true);
     } catch (error) {
       console.error("Failed to send message", error);
-      alert("Something went wrong. Please try again.");
+      setErrorMessage("Something went wrong. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -66,7 +83,6 @@ export default function ContactPage() {
           Have a question or feedback? We'd love to hear from you.
         </Typography>
       </div>
-
       <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
         {/* Contact Info */}
         <div className="space-y-6">
@@ -148,8 +164,8 @@ export default function ContactPage() {
               <label className="text-sm font-medium text-foreground/80">
                 Message
               </label>
-              <textarea
-                className="flex w-full px-3 py-2 text-sm transition-all duration-200 border rounded-md min-h-40 border-outline/50 bg-surface-variant/30 ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
+
+              <ContactTextarea
                 placeholder="Tell us more about your project..."
                 required
                 value={formData.message}
@@ -175,6 +191,13 @@ export default function ContactPage() {
           </form>
         </Card>
       </div>
+      {/* Inline error message */}
+      {errorMessage && (
+        <Typography variant="body" className="text-sm text-red-500">
+          {errorMessage}
+        </Typography>
+      )}
+      );
     </div>
   );
 }

@@ -2,7 +2,6 @@
 echo "Testing basic worker deployment..."
 set -euo pipefail
 
-echo "Testing basic worker deployment..."
 if wrangler deploy --config wrangler.test.toml; then
     echo "Deployment succeeded."
 else

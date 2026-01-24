@@ -66,7 +66,6 @@ export default {
 
       // Handle close event
       server.addEventListener("close", () => {
-        // server.close();
         // No action needed; the WebSocket is already closing when this event fires.
       });
 

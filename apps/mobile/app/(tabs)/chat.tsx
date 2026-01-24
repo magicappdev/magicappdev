@@ -1,8 +1,5 @@
 // Polyfills for React Native - ORDER MATTERS!
 // 1. URL polyfill for proper URL parsing
-import "react-native-url-polyfill/auto";
-// 2. Crypto polyfill for secure random generation
-import "react-native-get-random-values";
 // DO NOT import "partysocket/event-target-polyfill" - conflicts with React Native 0.81's native EventTarget
 // DO NOT import "event-target-polyfill" (generic) - same issue
 // DO NOT import "react-native-polyfill-globals/auto" - breaks fetch blob handling
@@ -22,6 +19,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import React, { useState, useRef, useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { AGENT_HOST } from "../../lib/api";
+import "react-native-url-polyfill/auto";
+// 2. Crypto polyfill for secure random generation
+import "react-native-get-random-values";
 
 interface Message {
   id: string;
@@ -67,11 +67,11 @@ export default function ChatScreen() {
       setIsConnected(false);
     };
 
-    ws.onerror = (error) => {
+    ws.onerror = error => {
       console.error("WebSocket error:", error);
     };
 
-    ws.onmessage = (event) => {
+    ws.onmessage = event => {
       try {
         const data = JSON.parse(event.data as string);
 

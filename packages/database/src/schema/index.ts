@@ -6,9 +6,9 @@ import { sessions } from "./sessions.js";
 import { projects } from "./projects.js";
 import { profiles } from "./profiles.js";
 import { accounts } from "./accounts.js";
+import { apiKeys } from "./api-keys.js";
 import { tickets } from "./tickets.js";
 import { users } from "./users.js";
-import { apiKeys } from "./api-keys.js";
 
 export const schema = {
   users,

@@ -82,7 +82,6 @@ export class MagicAgent extends DurableObject {
 
       server.addEventListener("close", () => {
         console.log("WebSocket closed");
-        // server.close();
       });
 
       return new Response(null, {

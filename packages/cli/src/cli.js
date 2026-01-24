@@ -16,26 +16,26 @@ const VERSION = pkg.version;
 /** TEST - Test if build picks up changes */
 /** Create the CLI program */
 export function createProgram() {
-    const program = new Command();
-    program
-        .name("magicappdev")
-        .description("CLI for creating and managing MagicAppDev apps")
-        .version(VERSION, "-v, --version", "Display version number");
-    // Add commands
-    program.addCommand(initCommand);
-    program.addCommand(authCommand);
-    program.addCommand(chatCommand);
-    program.addCommand(generateCommand);
-    program.addCommand(doctorCommand);
-    program.addCommand(completionsCommand);
-    return program;
+  const program = new Command();
+  program
+    .name("magicappdev")
+    .description("CLI for creating and managing MagicAppDev apps")
+    .version(VERSION, "-v, --version", "Display version number");
+  // Add commands
+  program.addCommand(initCommand);
+  program.addCommand(authCommand);
+  program.addCommand(chatCommand);
+  program.addCommand(generateCommand);
+  program.addCommand(doctorCommand);
+  program.addCommand(completionsCommand);
+  return program;
 }
 /** Run the CLI */
 export async function run(argv) {
-    const program = createProgram();
-    await program.parseAsync(argv || process.argv);
+  const program = createProgram();
+  await program.parseAsync(argv || process.argv);
 }
 // Run if executed directly
 if (import.meta.url.endsWith(process.argv[1].replace(/\\/g, "/"))) {
-    run().catch(console.error);
+  run().catch(console.error);
 }

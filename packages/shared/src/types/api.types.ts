@@ -9,11 +9,7 @@ import type {
   Template,
   User,
 } from "./app.types";
-import type {
-  Id,
-  PaginatedResponse,
-  PaginationParams,
-} from "./common.types";
+import type { Id, PaginatedResponse, PaginationParams } from "./common.types";
 
 /** API error response structure */
 export interface ApiErrorResponse {

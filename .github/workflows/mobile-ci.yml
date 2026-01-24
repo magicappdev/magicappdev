@@ -4,21 +4,21 @@ on:
   push:
     branches: [main]
     paths:
-      - 'apps/mobile/**'
-      - 'packages/shared/**'
-      - 'packages/ui/**'
+      - "apps/mobile/**"
+      - "packages/shared/**"
+      - "packages/ui/**"
   pull_request:
     branches: [main]
     paths:
-      - 'apps/mobile/**'
-      - 'packages/shared/**'
-      - 'packages/ui/**'
+      - "apps/mobile/**"
+      - "packages/shared/**"
+      - "packages/ui/**"
   workflow_dispatch:
 
 env:
   NODE_VERSION: 22
   PNPM_VERSION: 10.28.1
-  JAVA_VERSION: '21'
+  JAVA_VERSION: "21"
 
 jobs:
   lint-and-typecheck:
@@ -38,7 +38,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -67,12 +67,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Setup Java JDK
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: "temurin"
           java-version: ${{ env.JAVA_VERSION }}
 
       - name: Install dependencies
