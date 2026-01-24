@@ -6,7 +6,10 @@
   "build": {
     "base": {
       "node": "20.18.0",
-      "pnpm": "10.28.1"
+      "pnpm": "10.28.1",
+      "android": {
+        "image": "sdk-54"
+      }
     },
     "development": {
       "extends": "base",

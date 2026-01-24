@@ -63,7 +63,7 @@
   "editor.rulers": [80, 120],
   "editor.wordWrap": "on",
   "eslint.codeActionsOnSave.mode": "problems",
-  "eslint.enable": true,
+  "eslint.enable": false,
   "typescript.inlayHints.variableTypes.suppressWhenTypeMatchesName": true,
   "path-intellisense.ignoreTsConfigBaseUrl": true,
   "typescript.workspaceSymbols.excludeLibrarySymbols": true,
