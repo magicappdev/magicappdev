@@ -22,7 +22,18 @@ authCommand
       const url = new URL(req.url, `http://${req.headers.host}`);
       const accessToken = url.searchParams.get("accessToken");
       const refreshToken = url.searchParams.get("refreshToken");
-      if (accessToken && refreshToken) {
+      // Validate tokens are JWT format (basic check)
+      const isValidJwt = token =>
+        typeof token === "string" &&
+        token.split(".").length === 3 &&
+        token.length > 20 &&
+        token.length < 2000;
+      if (
+        accessToken &&
+        refreshToken &&
+        isValidJwt(accessToken) &&
+        isValidJwt(refreshToken)
+      ) {
         // Store tokens
         await saveConfig({ accessToken, refreshToken });
         api.setToken(accessToken);

@@ -25,6 +25,40 @@ import "react-native-url-polyfill/auto";
 // 2. Crypto polyfill for secure random generation
 import "react-native-get-random-values";
 
+function buildAgentWebSocketUrl(
+  host: string | undefined | null,
+): string | null {
+  if (!host) {
+    console.error("AGENT_HOST is not defined");
+    return null;
+  }
+  let normalized = host.trim();
+  // Strip common http/https prefixes if misconfigured that way
+  if (normalized.startsWith("http://")) {
+    normalized = normalized.substring("http://".length);
+  } else if (normalized.startsWith("https://")) {
+    normalized = normalized.substring("https://".length);
+  }
+  // Remove any trailing slashes
+  while (normalized.endsWith("/")) {
+    normalized = normalized.slice(0, -1);
+  }
+  // Basic validation: no spaces and non-empty
+  if (!normalized || /\s/.test(normalized)) {
+    console.error("AGENT_HOST is malformed:", host);
+    return null;
+  }
+  const wsUrl = `wss://${normalized}/agents/magic-agent/default`;
+  try {
+    // Validate URL format
+    new URL(wsUrl);
+  } catch (e) {
+    console.error("Constructed WebSocket URL is invalid:", wsUrl, e);
+    return null;
+  }
+  return wsUrl;
+}
+
 interface Message {
   id: string;
   role: "user" | "assistant" | "system";
@@ -74,7 +108,12 @@ export default function ChatScreen() {
   useEffect(() => {
     // Use native WebSocket instead of AgentClient to avoid EventTarget polyfill conflicts
     // The agent endpoint accepts standard WebSocket connections
-    const wsUrl = `wss://${AGENT_HOST}/agents/magic-agent/default`;
+    // const wsUrl = `wss://${AGENT_HOST}/agents/magic-agent/default`;
+    const wsUrl = buildAgentWebSocketUrl(AGENT_HOST);
+    if (!wsUrl) {
+      // Invalid or undefined host; do not attempt to connect
+      return;
+    }
     console.log("Connecting to WebSocket:", wsUrl);
     const ws = new WebSocket(wsUrl);
 
