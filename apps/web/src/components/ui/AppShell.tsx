@@ -38,9 +38,9 @@ export function AppShell({ children }: AppShellProps) {
     );
   }
 
-  // Define protected routes
+  // Define protected routes (chat temporarily public for testing)
   const protectedRoutes = [
-    "/chat",
+    // "/chat", // Temporarily public for testing
     "/projects",
     "/settings",
     "/tickets",
@@ -56,6 +56,7 @@ export function AppShell({ children }: AppShellProps) {
 
   const navItems = [
     { label: "Home", icon: Home, href: "/" },
+    { label: "Chat", icon: MessageSquare, href: "/chat" }, // Public for testing
     { label: "About", icon: Info, href: "/about" },
     { label: "Contact", icon: Mail, href: "/contact" },
   ];
@@ -63,7 +64,7 @@ export function AppShell({ children }: AppShellProps) {
   if (user) {
     navItems.push(
       { label: "Projects", icon: Folder, href: "/projects" },
-      { label: "Chat", icon: MessageSquare, href: "/chat" },
+      // Chat already in base nav items
       { label: "Tickets", icon: Ticket, href: "/tickets" },
       { label: "Settings", icon: Settings, href: "/settings" },
     );

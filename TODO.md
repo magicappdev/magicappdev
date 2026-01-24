@@ -66,3 +66,9 @@ Vercel’s AI SDK's filetype whitelists can be bypassed when uploading files Low
 # 1
 
 Vercel’s AI SDK's filetype whitelists can be bypassed when uploading files Low Direct
+
+## Fix Dark Mode in App + Fix Project Tab/creating editing projects
+
+## Add persistance to chats (history)
+
+## Fix Web Chat / Agent , Admin System Logs , Global config , change password, create api keys
