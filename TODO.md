@@ -26,6 +26,17 @@
 
 ## 🚧 In Progress
 
+## ✅ Recently Completed
+
+- **Agent AI Integration**
+  - [x] Connected minimal agent to Workers AI (`@cf/meta/llama-3.1-8b-instruct`)
+  - [x] Chat persistence with Durable Object SQL storage
+  - [x] Conversation history context in AI prompts
+  - [x] Clear history functionality (UI + backend)
+- **Web Chat Fix**
+  - [x] Fixed WebSocket connection to deployed agent (wss:// protocol)
+  - [x] Switched to native WebSocket for mobile compatibility
+
 ## 📋 Backlog
 
 - **Production Readiness**
@@ -69,6 +80,4 @@ Vercel’s AI SDK's filetype whitelists can be bypassed when uploading files Low
 
 ## Fix Dark Mode in App + Fix Project Tab/creating editing projects
 
-## Add persistance to chats (history)
-
-## Fix Web Chat / Agent , Admin System Logs , Global config , change password, create api keys
+## Admin System Logs , Global config , change password, create api keys

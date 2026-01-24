@@ -180,7 +180,8 @@
       "mcp__cloudflare-observability__query_worker_observability",
       "mcp__claude_ai_Cloudflare_Developer_Platform__search_cloudflare_documentation",
       "Bash(npx:*)",
-      "Bash(bash:*)"
+      "Bash(bash:*)",
+      "Bash(git merge:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

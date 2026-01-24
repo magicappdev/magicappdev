@@ -14,15 +14,15 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  Alert,
-  Keyboard,
-  KeyboardEvent,
+  // Alert,
+  // Keyboard,
+  // KeyboardEvent,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useTheme } from "../../contexts/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
 import { AGENT_HOST } from "../../lib/api";
-import { useTheme } from "../../contexts/ThemeContext";
 import "react-native-url-polyfill/auto";
 // 2. Crypto polyfill for secure random generation
 import "react-native-get-random-values";
@@ -141,7 +141,7 @@ export default function ChatScreen() {
       }
     };
 
-    wsRef.current = ws;
+    // wsRef.current = ws;
 
     return () => {
       ws.close();
@@ -164,20 +164,21 @@ export default function ChatScreen() {
     setSuggestedTemplate(null);
 
     // Send to Agent via native WebSocket
-    wsRef.current?.send(
-      JSON.stringify({
-        type: "chat",
-        content: userMessage.content,
-      }),
-    );
+    // wsRef.current?.send(
+    //   JSON.stringify({
+    //     type: "chat",
+    //     content: userMessage.content,
+    //   }),
+    // );
   };
 
   const handleKeyPress = (e: { nativeEvent: { key: string } }) => {
+    console.log("Key pressed:", e.nativeEvent.key);
     // Send on Enter key, unless Shift+Enter (which creates a new line)
-    if (e.nativeEvent.key === "Enter" && !e.nativeEvent.shiftKey) {
-      Keyboard.dismiss();
-      sendMessage();
-    }
+    // if (e.nativeEvent.key === "Enter" && !e.nativeEvent.shiftKey) {
+    //   Keyboard.dismiss();
+    //   sendMessage();
+    // }
   };
 
   const applyTemplate = (templateId: string) => {

@@ -21,11 +21,11 @@ export default function SettingsScreen() {
 
   if (!user) return null;
 
-  const themeNames = {
-    light: "Light",
-    dark: "Dark",
-    automatic: "Auto",
-  };
+  // const themeNames = {
+  //   light: "Light",
+  //   dark: "Dark",
+  //   automatic: "Auto",
+  // };
 
   return (
     <SafeAreaView style={styles.container} edges={["bottom"]}>
@@ -45,7 +45,9 @@ export default function SettingsScreen() {
 
       <ScrollView style={{ backgroundColor: theme.colors.background }}>
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>
+          <Text
+            style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}
+          >
             Profile
           </Text>
           <View style={styles.item}>
@@ -61,12 +63,22 @@ export default function SettingsScreen() {
               <Text style={[styles.itemTitle, { color: theme.colors.text }]}>
                 {user.name}
               </Text>
-              <Text style={[styles.itemSubtitle, { color: theme.colors.textSecondary }]}>
+              <Text
+                style={[
+                  styles.itemSubtitle,
+                  { color: theme.colors.textSecondary },
+                ]}
+              >
                 {user.email}
               </Text>
             </View>
             <View style={styles.badge}>
-              <Text style={[styles.badgeText, { color: theme.colors.textSecondary }]}>
+              <Text
+                style={[
+                  styles.badgeText,
+                  { color: theme.colors.textSecondary },
+                ]}
+              >
                 {user.role}
               </Text>
             </View>
@@ -74,7 +86,9 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>
+          <Text
+            style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}
+          >
             App Settings
           </Text>
           <View style={styles.item}>
@@ -86,7 +100,12 @@ export default function SettingsScreen() {
             >
               <Ionicons name="moon" size={20} color="#fff" />
             </View>
-            <Text style={[styles.itemTitle, { flex: 1, marginLeft: 12, color: theme.colors.text }]}>
+            <Text
+              style={[
+                styles.itemTitle,
+                { flex: 1, marginLeft: 12, color: theme.colors.text },
+              ]}
+            >
               Theme
             </Text>
             <View style={styles.themeButtons}>
@@ -150,7 +169,12 @@ export default function SettingsScreen() {
             >
               <Ionicons name="notifications" size={20} color="#fff" />
             </View>
-            <Text style={[styles.itemTitle, { flex: 1, marginLeft: 12, color: theme.colors.text }]}>
+            <Text
+              style={[
+                styles.itemTitle,
+                { flex: 1, marginLeft: 12, color: theme.colors.text },
+              ]}
+            >
               Notifications
             </Text>
             <Switch value={notifications} onValueChange={setNotifications} />
@@ -158,7 +182,9 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>
+          <Text
+            style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}
+          >
             Support
           </Text>
           <TouchableOpacity style={styles.item}>
@@ -170,10 +196,19 @@ export default function SettingsScreen() {
             >
               <Ionicons name="help-buoy" size={20} color="#fff" />
             </View>
-            <Text style={[styles.itemTitle, { flex: 1, marginLeft: 12, color: theme.colors.text }]}>
+            <Text
+              style={[
+                styles.itemTitle,
+                { flex: 1, marginLeft: 12, color: theme.colors.text },
+              ]}
+            >
               Help Center
             </Text>
-            <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
+            <Ionicons
+              name="chevron-forward"
+              size={20}
+              color={theme.colors.textSecondary}
+            />
           </TouchableOpacity>
         </View>
 

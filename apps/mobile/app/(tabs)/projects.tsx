@@ -11,10 +11,10 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
+import { useTheme } from "../../contexts/ThemeContext";
 import React, { useState, useEffect } from "react";
 import { api, type Project } from "../../lib/api";
 import { Ionicons } from "@expo/vector-icons";
-import { useTheme } from "../../contexts/ThemeContext";
 
 export default function ProjectsScreen() {
   const { theme } = useTheme();
@@ -41,7 +41,8 @@ export default function ProjectsScreen() {
   };
 
   const handleCreateProject = async () => {
-    const name = projectName.trim() || `Project ${projects.length + 1}`;
+    // Use timestamp for unique project names to avoid duplicates
+    const name = projectName.trim() || `Project ${Date.now()}`;
     try {
       const newProject = await api.createProject({ name });
       setProjects([newProject, ...projects]);
@@ -54,7 +55,12 @@ export default function ProjectsScreen() {
   };
 
   const renderProject = ({ item }: { item: Project }) => (
-    <TouchableOpacity style={styles.projectCard}>
+    <TouchableOpacity
+      style={styles.projectCard}
+      accessibilityRole="button"
+      accessibilityLabel={`Open project ${item.name}`}
+      accessibilityHint="Opens details for this project"
+    >
       <View style={styles.projectIcon}>
         <Ionicons name="cube-outline" size={24} color={theme.colors.primary} />
       </View>
@@ -67,7 +73,11 @@ export default function ProjectsScreen() {
           {item.status} • {new Date(item.updatedAt).toLocaleDateString()}
         </Text>
       </View>
-      <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
+      <Ionicons
+        name="chevron-forward"
+        size={20}
+        color={theme.colors.textSecondary}
+      />
     </TouchableOpacity>
   );
 
@@ -90,7 +100,11 @@ export default function ProjectsScreen() {
         refreshing={isLoading}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Ionicons name="folder-open-outline" size={64} color={theme.colors.textSecondary} />
+            <Ionicons
+              name="folder-open-outline"
+              size={64}
+              color={theme.colors.textSecondary}
+            />
             <Text style={styles.emptyTitle}>No projects yet</Text>
             <Text style={styles.emptyText}>
               Your generated projects will appear here.
@@ -115,21 +129,41 @@ export default function ProjectsScreen() {
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={styles.modalContainer}
         >
-          <View style={[styles.modalContent, { backgroundColor: theme.colors.card }]}>
+          <View
+            style={[
+              styles.modalContent,
+              { backgroundColor: theme.colors.card },
+            ]}
+          >
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
                 Create New Project
               </Text>
               <TouchableOpacity onPress={() => setIsModalVisible(false)}>
-                <Ionicons name="close" size={24} color={theme.colors.textSecondary} />
+                <Ionicons
+                  name="close"
+                  size={24}
+                  color={theme.colors.textSecondary}
+                />
               </TouchableOpacity>
             </View>
             <View style={styles.modalBody}>
-              <Text style={[styles.modalLabel, { color: theme.colors.textSecondary }]}>
+              <Text
+                style={[
+                  styles.modalLabel,
+                  { color: theme.colors.textSecondary },
+                ]}
+              >
                 Project Name
               </Text>
               <TextInput
-                style={[styles.modalInput, { color: theme.colors.text, backgroundColor: theme.colors.background }]}
+                style={[
+                  styles.modalInput,
+                  {
+                    color: theme.colors.text,
+                    backgroundColor: theme.colors.background,
+                  },
+                ]}
                 value={projectName}
                 onChangeText={setProjectName}
                 placeholder="Enter project name"
@@ -139,16 +173,26 @@ export default function ProjectsScreen() {
             </View>
             <View style={styles.modalFooter}>
               <TouchableOpacity
-                style={[styles.modalCancel, { backgroundColor: theme.colors.background }]}
+                style={[
+                  styles.modalCancel,
+                  { backgroundColor: theme.colors.background },
+                ]}
                 onPress={() => {
                   setIsModalVisible(false);
                   setProjectName("");
                 }}
               >
-                <Text style={[styles.modalButtonText, { color: theme.colors.text }]}>Cancel</Text>
+                <Text
+                  style={[styles.modalButtonText, { color: theme.colors.text }]}
+                >
+                  Cancel
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.modalConfirm, { backgroundColor: theme.colors.primary }]}
+                style={[
+                  styles.modalConfirm,
+                  { backgroundColor: theme.colors.primary },
+                ]}
                 onPress={handleCreateProject}
                 disabled={!projectName.trim()}
               >
