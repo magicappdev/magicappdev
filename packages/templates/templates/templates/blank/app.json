@@ -1,0 +1,4 @@
+{
+  "name": "/* {{pascalCase name}} */",
+  "displayName": "/* {{name}} */"
+}

@@ -1,0 +1,48 @@
+{
+  "name": "/* {{kebabCase name}} */",
+  "version": "1.0.0",
+  "description": "/* {{description}} */",
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    {{#if eslint}}
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    {{/if}}
+    {{#if jest}}
+    "test": "jest",
+    {{/if}}
+    {{#if prettier}}
+    "format": "prettier --write ."
+    {{/if}}
+  },
+  "dependencies": {
+    "expo": "~52.0.0",
+    "expo-router": "~4.0.0",
+    "expo-status-bar": "~2.0.0",
+    "react": "18.3.1",
+    "react-native": "0.76.0",
+    "@expo/vector-icons": "^14.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "~18.3.0",
+    "typescript": "~5.8.0",
+    {{#if eslint}}
+    "eslint": "^8.0.0",
+    "eslint-config-prettier": "^8.0.0",
+    "eslint-plugin-react": "^7.0.0",
+    "eslint-plugin-react-native": "^4.0.0",
+    {{/if}}
+    {{#if prettier}}
+    "prettier": "^3.0.0",
+    {{/if}}
+    {{#if jest}}
+    "jest": "^29.0.0",
+    "jest-environment-node": "^29.0.0",
+    "jest-mock": "^29.0.0",
+    "react-test-renderer": "18.3.1",
+    {{/if}}
+  }
+}
