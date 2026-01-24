@@ -14,7 +14,7 @@ export const apiKeys = sqliteTable("api_keys", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   provider: text("provider").notNull(), // "openai", "anthropic", "gemini", "openrouter", "zai"
-  apiKey: text("api_key").notNull(),
+  encryptedApiKey: text("encrypted_api_key").notNull(),
   label: text("label"), // User-friendly label like "My OpenAI Key"
   createdAt: text("created_at")
     .notNull()
