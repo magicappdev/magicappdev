@@ -24,7 +24,8 @@ RUN wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public | gp
     && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
 # MAINTAINER MagicAppDev
-LABEL org.opencontainers.image.authors="MagicAppDev"
+LABEL   org.opencontainers.image.authors="MagicAppDev"\
+        org.opencontainers.image.title="Magic App Dev Devcontainer"
 
 # EXPOSE 3100 5173 8100 3030
 
