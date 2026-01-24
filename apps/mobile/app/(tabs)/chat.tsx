@@ -202,98 +202,100 @@ export default function ChatScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
       >
-      <View style={styles.header}>
-        <View style={styles.headerTitleContainer}>
-          <Text style={styles.headerTitle}>Magic AI Chat</Text>
-          <View style={styles.statusContainer}>
-            <View
-              style={[
-                styles.statusDot,
-                { backgroundColor: isConnected ? "#34C759" : "#FF3B30" },
-              ]}
-            />
-            <Text style={styles.statusText}>
-              {isConnected ? "Connected" : "Disconnected"}
-            </Text>
-          </View>
-        </View>
-      </View>
-
-      <FlatList
-        ref={flatListRef}
-        data={messages}
-        renderItem={({ item }) => {
-          const isUser = item.role === "user";
-          return (
-            <View
-              style={[
-                styles.messageBubble,
-                isUser ? styles.userBubble : styles.assistantBubble,
-              ]}
-            >
-              <Text
+        <View style={styles.header}>
+          <View style={styles.headerTitleContainer}>
+            <Text style={styles.headerTitle}>Magic AI Chat</Text>
+            <View style={styles.statusContainer}>
+              <View
                 style={[
-                  styles.messageText,
-                  isUser ? styles.userText : styles.assistantText,
+                  styles.statusDot,
+                  { backgroundColor: isConnected ? "#34C759" : "#FF3B30" },
                 ]}
-              >
-                {item.content}
+              />
+              <Text style={styles.statusText}>
+                {isConnected ? "Connected" : "Disconnected"}
               </Text>
             </View>
-          );
-        }}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.messageList}
-      />
+          </View>
+        </View>
 
-      {suggestedTemplate && (
-        <View style={styles.suggestionContainer}>
-          <View style={styles.suggestionCard}>
-            <View style={styles.suggestionTextContainer}>
-              <Text style={styles.suggestionLabel}>Suggested Template</Text>
-              <Text style={styles.suggestionValue}>{suggestedTemplate}</Text>
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          renderItem={({ item }) => {
+            const isUser = item.role === "user";
+            return (
+              <View
+                style={[
+                  styles.messageBubble,
+                  isUser ? styles.userBubble : styles.assistantBubble,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.messageText,
+                    isUser ? styles.userText : styles.assistantText,
+                  ]}
+                >
+                  {item.content}
+                </Text>
+              </View>
+            );
+          }}
+          keyExtractor={item => item.id}
+          contentContainerStyle={styles.messageList}
+        />
+
+        {suggestedTemplate && (
+          <View style={styles.suggestionContainer}>
+            <View style={styles.suggestionCard}>
+              <View style={styles.suggestionTextContainer}>
+                <Text style={styles.suggestionLabel}>Suggested Template</Text>
+                <Text style={styles.suggestionValue}>{suggestedTemplate}</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.applyButton}
+                onPress={() => applyTemplate(suggestedTemplate)}
+              >
+                <Text style={styles.applyButtonText}>Use</Text>
+              </TouchableOpacity>
             </View>
+          </View>
+        )}
+
+        <View style={styles.inputContainer}>
+          <View
+            style={[styles.inputRow, { backgroundColor: theme.colors.card }]}
+          >
+            <TextInput
+              ref={inputRef}
+              style={styles.input}
+              value={input}
+              onChangeText={setInput}
+              onKeyPress={handleKeyPress}
+              placeholder={isConnected ? "Type a message..." : "Connecting..."}
+              placeholderTextColor={theme.colors.textSecondary}
+              multiline
+              editable={isConnected}
+              maxLength={2000}
+            />
             <TouchableOpacity
-              style={styles.applyButton}
-              onPress={() => applyTemplate(suggestedTemplate)}
+              style={[
+                styles.sendButton,
+                (!input.trim() || isLoading || !isConnected) &&
+                  styles.sendButtonDisabled,
+              ]}
+              onPress={sendMessage}
+              disabled={!input.trim() || isLoading || !isConnected}
             >
-              <Text style={styles.applyButtonText}>Use</Text>
+              {isLoading ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <Ionicons name="send" size={20} color="#fff" />
+              )}
             </TouchableOpacity>
           </View>
         </View>
-      )}
-
-      <View style={styles.inputContainer}>
-        <View style={[styles.inputRow, { backgroundColor: theme.colors.card }]}>
-          <TextInput
-            ref={inputRef}
-            style={styles.input}
-            value={input}
-            onChangeText={setInput}
-            onKeyPress={handleKeyPress}
-            placeholder={isConnected ? "Type a message..." : "Connecting..."}
-            placeholderTextColor={theme.colors.textSecondary}
-            multiline
-            editable={isConnected}
-            maxLength={2000}
-          />
-          <TouchableOpacity
-            style={[
-              styles.sendButton,
-              (!input.trim() || isLoading || !isConnected) &&
-                styles.sendButtonDisabled,
-            ]}
-            onPress={sendMessage}
-            disabled={!input.trim() || isLoading || !isConnected}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#fff" size="small" />
-            ) : (
-              <Ionicons name="send" size={20} color="#fff" />
-            )}
-          </TouchableOpacity>
-        </View>
-      </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
