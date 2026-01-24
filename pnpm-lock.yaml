@@ -199,9 +199,6 @@ importers:
         specifier: ^3.6.20
         version: 3.6.20
     devDependencies:
-      "@expo/metro-config":
-        specifier: ~54.0.14
-        version: 54.0.14(expo@54.0.32)
       "@expo/metro-runtime":
         specifier: ^6.1.2
         version: 6.1.2(expo@54.0.32)(react-dom@19.1.0(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)

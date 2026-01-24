@@ -226,7 +226,10 @@ export default function ChatScreen() {
                 ]}
               />
               <Text
-                style={[styles.statusText, { color: theme.colors.textSecondary }]}
+                style={[
+                  styles.statusText,
+                  { color: theme.colors.textSecondary },
+                ]}
               >
                 {isConnected ? "Connected" : "Disconnected"}
               </Text>
