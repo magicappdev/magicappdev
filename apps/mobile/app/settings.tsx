@@ -22,10 +22,15 @@ export default function SettingsScreen() {
   if (!user) return null;
 
   return (
-    <SafeAreaView style={styles.container} edges={["bottom"]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+      edges={["bottom"]}
+    >
       <Stack.Screen
         options={{
           title: "Settings",
+          headerStyle: { backgroundColor: theme.colors.card },
+          headerTintColor: theme.colors.text,
           headerLeft: () => (
             <TouchableOpacity
               onPress={() => router.back()}
@@ -44,7 +49,15 @@ export default function SettingsScreen() {
           >
             Profile
           </Text>
-          <View style={styles.item}>
+          <View
+            style={[
+              styles.item,
+              {
+                backgroundColor: theme.colors.card,
+                borderBottomColor: theme.colors.border,
+              },
+            ]}
+          >
             <Image
               source={{
                 uri:
@@ -85,7 +98,15 @@ export default function SettingsScreen() {
           >
             App Settings
           </Text>
-          <View style={styles.item}>
+          <View
+            style={[
+              styles.item,
+              {
+                backgroundColor: theme.colors.card,
+                borderBottomColor: theme.colors.border,
+              },
+            ]}
+          >
             <View
               style={[
                 styles.iconContainer,
@@ -154,7 +175,15 @@ export default function SettingsScreen() {
             </View>
           </View>
 
-          <View style={styles.item}>
+          <View
+            style={[
+              styles.item,
+              {
+                backgroundColor: theme.colors.card,
+                borderBottomColor: theme.colors.border,
+              },
+            ]}
+          >
             <View
               style={[
                 styles.iconContainer,
@@ -181,7 +210,15 @@ export default function SettingsScreen() {
           >
             Support
           </Text>
-          <TouchableOpacity style={styles.item}>
+          <TouchableOpacity
+            style={[
+              styles.item,
+              {
+                backgroundColor: theme.colors.card,
+                borderBottomColor: theme.colors.border,
+              },
+            ]}
+          >
             <View
               style={[
                 styles.iconContainer,
@@ -207,7 +244,14 @@ export default function SettingsScreen() {
         </View>
 
         <TouchableOpacity
-          style={[styles.item, { marginTop: 20 }]}
+          style={[
+            styles.item,
+            {
+              marginTop: 20,
+              backgroundColor: theme.colors.card,
+              borderBottomColor: theme.colors.border,
+            },
+          ]}
           onPress={logout}
         >
           <Text

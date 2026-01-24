@@ -1,4 +1,4 @@
-const { getDefaultConfig } = require("@expo/metro-config");
+const { getDefaultConfig } = require("expo/metro-config");
 const path = require("path");
 
 const projectRoot = __dirname;
@@ -9,15 +9,19 @@ const config = getDefaultConfig(projectRoot);
 // 1. Watch all files within the monorepo
 config.watchFolders = [...(config.watchFolders || []), workspaceRoot];
 
-// 2. Configure watch options for Windows/pnpm
-config.watchOptions = {
-  ...config.watchOptions,
-  useWatchman: false, // Disable watchman on Windows (has issues with pnpm)
-  poll: 1000, // Use polling instead of native file watching (more reliable on Windows)
+// 2. Configure watcher options for Windows/pnpm
+config.watcher = {
+  ...config.watcher,
+  watchman: {
+    deferStates: ["hg.update"],
+  },
+  healthCheck: {
+    enabled: true,
+  },
 };
 
-// 3. Block problematic directories from watching
-config.blockList = [
+// 3. Block problematic directories from watching (use resolver.blockList)
+config.resolver.blockList = [
   // Exclude pnpm cache directories
   /.*\/node_modules\/\.pnpm\/.*/,
   /.*\/node_modules\/.*\/\.pnpm\/.*/,

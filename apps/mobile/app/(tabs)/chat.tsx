@@ -196,15 +196,28 @@ export default function ChatScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+      edges={["top"]}
+    >
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
       >
-        <View style={styles.header}>
+        <View
+          style={[
+            styles.header,
+            {
+              backgroundColor: theme.colors.card,
+              borderBottomColor: theme.colors.border,
+            },
+          ]}
+        >
           <View style={styles.headerTitleContainer}>
-            <Text style={styles.headerTitle}>Magic AI Chat</Text>
+            <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
+              Magic AI Chat
+            </Text>
             <View style={styles.statusContainer}>
               <View
                 style={[
@@ -212,7 +225,9 @@ export default function ChatScreen() {
                   { backgroundColor: isConnected ? "#34C759" : "#FF3B30" },
                 ]}
               />
-              <Text style={styles.statusText}>
+              <Text
+                style={[styles.statusText, { color: theme.colors.textSecondary }]}
+              >
                 {isConnected ? "Connected" : "Disconnected"}
               </Text>
             </View>
@@ -228,13 +243,23 @@ export default function ChatScreen() {
               <View
                 style={[
                   styles.messageBubble,
-                  isUser ? styles.userBubble : styles.assistantBubble,
+                  isUser
+                    ? styles.userBubble
+                    : [
+                        styles.assistantBubble,
+                        {
+                          backgroundColor: theme.colors.card,
+                          borderColor: theme.colors.border,
+                        },
+                      ],
                 ]}
               >
                 <Text
                   style={[
                     styles.messageText,
-                    isUser ? styles.userText : styles.assistantText,
+                    isUser
+                      ? styles.userText
+                      : [styles.assistantText, { color: theme.colors.text }],
                   ]}
                 >
                   {item.content}
@@ -263,13 +288,24 @@ export default function ChatScreen() {
           </View>
         )}
 
-        <View style={styles.inputContainer}>
+        <View
+          style={[
+            styles.inputContainer,
+            { backgroundColor: theme.colors.background },
+          ]}
+        >
           <View
-            style={[styles.inputRow, { backgroundColor: theme.colors.card }]}
+            style={[
+              styles.inputRow,
+              {
+                backgroundColor: theme.colors.card,
+                borderColor: theme.colors.border,
+              },
+            ]}
           >
             <TextInput
               ref={inputRef}
-              style={styles.input}
+              style={[styles.input, { color: theme.colors.text }]}
               value={input}
               onChangeText={setInput}
               onKeyPress={handleKeyPress}
@@ -411,22 +447,26 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#E5E5EA", // Fallback
     backgroundColor: "#fff", // Fallback
+    paddingBottom: Platform.OS === "android" ? 8 : 0,
   },
   inputRow: {
     flexDirection: "row",
     padding: 12,
     alignItems: "flex-end",
     gap: 8,
+    borderWidth: 1,
+    borderColor: "transparent",
+    borderRadius: 8,
+    margin: 8,
+    marginTop: 0,
   },
   input: {
     flex: 1,
-    backgroundColor: "#F2F2F7", // Fallback
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 10,
     fontSize: 16,
     maxHeight: 100,
-    color: "#000", // Fallback
   },
   sendButton: {
     width: 40,
