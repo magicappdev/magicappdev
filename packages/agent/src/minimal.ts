@@ -29,7 +29,15 @@ interface AiStreamChunk {
   response?: string;
 }
 
+interface StoredMessage {
+  id: string;
+  role: "user" | "assistant" | "system";
+  content: string;
+  timestamp: number;
+}
+
 const DEFAULT_MODEL = "@cf/meta/llama-3.1-8b-instruct";
+const MAX_HISTORY_MESSAGES = 20; // Limit context window
 
 /**
  * Minimal MagicAgent Durable Object
@@ -37,12 +45,75 @@ const DEFAULT_MODEL = "@cf/meta/llama-3.1-8b-instruct";
 export class MagicAgent extends DurableObject {
   state: DurableObjectState;
   env: Env;
+  private initialized = false;
 
   constructor(state: DurableObjectState, env: Env) {
     super(state, env);
     this.state = state;
     this.env = env;
     console.log("MagicAgent initialized");
+  }
+
+  private async ensureSchema(): Promise<void> {
+    if (this.initialized) return;
+
+    // Create messages table if not exists
+    this.state.storage.sql.exec(`
+      CREATE TABLE IF NOT EXISTS messages (
+        id TEXT PRIMARY KEY,
+        role TEXT NOT NULL,
+        content TEXT NOT NULL,
+        timestamp INTEGER NOT NULL
+      )
+    `);
+    this.initialized = true;
+  }
+
+  private async saveMessage(message: StoredMessage): Promise<void> {
+    await this.ensureSchema();
+    this.state.storage.sql.exec(
+      `INSERT INTO messages (id, role, content, timestamp) VALUES (?, ?, ?, ?)`,
+      message.id,
+      message.role,
+      message.content,
+      message.timestamp,
+    );
+  }
+
+  private async getMessages(limit = MAX_HISTORY_MESSAGES): Promise<StoredMessage[]> {
+    await this.ensureSchema();
+    const rows = this.state.storage.sql.exec(
+      `SELECT id, role, content, timestamp FROM messages ORDER BY timestamp DESC LIMIT ?`,
+      limit,
+    ).toArray();
+    // Reverse to get chronological order
+    return (rows as StoredMessage[]).reverse();
+  }
+
+  private async clearMessages(): Promise<void> {
+    await this.ensureSchema();
+    this.state.storage.sql.exec(`DELETE FROM messages`);
+  }
+
+  private async sendHistoryOnConnect(server: WebSocket): Promise<void> {
+    // Send connected message
+    server.send(
+      JSON.stringify({
+        type: "connected",
+        message: "Connected to minimal agent",
+      }),
+    );
+
+    // Load and send message history
+    const history = await this.getMessages();
+    if (history.length > 0) {
+      server.send(
+        JSON.stringify({
+          type: "history",
+          messages: history,
+        }),
+      );
+    }
   }
 
   async fetch(request: Request): Promise<Response> {
@@ -59,13 +130,10 @@ export class MagicAgent extends DurableObject {
 
       server.accept();
 
-      // Send welcome message
-      server.send(
-        JSON.stringify({
-          type: "connected",
-          message: "Connected to minimal agent",
-        }),
-      );
+      // Send welcome message and load history
+      this.sendHistoryOnConnect(server).catch(err => {
+        console.error("Failed to send history:", err);
+      });
 
       // Handle messages with AI
       server.addEventListener("message", event => {
@@ -113,6 +181,13 @@ export class MagicAgent extends DurableObject {
       const data = JSON.parse(event.data);
       console.log("Received:", data);
 
+      // Handle clear history command
+      if (data.type === "clear_history") {
+        await this.clearMessages();
+        server.send(JSON.stringify({ type: "history_cleared" }));
+        return;
+      }
+
       if (data.type !== "chat" || !data.content) {
         server.send(
           JSON.stringify({ type: "error", message: "Expected chat message" }),
@@ -120,19 +195,33 @@ export class MagicAgent extends DurableObject {
         return;
       }
 
+      // Save user message
+      const userMessage: StoredMessage = {
+        id: crypto.randomUUID(),
+        role: "user",
+        content: data.content,
+        timestamp: Date.now(),
+      };
+      await this.saveMessage(userMessage);
+
+      // Get conversation history for context
+      const history = await this.getMessages();
+      const aiMessages = [
+        {
+          role: "system",
+          content: "You are a helpful AI assistant. Be concise.",
+        },
+        ...history.map(m => ({ role: m.role, content: m.content })),
+      ];
+
       const stream = (await this.env.AI.run(DEFAULT_MODEL, {
-        messages: [
-          {
-            role: "system",
-            content: "You are a helpful AI assistant. Be concise.",
-          },
-          { role: "user", content: data.content },
-        ],
+        messages: aiMessages,
         stream: true,
       })) as ReadableStream;
 
       const reader = stream.getReader();
       const decoder = new TextDecoder();
+      let fullResponse = "";
 
       while (true) {
         const { done, value } = await reader.read();
@@ -146,6 +235,7 @@ export class MagicAgent extends DurableObject {
             try {
               const parsed = JSON.parse(jsonData) as AiStreamChunk;
               if (parsed.response) {
+                fullResponse += parsed.response;
                 server.send(
                   JSON.stringify({
                     type: "chat_chunk",
@@ -154,11 +244,22 @@ export class MagicAgent extends DurableObject {
                 );
               }
             } catch (parseError) {
-              // Partial JSON chunks are expected during streaming; only log if debug needed
+              // Partial JSON chunks are expected during streaming
               console.debug("Partial JSON chunk:", parseError);
             }
           }
         }
+      }
+
+      // Save assistant response
+      if (fullResponse) {
+        const assistantMessage: StoredMessage = {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content: fullResponse,
+          timestamp: Date.now(),
+        };
+        await this.saveMessage(assistantMessage);
       }
 
       server.send(

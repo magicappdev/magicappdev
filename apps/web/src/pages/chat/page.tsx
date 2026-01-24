@@ -6,6 +6,7 @@ import {
   Sparkles,
   Code2,
   LayoutTemplate,
+  Trash2,
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { Typography } from "@/components/ui/Typography";
@@ -74,7 +75,20 @@ export default function ChatPage() {
       try {
         const data = JSON.parse(event.data as string);
 
-        if (data.type === "chat_chunk") {
+        if (data.type === "history") {
+          // Load chat history from server
+          const historyMessages: Message[] = data.messages.map(
+            (m: { id: string; role: string; content: string; timestamp: number }) => ({
+              id: m.id,
+              role: m.role as "user" | "assistant" | "system",
+              content: m.content,
+              timestamp: m.timestamp,
+            }),
+          );
+          setMessages(historyMessages);
+        } else if (data.type === "history_cleared") {
+          setMessages([]);
+        } else if (data.type === "chat_chunk") {
           setMessages(prev => {
             const last = prev[prev.length - 1];
             if (last && last.role === "assistant" && last.id === "streaming") {
@@ -159,6 +173,10 @@ export default function ChatPage() {
     // handleSubmit would need to be called or triggered
   };
 
+  const clearHistory = () => {
+    wsRef.current?.send(JSON.stringify({ type: "clear_history" }));
+  };
+
   return (
     <div className="flex h-[calc(100vh-4rem)] flex-col bg-background/50">
       {/* Header */}
@@ -179,6 +197,17 @@ export default function ChatPage() {
           <span className="text-foreground/60">
             {isConnected ? "Connected" : "Disconnected"}
           </span>
+          {messages.length > 0 && (
+            <Button
+              variant="text"
+              size="sm"
+              onClick={clearHistory}
+              className="ml-2 text-foreground/40 hover:text-error"
+              title="Clear chat history"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          )}
         </div>
       </div>
 
