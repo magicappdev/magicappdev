@@ -223,7 +223,7 @@ export default function SettingsScreen() {
                   borderBottomColor: theme.colors.border,
                 },
               ]}
-              onPress={() => router.push("/admin" as any)}
+              onPress={() => router.push("/admin" as const)}
             >
               <View
                 style={[

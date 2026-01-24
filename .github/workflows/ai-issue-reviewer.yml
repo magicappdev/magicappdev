@@ -4,12 +4,18 @@ on:
   issues:
     types: [opened]
 
+permissions:
+  contents: read
+  issues: read
+
 jobs:
   review:
     runs-on: ubuntu-latest
     steps:
       - name: Call Magic Reviewer Agent
+        env:
+          ISSUE_JSON: ${{ toJson(github.event.issue) }}
         run: |
           curl -X POST https://magicappdev-agent.magicappdev.workers.dev/api/reviewer/review \
             -H "Content-Type: application/json" \
-            -d '{"issue": ${{ toJson(github.event.issue) }}}'
+            -d "{\"issue\": $ISSUE_JSON}"

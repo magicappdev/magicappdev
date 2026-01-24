@@ -15,6 +15,9 @@ on:
       - "packages/ui/**"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 env:
   NODE_VERSION: 22
   PNPM_VERSION: 10.28.1

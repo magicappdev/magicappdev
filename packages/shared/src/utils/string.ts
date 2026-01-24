@@ -50,7 +50,9 @@ export function capitalize(str: string): string {
 
 /** Generate a URL-friendly slug */
 export function slugify(str: string): string {
-  return str
+  // Limit input length to prevent ReDoS
+  const input = str.slice(0, 500);
+  return input
     .toLowerCase()
     .trim()
     .replace(/[^\w\s-]/g, "")
@@ -70,6 +72,8 @@ export function isValidUrl(str: string): boolean {
 
 /** Check if string is a valid email */
 export function isValidEmail(str: string): boolean {
+  // Limit input length to prevent ReDoS
+  if (str.length > 254) return false;
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(str);
 }
