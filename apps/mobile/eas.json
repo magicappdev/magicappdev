@@ -13,6 +13,14 @@
     },
     "production": {
       "autoIncrement": true
+    },
+    "ios_simulator_development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": {
+        "buildConfiguration": "Debug",
+        "simulator": true
+      }
     }
   },
   "submit": {
