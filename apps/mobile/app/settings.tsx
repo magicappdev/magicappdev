@@ -16,10 +16,16 @@ import React from "react";
 
 export default function SettingsScreen() {
   const { user, logout } = useAuth();
-  const { mode, setMode } = useTheme();
+  const { theme, mode, setMode } = useTheme();
   const [notifications, setNotifications] = React.useState(true);
 
   if (!user) return null;
+
+  const themeNames = {
+    light: "Light",
+    dark: "Dark",
+    automatic: "Auto",
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={["bottom"]}>
@@ -31,15 +37,17 @@ export default function SettingsScreen() {
               onPress={() => router.back()}
               style={{ marginLeft: 8 }}
             >
-              <Ionicons name="close" size={24} color="#000" />
+              <Ionicons name="close" size={24} color={theme.colors.text} />
             </TouchableOpacity>
           ),
         }}
       />
 
-      <ScrollView>
+      <ScrollView style={{ backgroundColor: theme.colors.background }}>
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Profile</Text>
+          <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>
+            Profile
+          </Text>
           <View style={styles.item}>
             <Image
               source={{
@@ -50,24 +58,35 @@ export default function SettingsScreen() {
               style={styles.avatar}
             />
             <View style={styles.itemText}>
-              <Text style={styles.itemTitle}>{user.name}</Text>
-              <Text style={styles.itemSubtitle}>{user.email}</Text>
+              <Text style={[styles.itemTitle, { color: theme.colors.text }]}>
+                {user.name}
+              </Text>
+              <Text style={[styles.itemSubtitle, { color: theme.colors.textSecondary }]}>
+                {user.email}
+              </Text>
             </View>
             <View style={styles.badge}>
-              <Text style={styles.badgeText}>{user.role}</Text>
+              <Text style={[styles.badgeText, { color: theme.colors.textSecondary }]}>
+                {user.role}
+              </Text>
             </View>
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>App Settings</Text>
+          <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>
+            App Settings
+          </Text>
           <View style={styles.item}>
             <View
-              style={[styles.iconContainer, { backgroundColor: "#5856D6" }]}
+              style={[
+                styles.iconContainer,
+                { backgroundColor: theme.colors.primary },
+              ]}
             >
               <Ionicons name="moon" size={20} color="#fff" />
             </View>
-            <Text style={[styles.itemTitle, { flex: 1, marginLeft: 12 }]}>
+            <Text style={[styles.itemTitle, { flex: 1, marginLeft: 12, color: theme.colors.text }]}>
               Theme
             </Text>
             <View style={styles.themeButtons}>
@@ -124,11 +143,14 @@ export default function SettingsScreen() {
 
           <View style={styles.item}>
             <View
-              style={[styles.iconContainer, { backgroundColor: "#FF9500" }]}
+              style={[
+                styles.iconContainer,
+                { backgroundColor: theme.colors.success },
+              ]}
             >
               <Ionicons name="notifications" size={20} color="#fff" />
             </View>
-            <Text style={[styles.itemTitle, { flex: 1, marginLeft: 12 }]}>
+            <Text style={[styles.itemTitle, { flex: 1, marginLeft: 12, color: theme.colors.text }]}>
               Notifications
             </Text>
             <Switch value={notifications} onValueChange={setNotifications} />
@@ -136,17 +158,22 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Support</Text>
+          <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>
+            Support
+          </Text>
           <TouchableOpacity style={styles.item}>
             <View
-              style={[styles.iconContainer, { backgroundColor: "#34C759" }]}
+              style={[
+                styles.iconContainer,
+                { backgroundColor: theme.colors.warning },
+              ]}
             >
               <Ionicons name="help-buoy" size={20} color="#fff" />
             </View>
-            <Text style={[styles.itemTitle, { flex: 1, marginLeft: 12 }]}>
+            <Text style={[styles.itemTitle, { flex: 1, marginLeft: 12, color: theme.colors.text }]}>
               Help Center
             </Text>
-            <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />
+            <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
           </TouchableOpacity>
         </View>
 
@@ -157,14 +184,16 @@ export default function SettingsScreen() {
           <Text
             style={[
               styles.itemTitle,
-              { color: "#FF3B30", textAlign: "center", flex: 1 },
+              { color: theme.colors.error, textAlign: "center", flex: 1 },
             ]}
           >
             Log Out
           </Text>
         </TouchableOpacity>
 
-        <Text style={styles.version}>MagicAppDev v0.1.0 Alpha</Text>
+        <Text style={[styles.version, { color: theme.colors.textSecondary }]}>
+          MagicAppDev v0.1.0 Alpha
+        </Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -173,7 +202,6 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F2F2F7",
   },
   section: {
     marginTop: 24,
@@ -181,25 +209,24 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 13,
     textTransform: "uppercase",
-    color: "#8E8E93",
     marginLeft: 16,
     marginBottom: 8,
   },
   item: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
+    backgroundColor: "#fff", // Fallback
     padding: 12,
     paddingHorizontal: 16,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#C7C7CC",
+    borderBottomColor: "#C7C7CC", // Fallback
   },
   avatar: {
     width: 48,
     height: 48,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: "#E5E5EA",
+    borderColor: "#E5E5EA", // Fallback
   },
   iconContainer: {
     width: 32,
@@ -214,14 +241,14 @@ const styles = StyleSheet.create({
   },
   itemTitle: {
     fontSize: 17,
-    color: "#000",
+    color: "#000", // Fallback
   },
   itemSubtitle: {
     fontSize: 14,
-    color: "#8E8E93",
+    color: "#8E8E93", // Fallback
   },
   badge: {
-    backgroundColor: "#F2F2F7",
+    backgroundColor: "#F2F2F7", // Fallback
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
@@ -229,12 +256,12 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#8E8E93",
+    color: "#8E8E93", // Fallback
     textTransform: "uppercase",
   },
   version: {
     textAlign: "center",
-    color: "#8E8E93",
+    color: "#8E8E93", // Fallback
     fontSize: 12,
     marginVertical: 40,
   },
@@ -246,20 +273,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 6,
-    backgroundColor: "#F2F2F7",
+    backgroundColor: "#F2F2F7", // Fallback
     borderWidth: 1,
-    borderColor: "#C7C7CC",
+    borderColor: "#C7C7CC", // Fallback
   },
   themeButtonActive: {
-    backgroundColor: "#007AFF",
-    borderColor: "#007AFF",
+    backgroundColor: "#007AFF", // Fallback
+    borderColor: "#007AFF", // Fallback
   },
   themeButtonText: {
     fontSize: 13,
-    color: "#000",
+    color: "#000", // Fallback
   },
   themeButtonTextActive: {
-    color: "#fff",
+    color: "#fff", // Fallback
     fontWeight: "600",
   },
 });

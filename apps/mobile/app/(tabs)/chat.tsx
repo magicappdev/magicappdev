@@ -14,9 +14,12 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Alert,
+  Keyboard,
+  KeyboardEvent,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { AGENT_HOST } from "../../lib/api";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -50,7 +53,24 @@ export default function ChatScreen() {
   );
 
   const flatListRef = useRef<FlatList>(null);
-  const wsRef = useRef<WebSocket | null>(null);
+  const inputRef = useRef<TextInput>(null);
+
+  const scrollToBottom = useCallback(() => {
+    flatListRef.current?.scrollToEnd({ animated: true });
+  }, []);
+
+  useEffect(() => {
+    // Scroll to bottom when messages change
+    scrollToBottom();
+  }, [messages, scrollToBottom]);
+
+  // Focus input on mount
+  useEffect(() => {
+    // Small delay to ensure modal/layout is ready
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 100);
+  }, []);
 
   useEffect(() => {
     // Use native WebSocket instead of AgentClient to avoid EventTarget polyfill conflicts
@@ -152,10 +172,21 @@ export default function ChatScreen() {
     );
   };
 
+  const handleKeyPress = (e: { nativeEvent: { key: string } }) => {
+    // Send on Enter key, unless Shift+Enter (which creates a new line)
+    if (e.nativeEvent.key === "Enter" && !e.nativeEvent.shiftKey) {
+      Keyboard.dismiss();
+      sendMessage();
+    }
+  };
+
   const applyTemplate = (templateId: string) => {
     const msg = `Use the ${templateId} template.`;
     setInput(msg);
-    // In mobile we could also navigate to a preview or similar
+    // Focus the input after changing the text
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 50);
   };
 
   return (
@@ -202,9 +233,6 @@ export default function ChatScreen() {
         }}
         keyExtractor={item => item.id}
         contentContainerStyle={styles.messageList}
-        onContentSizeChange={() =>
-          flatListRef.current?.scrollToEnd({ animated: true })
-        }
       />
 
       {suggestedTemplate && (
@@ -226,17 +254,21 @@ export default function ChatScreen() {
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
+        style={styles.inputContainer}
       >
-        <View style={styles.inputContainer}>
+        <View style={[styles.inputRow, { backgroundColor: theme.colors.card }]}>
           <TextInput
+            ref={inputRef}
             style={styles.input}
             value={input}
             onChangeText={setInput}
-            placeholder={isConnected ? "Describe your app..." : "Connecting..."}
+            onKeyPress={handleKeyPress}
+            placeholder={isConnected ? "Type a message..." : "Connecting..."}
             placeholderTextColor={theme.colors.textSecondary}
             multiline
             editable={isConnected}
+            maxLength={2000}
           />
           <TouchableOpacity
             style={[
@@ -366,11 +398,13 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   inputContainer: {
-    flexDirection: "row",
-    padding: 12,
-    backgroundColor: "#fff", // Fallback
     borderTopWidth: 1,
     borderTopColor: "#E5E5EA", // Fallback
+    backgroundColor: "#fff", // Fallback
+  },
+  inputRow: {
+    flexDirection: "row",
+    padding: 12,
     alignItems: "flex-end",
     gap: 8,
   },
@@ -391,6 +425,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#007AFF", // Fallback
     alignItems: "center",
     justifyContent: "center",
+    paddingBottom: 2,
   },
   sendButtonDisabled: {
     opacity: 0.5,
