@@ -12,6 +12,7 @@
     "clean:all": "pnpm run clean && pnpm install && nx run mobile:prebuild:clean",
     "clean:android": "cd android && .\\gradlew --stop && .\\gradlew clean --no-build-cache && npx rimraf .cxx",
     "doctor": "expo-doctor",
+    "generate:icons": "node --import tsx scripts/generate-icons.ts",
     "ios": "expo run:ios",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
