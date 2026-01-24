@@ -11,10 +11,10 @@
  *   npx tsx scripts/generate-icons.ts
  */
 
-import fs from "fs";
-import path from "path";
 import { createCanvas, loadImage } from "canvas";
 import { fileURLToPath } from "url";
+import path from "path";
+import fs from "fs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -90,7 +90,10 @@ async function generateIcon(
 
     console.log(`✓ Generated ${size}x${size} ${type} icon: ${outputPath}`);
   } catch (error) {
-    console.error(`✗ Failed to generate icon for ${size}x${size} ${type}:`, error);
+    console.error(
+      `✗ Failed to generate icon for ${size}x${size} ${type}:`,
+      error,
+    );
   }
 }
 
@@ -107,14 +110,34 @@ async function generateAllIcons() {
   // Generate iOS icons
   console.log("\n📱 Generating iOS icons...");
   for (const spec of ICON_SIZES) {
-    await generateIcon(spec.size, "ios", "light", path.join(iconsDir, `${spec.name}.png`));
-    await generateIcon(spec.size, "ios", "dark", path.join(iconsDir, `${spec.name}-dark.png`));
+    await generateIcon(
+      spec.size,
+      "ios",
+      "light",
+      path.join(iconsDir, `${spec.name}.png`),
+    );
+    await generateIcon(
+      spec.size,
+      "ios",
+      "dark",
+      path.join(iconsDir, `${spec.name}-dark.png`),
+    );
   }
 
   // Generate Android icon
   console.log("\n🤖 Generating Android icon...");
-  await generateIcon(192, "android", "web", path.join(iconsDir, "icon-192-android.png"));
-  await generateIcon(512, "android", "web", path.join(iconsDir, "icon-512-android.png"));
+  await generateIcon(
+    192,
+    "android",
+    "web",
+    path.join(iconsDir, "icon-192-android.png"),
+  );
+  await generateIcon(
+    512,
+    "android",
+    "web",
+    path.join(iconsDir, "icon-512-android.png"),
+  );
 
   // Generate Web app icons
   console.log("\n🌐 Generating Web icons...");
@@ -127,7 +150,7 @@ async function generateAllIcons() {
 }
 
 // Run the generator
-generateAllIcons().catch((error) => {
+generateAllIcons().catch(error => {
   console.error("Fatal error:", error);
   process.exit(1);
 });

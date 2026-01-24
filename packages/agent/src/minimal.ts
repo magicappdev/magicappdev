@@ -80,19 +80,25 @@ export class MagicAgent extends DurableObject {
     );
   }
 
-  private async getMessages(limit = MAX_HISTORY_MESSAGES): Promise<StoredMessage[]> {
+  private async getMessages(
+    limit = MAX_HISTORY_MESSAGES,
+  ): Promise<StoredMessage[]> {
     await this.ensureSchema();
-    const rows = this.state.storage.sql.exec(
-      `SELECT id, role, content, timestamp FROM messages ORDER BY timestamp DESC LIMIT ?`,
-      limit,
-    ).toArray();
+    const rows = this.state.storage.sql
+      .exec(
+        `SELECT id, role, content, timestamp FROM messages ORDER BY timestamp DESC LIMIT ?`,
+        limit,
+      )
+      .toArray();
     // Map rows to StoredMessage type and reverse to get chronological order
-    return rows.map(row => ({
-      id: row.id as string,
-      role: row.role as "user" | "assistant" | "system",
-      content: row.content as string,
-      timestamp: row.timestamp as number,
-    })).reverse();
+    return rows
+      .map(row => ({
+        id: row.id as string,
+        role: row.role as "user" | "assistant" | "system",
+        content: row.content as string,
+        timestamp: row.timestamp as number,
+      }))
+      .reverse();
   }
 
   private async clearMessages(): Promise<void> {

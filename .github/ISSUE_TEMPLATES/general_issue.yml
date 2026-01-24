@@ -1,0 +1,88 @@
+name: General Issue
+description: Report any other type of issue or question
+title: "[ISSUE] "
+labels: ["question"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reaching out! Please provide as much detail as possible to help us understand your issue or question.
+
+  - type: dropdown
+    id: issue-type
+    attributes:
+      label: Issue Type
+      description: What type of issue are you reporting?
+      options:
+        - Question / Help Request
+        - Documentation Issue
+        - Performance Issue
+        - Security Issue
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: issue-description
+    attributes:
+      label: Issue Description
+      description: A clear and concise description of the issue or question
+      placeholder: Describe your issue in detail...
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      description: Describe the impact of this issue
+      placeholder: |
+        How does this issue affect you or your work?
+        Is it blocking any critical functionality?
+        What are the consequences of not addressing this?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-resolve
+    attributes:
+      label: Steps to Resolve
+      description: If you have any suggestions for resolving this issue, please describe them
+      placeholder: |
+        What steps have you already tried?
+        What do you think the solution might be?
+        Any additional context that might help?
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How urgent is this issue?
+      options:
+        - Critical (blocking core functionality)
+        - High (significantly impacts workflow)
+        - Medium (moderate impact)
+        - Low (minor inconvenience)
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Add any other context, screenshots, or examples here
+      placeholder: Any additional information that might be helpful...
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Checklist
+      description: Please confirm the following
+      options:
+        - label: I have read the [Contributing Guidelines](../CONTRIBUTING.md)
+          required: true
+        - label: I have searched existing issues to ensure this is not a duplicate
+          required: true
+        - label: I have provided all the requested information above
+          required: true

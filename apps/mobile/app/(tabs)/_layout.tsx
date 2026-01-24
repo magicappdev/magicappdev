@@ -1,7 +1,7 @@
+import { useTheme } from "../../contexts/ThemeContext";
 import { TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs, router } from "expo-router";
-import { useTheme } from "../../contexts/ThemeContext";
 import React from "react";
 
 export default function TabLayout() {

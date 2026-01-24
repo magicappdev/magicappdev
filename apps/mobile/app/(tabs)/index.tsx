@@ -6,9 +6,9 @@ import {
   Image,
   TouchableOpacity,
 } from "react-native";
+import { useTheme } from "../../contexts/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
 import { Link } from "expo-router";
-import { useTheme } from "../../contexts/ThemeContext";
 
 export default function HomeScreen() {
   const { theme } = useTheme();
