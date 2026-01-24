@@ -1,13 +1,13 @@
 /**
  * Chat command - Interactive AI App Builder
- * Uses native WebSocket for cross-platform compatibility
+ * Uses AgentClient from agents SDK for proper connection
  */
 
 import { header, logo, info } from "../lib/ui.js";
 import { AGENT_HOST } from "../lib/api.js";
 import { Command } from "commander";
 import prompts from "prompts";
-import WebSocket from "ws";
+import { AgentClient } from "agents/client";
 import chalk from "chalk";
 import ora from "ora";
 
@@ -17,6 +17,12 @@ interface AgentMessage {
   suggestedTemplate?: string;
   error?: string;
 }
+
+// Handle Ctrl+C in prompts
+const onCancel = () => {
+  console.log(chalk.dim("\nGoodbye!"));
+  process.exit(0);
+};
 
 export const chatCommand = new Command("chat")
   .description("Chat with the Magic AI App Builder")
@@ -30,51 +36,56 @@ export const chatCommand = new Command("chat")
     info("Connecting to agent...");
     const spinner = ora("Initializing connection").start();
 
-    // Build WebSocket URL for the agent
-    const wsUrl = `wss://${AGENT_HOST}/agents/magic-agent/default`;
+    // Parse host without protocol
+    const host = AGENT_HOST.replace(/^wss?:\/\//, "").replace(/^https?:\/\//, "");
 
     if (debug) {
-      console.log(chalk.dim(`\n[DEBUG] Connecting to: ${wsUrl}`));
+      console.log(chalk.dim(`\n[DEBUG] Connecting to host: ${host}`));
+      console.log(chalk.dim(`[DEBUG] Agent: MagicAgent, Room: default`));
     }
 
-    const ws = new WebSocket(wsUrl);
+    // Use AgentClient for proper connection with headers
+    const client = new AgentClient({
+      host,
+      agent: "MagicAgent",
+      name: "default",
+    });
 
     // Connection timeout
     const connectionTimeout = setTimeout(() => {
-      if (ws.readyState !== WebSocket.OPEN) {
+      if (client.readyState !== WebSocket.OPEN) {
         spinner.fail("Connection timeout - agent not responding");
-        ws.terminate();
+        client.close();
         process.exit(1);
       }
     }, 10000);
 
-    ws.on("open", () => {
+    client.addEventListener("open", () => {
       clearTimeout(connectionTimeout);
       spinner.succeed("Connected to Magic AI Assistant");
       if (debug) {
         console.log(chalk.dim("[DEBUG] WebSocket connection established"));
       }
-      startChatLoop(ws, debug);
+      startChatLoop(client, debug);
     });
 
-    ws.on("close", (code, reason) => {
+    client.addEventListener("close", event => {
       clearTimeout(connectionTimeout);
-      const reasonStr = reason.toString() || "Connection closed";
       if (debug) {
         console.log(
-          chalk.dim(`\n[DEBUG] WebSocket closed: ${code} - ${reasonStr}`),
+          chalk.dim(`\n[DEBUG] WebSocket closed: ${event.code} - ${event.reason}`),
         );
       }
-      if (code !== 1000) {
+      if (event.code !== 1000) {
         // 1000 = normal closure
-        spinner.fail(`Disconnected from agent (${code})`);
+        spinner.fail(`Disconnected from agent (${event.code})`);
       }
       process.exit(0);
     });
 
-    ws.on("error", (err: Error) => {
+    client.addEventListener("error", (err: Event) => {
       clearTimeout(connectionTimeout);
-      spinner.fail(`Connection error: ${err.message}`);
+      spinner.fail(`Connection error`);
       if (debug) {
         console.error(chalk.red(`\n[DEBUG] WebSocket error:`), err);
       }
@@ -82,7 +93,7 @@ export const chatCommand = new Command("chat")
     });
   });
 
-async function startChatLoop(ws: WebSocket, debug: boolean) {
+async function startChatLoop(client: AgentClient, debug: boolean) {
   console.log(chalk.dim("\nType your message below (type 'exit' to quit)"));
 
   // Track if we're waiting for a response
@@ -92,9 +103,11 @@ async function startChatLoop(ws: WebSocket, debug: boolean) {
   let resolveResponse: (() => void) | null = null;
 
   // Handle incoming messages
-  ws.on("message", (data: WebSocket.Data) => {
+  client.addEventListener("message", (event: MessageEvent) => {
     try {
-      const message: AgentMessage = JSON.parse(data.toString());
+      const message: AgentMessage = JSON.parse(
+        typeof event.data === "string" ? event.data : event.data.toString(),
+      );
 
       if (debug) {
         console.log(chalk.dim(`\n[DEBUG] Received: ${message.type}`));
@@ -152,23 +165,26 @@ async function startChatLoop(ws: WebSocket, debug: boolean) {
   });
 
   // Main chat loop
-  while (ws.readyState === WebSocket.OPEN) {
-    const response = await prompts({
-      type: "text",
-      name: "message",
-      message: chalk.cyan("You:"),
-    });
+  while (client.readyState === WebSocket.OPEN) {
+    const response = await prompts(
+      {
+        type: "text",
+        name: "message",
+        message: chalk.cyan("You:"),
+      },
+      { onCancel },
+    );
 
     // Handle Ctrl+C or empty input
     if (!response.message) {
       console.log(chalk.dim("\nGoodbye!"));
-      ws.close(1000, "User exit");
+      client.close();
       break;
     }
 
     if (response.message.toLowerCase() === "exit") {
       console.log(chalk.dim("\nGoodbye!"));
-      ws.close(1000, "User exit");
+      client.close();
       break;
     }
 
@@ -177,7 +193,7 @@ async function startChatLoop(ws: WebSocket, debug: boolean) {
     currentResponse = "";
     responseSpinner = ora("Magic AI is thinking...").start();
 
-    ws.send(
+    client.send(
       JSON.stringify({
         type: "chat",
         content: response.message,

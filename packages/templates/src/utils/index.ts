@@ -30,6 +30,19 @@ Handlebars.registerHelper("and", (a: unknown, b: unknown) => a && b);
 Handlebars.registerHelper("or", (a: unknown, b: unknown) => a || b);
 Handlebars.registerHelper("not", (a: unknown) => !a);
 
+// Raw block helper to output literal content without Handlebars processing
+// Usage: {{{{raw}}}} content with {{ braces }} {{{{/raw}}}}
+Handlebars.registerHelper("raw", function (this: unknown, options) {
+  return options.fn(this);
+});
+
+// Helper to output literal double braces (for JSX objects)
+// Usage: {{lb}} outputs {  and {{rb}} outputs }
+Handlebars.registerHelper("lb", () => "{");
+Handlebars.registerHelper("rb", () => "}");
+Handlebars.registerHelper("lbb", () => "{{");
+Handlebars.registerHelper("rbb", () => "}}");
+
 /** Compile a template string with variables */
 export function compileTemplate(
   template: string,

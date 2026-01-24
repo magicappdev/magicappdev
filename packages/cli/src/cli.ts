@@ -16,6 +16,17 @@ const pkg = require("../package.json");
 /** Package version */
 const VERSION = pkg.version;
 
+/** Compare semver versions: returns 1 if a > b, -1 if a < b, 0 if equal */
+function compareVersions(a: string, b: string): number {
+  const partsA = a.split(".").map(Number);
+  const partsB = b.split(".").map(Number);
+  for (let i = 0; i < 3; i++) {
+    if (partsA[i] > partsB[i]) return 1;
+    if (partsA[i] < partsB[i]) return -1;
+  }
+  return 0;
+}
+
 /** Check for updates by fetching npm registry (non-blocking) */
 async function checkForUpdates(): Promise<void> {
   try {
@@ -26,7 +37,11 @@ async function checkForUpdates(): Promise<void> {
     if (response.ok) {
       const data = (await response.json()) as { version?: string };
       const latestVersion = data.version;
-      if (latestVersion && latestVersion !== pkg.version) {
+      // Only show update message if npm version is newer than local
+      if (
+        latestVersion &&
+        compareVersions(latestVersion, pkg.version) > 0
+      ) {
         console.log(
           `\n\x1b[33mUpdate available:\x1b[0m ${pkg.version} → ${latestVersion}`,
         );
@@ -72,6 +87,16 @@ export function createProgram(): Command {
 
 /** Run the CLI */
 export async function run(argv?: string[]): Promise<void> {
+  // Handle Ctrl+C gracefully
+  process.on("SIGINT", () => {
+    console.log("\n\x1b[2mInterrupted.\x1b[0m");
+    process.exit(0);
+  });
+
+  process.on("SIGTERM", () => {
+    process.exit(0);
+  });
+
   // Check for updates (non-blocking)
   checkForUpdates();
 

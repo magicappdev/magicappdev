@@ -5,6 +5,12 @@
 import prompts from "prompts";
 import chalk from "chalk";
 
+// Handle Ctrl+C in prompts - exit cleanly
+const onCancel = () => {
+  console.log(chalk.dim("\nCancelled."));
+  process.exit(0);
+};
+
 /** Prompt for text input */
 export async function promptText(
   message: string,
@@ -13,13 +19,16 @@ export async function promptText(
     validate?: (value: string) => boolean | string;
   } = {},
 ): Promise<string | undefined> {
-  const response = await prompts({
-    type: "text",
-    name: "value",
-    message,
-    initial: options.initial,
-    validate: options.validate,
-  });
+  const response = await prompts(
+    {
+      type: "text",
+      name: "value",
+      message,
+      initial: options.initial,
+      validate: options.validate,
+    },
+    { onCancel },
+  );
 
   return response.value as string | undefined;
 }
@@ -30,19 +39,45 @@ export async function promptSelect<T>(
   choices: Array<{ title: string; value: T; description?: string }>,
   options: {
     initial?: number;
-    multiple?: boolean;
   } = {},
 ): Promise<T | undefined> {
-  const response = await prompts({
-    type: "select",
-    name: "value",
-    message,
-    choices,
-    initial: options.initial || 0,
-    ...(options.multiple && { multiple: true }),
-  });
+  const response = await prompts(
+    {
+      type: "select",
+      name: "value",
+      message,
+      choices,
+      initial: options.initial || 0,
+    },
+    { onCancel },
+  );
 
   return response.value as T | undefined;
+}
+
+/** Prompt for multi-selection from a list */
+export async function promptMultiSelect<T>(
+  message: string,
+  choices: Array<{ title: string; value: T; description?: string }>,
+  options: {
+    min?: number;
+    max?: number;
+  } = {},
+): Promise<T[]> {
+  const response = await prompts(
+    {
+      type: "multiselect",
+      name: "value",
+      message,
+      choices,
+      min: options.min,
+      max: options.max,
+      hint: "- Space to select. Return to submit",
+    },
+    { onCancel },
+  );
+
+  return (response.value as T[]) || [];
 }
 
 /** Prompt for confirmation (yes/no) */
@@ -52,12 +87,15 @@ export async function promptConfirm(
     initial?: boolean;
   } = {},
 ): Promise<boolean> {
-  const response = await prompts({
-    type: "confirm",
-    name: "value",
-    message,
-    initial: options.initial ?? true,
-  });
+  const response = await prompts(
+    {
+      type: "confirm",
+      name: "value",
+      message,
+      initial: options.initial ?? true,
+    },
+    { onCancel },
+  );
 
   return response.value as boolean;
 }
@@ -98,7 +136,7 @@ export async function promptFramework(): Promise<string | undefined> {
 
 /** Prompt for additional preferences */
 export async function promptPreferences(): Promise<Record<string, boolean>> {
-  const preferences = await promptSelect<string>(
+  const preferences = await promptMultiSelect<string>(
     "Select additional preferences:",
     [
       {
@@ -127,9 +165,6 @@ export async function promptPreferences(): Promise<Record<string, boolean>> {
         description: "Add Tailwind CSS for styling",
       },
     ],
-    {
-      multiple: true,
-    },
   );
 
   return preferences.reduce(

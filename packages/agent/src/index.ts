@@ -12,7 +12,7 @@ import {
 import type { TemplateMetadata } from "@magicappdev/templates";
 import { registry } from "@magicappdev/templates/registry";
 import type { Connection, WSMessage } from "agents";
-import { Agent } from "agents";
+import { Agent, routeAgentRequest } from "agents";
 
 // Re-export tool types for external use
 export type { ToolCall, PendingApproval, ToolDefinition };
@@ -575,16 +575,17 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
+    // Use routeAgentRequest for agents SDK routing
+    if (path.startsWith("/agents/")) {
+      const response = routeAgentRequest(request, env) as Response | null;
+      return response ?? new Response("Agent not found", { status: 404 });
+    }
+
     if (path.startsWith("/api/agent/")) {
       const id = path.split("/")[3] || "default";
       return env.MagicAgent.get(env.MagicAgent.idFromName(id)).fetch(request);
     }
 
-    // Support standard agents SDK client
-    if (path.startsWith("/agents/magic-agent/")) {
-      const id = path.split("/")[3] || "default";
-      return env.MagicAgent.get(env.MagicAgent.idFromName(id)).fetch(request);
-    }
     if (path.startsWith("/api/reviewer/")) {
       return env.IssueReviewer.get(
         env.IssueReviewer.idFromName("global"),

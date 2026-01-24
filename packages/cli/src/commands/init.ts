@@ -21,10 +21,8 @@ import {
   newline,
   divider,
 } from "../lib/ui.js";
-import {
-  generateApp,
-} from "@magicappdev/templates";
 import { builtInTemplates } from "@magicappdev/templates";
+import { generateApp } from "@magicappdev/templates";
 import { withSpinner } from "../lib/spinner.js";
 import { Command } from "commander";
 
@@ -105,7 +103,7 @@ export const initCommand = new Command("init")
       // Get additional preferences
       let preferences: Record<string, boolean> = {};
       if (!options.yes) {
-        preferences = await promptPreferences() || {};
+        preferences = (await promptPreferences()) || {};
       }
 
       newline();
@@ -121,18 +119,26 @@ export const initCommand = new Command("init")
       newline();
 
       // Find template
-      const template = builtInTemplates.find(t => t.id === "blank") || builtInTemplates[0];
+      const template =
+        builtInTemplates.find(t => t.id === templateSlug) ||
+        builtInTemplates[0];
 
       // Generate project
       const outputDir = process.cwd();
       const result = await withSpinner(
         `Creating ${projectName}...`,
         async () => {
-          return generateApp(projectName!, template, outputDir, {
-            typescript,
-            styling,
-            framework,
-          }, preferences);
+          return generateApp(
+            projectName!,
+            template,
+            outputDir,
+            {
+              typescript,
+              styling,
+              framework,
+            },
+            preferences,
+          );
         },
         { successText: `Created ${projectName}` },
       );

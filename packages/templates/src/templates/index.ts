@@ -1,20 +1,24 @@
 /**
  * Built-in template definitions
- * Note: Templates are now served from GitHub repository
- * See: https://github.com/magicappdev/templates
  */
 
 import { buttonComponentTemplate } from "./button-component.js";
+import { blankAppTemplate } from "./blank-app.js";
+import { tabsAppTemplate } from "./tabs-app.js";
 import { screenTemplate } from "./screen.js";
 
 /** All built-in templates */
 export const builtInTemplates = [
+  blankAppTemplate,
+  tabsAppTemplate,
   buttonComponentTemplate,
   screenTemplate,
 ];
 
 /** Export individual templates */
 export {
+  blankAppTemplate,
+  tabsAppTemplate,
   buttonComponentTemplate,
   screenTemplate,
 };
