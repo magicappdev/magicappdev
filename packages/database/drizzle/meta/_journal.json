@@ -15,6 +15,27 @@
       "when": 1768896343482,
       "tag": "0001_broad_iron_lad",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1737704700000,
+      "tag": "0002_tickets_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1737771840000,
+      "tag": "0003_api_keys_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1737790000000,
+      "tag": "0004_admin_tables",
+      "breakpoints": true
     }
   ]
 }

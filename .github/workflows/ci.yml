@@ -31,7 +31,7 @@ jobs:
         run: pnpm format
 
       - name: Nx Affected (lint, test, typecheck, build)
-        run: npx nx affected -t lint test typecheck build
+        run: npx nx affected -t lint test typecheck build --base=origin/main --head=HEAD
         env:
           NX_NO_CLOUD: true
 

@@ -52,6 +52,7 @@ export default function ChatScreen() {
 
   const flatListRef = useRef<FlatList>(null);
   const inputRef = useRef<TextInput>(null);
+  const wsRef = useRef<WebSocket | null>(null);
 
   const scrollToBottom = useCallback(() => {
     flatListRef.current?.scrollToEnd({ animated: true });
@@ -93,9 +94,9 @@ export default function ChatScreen() {
 
     ws.onmessage = event => {
       try {
-        const data = JSON.parse(event.data as string);
+        const data = JSON.parse(event.data);
 
-        if (data.type === "chat_chunk") {
+        if (data.type === "chunk") {
           setMessages(prev => {
             const last = prev[prev.length - 1];
             if (last && last.role === "assistant" && last.id === "streaming") {
@@ -139,10 +140,11 @@ export default function ChatScreen() {
       }
     };
 
-    // wsRef.current = ws;
+    wsRef.current = ws;
 
     return () => {
       ws.close();
+      wsRef.current = null;
     };
   }, []);
 
@@ -162,12 +164,17 @@ export default function ChatScreen() {
     setSuggestedTemplate(null);
 
     // Send to Agent via native WebSocket
-    // wsRef.current?.send(
-    //   JSON.stringify({
-    //     type: "chat",
-    //     content: userMessage.content,
-    //   }),
-    // );
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(
+        JSON.stringify({
+          type: "message",
+          content: userMessage.content,
+        }),
+      );
+    } else {
+      console.error("WebSocket is not connected");
+      setIsLoading(false);
+    }
   };
 
   const handleKeyPress = (e: {
@@ -189,7 +196,12 @@ export default function ChatScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["bottom"]}>
+    <SafeAreaView style={styles.container} edges={["top"]}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+      >
       <View style={styles.header}>
         <View style={styles.headerTitleContainer}>
           <Text style={styles.headerTitle}>Magic AI Chat</Text>
@@ -251,11 +263,7 @@ export default function ChatScreen() {
         </View>
       )}
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
-        style={styles.inputContainer}
-      >
+      <View style={styles.inputContainer}>
         <View style={[styles.inputRow, { backgroundColor: theme.colors.card }]}>
           <TextInput
             ref={inputRef}
@@ -285,6 +293,7 @@ export default function ChatScreen() {
             )}
           </TouchableOpacity>
         </View>
+      </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
