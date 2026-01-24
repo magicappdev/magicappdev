@@ -59,7 +59,6 @@
     "whatwg-fetch": "^3.6.20"
   },
   "devDependencies": {
-    "@expo/metro-config": "~54.0.14",
     "@expo/metro-runtime": "^6.1.2",
     "@types/react": "19.1.17",
     "babel-preset-expo": "^54.0.10",

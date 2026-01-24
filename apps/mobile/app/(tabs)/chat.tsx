@@ -96,7 +96,7 @@ export default function ChatScreen() {
       try {
         const data = JSON.parse(event.data);
 
-        if (data.type === "chunk") {
+        if (data.type === "chat_chunk") {
           setMessages(prev => {
             const last = prev[prev.length - 1];
             if (last && last.role === "assistant" && last.id === "streaming") {
@@ -167,7 +167,7 @@ export default function ChatScreen() {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(
         JSON.stringify({
-          type: "message",
+          type: "chat",
           content: userMessage.content,
         }),
       );
