@@ -1,6 +1,6 @@
 {
   "name": "@magicappdev/cli",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "CLI tool for creating and managing MagicAppDev apps",
   "keywords": [
     "cli",

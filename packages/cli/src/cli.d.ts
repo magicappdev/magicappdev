@@ -2,7 +2,6 @@
  * MagicAppDev CLI
  */
 import { Command } from "commander";
-/** TEST - Test if build picks up changes */
 /** Create the CLI program */
 export declare function createProgram(): Command;
 /** Run the CLI */

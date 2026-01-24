@@ -21,6 +21,10 @@
     "start": "expo start --clear",
     "start:reset": "expo start --reset-cache",
     "typecheck": "tsc --noEmit",
+    "version:major": "npm version major --no-git-tag-version && pnpm run version:sync",
+    "version:minor": "npm version minor --no-git-tag-version && pnpm run version:sync",
+    "version:patch": "npm version patch --no-git-tag-version && pnpm run version:sync",
+    "version:sync": "node scripts/sync-version.mjs",
     "web": "expo start --web"
   },
   "dependencies": {

@@ -130,8 +130,9 @@ todoo:
 - [x] Add shell completions command to CLI.
 - [ ] Add Docker-Compose Quickstart for App Developing
 - [ ] Discord Bot for Community Server
+- [ ] Add Github App Support to install MagicAppDev on User Accounts to initialize Repos, Setup Workflows.
 
-## ADD
+## ADD URL endpoints for @magicappdev/web/#Agends.md
 
 Interactions Endpoint URL
 You can optionally configure an interactions endpoint to receive interactions via HTTP POSTs rather than over Gateway with a bot user.

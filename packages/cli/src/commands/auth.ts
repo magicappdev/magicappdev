@@ -26,25 +26,47 @@ authCommand
     // Setup local callback server
     const server = http.createServer(async (req, res) => {
       const url = new URL(req.url!, `http://${req.headers.host}`);
+
+      // Ignore favicon and other non-callback requests
+      if (url.pathname !== "/" || req.method !== "GET") {
+        res.writeHead(204);
+        res.end();
+        return;
+      }
+
       const accessToken = url.searchParams.get("accessToken");
       const refreshToken = url.searchParams.get("refreshToken");
 
-      // Validate tokens are JWT format (basic check)
+      // If no tokens yet, this is just the initial browser request - wait for callback
+      if (!accessToken && !refreshToken) {
+        res.writeHead(200, { "Content-Type": "text/html" });
+        res.end(
+          "<h1>Authenticating...</h1><p>Please complete the GitHub login in the popup.</p>",
+        );
+        return;
+      }
+
+      // Validate accessToken is JWT format (basic check)
       const isValidJwt = (token: string) =>
         typeof token === "string" &&
         token.split(".").length === 3 &&
         token.length > 20 &&
         token.length < 2000;
 
-      if (
-        accessToken &&
-        refreshToken &&
-        isValidJwt(accessToken) &&
-        isValidJwt(refreshToken)
-      ) {
+      // Validate refreshToken is UUID format
+      const isValidUuid = (token: string) =>
+        typeof token === "string" &&
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          token,
+        );
+
+      if (isValidJwt(accessToken!) && isValidUuid(refreshToken!)) {
         // Store tokens
-        await saveConfig({ accessToken, refreshToken });
-        api.setToken(accessToken);
+        await saveConfig({
+          accessToken: accessToken!,
+          refreshToken: refreshToken!,
+        });
+        api.setToken(accessToken!);
 
         info(`Access Token received and saved`);
 
@@ -56,8 +78,9 @@ authCommand
         success("Successfully logged in!");
         process.exit(0);
       } else {
-        res.writeHead(400);
-        res.end("Login failed: Missing tokens");
+        error("Login failed: Invalid token format received");
+        res.writeHead(400, { "Content-Type": "text/html" });
+        res.end("<h1>Login Failed</h1><p>Invalid token format received.</p>");
       }
     });
 

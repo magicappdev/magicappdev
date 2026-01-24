@@ -13,14 +13,46 @@ const require = createRequire(import.meta.url);
 const pkg = require("../package.json");
 /** Package version */
 const VERSION = pkg.version;
-/** TEST - Test if build picks up changes */
+/** Check for updates by fetching npm registry (non-blocking) */
+async function checkForUpdates() {
+  try {
+    const response = await fetch(
+      `https://registry.npmjs.org/${pkg.name}/latest`,
+      { signal: AbortSignal.timeout(3000) },
+    );
+    if (response.ok) {
+      const data = await response.json();
+      const latestVersion = data.version;
+      if (latestVersion && latestVersion !== pkg.version) {
+        console.log(
+          `\n\x1b[33mUpdate available:\x1b[0m ${pkg.version} → ${latestVersion}`,
+        );
+        console.log(
+          `Run \x1b[36mnpm install -g ${pkg.name}\x1b[0m to update\n`,
+        );
+      }
+    }
+  } catch {
+    // Silently ignore update check errors (network issues, timeouts, etc.)
+  }
+}
 /** Create the CLI program */
 export function createProgram() {
   const program = new Command();
   program
     .name("magicappdev")
     .description("CLI for creating and managing MagicAppDev apps")
-    .version(VERSION, "-v, --version", "Display version number");
+    .version(VERSION, "-V, --version", "Display version number")
+    .option("-d, --debug", "Enable debug mode for verbose logging")
+    .hook("preAction", thisCommand => {
+      const opts = thisCommand.opts();
+      if (opts.debug) {
+        process.env.DEBUG = "true";
+        console.log(`[DEBUG] MagicAppDev CLI v${VERSION}`);
+        console.log(`[DEBUG] Node.js ${process.version}`);
+        console.log(`[DEBUG] Platform: ${process.platform} ${process.arch}`);
+      }
+    });
   // Add commands
   program.addCommand(initCommand);
   program.addCommand(authCommand);
@@ -32,6 +64,8 @@ export function createProgram() {
 }
 /** Run the CLI */
 export async function run(argv) {
+  // Check for updates (non-blocking)
+  checkForUpdates();
   const program = createProgram();
   await program.parseAsync(argv || process.argv);
 }

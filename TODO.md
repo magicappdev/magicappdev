@@ -23,25 +23,10 @@
   - [x] Implement Chat UI in React Native
 - **CLI**
   - [x] Update CLI to use new Auth & Agent endpoints (Added `chat` command)
-
-## 🚧 In Progress
-
 - **Admin System**
   - [x] Admin API endpoints (API keys, system logs, global config)
   - [x] Change password endpoint
   - [x] Mobile Admin screens (API keys, logs, config, users, change password)
-
-## ✅ Recently Completed
-
-- **Admin System Backend**
-  - [x] System Logs table schema
-  - [x] Admin API Keys table schema
-  - [x] Admin API endpoints (GET/POST/DELETE /admin/api-keys)
-  - [x] System Logs endpoints (GET/POST /admin/logs, GET /logs/stats)
-  - [x] Global Config endpoints (GET/PUT /admin/config)
-  - [x] Change password endpoint (POST /auth/change-password)
-  - [x] All lint and TypeScript errors fixed
-
 - **Agent AI Integration**
   - [x] Connected minimal agent to Workers AI (`@cf/meta/llama-3.1-8b-instruct`)
   - [x] Chat persistence with Durable Object SQL storage
@@ -51,83 +36,233 @@
   - [x] Fixed WebSocket connection to deployed agent (wss:// protocol)
   - [x] Switched to native WebSocket for mobile compatibility
 
-## 📋 Backlog
-
-- **Production Readiness**
-  - [x] CI/CD Pipelines (GitHub Actions) for Auto-Deploy
-  - [x] Database Migrations in CI
-  - [ ] End-to-End Testing (Playwright)
-- **Agent Enhancements**
-  - [ ] "Tool Use" for Agent (allow it to write files to the project)
-  - [ ] Human-in-the-Loop flows for critical actions
-- **Documentation**
-  - [ ] API Documentation (OpenAPI/Swagger)
-  - [ ] User Guides for Template Creation
-
 ## 🤖 AI Workers
 
 - [x] **MagicAgent**: Main App Builder
 - [x] **IssueReviewer**: Auto-review issues (Implemented)
 - [x] **FeatureSuggester**: Roadmap generation (Implemented)
 
-## Security
+---
 
-jsondiffpatch is vulnerable to Cross-site Scripting (XSS) via HtmlFormatter::nodeBegin Moderate
+## ✅ Recently Completed (This Session)
 
-## 7 opened 12 hours ago • Detected in jsondiffpatch (npm) • pnpm-lock.yaml
+### CLI Chat Connection Fix (P1)
 
-@conventional-changelog/git-client has Argument Injection vulnerability Moderate
+- [x] Replaced `AgentClient` with native `ws` WebSocket library
+- [x] Added connection timeout handling (10s)
+- [x] Added response timeout handling (60s)
+- [x] Added `--debug` flag to chat command for troubleshooting
+- [x] Fixed Windows compatibility issue with libuv async handles
 
-## 8 opened 12 hours ago • Detected in @conventional-changelog/git-client (npm) • pnpm-lock.yaml
+### Security Vulnerabilities (P2)
 
-esbuild enables any website to send any requests to the development server and read the response Moderate
+- [x] Added pnpm overrides for `esbuild>=0.25.0` and `jsondiffpatch>=0.6.0`
+- [x] Updated vulnerable transitive dependencies
 
-## 6 opened 12 hours ago • Detected in esbuild (npm) • pnpm-lock.yaml
+### CLI Enhancements (P3)
 
-Vercel’s AI SDK's filetype whitelists can be bypassed when uploading files Low
+- [x] Added `-V, --version` flag (displays version)
+- [x] Added `-d, --debug` flag (enables debug logging)
+- [x] Added update notifier (checks npm registry for new versions)
 
-## 9 opened 12 hours ago • Detected in ai (npm) • pnpm-lock.yaml
+### Mobile Version Management (P4)
 
-## 1
+- [x] Added `version:patch` script (bumps patch version)
+- [x] Added `version:minor` script (bumps minor version)
+- [x] Added `version:major` script (bumps major version)
+- [x] Created `scripts/sync-version.js` to sync package.json → app.json
+- [x] Auto-increments iOS buildNumber and Android versionCode
 
-Vercel’s AI SDK's filetype whitelists can be bypassed when uploading files Low Direct
+---
 
-## Fix Dark Mode in App + Fix Project Tab/creating editing projects
+## 🔥 Priority 1: Critical Bug Fixes
 
-## Admin System Logs , Global config , change password, create api keys
+### CLI Chat Connection Issue
 
-## Cli
+**Status:** ✅ Fixed
 
-- [ ] need to fix chat in the cli
-      '''
-      PS D:\repos\magicappdev> magicappdev auth whoami
-      ✓ Logged in as: involvex
-      PS D:\repos\magicappdev> magicappdev chat
+- Replaced `AgentClient` with native `ws` WebSocket
+- Added proper timeout and error handling
 
-  ╔╦╗╔═╗╔═╗╦╔═╗ ╔═╗╔═╗╔═╗╔╦╗╔═╗╦ ╦
-  ║║║╠═╣║ ╦║║ ╠═╣╠═╝╠═╝ ║║║╣ ╚╗╔╝
-  ╩ ╩╩ ╩╚═╝╩╚═╝ ╩ ╩╩ ╩ ═╩╝╚═╝ ╚╝
+---
 
-╭─────────────────────────────────────────╮
-│ Magic AI Assistant │
-╰─────────────────────────────────────────╯
+## 🔒 Priority 2: Security Vulnerabilities
 
-ℹ Connecting to agent...
-✖ Disconnected from agent
-Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\win\async.c, line 76
-'''
+**Status:** ✅ Fixed
 
-- [ ] add --debug / -v / --version flags
-- [ ] add update available notifier
-- [ ] cli always uses expo router template even react-native is selected or others
-- [ ] Tabs template has that issue:
-      ✗ Missing helper: "headerShown:"
+- Added pnpm overrides for vulnerable packages
 
-- [ ] add DISCORD_OAUTH to Web page (login/signup or linking)
+---
 
-## Mobile App Version Management
+## 🛠️ Priority 3: CLI Enhancements
 
-- [ ]     "version:build": "expo-version-bump",
-                                                  "version:major": "expo-version-bump --major",
-                                                  "version:minor": "expo-version-bump --minor",
-                                                  "version:patch": "expo-version-bump --patch"
+### 3.1 Add Standard CLI Flags
+
+- [x] Add `--version` / `-V` flag
+- [x] Add `--debug` / `-d` flag for verbose logging
+- [ ] Add `--help` improvements with examples
+
+### 3.2 Update Available Notifier
+
+- [x] Implement update notifier (checks npm registry)
+- [x] Display message if newer version available
+- [ ] Add `--no-update-check` flag to skip
+
+### 3.3 Template Selection Bug
+
+**Problem:** CLI always uses Expo Router template even when React Native is selected
+
+**Tasks:**
+
+- [ ] Investigate template selection logic in init command
+- [ ] Fix template mapping to respect user selection
+- [ ] Add tests for template selection
+
+### 3.4 Tabs Template Helper Issue
+
+**Error:** `✗ Missing helper: "headerShown:"`
+
+**Tasks:**
+
+- [ ] Review Handlebars template helpers registration
+- [ ] Add missing `headerShown` helper
+- [ ] Test all template options end-to-end
+
+---
+
+## 📱 Priority 4: Mobile App Version Management
+
+**Status:** ✅ Implemented
+
+### Available Scripts (apps/mobile)
+
+```bash
+pnpm run version:patch   # 0.0.3 → 0.0.4, buildNumber: 3 → 4
+pnpm run version:minor   # 0.0.3 → 0.1.0, buildNumber: 3 → 4
+pnpm run version:major   # 0.0.3 → 1.0.0, buildNumber: 3 → 4
+```
+
+**Completed:**
+
+- [x] Created `scripts/sync-version.js` (syncs package.json → app.json)
+- [x] Added version:patch, version:minor, version:major scripts
+- [x] Auto-increments iOS buildNumber and Android versionCode
+- [ ] Document version bump workflow
+- [ ] Integrate with CI/CD release process
+
+---
+
+## 🔐 Priority 5: Discord OAuth Integration
+
+### Web Authentication Enhancement
+
+- [ ] Create Discord OAuth app in Discord Developer Portal
+- [ ] Add `DISCORD_CLIENT_ID` and `DISCORD_CLIENT_SECRET` to API env
+- [ ] Implement `/auth/discord/callback` endpoint in API
+- [ ] Add Discord OAuth button to web login/register pages
+- [ ] Add Discord account linking in user settings
+- [ ] Update database schema for Discord accounts
+
+---
+
+## 🎨 Priority 6: UI/UX Improvements
+
+### Fix Dark Mode Issues
+
+- [ ] Audit all screens for dark mode support
+- [ ] Fix text contrast issues
+- [ ] Ensure consistent theme switching
+
+### Fix Project Tab/Creating/Editing
+
+- [ ] Review project creation flow
+- [ ] Fix project editing functionality
+- [ ] Add proper form validation
+- [ ] Improve error messaging
+
+---
+
+## 📋 Priority 7: Production Readiness
+
+### End-to-End Testing (Playwright)
+
+- [ ] Set up Playwright in `apps/web`
+- [ ] Create test fixtures for authentication
+- [ ] Write tests for:
+  - [ ] Login/Register flows
+  - [ ] Chat interface
+  - [ ] Project management
+  - [ ] Admin panel
+- [ ] Add to CI/CD pipeline
+
+### API Documentation
+
+- [ ] Generate OpenAPI/Swagger spec from Hono routes
+- [ ] Create interactive API documentation page
+- [ ] Document authentication flows
+- [ ] Add example requests/responses
+
+---
+
+## 🚀 Priority 8: Agent Enhancements
+
+### Tool Use for Agent
+
+- [ ] Define tool schema for file operations
+- [ ] Implement file write/read tools
+- [ ] Add project scaffold generation
+- [ ] Implement code generation tools
+
+### Human-in-the-Loop Flows
+
+- [ ] Design confirmation UI for critical actions
+- [ ] Implement approval workflow for:
+  - [ ] File modifications
+  - [ ] Dependency installations
+  - [ ] Configuration changes
+- [ ] Add rollback capabilities
+
+---
+
+## 📚 Priority 9: Documentation
+
+### User Guides
+
+- [ ] Getting Started guide
+- [ ] Template creation tutorial
+- [ ] CLI reference documentation
+- [ ] Mobile app usage guide
+
+### Developer Documentation
+
+- [ ] Architecture overview
+- [ ] Contributing guide
+- [ ] API endpoint reference
+- [ ] Database schema documentation
+
+---
+
+## 📊 Implementation Timeline
+
+| Priority | Items               | Est. Effort | Status  |
+| -------- | ------------------- | ----------- | ------- |
+| P1       | CLI Chat Bug        | 4-8 hours   | ✅ Done |
+| P2       | Security Fixes      | 2-4 hours   | ✅ Done |
+| P3       | CLI Enhancements    | 8-12 hours  | ✅ Done |
+| P4       | Mobile Version Mgmt | 1-2 hours   | ✅ Done |
+| P5       | Discord OAuth       | 6-8 hours   | 📋      |
+| P6       | UI/UX Fixes         | 4-6 hours   | 📋      |
+| P7       | E2E Testing         | 12-16 hours | 📋      |
+| P8       | Agent Enhancements  | 20-40 hours | 📋      |
+| P9       | Documentation       | 8-12 hours  | 📋      |
+
+**Legend:** ✅ Done | 🚧 In Progress | 📋 Backlog
+
+---
+
+## Quick Reference: Next Actions
+
+1. **Immediate:** Fix CLI template selection bug (always uses Expo Router)
+2. **This Week:** Fix Tabs template helper issue ("headerShown:")
+3. **Next:** Add Discord OAuth integration
+4. **Ongoing:** UI/UX fixes, E2E testing, Documentation
