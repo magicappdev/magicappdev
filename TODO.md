@@ -26,7 +26,21 @@
 
 ## 🚧 In Progress
 
+- **Admin System**
+  - [x] Admin API endpoints (API keys, system logs, global config)
+  - [x] Change password endpoint
+  - [ ] Mobile Admin screens (API keys, logs, config)
+
 ## ✅ Recently Completed
+
+- **Admin System Backend**
+  - [x] System Logs table schema
+  - [x] Admin API Keys table schema
+  - [x] Admin API endpoints (GET/POST/DELETE /admin/api-keys)
+  - [x] System Logs endpoints (GET/POST /admin/logs, GET /logs/stats)
+  - [x] Global Config endpoints (GET/PUT /admin/config)
+  - [x] Change password endpoint (POST /auth/change-password)
+  - [x] All lint and TypeScript errors fixed
 
 - **Agent AI Integration**
   - [x] Connected minimal agent to Workers AI (`@cf/meta/llama-3.1-8b-instruct`)
@@ -60,24 +74,53 @@
 
 jsondiffpatch is vulnerable to Cross-site Scripting (XSS) via HtmlFormatter::nodeBegin Moderate
 
-# 7 opened 12 hours ago • Detected in jsondiffpatch (npm) • pnpm-lock.yaml
+## 7 opened 12 hours ago • Detected in jsondiffpatch (npm) • pnpm-lock.yaml
 
 @conventional-changelog/git-client has Argument Injection vulnerability Moderate
 
-# 8 opened 12 hours ago • Detected in @conventional-changelog/git-client (npm) • pnpm-lock.yaml
+## 8 opened 12 hours ago • Detected in @conventional-changelog/git-client (npm) • pnpm-lock.yaml
 
 esbuild enables any website to send any requests to the development server and read the response Moderate
 
-# 6 opened 12 hours ago • Detected in esbuild (npm) • pnpm-lock.yaml
+## 6 opened 12 hours ago • Detected in esbuild (npm) • pnpm-lock.yaml
 
 Vercel’s AI SDK's filetype whitelists can be bypassed when uploading files Low
 
-# 9 opened 12 hours ago • Detected in ai (npm) • pnpm-lock.yaml
+## 9 opened 12 hours ago • Detected in ai (npm) • pnpm-lock.yaml
 
-# 1
+## 1
 
 Vercel’s AI SDK's filetype whitelists can be bypassed when uploading files Low Direct
 
 ## Fix Dark Mode in App + Fix Project Tab/creating editing projects
 
 ## Admin System Logs , Global config , change password, create api keys
+
+## Cli
+
+- [ ] need to fix chat in the cli
+      '''
+      PS D:\repos\magicappdev> magicappdev auth whoami
+      ✓ Logged in as: involvex
+      PS D:\repos\magicappdev> magicappdev chat
+
+  ╔╦╗╔═╗╔═╗╦╔═╗ ╔═╗╔═╗╔═╗╔╦╗╔═╗╦ ╦
+  ║║║╠═╣║ ╦║║ ╠═╣╠═╝╠═╝ ║║║╣ ╚╗╔╝
+  ╩ ╩╩ ╩╚═╝╩╚═╝ ╩ ╩╩ ╩ ═╩╝╚═╝ ╚╝
+
+╭─────────────────────────────────────────╮
+│ Magic AI Assistant │
+╰─────────────────────────────────────────╯
+
+ℹ Connecting to agent...
+✖ Disconnected from agent
+Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\win\async.c, line 76
+'''
+
+- [ ] add --debug / -v / --version flags
+- [ ] add update available notifier
+- [ ] cli always uses expo router template even react-native is selected or others
+- [ ] Tabs template has that issue:
+      ✗ Missing helper: "headerShown:"
+
+- [ ] add DISCORD_OAUTH to Web page (login/signup or linking)

@@ -351,18 +351,30 @@ importers:
       "@magicappdev/shared":
         specifier: workspace:*
         version: link:../shared
+      "@types/sha256":
+        specifier: ^0.2.2
+        version: 0.2.2
       axios:
         specifier: ^1.13.2
         version: 1.13.2
       bcryptjs:
         specifier: ^3.0.3
         version: 3.0.3
+      crypto:
+        specifier: ^1.0.1
+        version: 1.0.1
       drizzle-orm:
         specifier: ^0.45.1
         version: 0.45.1(@cloudflare/workers-types@4.20260123.0)(@opentelemetry/api@1.9.0)
       hono:
         specifier: ^4.11.5
         version: 4.11.5
+      node-crypto:
+        specifier: ^1.0.0
+        version: 1.0.0
+      sha256:
+        specifier: ^0.2.0
+        version: 0.2.0
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
@@ -5844,6 +5856,12 @@ packages:
         integrity: sha512-FmgJfu+MOcQ370SD0ev7EI8TlCAfKYU+B4m5T3yXc1CiRN94g/SZPtsCkk506aUDtlMnFZvasDwHHUcZUEaYuA==,
       }
 
+  "@types/sha256@0.2.2":
+    resolution:
+      {
+        integrity: sha512-uKMaDzyzfcDYGEwTgLh+hmgDMxXWyIVodY8T+qt7A+NYvikW0lmGLMGbQ7BipCB8dzXHa55C9g+Ii/3Lgt1KmA==,
+      }
+
   "@types/stack-utils@2.0.3":
     resolution:
       {
@@ -7139,10 +7157,22 @@ packages:
     engines: { node: ">=18" }
     hasBin: true
 
+  convert-hex@0.1.0:
+    resolution:
+      {
+        integrity: sha512-w20BOb1PiR/sEJdS6wNrUjF5CSfscZFUp7R9NSlXH8h2wynzXVEPFPJECAnkNylZ+cvf3p7TyRUHggDmrwXT9A==,
+      }
+
   convert-source-map@2.0.0:
     resolution:
       {
         integrity: sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==,
+      }
+
+  convert-string@0.1.0:
+    resolution:
+      {
+        integrity: sha512-1KX9ESmtl8xpT2LN2tFnKSbV4NiarbVi8DVb39ZriijvtTklyrT+4dT1wsGMHKD3CJUjXgvJzstm9qL9ICojGA==,
       }
 
   cookie-signature@1.2.2:
@@ -7241,6 +7271,13 @@ packages:
         integrity: sha512-v1plID3y9r/lPhviJ1wrXpLeyUIGAZ2SHNYTEapm7/8A9nLPoyvVp3RK/EPFqn5kEznyWgYZNsRtYYIWbuG8KA==,
       }
     engines: { node: ">=8" }
+
+  crypto@1.0.1:
+    resolution:
+      {
+        integrity: sha512-VxBKmeNcqQdiUQUW2Tzq0t377b54N2bMtXO/qiLa+6eRRmmC4qT3D4OnTGoT/U6O9aklQ/jTwbOtRMTTY8G0Ig==,
+      }
+    deprecated: This package is no longer supported. It's now a built-in Node module. If you've depended on crypto, you should switch to the one that's built-in.
 
   css-in-js-utils@3.1.0:
     resolution:
@@ -10257,6 +10294,12 @@ packages:
         integrity: sha512-5m3bsyrjFWE1xf7nz7YXdN4udnVtXK6/Yfgn5qnahL6bCkf2yKt4k3nuTKAtT4r3IG8JNR2ncsIMdZuAzJjHQQ==,
       }
 
+  node-crypto@1.0.0:
+    resolution:
+      {
+        integrity: sha512-eZTNSWK1XsP3KZr9W/ZKsdxr6EcECNAyG2dSXBH2lImJYzzoNRMBGCAurfOauiX6TkonA0Tm3g3KaqmVhgutHQ==,
+      }
+
   node-fetch@2.7.0:
     resolution:
       {
@@ -11571,6 +11614,12 @@ packages:
         integrity: sha512-TPbeg0b7ylrswdGCji8FRGFAKuqbpQlLbL8SOle3j1iHSs5Ob5mhvMAxWN2UItOjgALAB5Zp3fmMfj8mbWvXKw==,
       }
     engines: { node: ">=10" }
+
+  sha256@0.2.0:
+    resolution:
+      {
+        integrity: sha512-kTWMJUaez5iiT9CcMv8jSq6kMhw3ST0uRdcIWl3D77s6AsLXNXRp3heeqqfu5+Dyfu4hwpQnMzhqHh8iNQxw0w==,
+      }
 
   shallowequal@1.1.0:
     resolution:
@@ -16893,6 +16942,10 @@ snapshots:
 
   "@types/semver@7.7.1": {}
 
+  "@types/sha256@0.2.2":
+    dependencies:
+      "@types/node": 25.0.10
+
   "@types/stack-utils@2.0.3": {}
 
   "@types/ws@8.18.1":
@@ -17828,7 +17881,11 @@ snapshots:
     dependencies:
       meow: 13.2.0
 
+  convert-hex@0.1.0: {}
+
   convert-source-map@2.0.0: {}
+
+  convert-string@0.1.0: {}
 
   cookie-signature@1.2.2: {}
 
@@ -17886,6 +17943,8 @@ snapshots:
       which: 2.0.2
 
   crypto-random-string@2.0.0: {}
+
+  crypto@1.0.1: {}
 
   css-in-js-utils@3.1.0:
     dependencies:
@@ -19765,6 +19824,8 @@ snapshots:
 
   node-addon-api@7.1.1: {}
 
+  node-crypto@1.0.0: {}
+
   node-fetch@2.7.0:
     dependencies:
       whatwg-url: 5.0.0
@@ -20753,6 +20814,11 @@ snapshots:
   setprototypeof@1.2.0: {}
 
   sf-symbols-typescript@2.2.0: {}
+
+  sha256@0.2.0:
+    dependencies:
+      convert-hex: 0.1.0
+      convert-string: 0.1.0
 
   shallowequal@1.1.0: {}
 

@@ -209,20 +209,19 @@ export default function ProjectsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F2F2F7", // Fallback
+    backgroundColor: "#F2F2F7",
   },
   centerContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F2F2F7", // Fallback
   },
   listContent: {
     padding: 16,
     flexGrow: 1,
   },
   projectCard: {
-    backgroundColor: "#fff", // Fallback
+    backgroundColor: "#FFFFFF",
     borderRadius: 12,
     padding: 16,
     flexDirection: "row",
@@ -238,7 +237,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 8,
-    backgroundColor: "rgba(0, 122, 255, 0.1)", // Fallback
+    backgroundColor: "rgba(0, 122, 255, 0.1)",
     alignItems: "center",
     justifyContent: "center",
     marginRight: 16,
@@ -249,16 +248,16 @@ const styles = StyleSheet.create({
   projectName: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#1C1C1E", // Fallback
+    color: "#1C1C1E",
   },
   projectDescription: {
     fontSize: 14,
-    color: "#8E8E93", // Fallback
+    color: "#8E8E93",
     marginTop: 2,
   },
   projectMeta: {
     fontSize: 12,
-    color: "#AEAEB2", // Fallback
+    color: "#AEAEB2",
     marginTop: 4,
   },
   emptyContainer: {
@@ -270,25 +269,25 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#1C1C1E", // Fallback
+    color: "#1C1C1E",
     marginTop: 16,
   },
   emptyText: {
     fontSize: 16,
-    color: "#8E8E93", // Fallback
+    color: "#8E8E93",
     textAlign: "center",
     marginTop: 8,
     paddingHorizontal: 40,
   },
   createButton: {
     marginTop: 24,
-    backgroundColor: "#007AFF", // Fallback
+    backgroundColor: "#007AFF",
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 10,
   },
   createButtonText: {
-    color: "#fff", // Fallback
+    color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "600",
   },
@@ -326,7 +325,7 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#E5E5EA", // Fallback
+    borderColor: "#E5E5EA",
   },
   modalFooter: {
     flexDirection: "row",

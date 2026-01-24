@@ -76,7 +76,7 @@ body:
       label: Checklist
       description: Please confirm the following
       options:
-        - label: I have read the [Contributing Guidelines](../CONTRIBUTING.md)
+        - label: I have read the Contributing Guidelines
           required: true
         - label: I have searched existing issues to ensure this is not a duplicate
           required: true

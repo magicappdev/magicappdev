@@ -2,6 +2,8 @@
  * Database schema exports
  */
 
+import { adminApiKeys } from "./admin-api-keys.js";
+import { systemLogs } from "./system-logs.js";
 import { sessions } from "./sessions.js";
 import { projects } from "./projects.js";
 import { profiles } from "./profiles.js";
@@ -18,6 +20,8 @@ export const schema = {
   profiles,
   tickets,
   apiKeys,
+  systemLogs,
+  adminApiKeys,
 };
 
 export * from "./accounts.js";
@@ -27,3 +31,5 @@ export * from "./sessions.js";
 export * from "./users.js";
 export * from "./tickets.js";
 export * from "./api-keys.js";
+export * from "./system-logs.js";
+export * from "./admin-api-keys.js";

@@ -63,7 +63,10 @@
   "editor.rulers": [80, 120],
   "editor.wordWrap": "on",
   "eslint.codeActionsOnSave.mode": "problems",
-  "eslint.enable": false,
+  "eslint.enable": true,
+  "typescript.inlayHints.variableTypes.suppressWhenTypeMatchesName": true,
+  "path-intellisense.ignoreTsConfigBaseUrl": true,
+  "typescript.workspaceSymbols.excludeLibrarySymbols": true,
   "eslint.workingDirectories": [
     "packages/web/**",
     "packages/app/**",
@@ -105,6 +108,9 @@
     "**/.next": true,
     "**/build": true,
     "**/node_modules": true,
+    "**/node_modules/**": true,
+    "**/node_modules/*/**": true,
+    "**/*/**/node_modules/**": true,
     "apps/mobile/node_modules": true,
     "apps/mobile/node_modules/**": true
   },

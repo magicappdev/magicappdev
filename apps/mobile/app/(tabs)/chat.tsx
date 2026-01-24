@@ -14,9 +14,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  // Alert,
-  // Keyboard,
-  // KeyboardEvent,
+  Keyboard,
 } from "react-native";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -172,13 +170,13 @@ export default function ChatScreen() {
     // );
   };
 
-  const handleKeyPress = (e: { nativeEvent: { key: string } }) => {
-    console.log("Key pressed:", e.nativeEvent.key);
-    // Send on Enter key, unless Shift+Enter (which creates a new line)
-    // if (e.nativeEvent.key === "Enter" && !e.nativeEvent.shiftKey) {
-    //   Keyboard.dismiss();
-    //   sendMessage();
-    // }
+  const handleKeyPress = (e: {
+    nativeEvent: { key: string; shiftKey?: boolean };
+  }) => {
+    if (e.nativeEvent.key === "Enter" && !e.nativeEvent.shiftKey) {
+      Keyboard.dismiss();
+      sendMessage();
+    }
   };
 
   const applyTemplate = (templateId: string) => {

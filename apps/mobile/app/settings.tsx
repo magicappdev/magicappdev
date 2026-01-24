@@ -21,12 +21,6 @@ export default function SettingsScreen() {
 
   if (!user) return null;
 
-  // const themeNames = {
-  //   light: "Light",
-  //   dark: "Dark",
-  //   automatic: "Auto",
-  // };
-
   return (
     <SafeAreaView style={styles.container} edges={["bottom"]}>
       <Stack.Screen

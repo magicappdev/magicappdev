@@ -15,7 +15,6 @@ A powerful CLI tool for creating and managing MagicAppDev applications. The Magi
 - [Features](#features)
 - [Development](#development)
 - [License](#license)
-- [Contributing](#contributing)
 - [Troubleshooting](#troubleshooting)
 
 ## Installation
@@ -179,10 +178,6 @@ pnpm run test
 ## License
 
 MagicAppDev CLI is licensed under the [MIT License](LICENSE).
-
-## Contributing
-
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for more details.
 
 ## Troubleshooting
 

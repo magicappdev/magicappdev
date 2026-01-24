@@ -537,3 +537,54 @@ authRoutes.get("/me", async c => {
     );
   }
 });
+
+// Change Password
+authRoutes.post("/change-password", async c => {
+  const userId = c.var.userId;
+  if (!userId) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  const { currentPassword, newPassword } = await c.req.json<{
+    currentPassword: string;
+    newPassword: string;
+  }>();
+
+  if (!currentPassword || !newPassword) {
+    return c.json(
+      { error: "Current password and new password are required" },
+      400,
+    );
+  }
+
+  if (newPassword.length < 6) {
+    return c.json({ error: "New password must be at least 6 characters" }, 400);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = c.var.db as any;
+
+  const user = await db.query.users.findFirst({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    where: (u: any, { eq }: any) => eq(u.id, userId),
+  });
+
+  if (!user || !user.passwordHash) {
+    return c.json({ error: "User not found" }, 404);
+  }
+
+  const isValid = await bcrypt.compare(currentPassword, user.passwordHash);
+  if (!isValid) {
+    return c.json({ error: "Current password is incorrect" }, 401);
+  }
+
+  const newPasswordHash = await bcrypt.hash(newPassword, 10);
+
+  await db
+    .update(users)
+    .set({ passwordHash: newPasswordHash, updatedAt: new Date().toISOString() })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .where(eq((users as any).id, userId));
+
+  return c.json({ success: true, message: "Password changed successfully" });
+});

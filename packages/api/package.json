@@ -17,10 +17,14 @@
   "dependencies": {
     "@magicappdev/database": "workspace:*",
     "@magicappdev/shared": "workspace:*",
+    "@types/sha256": "^0.2.2",
     "axios": "^1.13.2",
     "bcryptjs": "^3.0.3",
+    "crypto": "^1.0.1",
     "drizzle-orm": "^0.45.1",
     "hono": "^4.11.5",
+    "node-crypto": "^1.0.0",
+    "sha256": "^0.2.0",
     "tslib": "^2.3.0"
   },
   "devDependencies": {
