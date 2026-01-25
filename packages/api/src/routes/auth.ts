@@ -129,6 +129,311 @@ interface GitHubEmail {
   visibility: string | null;
 }
 
+interface DiscordUser {
+  id: string;
+  username: string;
+  discriminator: string;
+  global_name: string | null;
+  avatar: string | null;
+  email: string | null;
+  verified: boolean;
+}
+
+// Login - Redirect to Discord
+authRoutes.get("/login/discord", c => {
+  const clientId = c.env.DISCORD_CLIENT_ID;
+  const platform = c.req.query("platform") || "web";
+  const clientRedirectUri = c.req.query("redirect_uri");
+
+  const apiRedirectUri =
+    c.env.DISCORD_REDIRECT_URI ||
+    new URL(c.req.url).origin + "/auth/callback/discord";
+
+  if (!clientId) {
+    return c.json(
+      {
+        success: false,
+        error: {
+          code: "NOT_CONFIGURED",
+          message: "Discord OAuth not configured",
+        },
+      },
+      500,
+    );
+  }
+
+  // Encode platform and client redirect URI into state
+  const state = JSON.stringify({
+    platform,
+    redirect_uri: clientRedirectUri,
+  });
+
+  const params = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: apiRedirectUri,
+    response_type: "code",
+    scope: "identify email",
+    state,
+  });
+
+  return c.redirect(
+    `https://discord.com/api/oauth2/authorize?${params.toString()}`,
+  );
+});
+
+// Callback - Handle Discord response
+authRoutes.get("/callback/discord", async c => {
+  console.log("Discord callback received");
+  const code = c.req.query("code");
+  const error = c.req.query("error");
+  const stateStr = c.req.query("state");
+
+  let platform = "web";
+  let clientRedirectUri: string | undefined;
+
+  try {
+    if (stateStr) {
+      const state = JSON.parse(stateStr);
+      if (typeof state === "object") {
+        platform = state.platform || "web";
+        clientRedirectUri = state.redirect_uri;
+      } else {
+        platform = stateStr;
+      }
+    }
+  } catch {
+    platform = stateStr || "web";
+  }
+
+  if (error || !code) {
+    console.error("Discord Auth Error:", error || "No code");
+    return c.json({ error: error || "No code provided" }, 400);
+  }
+
+  const clientId = c.env.DISCORD_CLIENT_ID;
+  const clientSecret = c.env.DISCORD_CLIENT_SECRET;
+
+  const redirectUri =
+    c.env.DISCORD_REDIRECT_URI ||
+    new URL(c.req.url).origin + "/auth/callback/discord";
+
+  if (!clientId || !clientSecret) {
+    console.error("Missing Discord credentials");
+    return c.json({ error: "Missing Discord credentials" }, 500);
+  }
+
+  try {
+    // 1. Exchange code for access token
+    console.log("Exchanging Discord code for token...");
+    const tokenResponse = await fetch("https://discord.com/api/oauth2/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        client_id: clientId,
+        client_secret: clientSecret,
+        grant_type: "authorization_code",
+        code,
+        redirect_uri: redirectUri,
+      }),
+    });
+
+    if (!tokenResponse.ok) {
+      const errText = await tokenResponse.text();
+      console.error("Discord Token Error:", errText);
+      return c.json({ error: "Failed to exchange code for token" }, 400);
+    }
+
+    const tokenData = (await tokenResponse.json()) as {
+      access_token: string;
+      token_type: string;
+      error?: string;
+    };
+
+    if (tokenData.error || !tokenData.access_token) {
+      console.error("Token Exchange Error:", tokenData.error);
+      return c.json(
+        { error: tokenData.error || "Failed to get access token" },
+        400,
+      );
+    }
+
+    console.log("Discord token received, fetching user info...");
+
+    // 2. Fetch User Info
+    const userResponse = await fetch("https://discord.com/api/users/@me", {
+      headers: {
+        Authorization: `Bearer ${tokenData.access_token}`,
+      },
+    });
+
+    if (!userResponse.ok) {
+      const errText = await userResponse.text();
+      console.error("Discord User Error:", errText);
+      return c.json({ error: "Failed to fetch user info from Discord" }, 400);
+    }
+
+    const discordUser = (await userResponse.json()) as DiscordUser;
+    console.log("Discord User received:", discordUser.username);
+
+    const email = discordUser.email;
+    if (!email || !discordUser.verified) {
+      console.error("No verified email found for Discord user");
+      return c.json(
+        { error: "Discord account must have a verified email" },
+        400,
+      );
+    }
+
+    console.log("User email:", email);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = c.var.db as any;
+
+    // 3. Find or Create User
+    console.log("Checking for existing Discord account...");
+    const existingAccount = await db.query.accounts.findFirst({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      where: (acc: any, { and, eq }: any) =>
+        and(
+          eq(acc.provider, "discord"),
+          eq(acc.providerAccountId, discordUser.id),
+        ),
+    });
+
+    let userId = "";
+
+    if (existingAccount) {
+      console.log(
+        "Existing Discord account found for user:",
+        existingAccount.userId,
+      );
+      userId = existingAccount.userId;
+    } else {
+      console.log("No existing account, checking for user with email...");
+      const existingUser = await db.query.users.findFirst({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        where: (u: any, { eq }: any) => eq(u.email, email),
+      });
+
+      if (existingUser) {
+        console.log(
+          "Existing user found with email, linking Discord account...",
+        );
+        userId = existingUser.id;
+
+        // Build Discord avatar URL
+        const avatarUrl = discordUser.avatar
+          ? `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`
+          : null;
+
+        await db
+          .update(users)
+          .set({
+            name:
+              existingUser.name ||
+              discordUser.global_name ||
+              discordUser.username,
+            avatarUrl: existingUser.avatarUrl || avatarUrl,
+          })
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .where(eq(users.id as any, userId));
+      } else {
+        console.log("Creating new user from Discord...");
+        userId = crypto.randomUUID();
+
+        const avatarUrl = discordUser.avatar
+          ? `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`
+          : null;
+
+        await db.insert(users).values({
+          id: userId,
+          email,
+          name: discordUser.global_name || discordUser.username,
+          avatarUrl,
+          emailVerified: true,
+          role: "user",
+        });
+
+        console.log("Creating user profile...");
+        await db.insert(profiles).values({
+          id: crypto.randomUUID(),
+          userId,
+        });
+      }
+
+      console.log("Linking Discord account...");
+      await db.insert(accounts).values({
+        id: crypto.randomUUID(),
+        userId,
+        type: "oauth",
+        provider: "discord",
+        providerAccountId: discordUser.id,
+        access_token: tokenData.access_token,
+      });
+    }
+
+    // 4. Create Session
+    console.log("Creating session...");
+
+    const user = await db.query.users.findFirst({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      where: (u: any, { eq }: any) => eq(u.id, userId),
+    });
+
+    const accessToken = await sign(
+      {
+        sub: userId,
+        role: user?.role || "user",
+        exp: Math.floor(Date.now() / 1000) + 60 * 60, // 1 hour
+      },
+      c.env.JWT_SECRET || "secret-fallback-do-not-use-in-prod",
+    );
+
+    const refreshToken = crypto.randomUUID();
+    const expiresAt = new Date(
+      Date.now() + 7 * 24 * 60 * 60 * 1000,
+    ).toISOString(); // 7 days
+
+    await db.insert(sessions).values({
+      id: crypto.randomUUID(),
+      userId,
+      refreshToken,
+      expiresAt,
+      userAgent: c.req.header("User-Agent"),
+      ipAddress: c.req.header("CF-Connecting-IP"),
+    });
+
+    console.log("Discord authentication successful, redirecting...");
+
+    // 5. Redirect back to app
+    if (platform === "mobile") {
+      const mobileUri =
+        clientRedirectUri ||
+        c.env.MOBILE_REDIRECT_URI ||
+        "magicappdev://auth/callback";
+
+      return c.redirect(
+        `${mobileUri}?accessToken=${accessToken}&refreshToken=${refreshToken}`,
+      );
+    }
+
+    const frontendUrl =
+      c.env.FRONTEND_URL ||
+      (c.env.ENVIRONMENT === "development"
+        ? "http://localhost:3100"
+        : "https://app.magicappdev.workers.dev");
+
+    return c.redirect(
+      `${frontendUrl}/auth/callback?accessToken=${accessToken}&refreshToken=${refreshToken}`,
+    );
+  } catch (err) {
+    console.error("Fatal Error in Discord Callback:", err);
+    throw err;
+  }
+});
+
 // Login - Redirect to GitHub
 authRoutes.get("/login/github", c => {
   const clientId = c.env.GITHUB_CLIENT_ID;

@@ -1,16 +1,67 @@
-import { User, Bell, Shield, Globe, Zap, LucideIcon } from "lucide-react";
+import {
+  User,
+  Bell,
+  Shield,
+  Globe,
+  Zap,
+  LucideIcon,
+  Loader2,
+} from "lucide-react";
 import { Typography } from "@/components/ui/Typography";
 import { useAuth } from "../../contexts/AuthContext";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
 import { useState } from "react";
+import { api } from "@/lib/api";
 
 type SettingsTab = "profile" | "api" | "notifications" | "security" | "region";
 
 export default function SettingsPage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  const handleChangePassword = async () => {
+    setPasswordError(null);
+    setPasswordSuccess(false);
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setPasswordError("All fields are required");
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setPasswordError("New password must be at least 6 characters");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError("New passwords do not match");
+      return;
+    }
+
+    setIsChangingPassword(true);
+
+    try {
+      await api.changePassword({ currentPassword, newPassword });
+      setPasswordSuccess(true);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error) {
+      setPasswordError(
+        error instanceof Error ? error.message : "Failed to change password",
+      );
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
 
   if (!user) return null;
 
@@ -155,13 +206,80 @@ export default function SettingsPage() {
 
           {activeTab === "security" && (
             <Card className="p-6 space-y-6">
-              <Typography variant="title">Security</Typography>
+              <Typography variant="title">Change Password</Typography>
+
+              {passwordError && (
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg text-sm">
+                  {passwordError}
+                </div>
+              )}
+
+              {passwordSuccess && (
+                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded-lg text-sm">
+                  Password changed successfully!
+                </div>
+              )}
+
               <div className="space-y-4">
-                <Button variant="outlined" className="w-full justify-start">
-                  Change Password
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Current Password
+                  </label>
+                  <Input
+                    type="password"
+                    placeholder="Enter current password"
+                    value={currentPassword}
+                    onChange={e => setCurrentPassword(e.target.value)}
+                    disabled={isChangingPassword}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">New Password</label>
+                  <Input
+                    type="password"
+                    placeholder="Enter new password"
+                    value={newPassword}
+                    onChange={e => setNewPassword(e.target.value)}
+                    disabled={isChangingPassword}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Confirm New Password
+                  </label>
+                  <Input
+                    type="password"
+                    placeholder="Confirm new password"
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    disabled={isChangingPassword}
+                  />
+                </div>
+                <Button
+                  onClick={handleChangePassword}
+                  disabled={isChangingPassword}
+                >
+                  {isChangingPassword ? (
+                    <>
+                      <Loader2 size={16} className="mr-2 animate-spin" />
+                      Changing...
+                    </>
+                  ) : (
+                    "Change Password"
+                  )}
                 </Button>
-                <Button variant="outlined" className="w-full justify-start">
-                  Enable Two-Factor Authentication
+              </div>
+
+              <div className="pt-4 border-t border-outline/10">
+                <Typography variant="label" className="text-foreground/60 mb-4">
+                  Two-Factor Authentication
+                </Typography>
+                <Button
+                  variant="outlined"
+                  className="w-full justify-start"
+                  disabled
+                >
+                  Enable Two-Factor Authentication (Coming Soon)
                 </Button>
               </div>
             </Card>

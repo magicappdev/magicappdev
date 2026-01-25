@@ -10,6 +10,15 @@ cd /workspace
 echo "📦 Configuring pnpm..."
 corepack enable
 corepack prepare pnpm@10.28.1 --activate
+export PNPM_HOME="/root/.local/share/pnpm"
+export PATH="$PNPM_HOME:$PATH"
+export SHELL="/bin/bash"
+# Configure pnpm for monorepo
+pnpm config set store-dir /workspace/.pnpm-store
+pnpm config set cache-dir /workspace/.pnpm-cache
+# Create cache directories for pnpm
+mkdir -p /workspace/.pnpm-store
+mkdir -p /workspace/.pnpm-cache
 PNPM_VERSION=$(pnpm --version)
 echo "✅ pnpm version: $PNPM_VERSION"
 

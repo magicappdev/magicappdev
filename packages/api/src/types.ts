@@ -28,6 +28,12 @@ export interface Env {
   GITHUB_CLIENT_SECRET?: string;
   /** GitHub Redirect URI */
   GITHUB_REDIRECT_URI?: string;
+  /** Discord Client ID */
+  DISCORD_CLIENT_ID?: string;
+  /** Discord Client Secret */
+  DISCORD_CLIENT_SECRET?: string;
+  /** Discord Redirect URI */
+  DISCORD_REDIRECT_URI?: string;
   /** Frontend URL for web redirects */
   FRONTEND_URL?: string;
   /** Mobile redirect URI for deep linking */

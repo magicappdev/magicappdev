@@ -4,6 +4,12 @@
   "projectType": "library",
   "sourceRoot": "packages/axiom-cloudflare-workers/src",
   "targets": {
+    "typecheck": {
+      "executor": "nx:noop"
+    },
+    "build": {
+      "executor": "nx:noop"
+    },
     "lint": {
       "executor": "nx:run-commands",
       "options": {

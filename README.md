@@ -363,9 +363,13 @@ For bug reports and feature requests, please use the [issue tracker](https://git
 
 ### Community Channels
 
-- **Discord**: Join our [Discord server](https://discord.gg/magicappdev) for community support and discussions.
-- **Slack**: Join our [Slack workspace](https://slack.magicappdev.com) for team collaboration.
+- **Discord**: Join our [Discord server](https://discord.gg/PpmKS8ZTPt) for community support and discussions
 
 ### Maintainer Contact
 
 For direct inquiries, you can contact the maintainer at [involvex](https://github.com/involvex).
+
+## Supporting and Donating
+
+[Sponsors](https://github.com/sponsors/involvex)
+[Paypal](https://paypal.me/involvex)
