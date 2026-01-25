@@ -12,6 +12,7 @@ export type { AiMessage, Project };
 export const getProjects = () => api.getProjects();
 export const createProject = (data: { name: string; description?: string }) =>
   api.createProject(data);
+export const deleteProject = (id: string) => api.deleteProject(id);
 export const sendMessage = (messages: AiMessage[]) => api.sendMessage(messages);
 export const streamMessage = (messages: AiMessage[]) =>
   api.streamMessage(messages);

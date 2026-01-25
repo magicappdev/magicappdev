@@ -1,16 +1,17 @@
 import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  TouchableOpacity,
-  Switch,
   Image,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../contexts/ThemeContext";
 import { useAuth } from "../contexts/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
+import * as Theme from "../constants/theme";
 import { Stack, router } from "expo-router";
 import React from "react";
 
@@ -113,7 +114,7 @@ export default function SettingsScreen() {
                 { backgroundColor: theme.colors.primary },
               ]}
             >
-              <Ionicons name="moon" size={20} color="#fff" />
+              <Ionicons name="moon" size={20} color={theme.colors.text} />
             </View>
             <Text
               style={[
@@ -190,7 +191,11 @@ export default function SettingsScreen() {
                 { backgroundColor: theme.colors.success },
               ]}
             >
-              <Ionicons name="notifications" size={20} color="#fff" />
+              <Ionicons
+                name="notifications"
+                size={20}
+                color={theme.colors.text}
+              />
             </View>
             <Text
               style={[
@@ -231,7 +236,7 @@ export default function SettingsScreen() {
                   { backgroundColor: theme.colors.error },
                 ]}
               >
-                <Ionicons name="shield" size={20} color="#fff" />
+                <Ionicons name="shield" size={20} color={theme.colors.text} />
               </View>
               <Text
                 style={[
@@ -271,7 +276,7 @@ export default function SettingsScreen() {
                 { backgroundColor: theme.colors.warning },
               ]}
             >
-              <Ionicons name="help-buoy" size={20} color="#fff" />
+              <Ionicons name="help-buoy" size={20} color={theme.colors.text} />
             </View>
             <Text
               style={[
@@ -318,6 +323,7 @@ export default function SettingsScreen() {
   );
 }
 
+// Base styles - colors applied dynamically via theme
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -334,18 +340,15 @@ const styles = StyleSheet.create({
   item: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff", // Fallback
     padding: 12,
     paddingHorizontal: 16,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#C7C7CC", // Fallback
   },
   avatar: {
     width: 48,
     height: 48,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: "#E5E5EA", // Fallback
   },
   iconContainer: {
     width: 32,
@@ -360,14 +363,11 @@ const styles = StyleSheet.create({
   },
   itemTitle: {
     fontSize: 17,
-    color: "#000", // Fallback
   },
   itemSubtitle: {
     fontSize: 14,
-    color: "#8E8E93", // Fallback
   },
   badge: {
-    backgroundColor: "#F2F2F7", // Fallback
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
@@ -375,12 +375,10 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#8E8E93", // Fallback
     textTransform: "uppercase",
   },
   version: {
     textAlign: "center",
-    color: "#8E8E93", // Fallback
     fontSize: 12,
     marginVertical: 40,
   },
@@ -392,20 +390,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 6,
-    backgroundColor: "#F2F2F7", // Fallback
     borderWidth: 1,
-    borderColor: "#C7C7CC", // Fallback
   },
   themeButtonActive: {
-    backgroundColor: "#007AFF", // Fallback
-    borderColor: "#007AFF", // Fallback
+    backgroundColor: Theme.lightTheme.colors.primary,
+    borderColor: Theme.lightTheme.colors.primary,
   },
   themeButtonText: {
     fontSize: 13,
-    color: "#000", // Fallback
   },
   themeButtonTextActive: {
-    color: "#fff", // Fallback
+    color: "#FFFFFF",
     fontWeight: "600",
   },
 });

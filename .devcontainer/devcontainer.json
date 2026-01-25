@@ -18,7 +18,12 @@
   //   }
   // ],
   "mounts": [
-    "source=${localWorkspaceFolder}/.git,target=/workspace/.git,type=bind,consistency=persistent"
+    "source=${localWorkspaceFolder}/.git,target=/workspace/.git,type=bind,consistency=persistent",
+    "source=devcontainer-pnpm-store,target=/root/.local/share/pnpm,type=volume",
+    "source=devcontainer-node-cache,target=/root/.cache,type=volume",
+    "source=devcontainer-wrangler-state,target=/workspace/.wrangler/state,type=volume",
+    "source=devcontainer-android-sdk,target=/usr/local/android-sdk,type=volume",
+    "source=devcontainer-expo-cache,target=/workspace/.expo,type=volume"
   ],
   "features": {
     "ghcr.io/devcontainers/features/git:1": {},
@@ -101,7 +106,13 @@
         "involvex.statusbar-quick-actions",
         "kilocode.kilo-code",
         "usernamehw.errorlens",
-        "involvex.involvex-smart-autocomplete"
+        "involvex.involvex-smart-autocomplete",
+        // New additions
+        "ms-azuretools.vscode-docker",
+        "GitHub.vscode-pull-request-github",
+        "ms-playwright.playwright",
+        "ms-python.python",
+        "ms-vscode.makefile-tools"
       ],
       "settings": {
         "terminal.integrated.defaultProfile.linux": "bash",
@@ -112,8 +123,39 @@
         "npmPackageManager.defaultPackageManager": "pnpm",
         "npmPackageManager.debug": true,
         "editor.codeActionsOnSave": {
-          "source.fixAll.eslint": "explicit"
+          "source.fixAll.eslint": "explicit",
+          "source.fixAll.prettier": "explicit",
+          "source.organizeImports": "explicit"
         },
+        // New optimizations
+        "files.associations": {
+          "*.toml": "toml"
+        },
+        "search.exclude": {
+          "**/.expo": true,
+          "**/.git": true,
+          "**/.gradle": true,
+          "**/.next": true,
+          "**/build": true,
+          "**/node_modules": true,
+          "**/dist": true,
+          "**/.wrangler": true
+        },
+        "files.watcherExclude": {
+          "**/.git/objects/**": true,
+          "**/.git/subtree-cache/**": true,
+          "**/node_modules/**": true,
+          "**/dist/**": true,
+          "**/.expo/**": true,
+          "**/.wrangler/**": true
+        },
+        // Docker specific
+        "docker.enabled": true,
+        "docker.explorerShowReducedMode": false,
+        // Remote development
+        "remote.containers.mountWorkspaceAsVolume": true,
+        "remote.autoForwardPorts": true,
+        "remote.autoForwardPortsSource": "local",
         "statusbarQuickActions.buttons": [
           {
             "id": "build",
@@ -198,11 +240,59 @@
   "containerEnv": {
     "NODE_ENV": "development",
     "PNPM_HOME": "/root/.local/share/pnpm",
-    "PATH": "/root/.local/share/pnpm:${PATH}"
+    "PATH": "/root/.local/share/pnpm:${PATH}",
+    // Project-specific variables
+    "DATABASE_URL": "file:./dev.db",
+    "WRangler_ENV": "development",
+    "EXPO_ANDROID_TOOLCHAIN": "clang",
+    "ANDROID_HOME": "/usr/local/android-sdk",
+    "JAVA_HOME": "/usr/lib/jvm/temurin-21-jdk",
+    // Cloudflare development
+    "CF_ACCOUNT_ID": "${localEnv:CF_ACCOUNT_ID}",
+    "CF_API_TOKEN": "${localEnv:CF_API_TOKEN}",
+    // AI Provider configuration
+    "OPENAI_API_KEY": "${localEnv:OPENAI_API_KEY}",
+    "ANTHROPIC_API_KEY": "${localEnv:ANTHROPIC_API_KEY}",
+    "GEMINI_API_KEY": "${localEnv:GEMINI_API_KEY}"
   },
 
   "containerUser": "root",
   "remoteUser": "root",
   "postCreateCommand": "bash .devcontainer/setup.sh",
-  "postStartCommand": "git status"
+  "postStartCommand": "git status",
+  "healthcheck": {
+    "interval": 30,
+    "retries": 3,
+    "startPeriod": 30,
+    "test": [
+      "CMD-SHELL",
+      "curl -f http://localhost:3100/ || exit 1",
+      "curl -f http://localhost:5173/ || exit 1"
+    ]
+  },
+  "platformOverrides": {
+    "linux": {
+      "features": {
+        "ghcr.io/devcontainers/features/node:1": {
+          "nodeGypDependencies": true,
+          "pnpmVersion": "latest",
+          "nvmVersion": "latest"
+        }
+      }
+    },
+    "windows": {
+      "features": {
+        "ghcr.io/devcontainers/features/node:1": {
+          "nodeGypDependencies": true,
+          "pnpmVersion": "latest",
+          "nvmVersion": "latest"
+        }
+      },
+      "mounts": [
+        "source=${localWorkspaceFolder}/.git,target=/workspace/.git,type=bind,consistency=persistent",
+        "source=devcontainer-pnpm-store,target=C:\\Users\\${localEnv:USERNAME}\\.pnpm-store,type=volume",
+        "source=devcontainer-wrangler-state,target=C:\\Users\\${localEnv:USERNAME}\\.wrangler\\state,type=volume"
+      ]
+    }
+  }
 }

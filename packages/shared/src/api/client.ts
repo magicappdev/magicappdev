@@ -111,6 +111,10 @@ export class ApiClient {
     return `${this.baseUrl}/auth/login/github?platform=${platform}`;
   }
 
+  getDiscordLoginUrl(platform: "web" | "mobile" = "web"): string {
+    return `${this.baseUrl}/auth/login/discord?platform=${platform}`;
+  }
+
   async login(credentials: {
     email: string;
     password: string;
@@ -186,6 +190,15 @@ export class ApiClient {
       throw new Error(response.error.message);
     }
     return response.data;
+  }
+
+  async deleteProject(id: string): Promise<void> {
+    const response = await this.request<ApiResponse<void>>(`/projects/${id}`, {
+      method: "DELETE",
+    });
+    if (!response.success) {
+      throw new Error(response.error.message);
+    }
   }
 
   async sendMessage(messages: AiMessage[]): Promise<AiMessage> {

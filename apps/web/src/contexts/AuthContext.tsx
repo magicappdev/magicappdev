@@ -6,6 +6,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   loginWithGitHub: () => void;
+  loginWithDiscord: () => void;
   login: (accessToken: string, refreshToken: string) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -62,6 +63,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     window.location.href = api.getGitHubLoginUrl("web");
   };
 
+  const loginWithDiscord = () => {
+    window.location.href = api.getDiscordLoginUrl("web");
+  };
+
   const login = async (accessToken: string, refreshToken: string) => {
     setIsLoading(true);
     localStorage.setItem("access_token", accessToken);
@@ -90,7 +95,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, isLoading, loginWithGitHub, login, logout: handleLogout }}
+      value={{
+        user,
+        isLoading,
+        loginWithGitHub,
+        loginWithDiscord,
+        login,
+        logout: handleLogout,
+      }}
     >
       {children}
     </AuthContext.Provider>

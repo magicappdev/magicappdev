@@ -1,18 +1,18 @@
 import {
-  StyleSheet,
-  Text,
-  View,
-  FlatList,
-  TouchableOpacity,
   ActivityIndicator,
   Alert,
-  Modal,
-  TextInput,
+  FlatList,
   KeyboardAvoidingView,
+  Modal,
   Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
+import React, { useCallback, useEffect, useState } from "react";
 import { useTheme } from "../../contexts/ThemeContext";
-import React, { useState, useEffect } from "react";
 import { api, type Project } from "../../lib/api";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -22,6 +22,8 @@ export default function ProjectsScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [projectName, setProjectName] = useState("");
+  const [projectDescription, setProjectDescription] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     loadProjects();
@@ -41,43 +43,99 @@ export default function ProjectsScreen() {
   };
 
   const handleCreateProject = async () => {
-    // Use timestamp for unique project names to avoid duplicates
-    const name = projectName.trim() || `Project ${Date.now()}`;
+    const name = projectName.trim();
+    if (!name || isSubmitting) return;
+
+    setIsSubmitting(true);
     try {
-      const newProject = await api.createProject({ name });
+      const newProject = await api.createProject({
+        name,
+        description: projectDescription.trim() || undefined,
+      });
       setProjects([newProject, ...projects]);
       setIsModalVisible(false);
       setProjectName("");
+      setProjectDescription("");
     } catch (error) {
       console.error("Failed to create project:", error);
-      Alert.alert("Error", "Failed to create project.");
+      Alert.alert("Error", "Failed to create project. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
+  const handleDeleteProject = useCallback(
+    async (projectId: string, projectName: string) => {
+      Alert.alert(
+        "Delete Project",
+        `Are you sure you want to delete "${projectName}"? This action cannot be undone.`,
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Delete",
+            style: "destructive",
+            onPress: async () => {
+              try {
+                await api.deleteProject(projectId);
+                setProjects(projects.filter(p => p.id !== projectId));
+              } catch (error) {
+                console.error("Failed to delete project:", error);
+                Alert.alert(
+                  "Error",
+                  "Failed to delete project. Please try again.",
+                );
+              }
+            },
+          },
+        ],
+      );
+    },
+    [projects],
+  );
+
   const renderProject = ({ item }: { item: Project }) => (
     <TouchableOpacity
-      style={styles.projectCard}
+      style={[styles.projectCard, { backgroundColor: theme.colors.card }]}
       accessibilityRole="button"
       accessibilityLabel={`Open project ${item.name}`}
       accessibilityHint="Opens details for this project"
+      onLongPress={() => handleDeleteProject(item.id, item.name)}
     >
       <View style={styles.projectIcon}>
         <Ionicons name="cube-outline" size={24} color={theme.colors.primary} />
       </View>
       <View style={styles.projectInfo}>
-        <Text style={styles.projectName}>{item.name}</Text>
-        <Text style={styles.projectDescription} numberOfLines={1}>
+        <Text style={[styles.projectName, { color: theme.colors.text }]}>
+          {item.name}
+        </Text>
+        <Text
+          style={[
+            styles.projectDescription,
+            { color: theme.colors.textSecondary },
+          ]}
+          numberOfLines={1}
+        >
           {item.description || "No description"}
         </Text>
-        <Text style={styles.projectMeta}>
+        <Text
+          style={[styles.projectMeta, { color: theme.colors.textSecondary }]}
+        >
           {item.status} • {new Date(item.updatedAt).toLocaleDateString()}
         </Text>
       </View>
-      <Ionicons
-        name="chevron-forward"
-        size={20}
-        color={theme.colors.textSecondary}
-      />
+      <TouchableOpacity
+        onPress={() => handleDeleteProject(item.id, item.name)}
+        style={styles.deleteButton}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        accessibilityLabel={`Delete ${item.name}`}
+        accessibilityHint="Deletes this project"
+      >
+        <Ionicons
+          name="trash-outline"
+          size={18}
+          color={theme.colors.error || "#ef4444"}
+        />
+      </TouchableOpacity>
     </TouchableOpacity>
   );
 
@@ -90,7 +148,9 @@ export default function ProjectsScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       <FlatList
         data={projects}
         renderItem={renderProject}
@@ -105,12 +165,19 @@ export default function ProjectsScreen() {
               size={64}
               color={theme.colors.textSecondary}
             />
-            <Text style={styles.emptyTitle}>No projects yet</Text>
-            <Text style={styles.emptyText}>
+            <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>
+              No projects yet
+            </Text>
+            <Text
+              style={[styles.emptyText, { color: theme.colors.textSecondary }]}
+            >
               Your generated projects will appear here.
             </Text>
             <TouchableOpacity
-              style={styles.createButton}
+              style={[
+                styles.createButton,
+                { backgroundColor: theme.colors.primary },
+              ]}
               onPress={() => setIsModalVisible(true)}
             >
               <Text style={styles.createButtonText}>Create New Project</Text>
@@ -162,6 +229,7 @@ export default function ProjectsScreen() {
                   {
                     color: theme.colors.text,
                     backgroundColor: theme.colors.background,
+                    borderColor: theme.colors.border,
                   },
                 ]}
                 value={projectName}
@@ -206,10 +274,10 @@ export default function ProjectsScreen() {
   );
 }
 
+// Base styles - colors applied dynamically via theme
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F2F2F7",
   },
   centerContainer: {
     flex: 1,
@@ -221,7 +289,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   projectCard: {
-    backgroundColor: "#FFFFFF",
     borderRadius: 12,
     padding: 16,
     flexDirection: "row",
@@ -248,16 +315,13 @@ const styles = StyleSheet.create({
   projectName: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#1C1C1E",
   },
   projectDescription: {
     fontSize: 14,
-    color: "#8E8E93",
     marginTop: 2,
   },
   projectMeta: {
     fontSize: 12,
-    color: "#AEAEB2",
     marginTop: 4,
   },
   emptyContainer: {
@@ -269,22 +333,23 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#1C1C1E",
     marginTop: 16,
   },
   emptyText: {
     fontSize: 16,
-    color: "#8E8E93",
     textAlign: "center",
     marginTop: 8,
     paddingHorizontal: 40,
   },
   createButton: {
     marginTop: 24,
-    backgroundColor: "#007AFF",
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 10,
+  },
+  deleteButton: {
+    padding: 8,
+    marginLeft: 8,
   },
   createButtonText: {
     color: "#FFFFFF",
@@ -325,7 +390,6 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#E5E5EA",
   },
   modalFooter: {
     flexDirection: "row",
@@ -346,5 +410,6 @@ const styles = StyleSheet.create({
   modalButtonText: {
     fontSize: 16,
     fontWeight: "600",
+    color: "#FFFFFF",
   },
 });

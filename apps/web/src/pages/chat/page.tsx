@@ -74,133 +74,182 @@ export default function ChatPage() {
   }, [messages]);
 
   useEffect(() => {
-    // Use native WebSocket for compatibility with minimal agent
-    const wsUrl = `${WS_PROTOCOL}//${AGENT_HOST}/agents/magic-agent/default`;
-    console.log("Connecting to WebSocket:", wsUrl);
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 3;
+    const reconnectDelay = 3000; // 3 seconds
 
-    const ws = new WebSocket(wsUrl);
+    const connectWebSocket = () => {
+      // Use native WebSocket for compatibility with minimal agent
+      const wsUrl = `${WS_PROTOCOL}//${AGENT_HOST}/agents/magic-agent/default`;
+      console.log("Connecting to WebSocket:", wsUrl);
 
-    ws.onopen = () => {
-      console.log("Connected to Agent");
-      setIsConnected(true);
-    };
+      const ws = new WebSocket(wsUrl);
 
-    ws.onclose = () => {
-      console.log("Disconnected from Agent");
-      setIsConnected(false);
-    };
+      ws.onopen = () => {
+        console.log("Connected to Agent");
+        setIsConnected(true);
+        reconnectAttempts = 0; // Reset attempts on successful connection
+      };
 
-    ws.onerror = error => {
-      console.error("WebSocket error:", error);
-    };
+      ws.onclose = () => {
+        console.log("Disconnected from Agent");
+        setIsConnected(false);
 
-    ws.onmessage = event => {
-      try {
-        const data = JSON.parse(event.data as string);
-
-        if (data.type === "history") {
-          // Load chat history from server
-          const historyMessages: Message[] = data.messages.map(
-            (m: {
-              id: string;
-              role: string;
-              content: string;
-              timestamp: number;
-            }) => ({
-              id: m.id,
-              role: m.role as "user" | "assistant" | "system",
-              content: m.content,
-              timestamp: m.timestamp,
-            }),
+        // Attempt reconnection if not manually disconnected
+        if (reconnectAttempts < maxReconnectAttempts) {
+          reconnectAttempts++;
+          console.log(
+            `Attempting to reconnect (${reconnectAttempts}/${maxReconnectAttempts})...`,
           );
-          setMessages(historyMessages);
-        } else if (data.type === "history_cleared") {
-          setMessages([]);
-        } else if (data.type === "chat_chunk") {
-          setMessages(prev => {
-            const last = prev[prev.length - 1];
-            if (last && last.role === "assistant" && last.id === "streaming") {
-              return [
-                ...prev.slice(0, -1),
-                { ...last, content: last.content + data.content },
-              ];
-            } else {
-              return [
-                ...prev,
-                {
-                  id: "streaming",
-                  role: "assistant",
-                  content: data.content,
-                  timestamp: Date.now(),
-                },
-              ];
+          setTimeout(connectWebSocket, reconnectDelay);
+        } else {
+          console.log("Max reconnection attempts reached");
+        }
+      };
+
+      ws.onerror = error => {
+        console.error("WebSocket error:", error);
+        setIsConnected(false);
+      };
+
+      ws.onmessage = event => {
+        try {
+          const data = JSON.parse(event.data as string);
+
+          if (data.type === "history") {
+            // Load chat history from server
+            const historyMessages: Message[] = data.messages.map(
+              (m: {
+                id: string;
+                role: string;
+                content: string;
+                timestamp: number;
+              }) => ({
+                id: m.id,
+                role: m.role as "user" | "assistant" | "system",
+                content: m.content,
+                timestamp: m.timestamp,
+              }),
+            );
+            setMessages(historyMessages);
+          } else if (data.type === "history_cleared") {
+            setMessages([]);
+          } else if (data.type === "chat_chunk") {
+            setMessages(prev => {
+              const last = prev[prev.length - 1];
+              if (
+                last &&
+                last.role === "assistant" &&
+                last.id === "streaming"
+              ) {
+                return [
+                  ...prev.slice(0, -1),
+                  { ...last, content: last.content + data.content },
+                ];
+              } else {
+                return [
+                  ...prev,
+                  {
+                    id: "streaming",
+                    role: "assistant",
+                    content: data.content,
+                    timestamp: Date.now(),
+                  },
+                ];
+              }
+            });
+          } else if (data.type === "chat_done") {
+            setMessages(prev => {
+              const last = prev[prev.length - 1];
+              if (last && last.id === "streaming") {
+                return [
+                  ...prev.slice(0, -1),
+                  { ...last, id: crypto.randomUUID() },
+                ];
+              }
+              return prev;
+            });
+            setIsLoading(false);
+            if (data.suggestedTemplate) {
+              setSuggestedTemplate(data.suggestedTemplate);
             }
-          });
-        } else if (data.type === "chat_done") {
-          setMessages(prev => {
-            const last = prev[prev.length - 1];
-            if (last && last.id === "streaming") {
-              return [
-                ...prev.slice(0, -1),
-                { ...last, id: crypto.randomUUID() },
-              ];
+          } else if (data.type === "error") {
+            setIsLoading(false);
+            setIsGenerating(false);
+            // Add user-friendly error message to chat
+            setMessages(prev => [
+              ...prev,
+              {
+                id: crypto.randomUUID(),
+                role: "system",
+                content: `Error: ${data.message || "Something went wrong. Please try again."}`,
+                timestamp: Date.now(),
+              },
+            ]);
+          } else if (data.type === "generation_start") {
+            setIsGenerating(true);
+            pendingFilesRef.current = [];
+            setGeneratedProject(null);
+          } else if (data.type === "generation_file") {
+            pendingFilesRef.current = [
+              ...pendingFilesRef.current,
+              { path: data.path, content: data.content },
+            ];
+          } else if (data.type === "generation_complete") {
+            const files = pendingFilesRef.current;
+            setGeneratedProject({
+              projectName: data.projectName,
+              templateSlug: data.templateSlug,
+              files,
+              dependencies: data.dependencies || {},
+              devDependencies: data.devDependencies || {},
+            });
+            // Expand first file by default
+            if (files.length > 0) {
+              setExpandedFiles(new Set([files[0].path]));
             }
-            return prev;
-          });
-          setIsLoading(false);
-          if (data.suggestedTemplate) {
-            setSuggestedTemplate(data.suggestedTemplate);
+            setIsGenerating(false);
+          } else if (data.type === "generation_error") {
+            setIsGenerating(false);
+            // Add user-friendly error message to chat
+            setMessages(prev => [
+              ...prev,
+              {
+                id: crypto.randomUUID(),
+                role: "system",
+                content: `Generation failed: ${data.error || "An error occurred during project generation."}`,
+                timestamp: Date.now(),
+              },
+            ]);
           }
-        } else if (data.type === "error") {
-          setIsLoading(false);
-          setIsGenerating(false);
-          console.error("Agent error:", data.message);
-        } else if (data.type === "generation_start") {
-          setIsGenerating(true);
-          pendingFilesRef.current = [];
-          setGeneratedProject(null);
-        } else if (data.type === "generation_file") {
-          pendingFilesRef.current = [
-            ...pendingFilesRef.current,
-            { path: data.path, content: data.content },
-          ];
-        } else if (data.type === "generation_complete") {
-          const files = pendingFilesRef.current;
-          setGeneratedProject({
-            projectName: data.projectName,
-            templateSlug: data.templateSlug,
-            files,
-            dependencies: data.dependencies || {},
-            devDependencies: data.devDependencies || {},
-          });
-          // Expand first file by default
-          if (files.length > 0) {
-            setExpandedFiles(new Set([files[0].path]));
-          }
-          setIsGenerating(false);
-        } else if (data.type === "generation_error") {
-          setIsGenerating(false);
-          console.error("Generation error:", data.error);
-          // Add error message to chat
+        } catch (e) {
+          console.error("Failed to parse message", e);
+          // Add parsing error to chat
           setMessages(prev => [
             ...prev,
             {
               id: crypto.randomUUID(),
               role: "system",
-              content: `Generation failed: ${data.error}`,
+              content: "Error: Failed to process response from the server.",
               timestamp: Date.now(),
             },
           ]);
         }
-      } catch (e) {
-        console.error("Failed to parse message", e);
-      }
+      };
+
+      wsRef.current = ws;
+
+      return () => {
+        ws.close();
+      };
     };
 
-    wsRef.current = ws;
+    connectWebSocket();
 
     return () => {
-      ws.close();
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
     };
   }, []);
 
@@ -315,7 +364,43 @@ export default function ChatPage() {
 
       {/* Messages */}
       <div className="flex-1 p-4 space-y-6 overflow-y-auto">
-        {messages.length === 0 && (
+        {/* Connection Status Banner */}
+        {!isConnected && (
+          <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-md text-sm text-center">
+            <div className="flex items-center justify-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Reconnecting to Magic Assistant...</span>
+            </div>
+            <div className="text-xs text-yellow-600 mt-1">
+              Please wait while we restore your connection
+            </div>
+          </div>
+        )}
+
+        {messages.length === 0 && !isConnected && (
+          <div className="flex flex-col items-center justify-center h-full space-y-4 text-foreground/40">
+            <Bot size={48} />
+            <Typography>Start building your app by describing it.</Typography>
+            <div className="grid w-full max-w-md grid-cols-2 gap-2">
+              <Button
+                variant="outlined"
+                className="justify-start text-xs"
+                onClick={() => setInput("Create a ToDo app")}
+              >
+                <LayoutTemplate className="w-3 h-3 mr-2" /> ToDo App
+              </Button>
+              <Button
+                variant="outlined"
+                className="justify-start text-xs"
+                onClick={() => setInput("Build a landing page")}
+              >
+                <Code2 className="w-3 h-3 mr-2" /> Landing Page
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {messages.length === 0 && isConnected && (
           <div className="flex flex-col items-center justify-center h-full space-y-4 text-foreground/40">
             <Bot size={48} />
             <Typography>Start building your app by describing it.</Typography>

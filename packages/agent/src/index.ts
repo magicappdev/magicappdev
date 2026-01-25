@@ -101,6 +101,81 @@ class ModelRouter {
 /**
  * MagicAgent - Stateful AI App Builder with Tool Use
  */
+
+// Dynamic prompt templates based on context
+export const PROMPT_TEMPLATES = {
+  // UI/Theme generation context
+  ui_theme: {
+    system: `You are a professional UI/UX designer and frontend developer. Your task is to generate modern, responsive React components with Tailwind CSS styling based on the user's requirements. Focus on creating clean, accessible, and visually appealing interfaces. Consider the following context:
+
+    1. User is asking for UI components or theme design
+    2. Generate components that follow modern design patterns
+    3. Use appropriate Tailwind CSS classes for styling
+    4. Ensure components are reusable and well-structured
+    5. Consider responsive design principles
+    6. Use proper accessibility practices
+
+    When generating code, create components that are:
+    - Clean and maintainable
+    - Responsive across devices
+    - Accessible with proper ARIA attributes
+    - Visually appealing with modern design
+    - Well-documented with clear props
+
+    Generate React components with TypeScript and Tailwind CSS. Include proper imports and export statements.`,
+
+    user: `Generate modern UI components with Tailwind CSS based on my requirements. I need:`,
+  },
+
+  // CSS generator context
+  css_generator: {
+    system: `You are a professional CSS developer specializing in modern CSS frameworks and design systems. Your task is to generate clean, efficient CSS with modern design principles. Focus on creating styles that are:
+
+    1. Modern and visually appealing
+    2. Responsive and mobile-first
+    3. Accessible and inclusive
+    4. Well-organized and maintainable
+    5. Following best practices for performance
+
+    Generate CSS that:
+    - Uses modern CSS features (flexbox, grid, custom properties)
+    - Is responsive across all device sizes
+    - Follows BEM or similar naming conventions
+    - Includes proper media queries
+    - Uses CSS custom properties for theming
+    - Is optimized for performance
+
+    Create a complete CSS file with all necessary styles for the requested components.`,
+
+    user: `Generate modern CSS styles for the following components:`,
+  },
+
+  // App preview context
+  app_preview: {
+    system: `You are a professional React developer and UI designer. Your task is to generate complete React applications with modern architecture and best practices. Focus on creating:
+
+    1. Complete, runnable React applications
+    2. Modern architecture with proper component structure
+    3. State management where appropriate
+    4. Clean, maintainable code
+    5. Proper error handling
+    6. Responsive design
+
+    Generate applications that:
+    - Follow modern React patterns
+    - Use functional components with hooks
+    - Include proper state management
+    - Have clean file structure
+    - Include necessary dependencies
+    - Are production-ready
+
+    Create a complete React application with all necessary files and configuration.`,
+  },
+};
+
+/**
+ * MagicAgent - Stateful AI App Builder with Tool Use
+ */
 export class MagicAgent extends Agent<Env, AgentState> {
   override initialState: AgentState = {
     messages: [],
@@ -555,7 +630,8 @@ Note: Tools marked [REQUIRES APPROVAL] will need user approval before execution.
 `
       : "";
 
-    const systemPrompt = `You are the MagicAppDev assistant, an expert AI App Builder.
+    // Determine context and select appropriate prompt template
+    let systemPromptFinal = `You are the MagicAppDev assistant, an expert AI App Builder.
 You are running on Cloudflare Workers and using ${modelKey} model.
 
 Available templates:
@@ -566,9 +642,36 @@ GOAL: Help the user build their app.
 2. If a template fits, suggest it using "SUGGEST_TEMPLATE: [slug]" in your response.
 3. Use tools when appropriate to read files, write code, or execute commands.
 4. Provide code snippets, architectural advice, and commands using the CLI.
-5. Be concise but helpful.
+5. Be concise but helpful.`;
+    let userPrompt = content;
 
-User Request: ${content}`;
+    // Detect context for dynamic prompt selection
+    if (
+      content.toLowerCase().includes("ui") ||
+      content.toLowerCase().includes("theme") ||
+      content.toLowerCase().includes("component")
+    ) {
+      systemPromptFinal = PROMPT_TEMPLATES.ui_theme.system;
+      userPrompt = PROMPT_TEMPLATES.ui_theme.user + " " + content;
+    } else if (
+      content.toLowerCase().includes("css") ||
+      content.toLowerCase().includes("style") ||
+      content.toLowerCase().includes("design")
+    ) {
+      systemPromptFinal = PROMPT_TEMPLATES.css_generator.system;
+      userPrompt = PROMPT_TEMPLATES.css_generator.user + " " + content;
+    } else if (
+      content.toLowerCase().includes("app") ||
+      content.toLowerCase().includes("preview") ||
+      content.toLowerCase().includes("generate")
+    ) {
+      systemPromptFinal = PROMPT_TEMPLATES.app_preview.system;
+      userPrompt = content;
+    }
+
+    const systemPrompt = `${systemPromptFinal}
+
+User Request: ${userPrompt}`;
 
     try {
       // Signal that we're processing

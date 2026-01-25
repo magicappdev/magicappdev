@@ -318,7 +318,11 @@ export default function ChatScreen() {
             <View style={styles.suggestionCard}>
               <View style={styles.suggestionTextContainer}>
                 <Text style={styles.suggestionLabel}>Suggested Template</Text>
-                <Text style={styles.suggestionValue}>{suggestedTemplate}</Text>
+                <Text
+                  style={[styles.suggestionValue, { color: theme.colors.text }]}
+                >
+                  {suggestedTemplate}
+                </Text>
               </View>
               <TouchableOpacity
                 style={styles.applyButton}
@@ -379,16 +383,14 @@ export default function ChatScreen() {
   );
 }
 
+// Base styles - colors applied dynamically via theme
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F2F2F7", // Fallback
   },
   header: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E5EA",
-    backgroundColor: "#fff", // Fallback
   },
   headerTitleContainer: {
     flexDirection: "row",
@@ -398,7 +400,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#000", // Fallback
   },
   statusContainer: {
     flexDirection: "row",
@@ -412,7 +413,6 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 12,
-    color: "#8E8E93", // Fallback
   },
   messageList: {
     padding: 16,
@@ -426,69 +426,62 @@ const styles = StyleSheet.create({
   },
   userBubble: {
     alignSelf: "flex-end",
-    backgroundColor: "#007AFF", // Fallback
     borderBottomRightRadius: 4,
+    backgroundColor: "#007AFF",
   },
   assistantBubble: {
     alignSelf: "flex-start",
-    backgroundColor: "#fff", // Fallback
     borderBottomLeftRadius: 4,
     borderWidth: 1,
-    borderColor: "#E5E5EA", // Fallback
   },
   messageText: {
     fontSize: 16,
     lineHeight: 22,
   },
   userText: {
-    color: "#fff", // Fallback
+    color: "#fff",
   },
-  assistantText: {
-    color: "#000", // Fallback
-  },
+  assistantText: {},
   suggestionContainer: {
     paddingHorizontal: 16,
     paddingBottom: 8,
   },
   suggestionCard: {
     flexDirection: "row",
-    backgroundColor: "#E1F5FE", // Fallback
     padding: 12,
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "space-between",
     borderWidth: 1,
-    borderColor: "#B3E5FC", // Fallback
+    backgroundColor: "rgba(0, 122, 255, 0.1)",
+    borderColor: "rgba(0, 122, 255, 0.3)",
   },
   suggestionTextContainer: {
     flex: 1,
   },
   suggestionLabel: {
     fontSize: 10,
-    color: "#0288D1", // Fallback
     fontWeight: "700",
     textTransform: "uppercase",
+    color: "#007AFF",
   },
   suggestionValue: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#01579B", // Fallback
   },
   applyButton: {
-    backgroundColor: "#0288D1", // Fallback
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
+    backgroundColor: "#007AFF",
   },
   applyButtonText: {
-    color: "#fff", // Fallback
+    color: "#fff",
     fontSize: 12,
     fontWeight: "600",
   },
   inputContainer: {
     borderTopWidth: 1,
-    borderTopColor: "#E5E5EA", // Fallback
-    backgroundColor: "#fff", // Fallback
     paddingBottom: Platform.OS === "android" ? 8 : 0,
   },
   inputRow: {
@@ -514,10 +507,10 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#007AFF", // Fallback
     alignItems: "center",
     justifyContent: "center",
     paddingBottom: 2,
+    backgroundColor: "#007AFF",
   },
   sendButtonDisabled: {
     opacity: 0.5,

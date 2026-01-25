@@ -33,22 +33,24 @@ LABEL   org.opencontainers.image.authors="MagicAppDev"\
 RUN corepack enable && corepack prepare pnpm@10.28.1 --activate
 
 # Install global tools
-# RUN npm install -g turbo typescript
+RUN npm install -g @expo/cli @expo/metro-config
 
 # Set working directory
-# WORKDIR /workspace/magicappdev
 WORKDIR /workspace
+
+# Create directories for persistent storage
+RUN mkdir -p /root/.local/share/pnpm /root/.cache /workspace/.wrangler/state /usr/local/android-sdk /workspace/.expo
+
 # Set environment variables
-# ENV NODE_ENV=development
-# ENV PNPM_HOME="/home/node/.local/share/pnpm"
-# ENV PATH="$PNPM_HOME:$PATH"
+ENV NODE_ENV=development
+ENV PNPM_HOME="/root/.local/share/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+ENV JAVA_HOME="/usr/lib/jvm/temurin-21-jdk"
+ENV ANDROID_HOME="/usr/local/android-sdk"
 
-# Create pnpm directories for root user
-RUN mkdir -p /root/.local/share/pnpm
-
-# HEALTHCHECK --interval=5m --timeout=3s \
-#     CMD [ "curl","-f","http://localhost:3100/", "||", "exit", "1" ] 
-   # CMD curl -f http://localhost:3100/ || exit 1
+# Health check configuration
+HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:3100/ || exit 1
 
 # Default command
 CMD ["bash"]

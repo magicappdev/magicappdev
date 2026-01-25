@@ -9,9 +9,11 @@ import { Github } from "lucide-react";
 import { api } from "@/lib/api";
 
 export default function LoginPage() {
-  const { user, loginWithGitHub, isLoading } = useAuth();
+  const { user, loginWithGitHub, loginWithDiscord } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   if (user) {
     return <Navigate to="/" replace />;
@@ -19,6 +21,9 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoginError(null);
+    setIsProcessing(true);
+
     try {
       const response = await api.login({ email, password });
 
@@ -29,10 +34,36 @@ export default function LoginPage() {
         api.setToken(accessToken);
         window.location.href = "/";
       } else {
-        alert(response.error?.message || "Login failed");
+        setLoginError(response.error?.message || "Login failed");
       }
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "An error occurred");
+      setLoginError(
+        err instanceof Error ? err.message : "An error occurred during login",
+      );
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleGitHubLogin = async () => {
+    setIsProcessing(true);
+    try {
+      await loginWithGitHub();
+    } catch (err: unknown) {
+      setLoginError(err instanceof Error ? err.message : "GitHub login failed");
+      setIsProcessing(false);
+    }
+  };
+
+  const handleDiscordLogin = async () => {
+    setIsProcessing(true);
+    try {
+      await loginWithDiscord();
+    } catch (err: unknown) {
+      setLoginError(
+        err instanceof Error ? err.message : "Discord login failed",
+      );
+      setIsProcessing(false);
     }
   };
 
@@ -61,6 +92,12 @@ export default function LoginPage() {
           Sign in to your account
         </Typography>
 
+        {loginError && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
+            {loginError}
+          </div>
+        )}
+
         <form onSubmit={handleLogin} className="space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">Email Address</label>
@@ -87,8 +124,8 @@ export default function LoginPage() {
               required
             />
           </div>
-          <Button type="submit" className="w-full">
-            Sign In
+          <Button type="submit" className="w-full" disabled={isProcessing}>
+            {isProcessing ? "Signing in..." : "Sign In"}
           </Button>
         </form>
 
@@ -104,13 +141,25 @@ export default function LoginPage() {
         </div>
 
         <Button
-          onClick={loginWithGitHub}
+          onClick={handleGitHubLogin}
           variant="outlined"
           className="w-full flex items-center justify-center gap-3"
-          disabled={isLoading}
+          disabled={isProcessing}
         >
           <Github size={20} />
           GitHub
+        </Button>
+
+        <Button
+          onClick={handleDiscordLogin}
+          variant="outlined"
+          className="w-full flex items-center justify-center gap-3 mt-4"
+          disabled={isProcessing}
+        >
+          <div className="w-5 h-5 bg-[#5865F2] rounded-full flex items-center justify-center">
+            <span className="text-white text-xs font-bold">D</span>
+          </div>
+          Discord
         </Button>
 
         <div className="text-center text-sm">
