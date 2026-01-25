@@ -38,10 +38,7 @@ async function checkForUpdates(): Promise<void> {
       const data = (await response.json()) as { version?: string };
       const latestVersion = data.version;
       // Only show update message if npm version is newer than local
-      if (
-        latestVersion &&
-        compareVersions(latestVersion, pkg.version) > 0
-      ) {
+      if (latestVersion && compareVersions(latestVersion, pkg.version) > 0) {
         console.log(
           `\n\x1b[33mUpdate available:\x1b[0m ${pkg.version} → ${latestVersion}`,
         );

@@ -103,7 +103,8 @@ export async function listGitHubTemplates(repo: string, branch: string) {
   // Filter for template files (e.g., files starting with "templates/")
   const templateFiles = data.tree
     .filter(
-      (file: { type: string; path: string }) => file.type === "blob" && file.path.startsWith("templates/"),
+      (file: { type: string; path: string }) =>
+        file.type === "blob" && file.path.startsWith("templates/"),
     )
     .map((file: { type: string; path: string; sha: string; url: string }) => ({
       path: file.path,

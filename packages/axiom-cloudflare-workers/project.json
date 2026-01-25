@@ -1,0 +1,36 @@
+{
+  "name": "@magicappdev/axiom-logpush",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "packages/axiom-cloudflare-workers/src",
+  "targets": {
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm run lint",
+        "cwd": "packages/axiom-cloudflare-workers"
+      }
+    },
+    "format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm run format",
+        "cwd": "packages/axiom-cloudflare-workers"
+      }
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "wrangler deploy",
+        "cwd": "packages/axiom-cloudflare-workers"
+      }
+    },
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "wrangler dev",
+        "cwd": "packages/axiom-cloudflare-workers"
+      }
+    }
+  }
+}

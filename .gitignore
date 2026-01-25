@@ -68,3 +68,9 @@ apps/*/wrangler.toml
 packages/*/wrangler.toml
 packages/*/wrangler.jsonc
 
+packages/axiom-cloudflare-workers/node_modules
+packages/axiom-cloudflare-workers/.env
+packages/axiom-cloudflare-workers/.dev.vars
+packages/axiom-cloudflare-workers/*.env
+packages/axiom-cloudflare-workers/*.vars
+packages/axiom-cloudflare-workers/.dev.vars.example

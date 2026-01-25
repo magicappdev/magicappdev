@@ -54,11 +54,11 @@ export const tabsAppTemplate: Template = {
     "web": "expo start --web"
   },
   "dependencies": {
-    "expo": "~52.0.0",
-    "expo-router": "~4.0.0",
-    "expo-status-bar": "~2.0.0",
+    "expo": "~53.0.0",
+    "expo-router": "~5.0.0",
+    "expo-status-bar": "~2.2.0",
     "react": "18.3.1",
-    "react-native": "0.76.0",
+    "react-native": "0.79.0",
     "@expo/vector-icons": "^14.0.0"
   },
   "devDependencies": {
@@ -275,11 +275,11 @@ const styles = StyleSheet.create({
     },
   ],
   dependencies: {
-    expo: "~52.0.0",
-    "expo-router": "~4.0.0",
-    "expo-status-bar": "~2.0.0",
+    expo: "~53.0.0",
+    "expo-router": "~5.0.0",
+    "expo-status-bar": "~2.2.0",
     react: "18.3.1",
-    "react-native": "0.76.0",
+    "react-native": "0.79.0",
     "@expo/vector-icons": "^14.0.0",
   },
   devDependencies: {

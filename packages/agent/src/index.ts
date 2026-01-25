@@ -1,22 +1,42 @@
 import {
-  type ToolCall,
+  AGENT_TOOLS,
   type PendingApproval,
+  type ToolCall,
   type ToolDefinition,
+  createPendingApproval,
+  getTool,
   getToolsPrompt,
   parseToolCalls,
   requiresApproval,
-  createPendingApproval,
-  getTool,
-  AGENT_TOOLS,
 } from "./tools";
-import type { TemplateMetadata } from "@magicappdev/templates";
+import {
+  compileTemplate,
+  compileFilePath,
+  evaluateCondition,
+} from "@magicappdev/templates";
+import type { Template, TemplateMetadata } from "@magicappdev/templates";
 import { registry } from "@magicappdev/templates/registry";
 import type { Connection, WSMessage } from "agents";
 import { Agent, routeAgentRequest } from "agents";
 
+/** Generated file result */
+interface GeneratedFile {
+  path: string;
+  content: string;
+}
+
+/** Project generation result */
+interface GenerateProjectResult {
+  success: boolean;
+  files: GeneratedFile[];
+  dependencies: Record<string, string>;
+  devDependencies: Record<string, string>;
+  error?: string;
+}
+
 // Re-export tool types for external use
-export type { ToolCall, PendingApproval, ToolDefinition };
 export { AGENT_TOOLS, getTool, requiresApproval };
+export type { PendingApproval, ToolCall, ToolDefinition };
 
 export interface Env {
   AI: WorkerAi;
@@ -126,6 +146,17 @@ export class MagicAgent extends Agent<Env, AgentState> {
             }),
           );
           break;
+        case "generate_project":
+          await this.handleGenerateProject(
+            connection,
+            data.templateSlug,
+            data.projectName,
+            data.variables || {},
+          );
+          break;
+        case "list_templates":
+          this.handleListTemplates(connection);
+          break;
         default:
           connection.send(
             JSON.stringify({ type: "error", message: "Unknown message type" }),
@@ -151,6 +182,165 @@ export class MagicAgent extends Agent<Env, AgentState> {
         approvals: pending,
       }),
     );
+  }
+
+  /**
+   * List available templates
+   */
+  private handleListTemplates(connection: Connection) {
+    const templates = registry.getMetadata();
+    connection.send(
+      JSON.stringify({
+        type: "templates_list",
+        templates: templates.map((t: TemplateMetadata) => ({
+          slug: t.slug,
+          name: t.name,
+          description: t.description,
+          category: t.category,
+          frameworks: t.frameworks,
+        })),
+      }),
+    );
+  }
+
+  /**
+   * Generate a project from a template
+   */
+  private async handleGenerateProject(
+    connection: Connection,
+    templateSlug: string,
+    projectName: string,
+    variables: Record<string, unknown>,
+  ) {
+    connection.send(
+      JSON.stringify({
+        type: "generation_start",
+        templateSlug,
+        projectName,
+      }),
+    );
+
+    try {
+      // Get the template
+      const template = registry.get(templateSlug) as Template | undefined;
+      if (!template) {
+        connection.send(
+          JSON.stringify({
+            type: "generation_error",
+            error: `Template "${templateSlug}" not found`,
+          }),
+        );
+        return;
+      }
+
+      // Merge variables with defaults
+      const finalVariables: Record<string, unknown> = {
+        name: projectName,
+        appName: projectName,
+        ...variables,
+      };
+
+      // Apply default values from template
+      for (const varDef of template.variables || []) {
+        if (
+          finalVariables[varDef.name] === undefined &&
+          varDef.default !== undefined
+        ) {
+          finalVariables[varDef.name] = varDef.default;
+        }
+      }
+
+      // Generate files in memory
+      const result = this.generateFilesInMemory(template, finalVariables);
+
+      if (!result.success) {
+        connection.send(
+          JSON.stringify({
+            type: "generation_error",
+            error: result.error,
+          }),
+        );
+        return;
+      }
+
+      // Send each file to the client
+      for (const file of result.files) {
+        connection.send(
+          JSON.stringify({
+            type: "generation_file",
+            path: file.path,
+            content: file.content,
+          }),
+        );
+      }
+
+      // Send completion message
+      connection.send(
+        JSON.stringify({
+          type: "generation_complete",
+          projectName,
+          templateSlug,
+          fileCount: result.files.length,
+          dependencies: result.dependencies,
+          devDependencies: result.devDependencies,
+        }),
+      );
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      connection.send(
+        JSON.stringify({
+          type: "generation_error",
+          error: message,
+        }),
+      );
+    }
+  }
+
+  /**
+   * Generate files in memory from a template
+   */
+  private generateFilesInMemory(
+    template: Template,
+    variables: Record<string, unknown>,
+  ): GenerateProjectResult {
+    try {
+      const files: GeneratedFile[] = [];
+
+      for (const templateFile of template.files) {
+        // Check condition
+        if (templateFile.condition) {
+          const shouldInclude = evaluateCondition(
+            templateFile.condition,
+            variables,
+          );
+          if (!shouldInclude) continue;
+        }
+
+        // Compile the file path
+        const filePath = compileFilePath(templateFile.path, variables);
+
+        // Compile the content
+        const content = compileTemplate(templateFile.content, variables);
+
+        files.push({ path: filePath, content });
+      }
+
+      return {
+        success: true,
+        files,
+        dependencies: template.dependencies || {},
+        devDependencies: template.devDependencies || {},
+      };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return {
+        success: false,
+        files: [],
+        dependencies: {},
+        devDependencies: {},
+        error: message,
+      };
+    }
   }
 
   /**
@@ -381,39 +571,78 @@ GOAL: Help the user build their app.
 User Request: ${content}`;
 
     try {
-      const stream = (await this.env.AI.run(model, {
+      // Signal that we're processing
+      connection.send(
+        JSON.stringify({
+          type: "chat_start",
+          model: modelKey,
+        }),
+      );
+
+      const aiResult = await this.env.AI.run(model, {
         messages: [
           { role: "system", content: systemPrompt },
           ...updatedMessages.map(m => ({ role: m.role, content: m.content })),
         ],
         stream: true,
-      })) as ReadableStream;
+      });
 
       let assistantContent = "";
-      const decoder = new TextDecoder();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      for await (const chunk of stream as any) {
-        const text = decoder.decode(chunk);
-        const lines = text.split("\n");
-        for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            const data = line.slice(6);
-            if (data === "[DONE]") break;
-            try {
-              const parsed = JSON.parse(data) as AiResponse;
-              if (parsed.response) {
-                assistantContent += parsed.response;
-                connection.send(
-                  JSON.stringify({
-                    type: "chat_chunk",
-                    content: parsed.response,
-                  }),
-                );
+
+      // Check if result is a ReadableStream
+      if (
+        aiResult &&
+        typeof aiResult === "object" &&
+        "getReader" in aiResult &&
+        typeof (aiResult as ReadableStream).getReader === "function"
+      ) {
+        const stream = aiResult as ReadableStream;
+        const reader = stream.getReader();
+        const decoder = new TextDecoder();
+
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const text = decoder.decode(value, { stream: true });
+            const lines = text.split("\n");
+
+            for (const line of lines) {
+              if (line.startsWith("data: ")) {
+                const data = line.slice(6).trim();
+                if (data === "[DONE]") continue;
+                try {
+                  const parsed = JSON.parse(data) as AiResponse;
+                  if (parsed.response) {
+                    assistantContent += parsed.response;
+                    connection.send(
+                      JSON.stringify({
+                        type: "chat_chunk",
+                        content: parsed.response,
+                      }),
+                    );
+                  }
+                } catch {
+                  // Ignore parse errors for incomplete JSON
+                }
               }
-            } catch {
-              // Ignore parse errors
             }
           }
+        } finally {
+          reader.releaseLock();
+        }
+      } else {
+        // Non-streaming response fallback
+        const response = aiResult as AiResponse;
+        if (response && response.response) {
+          assistantContent = response.response;
+          connection.send(
+            JSON.stringify({
+              type: "chat_chunk",
+              content: assistantContent,
+            }),
+          );
         }
       }
 
@@ -577,7 +806,10 @@ export default {
 
     // Use routeAgentRequest for agents SDK routing
     if (path.startsWith("/agents/")) {
-      const response = routeAgentRequest(request, env) as Response | null;
+      const response = routeAgentRequest(
+        request,
+        env,
+      ) as unknown as Response | null;
       return response ?? new Response("Agent not found", { status: 404 });
     }
 

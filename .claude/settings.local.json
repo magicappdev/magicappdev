@@ -187,11 +187,10 @@
       "Bash(npm audit:*)",
       "Bash(if exist dist rmdir /s /q dist)",
       "Bash(npm view:*)",
-      "Bash(git ls-tree:*)"
+      "Bash(git ls-tree:*)",
+      "mcp__nx-mcp__nx_workspace_path"
     ]
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": [
-    "cloudflare-builds"
-  ]
+  "enabledMcpjsonServers": ["cloudflare-builds"]
 }

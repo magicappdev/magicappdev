@@ -53,6 +53,23 @@
 - [x] Added response timeout handling (60s)
 - [x] Added `--debug` flag to chat command for troubleshooting
 - [x] Fixed Windows compatibility issue with libuv async handles
+- [x] Fixed agent streaming to use `getReader()` pattern
+- [x] Added `chat_start` message type for model indication
+- [x] Added proper handling of `state:update` messages from agents SDK
+
+### Axiom Logging Integration (P1)
+
+- [x] Created `@magicappdev/axiom-logpush` package
+- [x] Updated worker to use environment variables for secrets (`AXIOM_TOKEN`, `AXIOM_DATASET`)
+- [x] Fixed ESLint configuration isolation (root: true to prevent typescript-eslint inheritance)
+- [x] Created wrangler.toml with proper secret bindings
+
+### Template Generation Fixes (P1)
+
+- [x] Fixed template selection bug (always using "blank")
+- [x] Updated templates to use Expo SDK 53 / React Native 0.79
+- [x] Added auto-install after project creation
+- [x] Fixed Handlebars `{{{{raw}}}}` blocks for JSX escaping
 
 ### Security Vulnerabilities (P2)
 
@@ -64,6 +81,8 @@
 - [x] Added `-V, --version` flag (displays version)
 - [x] Added `-d, --debug` flag (enables debug logging)
 - [x] Added update notifier (checks npm registry for new versions)
+- [x] Fixed `promptMultiSelect` for preferences (was using wrong prompts type)
+- [x] Added Ctrl+C / SIGINT handling for graceful exit
 
 ### Mobile Version Management (P4)
 
@@ -264,7 +283,27 @@ pnpm run version:major   # 0.0.3 → 1.0.0, buildNumber: 3 → 4
 
 ## Quick Reference: Next Actions
 
-1. **Immediate:** Fix CLI template selection bug (always uses Expo Router)
-2. **This Week:** Fix Tabs template helper issue ("headerShown:")
+1. **Immediate:** Test web chat code generation (chat → template → generate → view code)
+2. **This Week:** Fix broken routes/buttons in web and mobile apps
 3. **Next:** Add Discord OAuth integration
 4. **Ongoing:** UI/UX fixes, E2E testing, Documentation
+
+---
+
+## ✅ Just Completed
+
+### Agent Code Generation (Core Feature)
+
+- [x] Added `generate_project` message handler to agent
+- [x] Added `list_templates` message handler
+- [x] Implemented in-memory code generation from templates
+- [x] Agent now sends `generation_file` messages for each file
+- [x] Agent sends `generation_complete` with dependencies
+
+### Web Chat UI Enhancement
+
+- [x] Added generated project display with file browser
+- [x] Files are collapsible with syntax highlighting
+- [x] Shows dependencies from template
+- [x] Download button for generated code
+- [x] Loading state during generation

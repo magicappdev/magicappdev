@@ -1,13 +1,13 @@
 /**
  * Chat command - Interactive AI App Builder
- * Uses AgentClient from agents SDK for proper connection
+ * Uses native WebSocket with partykit-compatible URL
  */
 
 import { header, logo, info } from "../lib/ui.js";
 import { AGENT_HOST } from "../lib/api.js";
 import { Command } from "commander";
 import prompts from "prompts";
-import { AgentClient } from "agents/client";
+import WebSocket from "ws";
 import chalk from "chalk";
 import ora from "ora";
 
@@ -16,6 +16,8 @@ interface AgentMessage {
   content?: string;
   suggestedTemplate?: string;
   error?: string;
+  message?: string;
+  model?: string;
 }
 
 // Handle Ctrl+C in prompts
@@ -36,56 +38,57 @@ export const chatCommand = new Command("chat")
     info("Connecting to agent...");
     const spinner = ora("Initializing connection").start();
 
-    // Parse host without protocol
-    const host = AGENT_HOST.replace(/^wss?:\/\//, "").replace(/^https?:\/\//, "");
+    // Build WebSocket URL with party headers embedded
+    // The agents SDK expects: /parties/{namespace}/{room} or /agents/{namespace}/{room}
+    const wsUrl = `wss://${AGENT_HOST}/agents/magic-agent/default`;
 
     if (debug) {
-      console.log(chalk.dim(`\n[DEBUG] Connecting to host: ${host}`));
-      console.log(chalk.dim(`[DEBUG] Agent: MagicAgent, Room: default`));
+      console.log(chalk.dim(`\n[DEBUG] Connecting to: ${wsUrl}`));
     }
 
-    // Use AgentClient for proper connection with headers
-    const client = new AgentClient({
-      host,
-      agent: "MagicAgent",
-      name: "default",
+    const ws = new WebSocket(wsUrl, {
+      headers: {
+        "x-partykit-namespace": "magic-agent",
+        "x-partykit-room": "default",
+      },
     });
 
     // Connection timeout
     const connectionTimeout = setTimeout(() => {
-      if (client.readyState !== WebSocket.OPEN) {
+      if (ws.readyState !== WebSocket.OPEN) {
         spinner.fail("Connection timeout - agent not responding");
-        client.close();
+        ws.terminate();
         process.exit(1);
       }
     }, 10000);
 
-    client.addEventListener("open", () => {
+    ws.on("open", () => {
       clearTimeout(connectionTimeout);
       spinner.succeed("Connected to Magic AI Assistant");
       if (debug) {
         console.log(chalk.dim("[DEBUG] WebSocket connection established"));
       }
-      startChatLoop(client, debug);
+      startChatLoop(ws, debug);
     });
 
-    client.addEventListener("close", event => {
+    ws.on("close", (code, reason) => {
       clearTimeout(connectionTimeout);
+      const reasonStr = reason?.toString() || "Connection closed";
       if (debug) {
         console.log(
-          chalk.dim(`\n[DEBUG] WebSocket closed: ${event.code} - ${event.reason}`),
+          chalk.dim(`\n[DEBUG] WebSocket closed: ${code} - ${reasonStr}`),
         );
       }
-      if (event.code !== 1000) {
+      if (code !== 1000) {
         // 1000 = normal closure
-        spinner.fail(`Disconnected from agent (${event.code})`);
+        spinner.fail(`Disconnected from agent (${code})`);
       }
       process.exit(0);
     });
 
-    client.addEventListener("error", (err: Event) => {
+    ws.on("error", (err: Error) => {
       clearTimeout(connectionTimeout);
-      spinner.fail(`Connection error`);
+      spinner.fail(`Connection error: ${err.message}`);
       if (debug) {
         console.error(chalk.red(`\n[DEBUG] WebSocket error:`), err);
       }
@@ -93,7 +96,7 @@ export const chatCommand = new Command("chat")
     });
   });
 
-async function startChatLoop(client: AgentClient, debug: boolean) {
+async function startChatLoop(ws: WebSocket, debug: boolean) {
   console.log(chalk.dim("\nType your message below (type 'exit' to quit)"));
 
   // Track if we're waiting for a response
@@ -103,59 +106,96 @@ async function startChatLoop(client: AgentClient, debug: boolean) {
   let resolveResponse: (() => void) | null = null;
 
   // Handle incoming messages
-  client.addEventListener("message", (event: MessageEvent) => {
+  ws.on("message", (data: WebSocket.Data) => {
     try {
-      const message: AgentMessage = JSON.parse(
-        typeof event.data === "string" ? event.data : event.data.toString(),
-      );
+      const raw = data.toString();
+      const message: AgentMessage = JSON.parse(raw);
 
       if (debug) {
-        console.log(chalk.dim(`\n[DEBUG] Received: ${message.type}`));
+        console.log(
+          chalk.dim(`\n[DEBUG] Received: ${message.type || "unknown"}`),
+        );
+        console.log(chalk.dim(`[DEBUG] Raw: ${raw.substring(0, 200)}...`));
       }
 
-      if (message.type === "chat_chunk" && message.content) {
-        currentResponse += message.content;
-        if (responseSpinner) {
-          responseSpinner.text = chalk.gray(
-            currentResponse.split("\n").pop() || "...",
-          );
-        }
-      } else if (message.type === "chat_done") {
-        if (responseSpinner) {
-          responseSpinner.stop();
-        }
-        console.log(chalk.green("\nMagic AI:"), currentResponse);
+      // Handle different message types
+      switch (message.type) {
+        case "chat_start":
+          if (debug) {
+            console.log(chalk.dim(`[DEBUG] Using model: ${message.model}`));
+          }
+          break;
 
-        if (message.suggestedTemplate) {
-          console.log(
-            chalk.yellow("\nSuggested Template:"),
-            chalk.bold(message.suggestedTemplate),
-          );
-          console.log(
-            chalk.dim(
-              `Run 'magicappdev init --template ${message.suggestedTemplate}' to use it.`,
-            ),
-          );
-        }
-        console.log(""); // Spacing
+        case "chat_chunk":
+          if (message.content) {
+            currentResponse += message.content;
+            if (responseSpinner) {
+              // Show last line of response in spinner
+              const lastLine = currentResponse.split("\n").pop() || "...";
+              responseSpinner.text = chalk.gray(
+                lastLine.length > 60 ? lastLine.slice(-60) + "..." : lastLine,
+              );
+            }
+          }
+          break;
 
-        // Reset state and resolve promise
-        currentResponse = "";
-        waitingForResponse = false;
-        if (resolveResponse) {
-          resolveResponse();
-          resolveResponse = null;
-        }
-      } else if (message.type === "error") {
-        if (responseSpinner) {
-          responseSpinner.fail(`Error: ${message.error || "Unknown error"}`);
-        }
-        currentResponse = "";
-        waitingForResponse = false;
-        if (resolveResponse) {
-          resolveResponse();
-          resolveResponse = null;
-        }
+        case "chat_done":
+          if (responseSpinner) {
+            responseSpinner.stop();
+          }
+          if (currentResponse) {
+            console.log(chalk.green("\nMagic AI:"), currentResponse);
+          } else {
+            console.log(chalk.yellow("\nMagic AI: (No response received)"));
+          }
+
+          if (message.suggestedTemplate) {
+            console.log(
+              chalk.yellow("\nSuggested Template:"),
+              chalk.bold(message.suggestedTemplate),
+            );
+            console.log(
+              chalk.dim(
+                `Run 'magicappdev init --template ${message.suggestedTemplate}' to use it.`,
+              ),
+            );
+          }
+          console.log(""); // Spacing
+
+          // Reset state and resolve promise
+          currentResponse = "";
+          waitingForResponse = false;
+          if (resolveResponse) {
+            resolveResponse();
+            resolveResponse = null;
+          }
+          break;
+
+        case "error":
+          if (responseSpinner) {
+            responseSpinner.fail(
+              `Error: ${message.error || message.message || "Unknown error"}`,
+            );
+          }
+          currentResponse = "";
+          waitingForResponse = false;
+          if (resolveResponse) {
+            resolveResponse();
+            resolveResponse = null;
+          }
+          break;
+
+        case "state:update":
+        case "cf_agent_state":
+          // Ignore state updates from agents SDK
+          break;
+
+        default:
+          if (debug) {
+            console.log(
+              chalk.dim(`[DEBUG] Ignored message type: ${message.type}`),
+            );
+          }
       }
     } catch (err) {
       if (debug) {
@@ -165,7 +205,7 @@ async function startChatLoop(client: AgentClient, debug: boolean) {
   });
 
   // Main chat loop
-  while (client.readyState === WebSocket.OPEN) {
+  while (ws.readyState === WebSocket.OPEN) {
     const response = await prompts(
       {
         type: "text",
@@ -178,13 +218,13 @@ async function startChatLoop(client: AgentClient, debug: boolean) {
     // Handle Ctrl+C or empty input
     if (!response.message) {
       console.log(chalk.dim("\nGoodbye!"));
-      client.close();
+      ws.close(1000, "User exit");
       break;
     }
 
     if (response.message.toLowerCase() === "exit") {
       console.log(chalk.dim("\nGoodbye!"));
-      client.close();
+      ws.close(1000, "User exit");
       break;
     }
 
@@ -193,7 +233,7 @@ async function startChatLoop(client: AgentClient, debug: boolean) {
     currentResponse = "";
     responseSpinner = ora("Magic AI is thinking...").start();
 
-    client.send(
+    ws.send(
       JSON.stringify({
         type: "chat",
         content: response.message,

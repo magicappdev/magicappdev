@@ -24,13 +24,51 @@ import {
 import { builtInTemplates } from "@magicappdev/templates";
 import { generateApp } from "@magicappdev/templates";
 import { withSpinner } from "../lib/spinner.js";
+import { spawn } from "child_process";
 import { Command } from "commander";
+import * as path from "path";
 
 interface InitOptions {
   template?: string;
   framework?: string;
   typescript?: boolean;
   yes?: boolean;
+  install?: boolean;
+}
+
+/** Detect the package manager to use */
+function detectPackageManager(): "pnpm" | "npm" | "yarn" | "bun" {
+  const userAgent = process.env.npm_config_user_agent || "";
+  if (userAgent.includes("pnpm")) return "pnpm";
+  if (userAgent.includes("yarn")) return "yarn";
+  if (userAgent.includes("bun")) return "bun";
+  return "npm";
+}
+
+/** Run package manager install */
+async function runInstall(
+  projectDir: string,
+  pm: string,
+): Promise<{ success: boolean; error?: string }> {
+  return new Promise(resolve => {
+    const child = spawn(pm, ["install"], {
+      cwd: projectDir,
+      stdio: "inherit",
+      shell: true,
+    });
+
+    child.on("close", code => {
+      if (code === 0) {
+        resolve({ success: true });
+      } else {
+        resolve({ success: false, error: `Exit code ${code}` });
+      }
+    });
+
+    child.on("error", err => {
+      resolve({ success: false, error: err.message });
+    });
+  });
 }
 
 export const initCommand = new Command("init")
@@ -40,6 +78,7 @@ export const initCommand = new Command("init")
   .option("-f, --framework <framework>", "Framework (expo, react-native, next)")
   .option("--typescript", "Use TypeScript", true)
   .option("-y, --yes", "Skip prompts and use defaults")
+  .option("--no-install", "Skip installing dependencies")
   .action(async (name: string | undefined, options: InitOptions) => {
     logo();
     header("Create a new project");
@@ -63,7 +102,11 @@ export const initCommand = new Command("init")
             value: "blank",
             description: "Minimal starter template",
           },
-          { title: "Tabs", value: "tabs", description: "Tab-based navigation" },
+          {
+            title: "Tabs",
+            value: "tabs",
+            description: "Tab-based navigation",
+          },
         ]);
       }
       if (!templateSlug) {
@@ -125,6 +168,7 @@ export const initCommand = new Command("init")
 
       // Generate project
       const outputDir = process.cwd();
+      const projectDir = path.join(outputDir, projectName);
       const result = await withSpinner(
         `Creating ${projectName}...`,
         async () => {
@@ -146,11 +190,37 @@ export const initCommand = new Command("init")
       newline();
       success(`Project created successfully!`);
       info(`Files created: ${result.files.length}`);
+
+      // Install dependencies
+      const shouldInstall = options.install !== false;
+      if (shouldInstall) {
+        const pm = detectPackageManager();
+        newline();
+
+        const installResult = await withSpinner(
+          `Installing dependencies with ${pm}...`,
+          async () => runInstall(projectDir, pm),
+          { successText: "Dependencies installed" },
+        );
+
+        if (!installResult.success) {
+          error(
+            `Failed to install dependencies: ${installResult.error || "Unknown error"}`,
+          );
+          info("You can install them manually:");
+          command(`cd ${projectName}`);
+          command(`${pm} install`);
+        }
+      }
+
       newline();
       info("Next steps:");
       command(`cd ${projectName}`);
-      command("npm install");
-      command("npm start");
+      if (!shouldInstall || options.install === false) {
+        const pm = detectPackageManager();
+        command(`${pm} install`);
+      }
+      command(`${detectPackageManager()} start`);
       newline();
     } catch (err) {
       error(err instanceof Error ? err.message : "Failed to create project");

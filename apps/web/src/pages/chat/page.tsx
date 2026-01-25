@@ -1,14 +1,19 @@
 import {
-  Send,
   Bot,
-  User as UserIcon,
-  Loader2,
-  Sparkles,
+  ChevronDown,
+  ChevronRight,
   Code2,
+  Download,
+  FileCode,
+  FolderOpen,
   LayoutTemplate,
+  Loader2,
+  Send,
+  Sparkles,
   Trash2,
+  User as UserIcon,
 } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Typography } from "@/components/ui/Typography";
 // import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/Button";
@@ -21,6 +26,19 @@ interface Message {
   role: "user" | "assistant" | "system";
   content: string;
   timestamp: number;
+}
+
+interface GeneratedFile {
+  path: string;
+  content: string;
+}
+
+interface GeneratedProject {
+  projectName: string;
+  templateSlug: string;
+  files: GeneratedFile[];
+  dependencies: Record<string, string>;
+  devDependencies: Record<string, string>;
 }
 
 // Use deployed agent or local dev server
@@ -38,6 +56,11 @@ export default function ChatPage() {
   const [suggestedTemplate, setSuggestedTemplate] = useState<string | null>(
     null,
   );
+  const [generatedProject, setGeneratedProject] =
+    useState<GeneratedProject | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [expandedFiles, setExpandedFiles] = useState<Set<string>>(new Set());
+  const pendingFilesRef = useRef<GeneratedFile[]>([]);
 
   const wsRef = useRef<WebSocket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -130,7 +153,44 @@ export default function ChatPage() {
           }
         } else if (data.type === "error") {
           setIsLoading(false);
+          setIsGenerating(false);
           console.error("Agent error:", data.message);
+        } else if (data.type === "generation_start") {
+          setIsGenerating(true);
+          pendingFilesRef.current = [];
+          setGeneratedProject(null);
+        } else if (data.type === "generation_file") {
+          pendingFilesRef.current = [
+            ...pendingFilesRef.current,
+            { path: data.path, content: data.content },
+          ];
+        } else if (data.type === "generation_complete") {
+          const files = pendingFilesRef.current;
+          setGeneratedProject({
+            projectName: data.projectName,
+            templateSlug: data.templateSlug,
+            files,
+            dependencies: data.dependencies || {},
+            devDependencies: data.devDependencies || {},
+          });
+          // Expand first file by default
+          if (files.length > 0) {
+            setExpandedFiles(new Set([files[0].path]));
+          }
+          setIsGenerating(false);
+        } else if (data.type === "generation_error") {
+          setIsGenerating(false);
+          console.error("Generation error:", data.error);
+          // Add error message to chat
+          setMessages(prev => [
+            ...prev,
+            {
+              id: crypto.randomUUID(),
+              role: "system",
+              content: `Generation failed: ${data.error}`,
+              timestamp: Date.now(),
+            },
+          ]);
         }
       } catch (e) {
         console.error("Failed to parse message", e);
@@ -169,13 +229,50 @@ export default function ChatPage() {
     );
   };
 
-  const applyTemplate = (templateId: string) => {
-    // Logic to apply template (e.g., redirect to builder or send command)
-    console.log("Applying template:", templateId);
-    // For now, just send a message
-    const msg = `Use the ${templateId} template.`;
-    setInput(msg);
-    // handleSubmit would need to be called or triggered
+  const generateProject = useCallback(
+    (templateSlug: string, projectName: string = "my-app") => {
+      if (!wsRef.current || !isConnected) return;
+
+      wsRef.current.send(
+        JSON.stringify({
+          type: "generate_project",
+          templateSlug,
+          projectName,
+          variables: {},
+        }),
+      );
+    },
+    [isConnected],
+  );
+
+  const toggleFileExpanded = (path: string) => {
+    setExpandedFiles(prev => {
+      const next = new Set(prev);
+      if (next.has(path)) {
+        next.delete(path);
+      } else {
+        next.add(path);
+      }
+      return next;
+    });
+  };
+
+  const downloadProject = () => {
+    if (!generatedProject) return;
+
+    // Create a simple text representation for now
+    // In a real implementation, this would create a zip file
+    const projectContent = generatedProject.files
+      .map(f => `=== ${f.path} ===\n${f.content}`)
+      .join("\n\n");
+
+    const blob = new Blob([projectContent], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${generatedProject.projectName}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const clearHistory = () => {
@@ -275,7 +372,7 @@ export default function ChatPage() {
           </div>
         ))}
 
-        {suggestedTemplate && (
+        {suggestedTemplate && !generatedProject && (
           <div className="max-w-3xl pl-12 mx-auto">
             <Card className="flex items-center justify-between p-4 bg-primary/5 border-primary/20">
               <div>
@@ -288,10 +385,101 @@ export default function ChatPage() {
               </div>
               <Button
                 size="sm"
-                onClick={() => applyTemplate(suggestedTemplate)}
+                onClick={() => generateProject(suggestedTemplate)}
+                disabled={isGenerating}
               >
-                Use Template
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Code2 className="w-4 h-4 mr-2" />
+                    Generate Project
+                  </>
+                )}
               </Button>
+            </Card>
+          </div>
+        )}
+
+        {/* Generated Project Display */}
+        {generatedProject && (
+          <div className="max-w-4xl mx-auto">
+            <Card className="overflow-hidden border-primary/20">
+              <div className="flex items-center justify-between p-4 border-b bg-primary/5 border-primary/10">
+                <div className="flex items-center gap-2">
+                  <FolderOpen className="w-5 h-5 text-primary" />
+                  <Typography variant="title" className="text-lg">
+                    {generatedProject.projectName}
+                  </Typography>
+                  <span className="px-2 py-0.5 text-xs rounded-full bg-primary/10 text-primary">
+                    {generatedProject.templateSlug}
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outlined"
+                    onClick={downloadProject}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Download
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="text"
+                    onClick={() => setGeneratedProject(null)}
+                  >
+                    Close
+                  </Button>
+                </div>
+              </div>
+
+              <div className="divide-y divide-outline/10 max-h-[60vh] overflow-y-auto">
+                {generatedProject.files.map(file => (
+                  <div key={file.path}>
+                    <button
+                      onClick={() => toggleFileExpanded(file.path)}
+                      className="flex items-center w-full gap-2 p-3 text-left hover:bg-surface/50"
+                    >
+                      {expandedFiles.has(file.path) ? (
+                        <ChevronDown className="w-4 h-4 text-foreground/60" />
+                      ) : (
+                        <ChevronRight className="w-4 h-4 text-foreground/60" />
+                      )}
+                      <FileCode className="w-4 h-4 text-primary" />
+                      <span className="font-mono text-sm">{file.path}</span>
+                    </button>
+                    {expandedFiles.has(file.path) && (
+                      <pre className="p-4 overflow-x-auto text-sm bg-black/50">
+                        <code className="text-green-400">{file.content}</code>
+                      </pre>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {Object.keys(generatedProject.dependencies).length > 0 && (
+                <div className="p-4 border-t border-outline/10 bg-surface/30">
+                  <Typography variant="label" className="mb-2">
+                    Dependencies
+                  </Typography>
+                  <div className="flex flex-wrap gap-2">
+                    {Object.entries(generatedProject.dependencies).map(
+                      ([name, version]) => (
+                        <span
+                          key={name}
+                          className="px-2 py-1 font-mono text-xs rounded bg-surface"
+                        >
+                          {name}@{version}
+                        </span>
+                      ),
+                    )}
+                  </div>
+                </div>
+              )}
             </Card>
           </div>
         )}

@@ -21,6 +21,19 @@ export declare function promptSelect<T>(
     initial?: number;
   },
 ): Promise<T | undefined>;
+/** Prompt for multi-selection from a list */
+export declare function promptMultiSelect<T>(
+  message: string,
+  choices: Array<{
+    title: string;
+    value: T;
+    description?: string;
+  }>,
+  options?: {
+    min?: number;
+    max?: number;
+  },
+): Promise<T[]>;
 /** Prompt for confirmation (yes/no) */
 export declare function promptConfirm(
   message: string,

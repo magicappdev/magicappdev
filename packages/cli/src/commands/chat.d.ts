@@ -1,6 +1,6 @@
 /**
  * Chat command - Interactive AI App Builder
- * Uses native WebSocket for cross-platform compatibility
+ * Uses native WebSocket with partykit-compatible URL
  */
 import { Command } from "commander";
 export declare const chatCommand: Command;

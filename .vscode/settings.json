@@ -230,5 +230,6 @@
     "editor.defaultFormatter": "vscode.json-language-features"
   },
   "errorLens.excludePatterns": ["**/*.{jsonc}"],
-  "DockerRun.DisableAutoGenerateConfig": true
+  "DockerRun.DisableAutoGenerateConfig": true,
+  "jest.enable": false
 }
