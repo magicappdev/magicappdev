@@ -71,6 +71,8 @@ export function createApp() {
   app.use("/auth/me", authMiddleware);
   app.use("/auth/accounts", authMiddleware);
   app.use("/auth/accounts/*", authMiddleware);
+  app.use("/auth/api-keys", authMiddleware);
+  app.use("/auth/api-keys/*", authMiddleware);
   app.use("/auth/profile", authMiddleware);
   app.use("/auth/change-password", authMiddleware);
   app.use("/auth/account", authMiddleware);

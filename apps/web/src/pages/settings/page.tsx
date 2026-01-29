@@ -85,6 +85,10 @@ export default function SettingsPage() {
       setIsLoadingApiKeys(true);
       try {
         console.log("Loading linked accounts and API keys...");
+        console.log("Current user:", user);
+        // Check if token is set in API client
+        const token = localStorage.getItem("access_token");
+        console.log("Token from localStorage:", token ? "Set" : "Not set");
         const [accounts, keys] = await Promise.all([
           api.getLinkedAccounts(),
           api.getUserApiKeys(),
