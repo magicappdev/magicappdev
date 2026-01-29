@@ -434,7 +434,7 @@ export class ApiClient {
   }
 
   async changePassword(data: {
-    currentPassword: string;
+    currentPassword?: string;
     newPassword: string;
   }): Promise<void> {
     const response = await this.request<ApiResponse<void>>(
@@ -449,7 +449,11 @@ export class ApiClient {
     }
   }
 
-  async updateProfile(data: { name?: string; bio?: string }): Promise<void> {
+  async updateProfile(data: {
+    name?: string;
+    bio?: string;
+    region?: string;
+  }): Promise<void> {
     const response = await this.request<ApiResponse<void>>("/auth/profile", {
       method: "PUT",
       body: JSON.stringify(data),
@@ -504,8 +508,72 @@ export class ApiClient {
     }
   }
 
+  async getUserApiKeys(): Promise<
+    Array<{
+      id: string;
+      name: string;
+      keyPrefix: string;
+      isActive: number;
+      createdAt: string;
+      lastUsedAt: string | null;
+    }>
+  > {
+    const response = await this.request<
+      ApiResponse<
+        Array<{
+          id: string;
+          name: string;
+          keyPrefix: string;
+          isActive: number;
+          createdAt: string;
+          lastUsedAt: string | null;
+        }>
+      >
+    >("/auth/api-keys");
+    if (!response.success) {
+      throw new Error(response.error.message);
+    }
+    return response.data;
+  }
+
+  async createUserApiKey(name: string): Promise<{
+    id: string;
+    name: string;
+    key: string;
+    keyPrefix: string;
+  }> {
+    const response = await this.request<
+      ApiResponse<{
+        id: string;
+        name: string;
+        key: string;
+        keyPrefix: string;
+      }>
+    >("/auth/api-keys", {
+      method: "POST",
+      body: JSON.stringify({ name }),
+    });
+    if (!response.success) {
+      throw new Error(response.error.message);
+    }
+    return response.data;
+  }
+
+  async deleteUserApiKey(id: string): Promise<void> {
+    const response = await this.request<ApiResponse<void>>(
+      `/auth/api-keys/${id}`,
+      {
+        method: "DELETE",
+      },
+    );
+    if (!response.success) {
+      throw new Error(response.error.message);
+    }
+  }
+
   getLinkAccountUrl(provider: "github" | "discord"): string {
-    return `${this.baseUrl}/auth/link/${provider}`;
+    // Include token in query param for middleware to pick up during browser navigation
+    return `${this.baseUrl}/auth/link/${provider}${this.accessToken ? `?token=${this.accessToken}` : ""}`;
   }
 
   async *streamMessage(messages: AiMessage[]): AsyncGenerator<string> {

@@ -930,6 +930,7 @@ authRoutes.get("/me", async c => {
       success: true,
       data: {
         ...user,
+        hasPassword: !!user.passwordHash,
         profile: userProfile,
       },
     });
@@ -956,15 +957,12 @@ authRoutes.post("/change-password", async c => {
   }
 
   const { currentPassword, newPassword } = await c.req.json<{
-    currentPassword: string;
+    currentPassword?: string;
     newPassword: string;
   }>();
 
-  if (!currentPassword || !newPassword) {
-    return c.json(
-      { error: "Current password and new password are required" },
-      400,
-    );
+  if (!newPassword) {
+    return c.json({ error: "New password is required" }, 400);
   }
 
   if (newPassword.length < 6) {
@@ -979,13 +977,19 @@ authRoutes.post("/change-password", async c => {
     where: (u: any, { eq }: any) => eq(u.id, userId),
   });
 
-  if (!user || !user.passwordHash) {
+  if (!user) {
     return c.json({ error: "User not found" }, 404);
   }
 
-  const isValid = await bcrypt.compare(currentPassword, user.passwordHash);
-  if (!isValid) {
-    return c.json({ error: "Current password is incorrect" }, 401);
+  // If user already has a password, verify current one
+  if (user.passwordHash) {
+    if (!currentPassword) {
+      return c.json({ error: "Current password is required" }, 400);
+    }
+    const isValid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!isValid) {
+      return c.json({ error: "Current password is incorrect" }, 401);
+    }
   }
 
   const newPasswordHash = await bcrypt.hash(newPassword, 10);
@@ -996,7 +1000,7 @@ authRoutes.post("/change-password", async c => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .where(eq((users as any).id, userId));
 
-  return c.json({ success: true, message: "Password changed successfully" });
+  return c.json({ success: true, message: "Password updated successfully" });
 });
 
 // Update Profile
@@ -1012,9 +1016,10 @@ authRoutes.put("/profile", async c => {
     );
   }
 
-  const { name, bio } = await c.req.json<{
+  const { name, bio, region } = await c.req.json<{
     name?: string;
     bio?: string;
+    region?: string;
   }>();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1030,11 +1035,15 @@ authRoutes.put("/profile", async c => {
         .where(eq((users as any).id, userId));
     }
 
-    // Update profile bio if provided
-    if (bio !== undefined) {
+    // Update profile bio/region if provided
+    if (bio !== undefined || region !== undefined) {
+      const updates: any = { updatedAt: new Date().toISOString() };
+      if (bio !== undefined) updates.bio = bio;
+      if (region !== undefined) updates.region = region;
+
       await db
         .update(profiles)
-        .set({ bio, updatedAt: new Date().toISOString() })
+        .set(updates)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .where(eq((profiles as any).userId, userId));
     }
@@ -1053,6 +1062,122 @@ authRoutes.put("/profile", async c => {
       },
       500,
     );
+  }
+});
+
+// ==================== User API Keys ====================
+
+import { adminApiKeys } from "@magicappdev/database";
+import { desc } from "drizzle-orm";
+
+// Generate a random API key (Local helper)
+const generateUserApiKey = async () => {
+  const uuid = crypto.randomUUID();
+  const encoder = new TextEncoder();
+  const data = encoder.encode(uuid);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hash = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+  return hash;
+};
+
+// Get user API keys
+authRoutes.get("/api-keys", async c => {
+  const userId = c.var.userId;
+  if (!userId) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+  const db = c.var.db as any;
+
+  try {
+    const keys = await db
+      .select({
+        id: adminApiKeys.id,
+        name: adminApiKeys.name,
+        keyPrefix: adminApiKeys.keyPrefix,
+        isActive: adminApiKeys.isActive,
+        createdAt: adminApiKeys.createdAt,
+        lastUsedAt: adminApiKeys.lastUsedAt,
+      })
+      .from(adminApiKeys)
+      .where(eq(adminApiKeys.createdBy, userId))
+      .orderBy(desc(adminApiKeys.createdAt))
+      .all();
+
+    return c.json({ success: true, data: keys });
+  } catch (err) {
+    console.error("Failed to fetch API keys:", err);
+    return c.json({ error: "Failed to fetch API keys" }, 500);
+  }
+});
+
+// Create a new API key
+authRoutes.post("/api-keys", async c => {
+  const userId = c.var.userId;
+  const db = c.var.db as any;
+
+  try {
+    const { name } = await c.req.json<{ name: string }>();
+    if (!name) return c.json({ error: "Name is required" }, 400);
+
+    const apiKey = await generateUserApiKey();
+    const keyPrefix = apiKey.substring(0, 8);
+
+    const newKey = await db
+      .insert(adminApiKeys)
+      .values({
+        id: crypto.randomUUID(),
+        name,
+        key: apiKey,
+        keyPrefix,
+        description: "User API Key",
+        scopes: JSON.stringify(["read", "write"]), // Standard user scopes
+        createdBy: userId,
+        isActive: 1,
+      })
+      .returning()
+      .get();
+
+    return c.json({
+      success: true,
+      data: {
+        ...newKey,
+        key: apiKey, // Return full key ONLY ONCE during creation
+      },
+    });
+  } catch (err) {
+    console.error("Failed to create API key:", err);
+    return c.json({ error: "Failed to create API key" }, 500);
+  }
+});
+
+// Delete an API key
+authRoutes.delete("/api-keys/:id", async c => {
+  const userId = c.var.userId;
+  if (!userId) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+  const db = c.var.db as any;
+  const keyId = c.req.param("id");
+
+  try {
+    // Ensure user owns the key
+    const key = await db
+      .select()
+      .from(adminApiKeys)
+      .where(
+        and(eq(adminApiKeys.id, keyId), eq(adminApiKeys.createdBy, userId)),
+      )
+      .get();
+
+    if (!key) return c.json({ error: "API key not found" }, 404);
+
+    await db.delete(adminApiKeys).where(eq(adminApiKeys.id, keyId));
+
+    return c.json({ success: true });
+  } catch (err) {
+    console.error("Failed to delete API key:", err);
+    return c.json({ error: "Failed to delete API key" }, 500);
   }
 });
 

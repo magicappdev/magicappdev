@@ -8,6 +8,8 @@ import {
   Loader2,
   Link2,
   Unlink,
+  Plus,
+  Trash2,
 } from "lucide-react";
 import { Typography } from "@/components/ui/Typography";
 import { useAuth } from "../../contexts/AuthContext";
@@ -26,6 +28,15 @@ interface LinkedAccount {
   createdAt: string;
 }
 
+interface UserApiKey {
+  id: string;
+  name: string;
+  keyPrefix: string;
+  isActive: number;
+  createdAt: string;
+  lastUsedAt: string | null;
+}
+
 export default function SettingsPage() {
   const { user, logout, refreshUser } = useAuth();
   const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
@@ -33,9 +44,18 @@ export default function SettingsPage() {
   // Profile state
   const [name, setName] = useState(user?.name || "");
   const [bio, setBio] = useState(user?.profile?.bio || "");
+  const [region, setRegion] = useState(
+    user?.profile?.region || "Automatic (Global)",
+  );
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [profileSuccess, setProfileSuccess] = useState(false);
+
+  // API Key state
+  const [apiKeys, setApiKeys] = useState<UserApiKey[]>([]);
+  const [isLoadingApiKeys, setIsLoadingApiKeys] = useState(false);
+  const [isGeneratingKey, setIsGeneratingKey] = useState(false);
+  const [newlyCreatedKey, setNewlyCreatedKey] = useState<string | null>(null);
 
   // Password state
   const [currentPassword, setCurrentPassword] = useState("");
@@ -58,27 +78,34 @@ export default function SettingsPage() {
   );
   const [linkError, setLinkError] = useState<string | null>(null);
 
-  // Load linked accounts on mount
+  // Load linked accounts and API keys on mount
   useEffect(() => {
-    const loadLinkedAccounts = async () => {
+    const loadInitialData = async () => {
       setIsLoadingAccounts(true);
+      setIsLoadingApiKeys(true);
       try {
-        const accounts = await api.getLinkedAccounts();
+        const [accounts, keys] = await Promise.all([
+          api.getLinkedAccounts(),
+          api.getUserApiKeys(),
+        ]);
         setLinkedAccounts(accounts);
+        setApiKeys(keys);
       } catch {
-        // Silently fail - user may not have any linked accounts
+        // Silently fail - user may not have any data yet
       } finally {
         setIsLoadingAccounts(false);
+        setIsLoadingApiKeys(false);
       }
     };
-    loadLinkedAccounts();
-  }, []);
+    if (user) loadInitialData();
+  }, [user]);
 
   // Update local state when user changes
   useEffect(() => {
     if (user) {
       setName(user.name || "");
       setBio(user.profile?.bio || "");
+      setRegion(user.profile?.region || "Automatic (Global)");
     }
   }, [user]);
 
@@ -88,7 +115,7 @@ export default function SettingsPage() {
     setIsSavingProfile(true);
 
     try {
-      await api.updateProfile({ name, bio });
+      await api.updateProfile({ name, bio, region });
       setProfileSuccess(true);
       refreshUser();
     } catch (error) {
@@ -97,6 +124,35 @@ export default function SettingsPage() {
       );
     } finally {
       setIsSavingProfile(false);
+    }
+  };
+
+  const handleGenerateApiKey = async () => {
+    const keyName = prompt("Enter a name for your new API key:");
+    if (!keyName) return;
+
+    setNewlyCreatedKey(null);
+    setIsGeneratingKey(true);
+    try {
+      const result = await api.createUserApiKey(keyName);
+      setNewlyCreatedKey(result.key);
+      // Reload keys
+      const keys = await api.getUserApiKeys();
+      setApiKeys(keys);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Failed to generate key");
+    } finally {
+      setIsGeneratingKey(false);
+    }
+  };
+
+  const handleDeleteApiKey = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this API key?")) return;
+    try {
+      await api.deleteUserApiKey(id);
+      setApiKeys(prev => prev.filter(k => k.id !== id));
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Failed to delete key");
     }
   };
 
@@ -143,8 +199,14 @@ export default function SettingsPage() {
     setPasswordError(null);
     setPasswordSuccess(false);
 
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      setPasswordError("All fields are required");
+    // Only currentPassword is required if they already have one
+    if (user?.hasPassword && !currentPassword) {
+      setPasswordError("Current password is required");
+      return;
+    }
+
+    if (!newPassword || !confirmPassword) {
+      setPasswordError("New passwords are required");
       return;
     }
 
@@ -161,14 +223,18 @@ export default function SettingsPage() {
     setIsChangingPassword(true);
 
     try {
-      await api.changePassword({ currentPassword, newPassword });
+      await api.changePassword({
+        currentPassword: user?.hasPassword ? currentPassword : undefined,
+        newPassword,
+      });
       setPasswordSuccess(true);
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
+      refreshUser();
     } catch (error) {
       setPasswordError(
-        error instanceof Error ? error.message : "Failed to change password",
+        error instanceof Error ? error.message : "Failed to update password",
       );
     } finally {
       setIsChangingPassword(false);
@@ -472,15 +538,86 @@ export default function SettingsPage() {
 
           {activeTab === "api" && (
             <Card className="p-6 space-y-6">
-              <Typography variant="title">API Keys</Typography>
-              <Typography variant="body" className="text-sm text-foreground/60">
-                Manage your API keys for accessing the MagicAppDev API
-                programmatically.
-              </Typography>
-              <div className="p-4 bg-surface-variant rounded-lg border border-outline/10 text-center text-foreground/50">
-                No API keys generated yet.
+              <div className="flex items-center justify-between">
+                <div>
+                  <Typography variant="title">API Keys</Typography>
+                  <Typography
+                    variant="body"
+                    className="text-sm text-foreground/60"
+                  >
+                    Manage your API keys for accessing the MagicAppDev API
+                    programmatically.
+                  </Typography>
+                </div>
+                <Button
+                  onClick={handleGenerateApiKey}
+                  disabled={isGeneratingKey}
+                  size="sm"
+                >
+                  {isGeneratingKey ? (
+                    <Loader2 size={16} className="animate-spin mr-2" />
+                  ) : (
+                    <Plus size={16} className="mr-2" />
+                  )}
+                  Generate New Key
+                </Button>
               </div>
-              <Button>Generate New Key</Button>
+
+              {newlyCreatedKey && (
+                <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-xl space-y-2 animate-in zoom-in-95 duration-300">
+                  <Typography variant="label" className="text-green-500">
+                    New Key Generated!
+                  </Typography>
+                  <p className="text-xs opacity-70">
+                    Copy this key now. For security, it won't be shown again.
+                  </p>
+                  <div className="bg-surface p-3 rounded-lg border border-outline/10 font-mono text-xs break-all select-all">
+                    {newlyCreatedKey}
+                  </div>
+                </div>
+              )}
+
+              {isLoadingApiKeys ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 size={32} className="animate-spin text-primary" />
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {apiKeys.map(key => (
+                    <div
+                      key={key.id}
+                      className="flex items-center justify-between p-4 bg-surface-variant/30 rounded-xl border border-outline/5"
+                    >
+                      <div className="space-y-1">
+                        <div className="font-medium text-sm">{key.name}</div>
+                        <div className="flex items-center gap-3 text-[10px] opacity-50 font-mono">
+                          <span>Prefix: {key.keyPrefix}...</span>
+                          <span>•</span>
+                          <span>
+                            Created{" "}
+                            {new Date(key.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                      <Button
+                        variant="text"
+                        size="sm"
+                        className="text-error h-8 w-8 p-0"
+                        onClick={() => handleDeleteApiKey(key.id)}
+                      >
+                        <Trash2 size={14} />
+                      </Button>
+                    </div>
+                  ))}
+                  {apiKeys.length === 0 && !newlyCreatedKey && (
+                    <div className="p-12 border border-dashed border-outline/20 rounded-2xl text-center">
+                      <Typography variant="body" className="opacity-40 italic">
+                        No API keys generated yet.
+                      </Typography>
+                    </div>
+                  )}
+                </div>
+              )}
             </Card>
           )}
 
@@ -512,7 +649,15 @@ export default function SettingsPage() {
 
           {activeTab === "security" && (
             <Card className="p-6 space-y-6">
-              <Typography variant="title">Change Password</Typography>
+              <Typography variant="title">
+                {user.hasPassword ? "Change Password" : "Set Account Password"}
+              </Typography>
+
+              <Typography variant="body" className="text-sm text-foreground/60">
+                {user.hasPassword
+                  ? "Update your existing password."
+                  : "You're currently signed in via OAuth. Set a password to enable direct login."}
+              </Typography>
 
               {passwordError && (
                 <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg text-sm">
@@ -522,23 +667,25 @@ export default function SettingsPage() {
 
               {passwordSuccess && (
                 <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded-lg text-sm">
-                  Password changed successfully!
+                  Password updated successfully!
                 </div>
               )}
 
               <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">
-                    Current Password
-                  </label>
-                  <Input
-                    type="password"
-                    placeholder="Enter current password"
-                    value={currentPassword}
-                    onChange={e => setCurrentPassword(e.target.value)}
-                    disabled={isChangingPassword}
-                  />
-                </div>
+                {user.hasPassword && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">
+                      Current Password
+                    </label>
+                    <Input
+                      type="password"
+                      placeholder="Enter current password"
+                      value={currentPassword}
+                      onChange={e => setCurrentPassword(e.target.value)}
+                      disabled={isChangingPassword}
+                    />
+                  </div>
+                )}
                 <div className="space-y-2">
                   <label className="text-sm font-medium">New Password</label>
                   <Input
@@ -568,10 +715,12 @@ export default function SettingsPage() {
                   {isChangingPassword ? (
                     <>
                       <Loader2 size={16} className="mr-2 animate-spin" />
-                      Changing...
+                      Saving...
                     </>
+                  ) : user.hasPassword ? (
+                    "Update Password"
                   ) : (
-                    "Change Password"
+                    "Set Password"
                   )}
                 </Button>
               </div>
@@ -594,14 +743,56 @@ export default function SettingsPage() {
           {activeTab === "region" && (
             <Card className="p-6 space-y-6">
               <Typography variant="title">Region</Typography>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Data Region</label>
-                <select className="w-full p-2 rounded-md bg-surface border border-outline/20">
-                  <option>Automatic (Global)</option>
-                  <option>North America</option>
-                  <option>Europe</option>
-                  <option>Asia Pacific</option>
-                </select>
+              <Typography variant="body" className="text-sm text-foreground/60">
+                Choose the primary region for your data and deployments.
+              </Typography>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Data Region</label>
+                  <select
+                    className="w-full p-3 rounded-xl bg-surface border border-outline/20 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                    value={region}
+                    onChange={e => setRegion(e.target.value)}
+                    disabled={isSavingProfile}
+                  >
+                    <option value="Automatic (Global)">
+                      Automatic (Global)
+                    </option>
+                    <option value="North America (East)">
+                      North America (East)
+                    </option>
+                    <option value="North America (West)">
+                      North America (West)
+                    </option>
+                    <option value="Europe (Frankfurt)">
+                      Europe (Frankfurt)
+                    </option>
+                    <option value="Europe (London)">Europe (London)</option>
+                    <option value="Asia Pacific (Tokyo)">
+                      Asia Pacific (Tokyo)
+                    </option>
+                    <option value="Asia Pacific (Singapore)">
+                      Asia Pacific (Singapore)
+                    </option>
+                  </select>
+                </div>
+
+                <div className="flex justify-end">
+                  <Button
+                    onClick={handleSaveProfile}
+                    disabled={
+                      isSavingProfile || region === user.profile?.region
+                    }
+                  >
+                    {isSavingProfile ? (
+                      <Loader2 size={16} className="animate-spin mr-2" />
+                    ) : (
+                      <Globe size={16} className="mr-2" />
+                    )}
+                    Update Region
+                  </Button>
+                </div>
               </div>
             </Card>
           )}
