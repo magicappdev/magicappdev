@@ -6,7 +6,7 @@
   "scripts": {
     "prebuild": "pnpm format && pnpm lint:fix && pnpm typecheck",
     "build": "vite build",
-    "deploy": "wrangler deploy -c wrangler.toml",
+    "deploy": "npx wrangler deploy -c wrangler.toml",
     "dev": "vite -m dev",
     "format": "prettier --write .",
     "lint": "eslint . --ignore-pattern '*.d.ts'",

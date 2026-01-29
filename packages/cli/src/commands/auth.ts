@@ -61,22 +61,35 @@ authCommand
         );
 
       if (isValidJwt(accessToken!) && isValidUuid(refreshToken!)) {
-        // Store tokens
-        await saveConfig({
-          accessToken: accessToken!,
-          refreshToken: refreshToken!,
-        });
-        api.setToken(accessToken!);
+        try {
+          // Verify token with API before saving (fixes user-controlled bypass)
+          api.setToken(accessToken!);
+          await api.getCurrentUser();
 
-        info(`Access Token received and saved`);
+          // Store tokens
+          await saveConfig({
+            accessToken: accessToken!,
+            refreshToken: refreshToken!,
+          });
 
-        res.writeHead(200, { "Content-Type": "text/html" });
-        res.end(
-          "<h1>Login Successful!</h1><p>You can close this window now.</p>",
-        );
+          info(`Access Token verified and saved`);
 
-        success("Successfully logged in!");
-        process.exit(0);
+          res.writeHead(200, { "Content-Type": "text/html" });
+          res.end(
+            "<h1>Login Successful!</h1><p>You can close this window now.</p>",
+          );
+
+          success("Successfully logged in!");
+          process.exit(0);
+        } catch (err) {
+          error(
+            `Verification failed: ${err instanceof Error ? err.message : "Invalid token"}`,
+          );
+          res.writeHead(401, { "Content-Type": "text/html" });
+          res.end(
+            "<h1>Login Failed</h1><p>Token verification failed. Please try again.</p>",
+          );
+        }
       } else {
         error("Login failed: Invalid token format received");
         res.writeHead(400, { "Content-Type": "text/html" });
