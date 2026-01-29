@@ -1116,16 +1116,20 @@ authRoutes.get("/api-keys", async c => {
 // Create a new API key
 authRoutes.post("/api-keys", async c => {
   const userId = c.var.userId;
+  console.log("[POST /auth/api-keys] Creating key for userId:", userId);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = c.var.db as any;
 
   try {
     const { name } = await c.req.json<{ name: string }>();
+    console.log("[POST /auth/api-keys] Key name:", name);
     if (!name) return c.json({ error: "Name is required" }, 400);
 
     const apiKey = await generateUserApiKey();
     const keyPrefix = apiKey.substring(0, 8);
+    console.log("[POST /auth/api-keys] Generated key prefix:", keyPrefix);
 
+    console.log("[POST /auth/api-keys] Inserting into adminApiKeys...");
     const newKey = await db
       .insert(adminApiKeys)
       .values({
@@ -1141,6 +1145,7 @@ authRoutes.post("/api-keys", async c => {
       .returning()
       .get();
 
+    console.log("[POST /auth/api-keys] Key created successfully:", newKey);
     return c.json({
       success: true,
       data: {
@@ -1149,7 +1154,7 @@ authRoutes.post("/api-keys", async c => {
       },
     });
   } catch (err) {
-    console.error("Failed to create API key:", err);
+    console.error("[POST /auth/api-keys] Failed to create API key:", err);
     return c.json({ error: "Failed to create API key" }, 500);
   }
 });
