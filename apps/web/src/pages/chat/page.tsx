@@ -7,6 +7,7 @@ import {
   FileCode,
   FolderOpen,
   LayoutTemplate,
+  Lightbulb,
   Loader2,
   Send,
   Sparkles,
@@ -56,6 +57,7 @@ export default function ChatPage() {
   const [suggestedTemplate, setSuggestedTemplate] = useState<string | null>(
     null,
   );
+  const [suggestedPrompts, setSuggestedPrompts] = useState<string[]>([]);
   const [generatedProject, setGeneratedProject] =
     useState<GeneratedProject | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -173,6 +175,9 @@ export default function ChatPage() {
             if (data.suggestedTemplate) {
               setSuggestedTemplate(data.suggestedTemplate);
             }
+            if (data.suggestedPrompts && Array.isArray(data.suggestedPrompts)) {
+              setSuggestedPrompts(data.suggestedPrompts);
+            }
           } else if (data.type === "error") {
             setIsLoading(false);
             setIsGenerating(false);
@@ -253,19 +258,21 @@ export default function ChatPage() {
     };
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading) return;
+  const handleSubmit = async (e: React.FormEvent, promptText?: string) => {
+    e?.preventDefault();
+    const textToSend = promptText || input;
+    if (!textToSend.trim() || isLoading) return;
 
     const userMsg: Message = {
       id: crypto.randomUUID(),
       role: "user",
-      content: input,
+      content: textToSend,
       timestamp: Date.now(),
     };
 
     setMessages(prev => [...prev, userMsg]);
     setInput("");
+    setSuggestedPrompts([]); // Clear suggestions after selection
     setIsLoading(true);
     setSuggestedTemplate(null);
 
@@ -572,9 +579,30 @@ export default function ChatPage() {
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Suggested Prompts */}
+      {suggestedPrompts.length > 0 && !isLoading && (
+        <div className="px-4 pb-2 max-w-3xl mx-auto w-full overflow-x-auto no-scrollbar">
+          <div className="flex gap-2 whitespace-nowrap">
+            {suggestedPrompts.map((prompt, i) => (
+              <button
+                key={i}
+                onClick={e => handleSubmit(e, prompt)}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-full bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 transition-colors"
+              >
+                <Lightbulb className="w-3 h-3" />
+                {prompt}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Input */}
       <div className="p-4 border-t border-outline/10 bg-surface/50 backdrop-blur-sm">
-        <form onSubmit={handleSubmit} className="flex max-w-3xl gap-2 mx-auto">
+        <form
+          onSubmit={e => handleSubmit(e)}
+          className="flex max-w-3xl gap-2 mx-auto"
+        >
           <Input
             value={input}
             onChange={e => setInput(e.target.value)}

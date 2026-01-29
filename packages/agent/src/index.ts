@@ -73,6 +73,7 @@ export interface AgentState {
   projectId?: string;
   config: Record<string, unknown>;
   suggestedTemplate?: string;
+  suggestedPrompts?: string[];
   toolCalls: ToolCall[];
   pendingApprovals: PendingApproval[];
   toolsEnabled: boolean;
@@ -642,7 +643,8 @@ GOAL: Help the user build their app.
 2. If a template fits, suggest it using "SUGGEST_TEMPLATE: [slug]" in your response.
 3. Use tools when appropriate to read files, write code, or execute commands.
 4. Provide code snippets, architectural advice, and commands using the CLI.
-5. Be concise but helpful.`;
+5. Be concise but helpful.
+6. At the end of your response, suggest 3 relevant follow-up prompts for the user. Format them as "SUGGEST_PROMPTS: ["prompt1", "prompt2", "prompt3"]".`;
     let userPrompt = content;
 
     // Detect context for dynamic prompt selection
@@ -755,6 +757,18 @@ User Request: ${userPrompt}`;
         this.setState({ ...this.state, suggestedTemplate: match[1] });
       }
 
+      // Extract prompt suggestions
+      const promptMatch = assistantContent.match(/SUGGEST_PROMPTS: (\[.*?\])/);
+      let suggestedPrompts: string[] = [];
+      if (promptMatch) {
+        try {
+          suggestedPrompts = JSON.parse(promptMatch[1]);
+          this.setState({ ...this.state, suggestedPrompts });
+        } catch (e) {
+          console.error("Failed to parse suggested prompts", e);
+        }
+      }
+
       // Parse tool calls from the response
       const toolCalls = this.state.toolsEnabled
         ? parseToolCalls(assistantContent)
@@ -836,6 +850,7 @@ User Request: ${userPrompt}`;
         JSON.stringify({
           type: "chat_done",
           suggestedTemplate: this.state.suggestedTemplate,
+          suggestedPrompts: this.state.suggestedPrompts,
           toolCalls: toolCalls.length,
           pendingApprovals: newPendingApprovals.length,
         }),

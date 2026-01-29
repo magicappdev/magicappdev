@@ -46,6 +46,13 @@ config.resolver.nodeModulesPaths = [
 // Force resolution to use node_modules for workspace packages
 config.resolver.extraNodeModules = {
   "@magicappdev/shared": path.resolve(workspaceRoot, "packages/shared"),
+  "@expo/metro-runtime": path.resolve(
+    workspaceRoot,
+    "node_modules/@expo/metro-runtime",
+  ),
+  "expo-router": path.resolve(workspaceRoot, "node_modules/expo-router"),
+  "react-native": path.resolve(workspaceRoot, "node_modules/react-native"),
+  react: path.resolve(workspaceRoot, "node_modules/react"),
 };
 
 // Add support for 3D model files

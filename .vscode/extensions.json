@@ -1,3 +1,13 @@
 {
-  "recommendations": ["Webnative.webnative"]
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "csstools.postcss",
+    "bradlc.vscode-tailwindcss",
+    "connor4312.esbuild-problem-matchers",
+    "yoavbls.pretty-ts-errors",
+    "involvex.vscode-npm-package-manager",
+    "involvex.statusbar-quick-actions",
+    "involvex.involvex-smart-autocomplete"
+  ]
 }

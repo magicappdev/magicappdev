@@ -41,10 +41,6 @@
     "sync:check": "nx sync:check",
     "typecheck": "nx run-many --target=typecheck --all"
   },
-  "resolutions": {
-    "react": "19.1.0",
-    "react-dom": "19.1.0"
-  },
   "dependencies": {
     "autoprefixer": "^10.4.23",
     "clsx": "^2.1.1",
@@ -58,6 +54,7 @@
     "@commitlint/cli": "^20.3.1",
     "@commitlint/config-conventional": "^20.3.1",
     "@conventional-changelog/git-client": "^2.5.1",
+    "@expo/metro-runtime": "^6.1.2",
     "@nx/js": "22.4.1",
     "@swc-node/register": "~1.11.1",
     "@swc/core": "~1.15.10",
@@ -80,8 +77,12 @@
   "packageManager": "pnpm@10.28.1",
   "pnpm": {
     "overrides": {
+      "@expo/metro-runtime": "^6.1.2",
       "esbuild": ">=0.25.0",
-      "jsondiffpatch": ">=0.6.0"
+      "jsondiffpatch": ">=0.6.0",
+      "react": "19.1.0",
+      "react-dom": "19.1.0",
+      "tar": ">=7.5.7"
     }
   }
 }
