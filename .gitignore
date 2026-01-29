@@ -74,3 +74,5 @@ packages/axiom-cloudflare-workers/.dev.vars
 packages/axiom-cloudflare-workers/*.env
 packages/axiom-cloudflare-workers/*.vars
 packages/axiom-cloudflare-workers/.dev.vars.example
+
+apps/mobile/.idea
