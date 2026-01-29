@@ -8,10 +8,12 @@ import { Plus, Folder, Loader2, AlertCircle, Trash2 } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import { Typography } from "@/components/ui/Typography";
 import { Button } from "@/components/ui/Button";
+import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
 
 export default function ProjectsPage() {
+  const navigate = useNavigate();
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
@@ -215,6 +217,7 @@ export default function ProjectsPage() {
           {projects.map(project => (
             <Card
               key={project.id}
+              onClick={() => navigate(`/projects/${project.id}`)}
               className="p-6 hover:border-primary/50 transition-colors group cursor-pointer relative"
             >
               <div className="flex justify-between items-start mb-4">
@@ -223,7 +226,7 @@ export default function ProjectsPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium border ${
+                    className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase border ${
                       project.status === "active"
                         ? "bg-green-500/10 text-green-500 border-green-500/20"
                         : "bg-surface-variant text-foreground/50 border-outline/10"

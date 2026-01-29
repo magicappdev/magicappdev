@@ -44,6 +44,42 @@ ticketsRoutes.get("/", async c => {
   return c.json({ success: true, data: userTickets });
 });
 
+// Get ticket detail
+ticketsRoutes.get("/:id", async c => {
+  const userId = c.get("userId") as string;
+  const userRole = c.get("userRole");
+  const db = c.get("db");
+  const ticketId = c.req.param("id");
+
+  const ticket = await db
+    .select({
+      id: tickets.id,
+      userId: tickets.userId,
+      subject: tickets.subject,
+      message: tickets.message,
+      status: tickets.status,
+      createdAt: tickets.createdAt,
+      updatedAt: tickets.updatedAt,
+      userName: users.name,
+      userEmail: users.email,
+    })
+    .from(tickets)
+    .innerJoin(users, eq(tickets.userId, users.id))
+    .where(eq(tickets.id, ticketId))
+    .get();
+
+  if (!ticket) {
+    return c.json({ error: "Ticket not found" }, 404);
+  }
+
+  // Check permission
+  if (userRole !== "admin" && ticket.userId !== userId) {
+    return c.json({ error: "Forbidden" }, 403);
+  }
+
+  return c.json({ success: true, data: ticket });
+});
+
 // Create ticket
 ticketsRoutes.post("/", async c => {
   const userId = c.get("userId") as string;

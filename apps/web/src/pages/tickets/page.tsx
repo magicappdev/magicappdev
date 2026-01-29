@@ -11,11 +11,13 @@ import { Typography } from "@/components/ui/Typography";
 import type { Ticket } from "@magicappdev/shared/api";
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
+import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
 import { api } from "../../lib/api";
 
 export default function TicketsPage() {
+  const navigate = useNavigate();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [showNewForm, setShowNewForm] = useState(false);
@@ -123,6 +125,7 @@ export default function TicketsPage() {
           {tickets.map(ticket => (
             <Card
               key={ticket.id}
+              onClick={() => navigate(`/tickets/${ticket.id}`)}
               className="p-4 hover:border-primary/30 transition-all cursor-pointer group"
             >
               <div className="flex items-center justify-between">

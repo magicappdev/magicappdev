@@ -10,9 +10,12 @@ import type {
 
 export interface Ticket {
   id: string;
+  userId?: string;
   subject: string;
+  message?: string;
   status: "open" | "in_progress" | "closed" | "resolved";
   createdAt: string;
+  updatedAt?: string;
   userName?: string;
   userEmail?: string;
 }
@@ -22,6 +25,7 @@ export interface AdminUser {
   name: string;
   email: string;
   role: "admin" | "user";
+  avatarUrl?: string | null;
   createdAt: string;
 }
 
@@ -231,6 +235,14 @@ export class ApiClient {
 
   async getTickets(): Promise<Ticket[]> {
     const response = await this.request<ApiResponse<Ticket[]>>("/tickets");
+    if (!response.success) {
+      throw new Error(response.error.message);
+    }
+    return response.data;
+  }
+
+  async getTicket(id: string): Promise<Ticket> {
+    const response = await this.request<ApiResponse<Ticket>>(`/tickets/${id}`);
     if (!response.success) {
       throw new Error(response.error.message);
     }

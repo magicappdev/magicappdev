@@ -1,4 +1,6 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import ProjectDetailPage from "./pages/projects/detail";
+import TicketDetailPage from "./pages/tickets/detail";
 import { AuthProvider } from "./contexts/AuthContext";
 import AuthCallbackPage from "./pages/auth/callback";
 import SettingsPage from "./pages/settings/page";
@@ -30,7 +32,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/projects" element={<ProjectsPage />} />
+            <Route path="/projects/:id" element={<ProjectDetailPage />} />
             <Route path="/tickets" element={<TicketsPage />} />
+            <Route path="/tickets/:id" element={<TicketDetailPage />} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>

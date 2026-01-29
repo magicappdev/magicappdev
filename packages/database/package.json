@@ -28,8 +28,8 @@
     "generate": "drizzle-kit generate",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "migrate:local": "wrangler d1 migrations apply magicappdev-db --local --persist-to ../../.wrangler/state -c wrangler.toml",
-    "migrate:prod": "wrangler d1 migrations apply magicappdev-db --remote -c wrangler.toml",
+    "migrate:local": "npx wrangler d1 migrations apply magicappdev-db --local --persist-to ../../.wrangler/state -c wrangler.toml",
+    "migrate:prod": "npx wrangler d1 migrations apply magicappdev-db --remote -c wrangler.toml",
     "test": "vitest run --passWithNoTests",
     "typecheck": "tsc -b"
   },
