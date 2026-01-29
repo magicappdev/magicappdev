@@ -242,7 +242,7 @@ importers:
     dependencies:
       '@cloudflare/vite-plugin':
         specifier: ^1.21.2
-        version: 1.21.2(vite@7.3.1(@types/node@25.0.10)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(workerd@1.20260128.0)(wrangler@4.61.1(@cloudflare/workers-types@4.20260123.0))
+        version: 1.21.2(vite@7.3.1(@types/node@25.0.10)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(workerd@1.20260128.0)(wrangler@4.61.1(@cloudflare/workers-types@4.20260129.0))
       '@magicappdev/database':
         specifier: workspace:*
         version: link:../../packages/database
@@ -254,7 +254,7 @@ importers:
         version: 3.2.1(@types/react-dom@19.2.3(@types/react@19.2.9))(@types/react@19.2.9)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       agents:
         specifier: ^0.3.6
-        version: 0.3.6(@cloudflare/ai-chat@0.0.4)(@cloudflare/codemode@0.0.5)(@cloudflare/workers-types@4.20260123.0)(ai@4.3.19(react@19.1.0)(zod@4.3.6))(hono@4.11.5)(react@19.1.0)(zod@4.3.6)
+        version: 0.3.6(@cloudflare/ai-chat@0.0.4)(@cloudflare/codemode@0.0.5)(@cloudflare/workers-types@4.20260129.0)(ai@4.3.19(react@19.1.0)(zod@4.3.6))(hono@4.11.5)(react@19.1.0)(zod@4.3.6)
       ai:
         specifier: ^4.3.19
         version: 4.3.19(react@19.1.0)(zod@4.3.6)
@@ -318,7 +318,7 @@ importers:
         version: 7.3.1(@types/node@25.0.10)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       wrangler:
         specifier: 4.61.1
-        version: 4.61.1(@cloudflare/workers-types@4.20260123.0)
+        version: 4.61.1(@cloudflare/workers-types@4.20260129.0)
 
   packages/agent:
     dependencies:
@@ -330,14 +330,14 @@ importers:
         version: link:../templates
       agents:
         specifier: latest
-        version: 0.3.6(@cloudflare/ai-chat@0.0.4)(@cloudflare/codemode@0.0.5)(@cloudflare/workers-types@4.20260123.0)(ai@6.0.48(zod@4.3.6))(react@19.2.3)(zod@4.3.6)
+        version: 0.3.6(@cloudflare/ai-chat@0.0.4)(@cloudflare/codemode@0.0.5)(@cloudflare/workers-types@4.20260129.0)(ai@6.0.48(zod@4.3.6))(react@19.2.3)(zod@4.3.6)
       zod:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
       '@cloudflare/workers-types':
-        specifier: ^4.20260123.0
-        version: 4.20260123.0
+        specifier: ^4.20260129.0
+        version: 4.20260129.0
       eslint:
         specifier: ^9.39.2
         version: 9.39.2(jiti@2.6.1)
@@ -346,7 +346,7 @@ importers:
         version: 5.9.3
       wrangler:
         specifier: 4.61.1
-        version: 4.61.1(@cloudflare/workers-types@4.20260123.0)
+        version: 4.61.1(@cloudflare/workers-types@4.20260129.0)
 
   packages/api:
     dependencies:
@@ -370,7 +370,7 @@ importers:
         version: 1.0.1
       drizzle-orm:
         specifier: ^0.45.1
-        version: 0.45.1(@cloudflare/workers-types@4.20260123.0)(@opentelemetry/api@1.9.0)
+        version: 0.45.1(@cloudflare/workers-types@4.20260129.0)(@opentelemetry/api@1.9.0)
       hono:
         specifier: ^4.11.5
         version: 4.11.5
@@ -385,8 +385,8 @@ importers:
         version: 2.8.1
     devDependencies:
       '@cloudflare/workers-types':
-        specifier: ^4.20260123.0
-        version: 4.20260123.0
+        specifier: ^4.20260129.0
+        version: 4.20260129.0
       '@types/bcryptjs':
         specifier: ^3.0.0
         version: 3.0.0
@@ -410,7 +410,7 @@ importers:
         version: 4.0.18(@opentelemetry/api@1.9.0)(@types/node@25.0.10)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       wrangler:
         specifier: 4.61.1
-        version: 4.61.1(@cloudflare/workers-types@4.20260123.0)
+        version: 4.61.1(@cloudflare/workers-types@4.20260129.0)
 
   packages/axiom-cloudflare-workers:
     devDependencies:
@@ -419,7 +419,7 @@ importers:
         version: 9.39.2(jiti@2.6.1)
       wrangler:
         specifier: ^3.0.0
-        version: 3.114.17(@cloudflare/workers-types@4.20260123.0)
+        version: 3.114.17(@cloudflare/workers-types@4.20260129.0)
 
   packages/cli:
     dependencies:
@@ -431,7 +431,7 @@ importers:
         version: link:../templates
       agents:
         specifier: ^0.3.6
-        version: 0.3.6(@cloudflare/ai-chat@0.0.4)(@cloudflare/codemode@0.0.5)(@cloudflare/workers-types@4.20260123.0)(ai@6.0.48(zod@4.3.6))(react@19.2.3)(zod@4.3.6)
+        version: 0.3.6(@cloudflare/ai-chat@0.0.4)(@cloudflare/codemode@0.0.5)(@cloudflare/workers-types@4.20260129.0)(ai@6.0.48(zod@4.3.6))(react@19.2.3)(zod@4.3.6)
       chalk:
         specifier: ^5.4.0
         version: 5.6.2
@@ -489,14 +489,14 @@ importers:
         version: link:../shared
       drizzle-orm:
         specifier: ^0.45.1
-        version: 0.45.1(@cloudflare/workers-types@4.20260123.0)(@opentelemetry/api@1.9.0)
+        version: 0.45.1(@cloudflare/workers-types@4.20260129.0)(@opentelemetry/api@1.9.0)
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
     devDependencies:
       '@cloudflare/workers-types':
-        specifier: ^4.20260123.0
-        version: 4.20260123.0
+        specifier: ^4.20260129.0
+        version: 4.20260129.0
       '@types/node':
         specifier: ^25.0.10
         version: 25.0.10
@@ -520,16 +520,16 @@ importers:
         version: 4.0.18(@opentelemetry/api@1.9.0)(@types/node@25.0.10)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       wrangler:
         specifier: 4.61.0
-        version: 4.61.0(@cloudflare/workers-types@4.20260123.0)
+        version: 4.61.0(@cloudflare/workers-types@4.20260129.0)
 
   packages/llmchat:
     devDependencies:
       '@cloudflare/vitest-pool-workers':
         specifier: 0.12.6
-        version: 0.12.6(@cloudflare/workers-types@4.20260123.0)(@vitest/runner@4.0.18)(@vitest/snapshot@4.0.18)(vitest@4.0.18(@opentelemetry/api@1.9.0)(@types/node@25.0.10)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+        version: 0.12.6(@cloudflare/workers-types@4.20260129.0)(@vitest/runner@4.0.18)(@vitest/snapshot@4.0.18)(vitest@4.0.18(@opentelemetry/api@1.9.0)(@types/node@25.0.10)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       '@cloudflare/workers-types':
-        specifier: ^4.20260123.0
-        version: 4.20260123.0
+        specifier: ^4.20260129.0
+        version: 4.20260129.0
       '@magicappdev/database':
         specifier: workspace:*
         version: link:../database
@@ -556,7 +556,7 @@ importers:
         version: 4.0.18(@opentelemetry/api@1.9.0)(@types/node@25.0.10)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
       wrangler:
         specifier: 4.61.1
-        version: 4.61.1(@cloudflare/workers-types@4.20260123.0)
+        version: 4.61.1(@cloudflare/workers-types@4.20260129.0)
 
   packages/shared:
     dependencies:
@@ -1582,8 +1582,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@cloudflare/workers-types@4.20260123.0':
-    resolution: {integrity: sha512-pQccZ8IDLFKkvdKBXZRPkbMtWtS7vVz1giJGkAAZ5cZH2RHK5Bs6p1OoVZA8Z2Sry8Q0tZbZ5Yjud4R7SrG3KQ==}
+  '@cloudflare/workers-types@4.20260129.0':
+    resolution: {integrity: sha512-ytqtGV7L60HI/BL/p6tY1A5DIIlNl0NX+wiNeGTyB6e65x1HEeZrceVzL5RsVws7xMsBpF+2VAlm/3ga3c7Txg==}
 
   '@commitlint/cli@20.3.1':
     resolution: {integrity: sha512-NtInjSlyev/+SLPvx/ulz8hRE25Wf5S9dLNDcIwazq0JyB4/w1ROF/5nV0ObPTX8YpRaKYeKtXDYWqumBNHWsw==}
@@ -9599,21 +9599,21 @@ snapshots:
 
   '@cloudflare/ai-chat@0.0.4(agents@0.3.6)(ai@4.3.19(react@19.1.0)(zod@4.3.6))(react@19.1.0)(zod@4.3.6)':
     dependencies:
-      agents: 0.3.6(@cloudflare/ai-chat@0.0.4)(@cloudflare/codemode@0.0.5)(@cloudflare/workers-types@4.20260123.0)(ai@4.3.19(react@19.1.0)(zod@4.3.6))(hono@4.11.5)(react@19.1.0)(zod@4.3.6)
+      agents: 0.3.6(@cloudflare/ai-chat@0.0.4)(@cloudflare/codemode@0.0.5)(@cloudflare/workers-types@4.20260129.0)(ai@4.3.19(react@19.1.0)(zod@4.3.6))(hono@4.11.5)(react@19.1.0)(zod@4.3.6)
       ai: 4.3.19(react@19.1.0)(zod@4.3.6)
       react: 19.1.0
       zod: 4.3.6
 
   '@cloudflare/ai-chat@0.0.4(agents@0.3.6)(ai@6.0.48(zod@4.3.6))(react@19.2.3)(zod@4.3.6)':
     dependencies:
-      agents: 0.3.6(@cloudflare/ai-chat@0.0.4)(@cloudflare/codemode@0.0.5)(@cloudflare/workers-types@4.20260123.0)(ai@6.0.48(zod@4.3.6))(react@19.2.3)(zod@4.3.6)
+      agents: 0.3.6(@cloudflare/ai-chat@0.0.4)(@cloudflare/codemode@0.0.5)(@cloudflare/workers-types@4.20260129.0)(ai@6.0.48(zod@4.3.6))(react@19.2.3)(zod@4.3.6)
       ai: 6.0.48(zod@4.3.6)
       react: 19.2.3
       zod: 4.3.6
 
   '@cloudflare/codemode@0.0.5(agents@0.3.6)(ai@4.3.19(react@19.1.0)(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6)':
     dependencies:
-      agents: 0.3.6(@cloudflare/ai-chat@0.0.4)(@cloudflare/codemode@0.0.5)(@cloudflare/workers-types@4.20260123.0)(ai@4.3.19(react@19.1.0)(zod@4.3.6))(hono@4.11.5)(react@19.1.0)(zod@4.3.6)
+      agents: 0.3.6(@cloudflare/ai-chat@0.0.4)(@cloudflare/codemode@0.0.5)(@cloudflare/workers-types@4.20260129.0)(ai@4.3.19(react@19.1.0)(zod@4.3.6))(hono@4.11.5)(react@19.1.0)(zod@4.3.6)
       ai: 4.3.19(react@19.1.0)(zod@4.3.6)
       zod: 4.3.6
       zod-to-ts: 2.0.0(typescript@5.9.3)(zod@4.3.6)
@@ -9622,7 +9622,7 @@ snapshots:
 
   '@cloudflare/codemode@0.0.5(agents@0.3.6)(ai@6.0.48(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6)':
     dependencies:
-      agents: 0.3.6(@cloudflare/ai-chat@0.0.4)(@cloudflare/codemode@0.0.5)(@cloudflare/workers-types@4.20260123.0)(ai@6.0.48(zod@4.3.6))(react@19.2.3)(zod@4.3.6)
+      agents: 0.3.6(@cloudflare/ai-chat@0.0.4)(@cloudflare/codemode@0.0.5)(@cloudflare/workers-types@4.20260129.0)(ai@6.0.48(zod@4.3.6))(react@19.2.3)(zod@4.3.6)
       ai: 6.0.48(zod@4.3.6)
       zod: 4.3.6
       zod-to-ts: 2.0.0(typescript@5.9.3)(zod@4.3.6)
@@ -9665,20 +9665,20 @@ snapshots:
     optionalDependencies:
       workerd: 1.20260128.0
 
-  '@cloudflare/vite-plugin@1.21.2(vite@7.3.1(@types/node@25.0.10)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(workerd@1.20260128.0)(wrangler@4.61.1(@cloudflare/workers-types@4.20260123.0))':
+  '@cloudflare/vite-plugin@1.21.2(vite@7.3.1(@types/node@25.0.10)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(workerd@1.20260128.0)(wrangler@4.61.1(@cloudflare/workers-types@4.20260129.0))':
     dependencies:
       '@cloudflare/unenv-preset': 2.11.0(unenv@2.0.0-rc.24)(workerd@1.20260128.0)
       miniflare: 4.20260120.0
       unenv: 2.0.0-rc.24
       vite: 7.3.1(@types/node@25.0.10)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
-      wrangler: 4.61.1(@cloudflare/workers-types@4.20260123.0)
+      wrangler: 4.61.1(@cloudflare/workers-types@4.20260129.0)
       ws: 8.18.0
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
       - workerd
 
-  '@cloudflare/vitest-pool-workers@0.12.6(@cloudflare/workers-types@4.20260123.0)(@vitest/runner@4.0.18)(@vitest/snapshot@4.0.18)(vitest@4.0.18(@opentelemetry/api@1.9.0)(@types/node@25.0.10)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))':
+  '@cloudflare/vitest-pool-workers@0.12.6(@cloudflare/workers-types@4.20260129.0)(@vitest/runner@4.0.18)(@vitest/snapshot@4.0.18)(vitest@4.0.18(@opentelemetry/api@1.9.0)(@types/node@25.0.10)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))':
     dependencies:
       '@vitest/runner': 4.0.18
       '@vitest/snapshot': 4.0.18
@@ -9686,7 +9686,7 @@ snapshots:
       esbuild: 0.27.0
       miniflare: 4.20260120.0
       vitest: 4.0.18(@opentelemetry/api@1.9.0)(@types/node@25.0.10)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
-      wrangler: 4.60.0(@cloudflare/workers-types@4.20260123.0)
+      wrangler: 4.60.0(@cloudflare/workers-types@4.20260129.0)
       zod: 3.25.76
     transitivePeerDependencies:
       - '@cloudflare/workers-types'
@@ -9753,7 +9753,7 @@ snapshots:
   '@cloudflare/workerd-windows-64@1.20260128.0':
     optional: true
 
-  '@cloudflare/workers-types@4.20260123.0': {}
+  '@cloudflare/workers-types@4.20260129.0': {}
 
   '@commitlint/cli@20.3.1(@types/node@25.0.10)(typescript@5.9.3)':
     dependencies:
@@ -10494,7 +10494,7 @@ snapshots:
       postcss: 8.4.49
       resolve-from: 5.0.0
     optionalDependencies:
-      expo: 54.0.32(@babel/core@7.28.6)(@expo/metro-runtime@6.1.2)(expo-router@6.0.22)(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.2.9)(react@19.2.3))(react@19.2.3)
+      expo: 54.0.32(@babel/core@7.28.6)(@expo/metro-runtime@6.1.2)(expo-router@6.0.22)(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
     transitivePeerDependencies:
       - bufferutil
       - supports-color
@@ -10574,7 +10574,7 @@ snapshots:
       '@expo/json-file': 10.0.8
       '@react-native/normalize-colors': 0.81.5
       debug: 4.4.3
-      expo: 54.0.32(@babel/core@7.28.6)(@expo/metro-runtime@6.1.2)(expo-router@6.0.22)(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.2.9)(react@19.2.3))(react@19.2.3)
+      expo: 54.0.32(@babel/core@7.28.6)(@expo/metro-runtime@6.1.2)(expo-router@6.0.22)(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
       resolve-from: 5.0.0
       semver: 7.7.3
       xml2js: 0.6.0
@@ -13180,7 +13180,7 @@ snapshots:
 
   agent-base@7.1.4: {}
 
-  agents@0.3.6(@cloudflare/ai-chat@0.0.4)(@cloudflare/codemode@0.0.5)(@cloudflare/workers-types@4.20260123.0)(ai@4.3.19(react@19.1.0)(zod@4.3.6))(hono@4.11.5)(react@19.1.0)(zod@4.3.6):
+  agents@0.3.6(@cloudflare/ai-chat@0.0.4)(@cloudflare/codemode@0.0.5)(@cloudflare/workers-types@4.20260129.0)(ai@4.3.19(react@19.1.0)(zod@4.3.6))(hono@4.11.5)(react@19.1.0)(zod@4.3.6):
     dependencies:
       '@cfworker/json-schema': 4.1.1
       '@cloudflare/ai-chat': 0.0.4(agents@0.3.6)(ai@4.3.19(react@19.1.0)(zod@4.3.6))(react@19.1.0)(zod@4.3.6)
@@ -13192,7 +13192,7 @@ snapshots:
       json-schema-to-typescript: 15.0.4
       mimetext: 3.0.27
       nanoid: 5.1.6
-      partyserver: 0.1.0(@cloudflare/workers-types@4.20260123.0)
+      partyserver: 0.1.0(@cloudflare/workers-types@4.20260129.0)
       partysocket: 1.1.10
       react: 19.1.0
       yargs: 18.0.0
@@ -13202,7 +13202,7 @@ snapshots:
       - hono
       - supports-color
 
-  agents@0.3.6(@cloudflare/ai-chat@0.0.4)(@cloudflare/codemode@0.0.5)(@cloudflare/workers-types@4.20260123.0)(ai@6.0.48(zod@4.3.6))(react@19.2.3)(zod@4.3.6):
+  agents@0.3.6(@cloudflare/ai-chat@0.0.4)(@cloudflare/codemode@0.0.5)(@cloudflare/workers-types@4.20260129.0)(ai@6.0.48(zod@4.3.6))(react@19.2.3)(zod@4.3.6):
     dependencies:
       '@cfworker/json-schema': 4.1.1
       '@cloudflare/ai-chat': 0.0.4(agents@0.3.6)(ai@6.0.48(zod@4.3.6))(react@19.2.3)(zod@4.3.6)
@@ -13214,7 +13214,7 @@ snapshots:
       json-schema-to-typescript: 15.0.4
       mimetext: 3.0.27
       nanoid: 5.1.6
-      partyserver: 0.1.0(@cloudflare/workers-types@4.20260123.0)
+      partyserver: 0.1.0(@cloudflare/workers-types@4.20260129.0)
       partysocket: 1.1.10
       react: 19.2.3
       yargs: 18.0.0
@@ -13492,7 +13492,7 @@ snapshots:
       resolve-from: 5.0.0
     optionalDependencies:
       '@babel/runtime': 7.28.6
-      expo: 54.0.32(@babel/core@7.28.6)(@expo/metro-runtime@6.1.2)(expo-router@6.0.22)(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.2.9)(react@19.2.3))(react@19.2.3)
+      expo: 54.0.32(@babel/core@7.28.6)(@expo/metro-runtime@6.1.2)(expo-router@6.0.22)(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
     transitivePeerDependencies:
       - '@babel/core'
       - supports-color
@@ -14065,9 +14065,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.45.1(@cloudflare/workers-types@4.20260123.0)(@opentelemetry/api@1.9.0):
+  drizzle-orm@0.45.1(@cloudflare/workers-types@4.20260129.0)(@opentelemetry/api@1.9.0):
     optionalDependencies:
-      '@cloudflare/workers-types': 4.20260123.0
+      '@cloudflare/workers-types': 4.20260129.0
       '@opentelemetry/api': 1.9.0
 
   dunder-proto@1.0.1:
@@ -16291,9 +16291,9 @@ snapshots:
 
   parseurl@1.3.3: {}
 
-  partyserver@0.1.0(@cloudflare/workers-types@4.20260123.0):
+  partyserver@0.1.0(@cloudflare/workers-types@4.20260129.0):
     dependencies:
-      '@cloudflare/workers-types': 4.20260123.0
+      '@cloudflare/workers-types': 4.20260129.0
       nanoid: 5.1.6
 
   partysocket@1.1.10:
@@ -17966,7 +17966,7 @@ snapshots:
       '@cloudflare/workerd-linux-arm64': 1.20260128.0
       '@cloudflare/workerd-windows-64': 1.20260128.0
 
-  wrangler@3.114.17(@cloudflare/workers-types@4.20260123.0):
+  wrangler@3.114.17(@cloudflare/workers-types@4.20260129.0):
     dependencies:
       '@cloudflare/kv-asset-handler': 0.3.4
       '@cloudflare/unenv-preset': 2.0.2(unenv@2.0.0-rc.14)(workerd@1.20250718.0)
@@ -17979,14 +17979,14 @@ snapshots:
       unenv: 2.0.0-rc.14
       workerd: 1.20250718.0
     optionalDependencies:
-      '@cloudflare/workers-types': 4.20260123.0
+      '@cloudflare/workers-types': 4.20260129.0
       fsevents: 2.3.3
       sharp: 0.33.5
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
 
-  wrangler@4.60.0(@cloudflare/workers-types@4.20260123.0):
+  wrangler@4.60.0(@cloudflare/workers-types@4.20260129.0):
     dependencies:
       '@cloudflare/kv-asset-handler': 0.4.2
       '@cloudflare/unenv-preset': 2.11.0(unenv@2.0.0-rc.24)(workerd@1.20260120.0)
@@ -17997,13 +17997,13 @@ snapshots:
       unenv: 2.0.0-rc.24
       workerd: 1.20260120.0
     optionalDependencies:
-      '@cloudflare/workers-types': 4.20260123.0
+      '@cloudflare/workers-types': 4.20260129.0
       fsevents: 2.3.3
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
 
-  wrangler@4.61.0(@cloudflare/workers-types@4.20260123.0):
+  wrangler@4.61.0(@cloudflare/workers-types@4.20260129.0):
     dependencies:
       '@cloudflare/kv-asset-handler': 0.4.2
       '@cloudflare/unenv-preset': 2.11.0(unenv@2.0.0-rc.24)(workerd@1.20260124.0)
@@ -18014,13 +18014,13 @@ snapshots:
       unenv: 2.0.0-rc.24
       workerd: 1.20260124.0
     optionalDependencies:
-      '@cloudflare/workers-types': 4.20260123.0
+      '@cloudflare/workers-types': 4.20260129.0
       fsevents: 2.3.3
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
 
-  wrangler@4.61.1(@cloudflare/workers-types@4.20260123.0):
+  wrangler@4.61.1(@cloudflare/workers-types@4.20260129.0):
     dependencies:
       '@cloudflare/kv-asset-handler': 0.4.2
       '@cloudflare/unenv-preset': 2.12.0(unenv@2.0.0-rc.24)(workerd@1.20260128.0)
@@ -18031,7 +18031,7 @@ snapshots:
       unenv: 2.0.0-rc.24
       workerd: 1.20260128.0
     optionalDependencies:
-      '@cloudflare/workers-types': 4.20260123.0
+      '@cloudflare/workers-types': 4.20260129.0
       fsevents: 2.3.3
     transitivePeerDependencies:
       - bufferutil
