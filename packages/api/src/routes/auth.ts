@@ -1243,7 +1243,10 @@ authRoutes.delete("/account", async c => {
 // Get Linked Accounts
 authRoutes.get("/accounts", async c => {
   const userId = c.var.userId;
+  console.log("[GET /auth/accounts] Fetching for userId:", userId);
+
   if (!userId) {
+    console.log("[GET /auth/accounts] No userId found");
     return c.json(
       {
         success: false,
@@ -1268,7 +1271,19 @@ authRoutes.get("/accounts", async c => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .where(eq((accounts as any).userId, userId));
 
-    return c.json({ success: true, data: linkedAccounts });
+    console.log("[GET /auth/accounts] Found accounts:", linkedAccounts);
+
+    // Format dates as ISO strings for frontend
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const formattedAccounts = linkedAccounts.map((account: any) => ({
+      ...account,
+      createdAt: account.createdAt
+        ? new Date(account.createdAt).toISOString()
+        : new Date().toISOString(),
+    }));
+
+    console.log("[GET /auth/accounts] Formatted accounts:", formattedAccounts);
+    return c.json({ success: true, data: formattedAccounts });
   } catch (err) {
     console.error("Error fetching linked accounts:", err);
     return c.json(

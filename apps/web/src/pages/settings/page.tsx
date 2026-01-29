@@ -84,14 +84,20 @@ export default function SettingsPage() {
       setIsLoadingAccounts(true);
       setIsLoadingApiKeys(true);
       try {
+        console.log("Loading linked accounts and API keys...");
         const [accounts, keys] = await Promise.all([
           api.getLinkedAccounts(),
           api.getUserApiKeys(),
         ]);
+        console.log("Linked accounts loaded:", accounts);
+        console.log("API keys loaded:", keys);
         setLinkedAccounts(accounts);
         setApiKeys(keys);
-      } catch {
-        // Silently fail - user may not have any data yet
+      } catch (error) {
+        console.error("Failed to load initial data:", error);
+        setLinkError(
+          error instanceof Error ? error.message : "Failed to load accounts",
+        );
       } finally {
         setIsLoadingAccounts(false);
         setIsLoadingApiKeys(false);
