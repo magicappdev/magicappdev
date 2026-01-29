@@ -1037,6 +1037,7 @@ authRoutes.put("/profile", async c => {
 
     // Update profile bio/region if provided
     if (bio !== undefined || region !== undefined) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const updates: any = { updatedAt: new Date().toISOString() };
       if (bio !== undefined) updates.bio = bio;
       if (region !== undefined) updates.region = region;
@@ -1087,6 +1088,7 @@ authRoutes.get("/api-keys", async c => {
   if (!userId) {
     return c.json({ error: "Unauthorized" }, 401);
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = c.var.db as any;
 
   try {
@@ -1114,6 +1116,7 @@ authRoutes.get("/api-keys", async c => {
 // Create a new API key
 authRoutes.post("/api-keys", async c => {
   const userId = c.var.userId;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = c.var.db as any;
 
   try {
@@ -1157,6 +1160,7 @@ authRoutes.delete("/api-keys/:id", async c => {
   if (!userId) {
     return c.json({ error: "Unauthorized" }, 401);
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = c.var.db as any;
   const keyId = c.req.param("id");
 
@@ -1258,6 +1262,7 @@ authRoutes.get("/accounts", async c => {
         id: accounts.id,
         provider: accounts.provider,
         providerAccountId: accounts.providerAccountId,
+        createdAt: accounts.createdAt,
       })
       .from(accounts)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
