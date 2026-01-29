@@ -11,6 +11,7 @@ export interface User {
   name: string;
   avatarUrl?: string;
   role: "admin" | "user";
+  hasPassword?: boolean;
   profile?: Profile;
   createdAt: Timestamp;
   updatedAt: Timestamp;
@@ -23,6 +24,7 @@ export interface Profile {
   bio?: string;
   website?: string;
   location?: string;
+  region?: string;
   githubUsername?: string;
   twitterUsername?: string;
   createdAt: Timestamp;

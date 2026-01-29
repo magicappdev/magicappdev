@@ -16,8 +16,17 @@ interface JwtPayload {
 /** Auth middleware */
 export const authMiddleware = createMiddleware<AppContext>(async (c, next) => {
   const authHeader = c.req.header("Authorization");
+  const queryToken = c.req.query("token");
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  let token = "";
+
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    token = authHeader.split(" ")[1];
+  } else if (queryToken) {
+    token = queryToken;
+  }
+
+  if (!token) {
     return c.json(
       {
         success: false,
@@ -27,7 +36,6 @@ export const authMiddleware = createMiddleware<AppContext>(async (c, next) => {
     );
   }
 
-  const token = authHeader.split(" ")[1];
   const secret = c.env.JWT_SECRET || "secret-fallback-do-not-use-in-prod";
 
   try {
