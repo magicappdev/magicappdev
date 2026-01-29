@@ -198,13 +198,15 @@ export default function ProjectDetailPage() {
   );
 }
 
+import { LucideIcon } from "lucide-react";
+
 function ResourceItem({
   icon: Icon,
   title,
   subtitle,
   status,
 }: {
-  icon: any;
+  icon: LucideIcon;
   title: string;
   subtitle: string;
   status: string;
@@ -233,7 +235,7 @@ function DetailItem({
 }: {
   label: string;
   value: string;
-  icon?: any;
+  icon?: LucideIcon;
   className?: string;
 }) {
   return (

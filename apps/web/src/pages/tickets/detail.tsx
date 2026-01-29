@@ -146,7 +146,9 @@ export default function TicketDetailPage() {
             <select
               className="bg-surface border border-outline/20 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary/50"
               value={ticket.status}
-              onChange={e => handleUpdateStatus(e.target.value as any)}
+              onChange={e =>
+                handleUpdateStatus(e.target.value as Ticket["status"])
+              }
               disabled={isUpdating}
             >
               <option value="open">Open</option>
