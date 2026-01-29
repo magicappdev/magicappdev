@@ -83,6 +83,7 @@ authRoutes.post("/login", async c => {
       exp: Math.floor(Date.now() / 1000) + 60 * 60,
     },
     c.env.JWT_SECRET || "secret-fallback-do-not-use-in-prod",
+    "HS256",
   );
 
   const refreshToken = crypto.randomUUID();
@@ -190,6 +191,7 @@ authRoutes.get("/callback/discord", async c => {
 
   let platform = "web";
   let clientRedirectUri: string | undefined;
+  let linkUserId: string | undefined;
 
   try {
     if (stateStr) {
@@ -197,6 +199,9 @@ authRoutes.get("/callback/discord", async c => {
       if (typeof state === "object") {
         platform = state.platform || "web";
         clientRedirectUri = state.redirect_uri;
+        if (state.action === "link" && state.userId) {
+          linkUserId = state.userId;
+        }
       } else {
         platform = stateStr;
       }
@@ -277,101 +282,146 @@ authRoutes.get("/callback/discord", async c => {
     const discordUser = (await userResponse.json()) as DiscordUser;
     console.log("Discord User received:", discordUser.username);
 
-    const email = discordUser.email;
-    if (!email || !discordUser.verified) {
-      console.error("No verified email found for Discord user");
-      return c.json(
-        { error: "Discord account must have a verified email" },
-        400,
-      );
-    }
-
-    console.log("User email:", email);
-
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = c.var.db as any;
 
-    // 3. Find or Create User
-    console.log("Checking for existing Discord account...");
-    const existingAccount = await db.query.accounts.findFirst({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      where: (acc: any, { and, eq }: any) =>
-        and(
-          eq(acc.provider, "discord"),
-          eq(acc.providerAccountId, discordUser.id),
-        ),
-    });
-
     let userId = "";
 
-    if (existingAccount) {
-      console.log(
-        "Existing Discord account found for user:",
-        existingAccount.userId,
-      );
-      userId = existingAccount.userId;
-    } else {
-      console.log("No existing account, checking for user with email...");
-      const existingUser = await db.query.users.findFirst({
+    // Handle Account Linking
+    if (linkUserId) {
+      console.log("Linking Discord account to user:", linkUserId);
+      const targetUser = await db.query.users.findFirst({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        where: (u: any, { eq }: any) => eq(u.email, email),
+        where: (u: any, { eq }: any) => eq(u.id, linkUserId),
       });
 
-      if (existingUser) {
-        console.log(
-          "Existing user found with email, linking Discord account...",
-        );
-        userId = existingUser.id;
-
-        // Build Discord avatar URL
-        const avatarUrl = discordUser.avatar
-          ? `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`
-          : null;
-
-        await db
-          .update(users)
-          .set({
-            name:
-              existingUser.name ||
-              discordUser.global_name ||
-              discordUser.username,
-            avatarUrl: existingUser.avatarUrl || avatarUrl,
-          })
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .where(eq(users.id as any, userId));
-      } else {
-        console.log("Creating new user from Discord...");
-        userId = crypto.randomUUID();
-
-        const avatarUrl = discordUser.avatar
-          ? `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`
-          : null;
-
-        await db.insert(users).values({
-          id: userId,
-          email,
-          name: discordUser.global_name || discordUser.username,
-          avatarUrl,
-          emailVerified: true,
-          role: "user",
-        });
-
-        console.log("Creating user profile...");
-        await db.insert(profiles).values({
-          id: crypto.randomUUID(),
-          userId,
-        });
+      if (!targetUser) {
+        return c.json({ error: "Target user for linking not found" }, 404);
       }
 
-      console.log("Linking Discord account...");
-      await db.insert(accounts).values({
-        id: crypto.randomUUID(),
-        userId,
-        type: "oauth",
-        provider: "discord",
-        providerAccountId: discordUser.id,
-        access_token: tokenData.access_token,
+      const existingAccount = await db.query.accounts.findFirst({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        where: (acc: any, { and, eq }: any) =>
+          and(
+            eq(acc.provider, "discord"),
+            eq(acc.providerAccountId, discordUser.id),
+          ),
       });
+
+      if (existingAccount) {
+        if (existingAccount.userId !== linkUserId) {
+          return c.json(
+            { error: "Discord account already linked to another user" },
+            400,
+          );
+        }
+        // Already linked to this user, just proceed to login
+        userId = linkUserId;
+      } else {
+        // Link it
+        await db.insert(accounts).values({
+          id: crypto.randomUUID(),
+          userId: linkUserId,
+          type: "oauth",
+          provider: "discord",
+          providerAccountId: discordUser.id,
+          access_token: tokenData.access_token,
+        });
+        userId = linkUserId;
+      }
+    } else {
+      // Normal Login Flow
+      const email = discordUser.email;
+      if (!email || !discordUser.verified) {
+        console.error("No verified email found for Discord user");
+        return c.json(
+          { error: "Discord account must have a verified email" },
+          400,
+        );
+      }
+
+      console.log("User email:", email);
+
+      // 3. Find or Create User
+      console.log("Checking for existing Discord account...");
+      const existingAccount = await db.query.accounts.findFirst({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        where: (acc: any, { and, eq }: any) =>
+          and(
+            eq(acc.provider, "discord"),
+            eq(acc.providerAccountId, discordUser.id),
+          ),
+      });
+
+      if (existingAccount) {
+        console.log(
+          "Existing Discord account found for user:",
+          existingAccount.userId,
+        );
+        userId = existingAccount.userId;
+      } else {
+        console.log("No existing account, checking for user with email...");
+        const existingUser = await db.query.users.findFirst({
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          where: (u: any, { eq }: any) => eq(u.email, email),
+        });
+
+        if (existingUser) {
+          console.log(
+            "Existing user found with email, linking Discord account...",
+          );
+          userId = existingUser.id;
+
+          // Build Discord avatar URL
+          const avatarUrl = discordUser.avatar
+            ? `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`
+            : null;
+
+          await db
+            .update(users)
+            .set({
+              name:
+                existingUser.name ||
+                discordUser.global_name ||
+                discordUser.username,
+              avatarUrl: existingUser.avatarUrl || avatarUrl,
+            })
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .where(eq(users.id as any, userId));
+        } else {
+          console.log("Creating new user from Discord...");
+          userId = crypto.randomUUID();
+
+          const avatarUrl = discordUser.avatar
+            ? `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`
+            : null;
+
+          await db.insert(users).values({
+            id: userId,
+            email,
+            name: discordUser.global_name || discordUser.username,
+            avatarUrl,
+            emailVerified: true,
+            role: "user",
+          });
+
+          console.log("Creating user profile...");
+          await db.insert(profiles).values({
+            id: crypto.randomUUID(),
+            userId,
+          });
+        }
+
+        console.log("Linking Discord account...");
+        await db.insert(accounts).values({
+          id: crypto.randomUUID(),
+          userId,
+          type: "oauth",
+          provider: "discord",
+          providerAccountId: discordUser.id,
+          access_token: tokenData.access_token,
+        });
+      }
     }
 
     // 4. Create Session
@@ -389,6 +439,7 @@ authRoutes.get("/callback/discord", async c => {
         exp: Math.floor(Date.now() / 1000) + 60 * 60, // 1 hour
       },
       c.env.JWT_SECRET || "secret-fallback-do-not-use-in-prod",
+      "HS256",
     );
 
     const refreshToken = crypto.randomUUID();
@@ -475,6 +526,7 @@ authRoutes.get("/callback/github", async c => {
 
   let platform = "web";
   let clientRedirectUri: string | undefined;
+  let linkUserId: string | undefined;
 
   try {
     if (stateStr) {
@@ -483,6 +535,9 @@ authRoutes.get("/callback/github", async c => {
       if (typeof state === "object") {
         platform = state.platform || "web";
         clientRedirectUri = state.redirect_uri;
+        if (state.action === "link" && state.userId) {
+          linkUserId = state.userId;
+        }
       } else {
         platform = stateStr;
       }
@@ -573,108 +628,156 @@ authRoutes.get("/callback/github", async c => {
     const githubUser = (await userResponse.json()) as GitHubUser;
     console.log("GitHub User received:", githubUser.login);
 
-    // 3. Fetch Email if missing
-    let email = githubUser.email;
-    if (!email) {
-      console.log("Email missing from user profile, fetching emails...");
-      const emailsResponse = await fetch("https://api.github.com/user/emails", {
-        headers: {
-          Authorization: `Bearer ${tokenData.access_token}`,
-          "User-Agent": "MagicAppDev",
-        },
-      });
-
-      if (emailsResponse.ok) {
-        const emails = (await emailsResponse.json()) as GitHubEmail[];
-        const primary = emails.find(
-          (e: GitHubEmail) => e.primary && e.verified,
-        );
-        if (primary) email = primary.email;
-      }
-    }
-
-    if (!email) {
-      console.error("No verified email found for user");
-      return c.json({ error: "No verified email found" }, 400);
-    }
-
-    console.log("User email:", email);
-
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = c.var.db as any;
 
-    // 4. Find or Create User
-    console.log("Checking for existing account...");
-    const existingAccount = await db.query.accounts.findFirst({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      where: (acc: any, { and, eq }: any) =>
-        and(
-          eq(acc.provider, "github"),
-          eq(acc.providerAccountId, String(githubUser.id)),
-        ),
-    });
-
     let userId = "";
 
-    if (existingAccount) {
-      console.log("Existing account found for user:", existingAccount.userId);
-      userId = existingAccount.userId;
-    } else {
-      console.log("No existing account, checking for user with email...");
-      // Check if user with email exists (link account)
-      const existingUser = await db.query.users.findFirst({
+    // Handle Account Linking
+    if (linkUserId) {
+      console.log("Linking GitHub account to user:", linkUserId);
+      const targetUser = await db.query.users.findFirst({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        where: (u: any, { eq }: any) => eq(u.email, email),
+        where: (u: any, { eq }: any) => eq(u.id, linkUserId),
       });
 
-      if (existingUser) {
-        console.log("Existing user found with email, linking account...");
-        userId = existingUser.id;
-
-        // Update user name/avatar if not set or if we want to sync
-        await db
-          .update(users)
-          .set({
-            name: existingUser.name || githubUser.name || githubUser.login,
-            avatarUrl: existingUser.avatarUrl || githubUser.avatar_url,
-          })
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .where(eq(users.id as any, userId));
-      } else {
-        console.log("Creating new user...");
-        // Create new user
-        userId = crypto.randomUUID();
-        await db.insert(users).values({
-          id: userId,
-          email,
-          name: githubUser.name || githubUser.login,
-          avatarUrl: githubUser.avatar_url,
-          emailVerified: true,
-          role: "user",
-        });
-
-        console.log("Creating user profile...");
-        // Create profile
-        await db.insert(profiles).values({
-          id: crypto.randomUUID(),
-          userId,
-          bio: githubUser.bio,
-          location: githubUser.location,
-          website: githubUser.blog,
-          githubUsername: githubUser.login,
-        });
+      if (!targetUser) {
+        return c.json({ error: "Target user for linking not found" }, 404);
       }
 
-      console.log("Linking account...");
-      // Link Account
-      await db.insert(accounts).values({
-        id: crypto.randomUUID(),
-        userId,
-        type: "oauth",
-        provider: "github",
-        providerAccountId: githubUser.id.toString(),
-        access_token: tokenData.access_token,
+      const existingAccount = await db.query.accounts.findFirst({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        where: (acc: any, { and, eq }: any) =>
+          and(
+            eq(acc.provider, "github"),
+            eq(acc.providerAccountId, String(githubUser.id)),
+          ),
       });
+
+      if (existingAccount) {
+        if (existingAccount.userId !== linkUserId) {
+          return c.json(
+            { error: "GitHub account already linked to another user" },
+            400,
+          );
+        }
+        // Already linked to this user, proceed
+        userId = linkUserId;
+      } else {
+        // Link it
+        await db.insert(accounts).values({
+          id: crypto.randomUUID(),
+          userId: linkUserId,
+          type: "oauth",
+          provider: "github",
+          providerAccountId: githubUser.id.toString(),
+          access_token: tokenData.access_token,
+        });
+        userId = linkUserId;
+      }
+    } else {
+      // Normal Login Flow
+      // 3. Fetch Email if missing
+      let email = githubUser.email;
+      if (!email) {
+        console.log("Email missing from user profile, fetching emails...");
+        const emailsResponse = await fetch(
+          "https://api.github.com/user/emails",
+          {
+            headers: {
+              Authorization: `Bearer ${tokenData.access_token}`,
+              "User-Agent": "MagicAppDev",
+            },
+          },
+        );
+
+        if (emailsResponse.ok) {
+          const emails = (await emailsResponse.json()) as GitHubEmail[];
+          const primary = emails.find(
+            (e: GitHubEmail) => e.primary && e.verified,
+          );
+          if (primary) email = primary.email;
+        }
+      }
+
+      if (!email) {
+        console.error("No verified email found for user");
+        return c.json({ error: "No verified email found" }, 400);
+      }
+
+      console.log("User email:", email);
+
+      // 4. Find or Create User
+      console.log("Checking for existing account...");
+      const existingAccount = await db.query.accounts.findFirst({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        where: (acc: any, { and, eq }: any) =>
+          and(
+            eq(acc.provider, "github"),
+            eq(acc.providerAccountId, String(githubUser.id)),
+          ),
+      });
+
+      if (existingAccount) {
+        console.log("Existing account found for user:", existingAccount.userId);
+        userId = existingAccount.userId;
+      } else {
+        console.log("No existing account, checking for user with email...");
+        // Check if user with email exists (link account)
+        const existingUser = await db.query.users.findFirst({
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          where: (u: any, { eq }: any) => eq(u.email, email),
+        });
+
+        if (existingUser) {
+          console.log("Existing user found with email, linking account...");
+          userId = existingUser.id;
+
+          // Update user name/avatar if not set or if we want to sync
+          await db
+            .update(users)
+            .set({
+              name: existingUser.name || githubUser.name || githubUser.login,
+              avatarUrl: existingUser.avatarUrl || githubUser.avatar_url,
+            })
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .where(eq(users.id as any, userId));
+        } else {
+          console.log("Creating new user...");
+          // Create new user
+          userId = crypto.randomUUID();
+          await db.insert(users).values({
+            id: userId,
+            email,
+            name: githubUser.name || githubUser.login,
+            avatarUrl: githubUser.avatar_url,
+            emailVerified: true,
+            role: "user",
+          });
+
+          console.log("Creating user profile...");
+          // Create profile
+          await db.insert(profiles).values({
+            id: crypto.randomUUID(),
+            userId,
+            bio: githubUser.bio,
+            location: githubUser.location,
+            website: githubUser.blog,
+            githubUsername: githubUser.login,
+          });
+        }
+
+        console.log("Linking account...");
+        // Link Account
+        await db.insert(accounts).values({
+          id: crypto.randomUUID(),
+          userId,
+          type: "oauth",
+          provider: "github",
+          providerAccountId: githubUser.id.toString(),
+          access_token: tokenData.access_token,
+        });
+      }
     }
 
     // 5. Create Session
@@ -693,6 +796,7 @@ authRoutes.get("/callback/github", async c => {
         exp: Math.floor(Date.now() / 1000) + 60 * 60, // 1 hour
       },
       c.env.JWT_SECRET || "secret-fallback-do-not-use-in-prod",
+      "HS256",
     );
 
     const refreshToken = crypto.randomUUID();
@@ -769,6 +873,7 @@ authRoutes.post("/refresh", async c => {
       exp: Math.floor(Date.now() / 1000) + 60 * 60,
     },
     c.env.JWT_SECRET || "secret-fallback-do-not-use-in-prod",
+    "HS256",
   );
 
   return c.json({ success: true, data: { accessToken } });
