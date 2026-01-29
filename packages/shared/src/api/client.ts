@@ -437,6 +437,65 @@ export class ApiClient {
     }
   }
 
+  async updateProfile(data: { name?: string; bio?: string }): Promise<void> {
+    const response = await this.request<ApiResponse<void>>("/auth/profile", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+    if (!response.success) {
+      throw new Error(response.error.message);
+    }
+  }
+
+  async deleteAccount(): Promise<void> {
+    const response = await this.request<ApiResponse<void>>("/auth/account", {
+      method: "DELETE",
+    });
+    if (!response.success) {
+      throw new Error(response.error.message);
+    }
+  }
+
+  async getLinkedAccounts(): Promise<
+    Array<{
+      id: string;
+      provider: string;
+      providerAccountId: string;
+      createdAt: string;
+    }>
+  > {
+    const response = await this.request<
+      ApiResponse<
+        Array<{
+          id: string;
+          provider: string;
+          providerAccountId: string;
+          createdAt: string;
+        }>
+      >
+    >("/auth/accounts");
+    if (!response.success) {
+      throw new Error(response.error.message);
+    }
+    return response.data;
+  }
+
+  async unlinkAccount(provider: string): Promise<void> {
+    const response = await this.request<ApiResponse<void>>(
+      `/auth/accounts/${provider}`,
+      {
+        method: "DELETE",
+      },
+    );
+    if (!response.success) {
+      throw new Error(response.error.message);
+    }
+  }
+
+  getLinkAccountUrl(provider: "github" | "discord"): string {
+    return `${this.baseUrl}/auth/link/${provider}`;
+  }
+
   async *streamMessage(messages: AiMessage[]): AsyncGenerator<string> {
     const url = `${this.baseUrl}/ai/chat`;
     const response = await fetch(url, {

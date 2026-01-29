@@ -4,7 +4,7 @@
 
 import { accounts, profiles, sessions, users } from "@magicappdev/database";
 import type { AppContext } from "../types.js";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { sign } from "hono/jwt";
 import bcrypt from "bcryptjs";
 import { Hono } from "hono";
@@ -892,4 +892,328 @@ authRoutes.post("/change-password", async c => {
     .where(eq((users as any).id, userId));
 
   return c.json({ success: true, message: "Password changed successfully" });
+});
+
+// Update Profile
+authRoutes.put("/profile", async c => {
+  const userId = c.var.userId;
+  if (!userId) {
+    return c.json(
+      {
+        success: false,
+        error: { code: "UNAUTHORIZED", message: "Unauthorized" },
+      },
+      401,
+    );
+  }
+
+  const { name, bio } = await c.req.json<{
+    name?: string;
+    bio?: string;
+  }>();
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = c.var.db as any;
+
+  try {
+    // Update user name if provided
+    if (name !== undefined) {
+      await db
+        .update(users)
+        .set({ name, updatedAt: new Date().toISOString() })
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .where(eq((users as any).id, userId));
+    }
+
+    // Update profile bio if provided
+    if (bio !== undefined) {
+      await db
+        .update(profiles)
+        .set({ bio, updatedAt: new Date().toISOString() })
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .where(eq((profiles as any).userId, userId));
+    }
+
+    return c.json({ success: true, message: "Profile updated successfully" });
+  } catch (err) {
+    console.error("Error updating profile:", err);
+    return c.json(
+      {
+        success: false,
+        error: {
+          code: "UPDATE_FAILED",
+          message:
+            err instanceof Error ? err.message : "Failed to update profile",
+        },
+      },
+      500,
+    );
+  }
+});
+
+// Delete Account
+authRoutes.delete("/account", async c => {
+  const userId = c.var.userId;
+  if (!userId) {
+    return c.json(
+      {
+        success: false,
+        error: { code: "UNAUTHORIZED", message: "Unauthorized" },
+      },
+      401,
+    );
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = c.var.db as any;
+
+  try {
+    // Delete in order: sessions, accounts, profiles, then users
+    await db
+      .delete(sessions)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .where(eq((sessions as any).userId, userId));
+
+    await db
+      .delete(accounts)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .where(eq((accounts as any).userId, userId));
+
+    await db
+      .delete(profiles)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .where(eq((profiles as any).userId, userId));
+
+    await db
+      .delete(users)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .where(eq((users as any).id, userId));
+
+    return c.json({ success: true, message: "Account deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting account:", err);
+    return c.json(
+      {
+        success: false,
+        error: {
+          code: "DELETE_FAILED",
+          message:
+            err instanceof Error ? err.message : "Failed to delete account",
+        },
+      },
+      500,
+    );
+  }
+});
+
+// Get Linked Accounts
+authRoutes.get("/accounts", async c => {
+  const userId = c.var.userId;
+  if (!userId) {
+    return c.json(
+      {
+        success: false,
+        error: { code: "UNAUTHORIZED", message: "Unauthorized" },
+      },
+      401,
+    );
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = c.var.db as any;
+
+  try {
+    const linkedAccounts = await db
+      .select({
+        id: accounts.id,
+        provider: accounts.provider,
+        providerAccountId: accounts.providerAccountId,
+      })
+      .from(accounts)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .where(eq((accounts as any).userId, userId));
+
+    return c.json({ success: true, data: linkedAccounts });
+  } catch (err) {
+    console.error("Error fetching linked accounts:", err);
+    return c.json(
+      {
+        success: false,
+        error: {
+          code: "FETCH_FAILED",
+          message:
+            err instanceof Error ? err.message : "Failed to fetch accounts",
+        },
+      },
+      500,
+    );
+  }
+});
+
+// Unlink OAuth Account
+authRoutes.delete("/accounts/:provider", async c => {
+  const userId = c.var.userId;
+  const provider = c.req.param("provider");
+
+  if (!userId) {
+    return c.json(
+      {
+        success: false,
+        error: { code: "UNAUTHORIZED", message: "Unauthorized" },
+      },
+      401,
+    );
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = c.var.db as any;
+
+  try {
+    // Check if user has a password set (can't unlink all OAuth if no password)
+    const user = await db.query.users.findFirst({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      where: (u: any, { eq }: any) => eq(u.id, userId),
+    });
+
+    const linkedAccounts = await db
+      .select()
+      .from(accounts)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .where(eq((accounts as any).userId, userId));
+
+    // Prevent unlinking if it's the only auth method
+    if (!user.passwordHash && linkedAccounts.length <= 1) {
+      return c.json(
+        {
+          success: false,
+          error: {
+            code: "CANNOT_UNLINK",
+            message:
+              "Cannot unlink the only authentication method. Set a password first.",
+          },
+        },
+        400,
+      );
+    }
+
+    await db.delete(accounts).where(
+      and(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        eq((accounts as any).userId, userId),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        eq((accounts as any).provider, provider),
+      ),
+    );
+
+    return c.json({
+      success: true,
+      message: `${provider} account unlinked successfully`,
+    });
+  } catch (err) {
+    console.error("Error unlinking account:", err);
+    return c.json(
+      {
+        success: false,
+        error: {
+          code: "UNLINK_FAILED",
+          message:
+            err instanceof Error ? err.message : "Failed to unlink account",
+        },
+      },
+      500,
+    );
+  }
+});
+
+// Link OAuth Account (for already logged in users)
+authRoutes.get("/link/:provider", c => {
+  const userId = c.var.userId;
+  const provider = c.req.param("provider");
+
+  if (!userId) {
+    return c.json(
+      {
+        success: false,
+        error: { code: "UNAUTHORIZED", message: "Unauthorized" },
+      },
+      401,
+    );
+  }
+
+  // Encode userId and action in state for the callback
+  const state = JSON.stringify({
+    action: "link",
+    userId,
+  });
+
+  if (provider === "github") {
+    const clientId = c.env.GITHUB_CLIENT_ID;
+    const redirectUri =
+      c.env.GITHUB_REDIRECT_URI ||
+      new URL(c.req.url).origin + "/auth/callback/github";
+
+    if (!clientId) {
+      return c.json(
+        {
+          success: false,
+          error: {
+            code: "NOT_CONFIGURED",
+            message: "GitHub OAuth not configured",
+          },
+        },
+        500,
+      );
+    }
+
+    const params = new URLSearchParams({
+      client_id: clientId,
+      redirect_uri: redirectUri,
+      scope: "user:email read:user",
+      state,
+    });
+
+    return c.redirect(
+      `https://github.com/login/oauth/authorize?${params.toString()}`,
+    );
+  }
+
+  if (provider === "discord") {
+    const clientId = c.env.DISCORD_CLIENT_ID;
+    const redirectUri =
+      c.env.DISCORD_REDIRECT_URI ||
+      new URL(c.req.url).origin + "/auth/callback/discord";
+
+    if (!clientId) {
+      return c.json(
+        {
+          success: false,
+          error: {
+            code: "NOT_CONFIGURED",
+            message: "Discord OAuth not configured",
+          },
+        },
+        500,
+      );
+    }
+
+    const params = new URLSearchParams({
+      client_id: clientId,
+      redirect_uri: redirectUri,
+      response_type: "code",
+      scope: "identify email",
+      state,
+    });
+
+    return c.redirect(
+      `https://discord.com/api/oauth2/authorize?${params.toString()}`,
+    );
+  }
+
+  return c.json(
+    {
+      success: false,
+      error: { code: "INVALID_PROVIDER", message: "Invalid provider" },
+    },
+    400,
+  );
 });

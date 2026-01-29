@@ -9,6 +9,7 @@ interface AuthContextType {
   loginWithDiscord: () => void;
   login: (accessToken: string, refreshToken: string) => Promise<void>;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -93,6 +94,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   };
 
+  const refreshUser = async () => {
+    const accessToken = localStorage.getItem("access_token");
+    if (accessToken) {
+      try {
+        await fetchUser(accessToken);
+      } catch (error) {
+        console.error("Refresh user failed:", error);
+      }
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -102,6 +114,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loginWithDiscord,
         login,
         logout: handleLogout,
+        refreshUser,
       }}
     >
       {children}
