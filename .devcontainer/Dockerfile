@@ -29,7 +29,7 @@ LABEL org.opencontainers.image.authors="MagicAppDev"
 # EXPOSE 3100 5173 8100 3030
 
 # Enable corepack for pnpm
-RUN corepack enable && corepack prepare pnpm@10.28.1 --activate
+RUN corepack enable && corepack prepare pnpm@10.28.2 --activate
 
 # Install global tools
 # RUN npm install -g turbo typescript

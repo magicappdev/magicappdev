@@ -18,7 +18,8 @@
         "involvex.statusbar-quick-actions",
         "kilocode.kilo-code",
         "usernamehw.errorlens",
-        "involvex.involvex-smart-autocomplete"
+        "involvex.involvex-smart-autocomplete",
+        "Anthropic.claude-code"
       ],
       "settings": {
         "terminal.integrated.defaultProfile.linux": "bash",

@@ -76,7 +76,7 @@
     "typescript-eslint": "^8.53.1",
     "wrangler": "^4.61.1"
   },
-  "packageManager": "pnpm@10.28.1",
+  "packageManager": "pnpm@10.28.2",
   "pnpm": {
     "overrides": {
       "@babel/runtime": "^7.28.6",

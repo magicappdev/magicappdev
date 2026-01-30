@@ -9,7 +9,7 @@ cd /workspace
 # Verify and configure pnpm
 echo "📦 Configuring pnpm..."
 corepack enable
-corepack prepare pnpm@10.28.1 --activate
+corepack prepare pnpm@10.28.2 --activate
 export PNPM_HOME="/root/.local/share/pnpm"
 export PATH="$PNPM_HOME:$PATH"
 export SHELL="/bin/bash"
@@ -30,7 +30,7 @@ fi
 
 # Install global dependencies if needed
 echo "🔧 Installing global dependencies..."
-pnpm install -g @expo/cli @expo/metro-config
+pnpm install -g @expo/cli @expo/metro-config @kilocode/cli@next @google/gemini-cli@latest nx@latest @anthropic-ai/claude-code@latest
 
 # Initialize Android SDK if needed
 if [ ! -d "/usr/local/android-sdk" ]; then
