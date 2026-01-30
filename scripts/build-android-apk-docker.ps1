@@ -29,7 +29,7 @@ docker-compose -f ../../docker-compose.android.yml run --rm android-builder bash
 # Build the APK
 Write-Host "🔨 Building APK (this will take several minutes)..." -ForegroundColor Yellow
 docker-compose -f ../../docker-compose.android.yml run --rm android-builder bash -c "
-    pnpm install && cd android &&  ./gradlew --stop && ./gradlew clean assembleDebug --no-daemon --debug --no-build-cache
+    pnpm install && cd android &&  ./gradlew --stop && ./gradlew clean assembleDebug --no-daemon --no-build-cache
 "
 
 # Check if build succeeded
