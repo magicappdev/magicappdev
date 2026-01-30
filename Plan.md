@@ -50,8 +50,8 @@ Develop a comprehensive monorepo-based fullstack app building platform inspired 
 
 ## Repository & Publishing
 
-- GitHub: https://github.com/magicappdev
-- NPM: https://www.npmjs.com/org/magicappdev
+- GitHub: <https://github.com/magicappdev>
+- NPM: <https://www.npmjs.com/org/magicappdev>
 
 ## Project Status (January 2026)
 
@@ -132,17 +132,17 @@ todoo:
 - [ ] Discord Bot for Community Server
 - [ ] Add Github App Support to install MagicAppDev on User Accounts to initialize Repos, Setup Workflows.
 
-## ADD URL endpoints for @magicappdev/web/#Agends.md
+## ADD URL endpoints for @magicappdev/web/#Agents.md
 
 Interactions Endpoint URL
 You can optionally configure an interactions endpoint to receive interactions via HTTP POSTs rather than over Gateway with a bot user.
-https://nice-example.local/api/interactions
+<https://nice-example.local/api/interactions>
 Linked Roles Verification URL
 You can configure a verification URL to enable your application as a requirement in a server role's Links settings
-https://nice-example.local/verify-user
+<https://nice-example.local/verify-user>
 Terms of Service URL
 A link to your application's Terms of Service
-https://my-cool-app.com/terms-of-service
+<https://my-cool-app.com/terms-of-service>
 Privacy Policy URL
 A link to your application's Privacy Policy
-https://my-cool-app.com/privacy-policy
+<https://my-cool-app.com/privacy-policy>

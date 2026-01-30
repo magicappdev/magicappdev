@@ -1,4 +1,4 @@
-# Agends.md - Comprehensive Documentation
+# Agents.md - Comprehensive Documentation
 
 ## Overview
 
@@ -21,13 +21,13 @@ This document provides detailed documentation for each package in the MagicAppDe
 
 For the community Discord server, configure the following bot settings:
 
-- **Interactions Endpoint URL**: https://nice-example.local/api/interactions
+- **Interactions Endpoint URL**: <https://nice-example.local/api/interactions>
   - Used to receive interactions via HTTP POSTs rather than over Gateway with a bot user.
-- **Linked Roles Verification URL**: https://nice-example.local/verify-user
+- **Linked Roles Verification URL**: <https://nice-example.local/verify-user>
   - Configured to enable the application as a requirement in a server role's Links settings.
-- **Terms of Service URL**: https://my-cool-app.com/terms-of-service
+- **Terms of Service URL**: <https://my-cool-app.com/terms-of-service>
   - A link to the application's Terms of Service.
-- **Privacy Policy URL**: https://my-cool-app.com/privacy-policy
+- **Privacy Policy URL**: <https://my-cool-app.com/privacy-policy>
   - A link to the application's Privacy Policy.
 
 ## Packages

@@ -1,4 +1,4 @@
-# Agends.md - @magicappdev/database
+# Agents.md - @magicappdev/database
 
 ## Overview
 
@@ -21,10 +21,10 @@ The `@magicappdev/database` package provides the data persistence layer for Magi
 
 ## Discord Bot Integration (Reference)
 
-- **Interactions Endpoint**: https://nice-example.local/api/interactions
-- **Linked Roles**: https://nice-example.local/verify-user
-- **TOS**: https://my-cool-app.com/terms-of-service
-- **Privacy**: https://my-cool-app.com/privacy-policy
+- **Interactions Endpoint**: <https://nice-example.local/api/interactions>
+- **Linked Roles**: <https://nice-example.local/verify-user>
+- **TOS**: <https://my-cool-app.com/terms-of-service>
+- **Privacy**: <https://my-cool-app.com/privacy-policy>
 
 ## Implementation Steps & Progress
 

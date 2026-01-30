@@ -21,17 +21,15 @@ config.watcher = {
 };
 
 // 3. Block problematic directories from watching (use resolver.blockList)
+// NOTE: Removed pnpm .pnpm blocking to allow @babel/runtime helpers to resolve
 config.resolver.blockList = [
-  // Exclude pnpm cache directories
-  /.*\/node_modules\/\.pnpm\/.*/,
-  /.*\/node_modules\/.*\/\.pnpm\/.*/,
   // Exclude pnpm dlx cache (used by bun/pnpm)
   /[A-Z]:\\.+\\pnpm-cache\\+.*/,
   /.*\/pnpm-cache\/.*/,
   // Exclude Metro's own cache
   /.*\/metro-.*/,
   // Exclude Windows AppData
-  /[A-Z]:\\.+\\AppData\\.+/,
+  /[A-Z]:\\.+\\AppData\.+/,
 ];
 
 // 4. Reduce workers on Windows to prevent file handle issues
@@ -53,6 +51,11 @@ config.resolver.extraNodeModules = {
   "expo-router": path.resolve(workspaceRoot, "node_modules/expo-router"),
   "react-native": path.resolve(workspaceRoot, "node_modules/react-native"),
   react: path.resolve(workspaceRoot, "node_modules/react"),
+  // Point @babel/runtime to the pnpm installation location
+  "@babel/runtime": path.resolve(
+    workspaceRoot,
+    "node_modules/.pnpm/@babel+runtime@7.28.6/node_modules/@babel/runtime",
+  ),
 };
 
 // Add support for 3D model files

@@ -1,4 +1,4 @@
-# Agends.md - @magicappdev/web
+# Agents.md - @magicappdev/web
 
 ## Overview
 
@@ -24,10 +24,10 @@ The `@magicappdev/web` application is the primary Next.js-based interface for Ma
 
 ## Discord Bot Integration (Reference)
 
-- **Interactions Endpoint**: https://nice-example.local/api/interactions
-- **Linked Roles**: https://nice-example.local/verify-user
-- **TOS**: https://my-cool-app.com/terms-of-service
-- **Privacy**: https://my-cool-app.com/privacy-policy
+- **Interactions Endpoint**: <https://nice-example.local/api/interactions>
+- **Linked Roles**: <https://nice-example.local/verify-user>
+- **TOS**: <https://my-cool-app.com/terms-of-service>
+- **Privacy**: <https://my-cool-app.com/privacy-policy>
 
 ## Implementation Steps & Progress
 

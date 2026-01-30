@@ -1,4 +1,4 @@
-# Agends.md - @magicappdev/cli
+# Agents.md - @magicappdev/cli
 
 ## Overview
 
@@ -22,10 +22,10 @@ The `@magicappdev/cli` package is a command-line interface tool named `mad` (or 
 
 ## Discord Bot Integration (Reference)
 
-- **Interactions Endpoint**: https://nice-example.local/api/interactions
-- **Linked Roles**: https://nice-example.local/verify-user
-- **TOS**: https://my-cool-app.com/terms-of-service
-- **Privacy**: https://my-cool-app.com/privacy-policy
+- **Interactions Endpoint**: <https://nice-example.local/api/interactions>
+- **Linked Roles**: <https://nice-example.local/verify-user>
+- **TOS**: <https://my-cool-app.com/terms-of-service>
+- **Privacy**: <https://my-cool-app.com/privacy-policy>
 
 ## Implementation Steps & Progress
 

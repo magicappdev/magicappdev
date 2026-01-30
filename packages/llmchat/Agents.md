@@ -1,4 +1,4 @@
-# Agends.md - @magicappdev/llmchat
+# Agents.md - @magicappdev/llmchat
 
 ## Overview
 
@@ -21,10 +21,10 @@ The `@magicappdev/llmchat` package provides real-time AI chat capabilities withi
 
 ## Discord Bot Integration (Reference)
 
-- **Interactions Endpoint**: https://nice-example.local/api/interactions
-- **Linked Roles**: https://nice-example.local/verify-user
-- **TOS**: https://my-cool-app.com/terms-of-service
-- **Privacy**: https://my-cool-app.com/privacy-policy
+- **Interactions Endpoint**: <https://nice-example.local/api/interactions>
+- **Linked Roles**: <https://nice-example.local/verify-user>
+- **TOS**: <https://my-cool-app.com/terms-of-service>
+- **Privacy**: <https://my-cool-app.com/privacy-policy>
 
 ## Implementation Steps & Progress
 

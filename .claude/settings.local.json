@@ -190,7 +190,16 @@
       "Bash(git ls-tree:*)",
       "mcp__nx-mcp__nx_workspace_path",
       "Bash(/c/Users/lukas/AppData/Local/pnpm/pnpm:*)",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "Bash(cmd.exe /c \"pnpm install\")",
+      "Bash(/c/Users/lukas/AppData/Local/pnpm/pnpm.cmd install --force --no-frozen-lockfile)",
+      "Bash(powershell.exe -Command \"pnpm install expo-router@7.0.0-beta --force\")",
+      "Bash(powershell.exe -Command \"pnpm install --force\")",
+      "Bash(powershell.exe -Command \"pnpm add expo-router@55.0.0-canary-20260128-67ce8d5\")",
+      "Bash(powershell.exe -Command \"pnpm install\")",
+      "Bash(powershell.exe -Command \"npm install\")",
+      "Bash(cmd.exe:*)",
+      "Bash(xargs cat)"
     ]
   },
   "enableAllProjectMcpServers": true,

@@ -164,4 +164,4 @@ export function useWebSocket(url: string) {
 - [Expo Documentation](https://docs.expo.dev/)
 - [React Native Documentation](https://reactnative.dev/docs/getting-started)
 - [Expo Router Documentation](https://expo.github.io/router/docs/)
-- [MagicAppDev Mobile Agends](apps/mobile/Agends.md)
+- [MagicAppDev Mobile Agents](apps/mobile/Agents.md)

@@ -221,4 +221,4 @@ export function useTheme() {
 - [Shadcn/UI Documentation](https://ui.shadcn.com/)
 - [Framer Motion Documentation](https://www.framer.com/motion/)
 - [Radix UI Documentation](https://www.radix-ui.com/)
-- [MagicAppDev Design Agends](Agends.md)
+- [MagicAppDev Design Agents](Agents.md)

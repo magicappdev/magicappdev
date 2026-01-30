@@ -182,4 +182,4 @@ export { apiClient };
 - [Cloudflare Workers Documentation](https://developers.cloudflare.com/workers/)
 - [Tailwind CSS Documentation](https://tailwindcss.com/docs)
 - [Shadcn/UI Documentation](https://ui.shadcn.com/)
-- [MagicAppDev Web Agends](apps/web/Agends.md)
+- [MagicAppDev Web Agents](apps/web/Agents.md)

@@ -36,36 +36,15 @@
       "output": "static"
     },
     "scheme": "magicappdev",
-    "plugins": [
-      "expo-router",
-      "expo-splash-screen",
-      "expo-secure-store",
-      "expo-font",
-      "expo-web-browser",
-      [
-        "expo-build-properties",
-        {
-          "android": {
-            "compileSdkVersion": 35,
-            "targetSdkVersion": 35,
-            "minSdkVersion": 24,
-            "buildToolsVersion": "35.0.0"
-          }
-        }
-      ]
-    ],
+    "plugins": ["expo-router", "expo-secure-store"],
     "extra": {
       "router": {},
       "eas": {
         "projectId": "a5a4e0f9-897d-40d9-bfae-5838d7ba497d"
       }
     },
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
     "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
+      "typedRoutes": true
     }
   }
 }

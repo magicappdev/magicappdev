@@ -196,4 +196,4 @@ jobs:
 - [Turborepo Documentation](https://turbo.build/repo/docs)
 - [Nx Documentation](https://nx.dev/getting-started/intro)
 - [Cloudflare Workers Documentation](https://developers.cloudflare.com/workers/)
-- [MagicAppDev CI/CD Agends](Agends.md)
+- [MagicAppDev CI/CD Agents](Agents.md)
