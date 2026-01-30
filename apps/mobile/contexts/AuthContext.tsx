@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import * as SecureStore from "expo-secure-store";
 import type { User } from "@magicappdev/shared";
 import * as WebBrowser from "expo-web-browser";
+import { Platform } from "react-native";
 import * as Linking from "expo-linking";
 import { api } from "../lib/api";
 
@@ -14,6 +15,30 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Helper functions for storage with web fallback
+const storage = {
+  async getItemAsync(key: string): Promise<string | null> {
+    if (Platform.OS === "web") {
+      return localStorage.getItem(key);
+    }
+    return await SecureStore.getItemAsync(key);
+  },
+  async setItemAsync(key: string, value: string): Promise<void> {
+    if (Platform.OS === "web") {
+      localStorage.setItem(key, value);
+    } else {
+      await SecureStore.setItemAsync(key, value);
+    }
+  },
+  async deleteItemAsync(key: string): Promise<void> {
+    if (Platform.OS === "web") {
+      localStorage.removeItem(key);
+    } else {
+      await SecureStore.deleteItemAsync(key);
+    }
+  },
+};
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -47,8 +72,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const saveTokens = async (accessToken: string, refreshToken: string) => {
-    await SecureStore.setItemAsync("access_token", accessToken);
-    await SecureStore.setItemAsync("refresh_token", refreshToken);
+    await storage.setItemAsync("access_token", accessToken);
+    await storage.setItemAsync("refresh_token", refreshToken);
     api.setToken(accessToken);
     try {
       const userData = await api.getCurrentUser();
@@ -76,8 +101,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const loadAuth = async () => {
-    const accessToken = await SecureStore.getItemAsync("access_token");
-    const refreshToken = await SecureStore.getItemAsync("refresh_token");
+    const accessToken = await storage.getItemAsync("access_token");
+    const refreshToken = await storage.getItemAsync("refresh_token");
 
     if (accessToken) {
       api.setToken(accessToken);
@@ -88,7 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (refreshToken) {
           try {
             const newToken = await api.refresh(refreshToken);
-            await SecureStore.setItemAsync("access_token", newToken);
+            await storage.setItemAsync("access_token", newToken);
             const userData = await api.getCurrentUser();
             setUser(userData);
           } catch {
@@ -125,7 +150,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const handleLogout = async () => {
-    const refreshToken = await SecureStore.getItemAsync("refresh_token");
+    const refreshToken = await storage.getItemAsync("refresh_token");
     if (refreshToken) {
       try {
         await api.logout(refreshToken);
@@ -133,8 +158,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error("Logout failed", e);
       }
     }
-    await SecureStore.deleteItemAsync("access_token");
-    await SecureStore.deleteItemAsync("refresh_token");
+    await storage.deleteItemAsync("access_token");
+    await storage.deleteItemAsync("refresh_token");
     api.setToken(null);
     setUser(null);
   };
