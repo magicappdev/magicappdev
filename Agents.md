@@ -460,3 +460,98 @@ React Native-based mobile application mirroring the web interface features, prov
 ## Conclusion
 
 This document provides a comprehensive overview of the architecture, dependencies, usage guidelines, and integration points for each package and application in the MagicAppDev project. Use this documentation to ensure consistency and maintainability across all components. The project is focused on building a full-stack framework for people to build mobile and web apps with no-code capabilities, including a website with agent chat, mobile app, and CLI to generate code setups, all hosted on Cloudflare Workers and designed to be free-tier compatible.
+
+## Development Guidelines for Agentic Coding
+
+### 1. Build, Lint, and Quality Commands
+
+Always run these commands from the root directory using `pnpm`.
+
+- **Build Everything**: `pnpm build` (uses Turborepo)
+- **Build Package**: `turbo build --filter=@magicappdev/<package-name>`
+- **Format Code**: `pnpm format` (runs Prettier)
+- **Fix Linting**: `pnpm lint:fix` (runs ESLint)
+- **Typecheck All**: `pnpm typecheck` (runs Nx/TypeScript)
+- **Full Check**: `pnpm check` (format + lint:fix + typecheck + build)
+
+### 2. Code Style Guidelines
+
+#### Formatting (Prettier)
+
+Adhere to the `.prettierrc` configuration:
+
+- **Width**: 80 characters
+- **Indentation**: 2 spaces (no tabs)
+- **Semicolons**: Required
+- **Quotes**: Double quotes
+- **Trailing Commas**: All (arrays, objects, imports)
+- **Arrow Functions**: Avoid parentheses for single parameters (`x => x`)
+
+#### Imports & Modules
+
+- **Extensions**: Always use explicit `.js` extensions for local imports in TypeScript files (e.g., `import { foo } from "./foo.js"`).
+- **Organization**: Imports are automatically sorted (External > Workspace > Relative).
+- **Workspace Packages**: Use `@magicappdev/` prefix for internal dependencies.
+
+#### TypeScript & Types
+
+- **Strict Mode**: `strict: true` is enabled. Avoid `any` unless absolutely necessary.
+- **Inference**: Use Type Inference for local variables.
+- **Schema Types**: Export inferred types from Drizzle schemas:
+  ```typescript
+  export type User = typeof users.$inferSelect;
+  export type NewUser = typeof users.$inferInsert;
+  ```
+- **Interfaces**: Prefer `interface` for public APIs and props.
+- **Utility Types**: Use `Record<string, unknown>` for generic objects instead of `object` or `any`.
+
+#### Naming Conventions
+
+- **Variables/Functions**: `camelCase`
+- **Components/Types/Interfaces**: `PascalCase`
+- **Files**: `kebab-case.ts` or `kebab-case.tsx`
+- **Constants**: `UPPER_SNAKE_CASE`
+- **Database Tables/Columns**: `snake_case`
+
+#### Error Handling
+
+- **API Requests**: Always check `response.ok` before parsing JSON.
+- **Error Extraction**: Parse error messages from the backend response:
+  ```typescript
+  const errorData = await response.json().catch(() => ({}));
+  const message = errorData.error?.message || "Request failed";
+  throw new Error(message);
+  ```
+- **API Format**: Backend errors follow `{ success: false, error: { code, message } }`.
+- **Validation**: Use Zod schemas for request body validation.
+
+#### React Patterns (Web & Mobile)
+
+- **Components**: Use functional components with hooks.
+- **Ref Forwarding**: Use `forwardRef` for UI components:
+  ```typescript
+  export const Button = forwardRef<HTMLButtonElement, ButtonProps>(...)
+  ```
+- **Styling**:
+  - **Web**: Tailwind CSS utility classes with `cn()` helper. Avoid inline styles.
+  - **Mobile**: `StyleSheet.create()` for native components. Use theme constants from `@magicappdev/shared`.
+- **Context**: Use React Context for global state (Auth, Theme).
+
+#### Database & API (Cloudflare)
+
+- **Drizzle**: Define schemas in `packages/database/src/schema/`. Export the combined schema object in `index.ts`.
+- **Hono API**: Use the middleware pattern for auth: `app.use("/path/*", authMiddleware)`.
+- **Auth**: Access the authenticated user via `c.get("userId")` in Hono.
+- **Environment**: Access variables through `c.env` (e.g., `c.env.DB`, `c.env.JWT_SECRET`).
+
+#### Comments
+
+- **Minimalism**: Write self-documenting code. Use comments only for "why", not "what".
+- **JSDoc**: Use sparingly for complex exported utilities.
+
+### 3. Testing and Quality Assurance
+
+- **Framework**: Vitest is used for unit and integration tests.
+- **Execution**: Run `pnpm test` to execute all tests in the workspace.
+- **Continuous Integration**: GitHub Actions runs linting, typechecking, and tests on every push.
+- **Pre-commit Workflow**: Husky and lint-staged ensure code quality before commits.

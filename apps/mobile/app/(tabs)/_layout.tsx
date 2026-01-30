@@ -1,7 +1,8 @@
 import { useTheme } from "../../contexts/ThemeContext";
 import { TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Tabs, router } from "expo-router";
+import Tabs from "expo-router/tabs.js";
+import { router } from "expo-router";
 import React from "react";
 
 export default function TabLayout() {
@@ -45,7 +46,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({ color, size }: { color: string; size: number }) => (
             <Ionicons name="home" size={size} color={color} />
           ),
         }}
@@ -54,7 +55,7 @@ export default function TabLayout() {
         name="chat"
         options={{
           title: "AI Chat",
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({ color, size }: { color: string; size: number }) => (
             <Ionicons name="chatbubble" size={size} color={color} />
           ),
         }}
@@ -63,7 +64,7 @@ export default function TabLayout() {
         name="projects"
         options={{
           title: "Projects",
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({ color, size }: { color: string; size: number }) => (
             <Ionicons name="folder" size={size} color={color} />
           ),
         }}

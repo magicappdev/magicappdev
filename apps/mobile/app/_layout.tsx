@@ -1,13 +1,9 @@
 import { AuthProvider, useAuth } from "../contexts/AuthContext";
 import { ThemeProvider } from "../contexts/ThemeContext";
-import { Stack, router, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+import { router, useSegments } from "expo-router";
+import { Stack } from "expo-router";
 import { useEffect } from "react";
-
-export {
-  // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
-} from "expo-router";
 
 export const unstable_settings = {
   // Ensure that reloading on `/modal` keeps a back button present.
@@ -38,6 +34,9 @@ function RootLayoutNav() {
   useEffect(() => {
     if (!isLoading) {
       SplashScreen.hideAsync();
+      {
+        /* <ErrorBoundary /> */
+      }
     }
   }, [isLoading]);
 

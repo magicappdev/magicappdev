@@ -45,8 +45,7 @@ export default function HomeScreen() {
           Describe your app idea and our AI will help you generate code,
           components, and full projects.
         </Text>
-        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <Link href={"/chat" as any} asChild>
+        <Link href={"/chat"}>
           <TouchableOpacity
             style={[styles.button, { backgroundColor: theme.colors.primary }]}
             activeOpacity={0.8}

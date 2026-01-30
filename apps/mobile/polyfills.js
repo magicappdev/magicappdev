@@ -67,6 +67,10 @@ if (typeof global !== "undefined") {
   global._objectWithoutProperties = _objectWithoutProperties;
   global._objectWithoutPropertiesLoose = _objectWithoutPropertiesLoose;
   global._extends = _extends;
+  // Also define numbered variants that Metro bundler might create
+  global._objectWithoutPropertiesLoose2 = _objectWithoutPropertiesLoose;
+  global._objectWithoutPropertiesLoose3 = _objectWithoutPropertiesLoose;
+  global._objectWithoutPropertiesLoose4 = _objectWithoutPropertiesLoose;
 }
 
 if (typeof window !== "undefined") {
@@ -74,4 +78,8 @@ if (typeof window !== "undefined") {
   window._objectWithoutProperties = _objectWithoutProperties;
   window._objectWithoutPropertiesLoose = _objectWithoutPropertiesLoose;
   window._extends = _extends;
+  // Also define numbered variants that Metro bundler might create
+  window._objectWithoutPropertiesLoose2 = _objectWithoutPropertiesLoose;
+  window._objectWithoutPropertiesLoose3 = _objectWithoutPropertiesLoose;
+  window._objectWithoutPropertiesLoose4 = _objectWithoutPropertiesLoose;
 }

@@ -33,7 +33,7 @@
     },
     "web": {
       "favicon": "./assets/favicon.png",
-      "output": "static"
+      "output": "single"
     },
     "scheme": "magicappdev",
     "plugins": ["expo-router", "expo-secure-store"],
