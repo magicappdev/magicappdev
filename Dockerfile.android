@@ -1,0 +1,48 @@
+FROM eclipse-temurin:17-jdk-jammy
+
+# Install Android SDK and build tools
+RUN apt-get update && apt-get install -y \
+    wget \
+    unzip \
+    git \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set up Android environment variables
+ENV ANDROID_HOME=/opt/android-sdk
+ENV ANDROID_SDK_ROOT=$ANDROID_HOME
+
+# Download and install Android command line tools
+RUN mkdir -p ${ANDROID_HOME}/cmdline-tools && \
+    cd ${ANDROID_HOME}/cmdline-tools && \
+    wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip && \
+    unzip commandlinetools-linux-11076708_latest.zip && \
+    rm commandlinetools-linux-11076708_latest.zip && \
+    mv cmdline-tools latest
+
+# Set PATH after installing cmdline-tools
+ENV PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
+
+# Accept Android licenses
+RUN yes | ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --licenses
+
+# Install required Android SDK components
+RUN ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --update && \
+    ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager \
+    "platform-tools" \
+    "platforms;android-35" \
+    "build-tools;35.0.0" \
+    "ndk;26.1.10909125"
+
+# Install Node.js
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y nodejs && \
+    npm install -g pnpm@latest
+
+# Set up working directory
+WORKDIR /app
+
+# Expose Metro bundler port
+EXPOSE 8081
+
+CMD ["/bin/bash"]

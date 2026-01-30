@@ -76,3 +76,5 @@ packages/axiom-cloudflare-workers/*.vars
 packages/axiom-cloudflare-workers/.dev.vars.example
 
 apps/mobile/.idea
+
+.pnpm-store

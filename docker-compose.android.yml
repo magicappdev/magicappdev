@@ -1,0 +1,21 @@
+services:
+  android-builder:
+    build:
+      context: .
+      dockerfile: Dockerfile.android
+    volumes:
+      - ./:/app
+      - android-cache:/root/.android
+      - gradle-cache:/root/.gradle
+      - node-modules-cache:/app/node_modules
+    working_dir: /app/apps/mobile
+    environment:
+      - NODE_ENV=development
+      - EXPO_USE_FAST_REFRESH=1
+    stdin_open: true
+    tty: true
+
+volumes:
+  android-cache:
+  gradle-cache:
+  node-modules-cache:

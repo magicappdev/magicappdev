@@ -199,7 +199,12 @@
       "Bash(powershell.exe -Command \"pnpm install\")",
       "Bash(powershell.exe -Command \"npm install\")",
       "Bash(cmd.exe:*)",
-      "Bash(xargs cat)"
+      "Bash(xargs cat)",
+      "Bash(xargs:*)",
+      "Bash(powershell.exe -Command \"cd ''D:\\\\repos\\\\magicappdev\\\\apps\\\\mobile\\\\android''; .\\\\gradlew.bat --no-daemon --version 2>&1\")",
+      "Bash(powershell.exe:*)",
+      "Bash(Select-String:*)",
+      "Bash(Select-Object -Last 20)"
     ]
   },
   "enableAllProjectMcpServers": true,
