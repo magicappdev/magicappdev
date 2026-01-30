@@ -72,8 +72,10 @@
 - **mobile/api:** fix style deprecations and add settings menu ([990e256](https://github.com/magicappdev/magicappdev/commit/990e25627674434d158f0892b722819ff9ba26a6))
 - **mobile:** add accessibility and unique project naming ([a6565c8](https://github.com/magicappdev/magicappdev/commit/a6565c87835afbf41219c26ce62516bdd23b31e4))
 - **mobile:** add app metadata, plugins, and dependencies ([d4ad5b5](https://github.com/magicappdev/magicappdev/commit/d4ad5b5c08c0a76620d31b7a405a968d77b9121f))
+- **mobile:** add cross-platform storage abstraction for web compatibility ([8a4c4be](https://github.com/magicappdev/magicappdev/commit/8a4c4be7d63de9f4180a0e9a7246a05f6c6b5a4b))
 - **mobile:** add icon generation script with transparency support ([581fc0a](https://github.com/magicappdev/magicappdev/commit/581fc0a1d1128df040eb953c3608223bb241d1a1))
 - **mobile:** apply theme context to all screens and add project creation modal ([6573263](https://github.com/magicappdev/magicappdev/commit/657326397ab569cb92e948b8534104ca646dfd36))
+- **mobile:** downgrade React from 19 to 18 for Expo SDK 54 compatibility ([fed1bf5](https://github.com/magicappdev/magicappdev/commit/fed1bf5f1fed3723cdfd8ff17ba181b2d5183f6e))
 - **mobile:** enhance icon generation with modern gradient themes ([7eb5757](https://github.com/magicappdev/magicappdev/commit/7eb57578ddc7d81b5d81b0ce32d188d608077dd5))
 - **mobile:** fix settings page to use theme context ([2c65296](https://github.com/magicappdev/magicappdev/commit/2c652961f92df08542c5878aeb1124f60df8fa32))
 - **mobile:** implement dark mode with theme system and convert icons to PNG ([9a69aed](https://github.com/magicappdev/magicappdev/commit/9a69aed26f21d1e733990496539554ab0a1a22de))
@@ -99,4 +101,5 @@
 
 ### BREAKING CHANGES
 
+- **mobile:** Mobile app now requires React 18 instead of React 19
 - **agent:** Mobile chat now uses AgentClient instead of SSE
