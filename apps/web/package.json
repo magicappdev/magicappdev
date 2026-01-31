@@ -12,6 +12,9 @@
     "lint": "eslint . --ignore-pattern '*.d.ts'",
     "lint:fix": "eslint --fix .",
     "preview": "wrangler dev",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:ui": "playwright test --ui",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

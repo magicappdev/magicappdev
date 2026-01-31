@@ -1,58 +1,69 @@
 {
-  "name": "axiom-cloudflare-workers",
+  "name": "database",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "packages/axiom-cloudflare-workers/src",
+  "sourceRoot": "packages/database/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "nx:run-commands",
       "options": {
         "commands": ["tsc"],
-        "cwd": "packages/axiom-cloudflare-workers"
+        "cwd": "packages/database"
       }
     },
-    "deploy": {
+    "generate": {
       "executor": "nx:run-commands",
       "options": {
-        "commands": ["wrangler deploy"],
-        "cwd": "packages/axiom-cloudflare-workers"
+        "commands": ["drizzle-kit generate"],
+        "cwd": "packages/database"
       }
     },
-    "dev": {
+    "migrate:local": {
       "executor": "nx:run-commands",
       "options": {
-        "commands": ["wrangler dev"],
-        "cwd": "packages/axiom-cloudflare-workers"
+        "commands": [
+          "wrangler d1 execute DB --local --file=./drizzle/migrations/migration.sql"
+        ],
+        "cwd": "packages/database"
+      }
+    },
+    "migrate:prod": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "wrangler d1 execute DB --file=./drizzle/migrations/migration.sql"
+        ],
+        "cwd": "packages/database"
       }
     },
     "typecheck": {
       "executor": "nx:run-commands",
       "options": {
         "commands": ["tsc --noEmit"],
-        "cwd": "packages/axiom-cloudflare-workers"
+        "cwd": "packages/database"
       }
     },
     "lint": {
       "executor": "nx:run-commands",
       "options": {
         "commands": ["eslint ."],
-        "cwd": "packages/axiom-cloudflare-workers"
+        "cwd": "packages/database"
       }
     },
     "lint:fix": {
       "executor": "nx:run-commands",
       "options": {
         "commands": ["eslint . --fix"],
-        "cwd": "packages/axiom-cloudflare-workers"
+        "cwd": "packages/database"
       }
     },
     "clean": {
       "executor": "nx:run-commands",
       "options": {
         "commands": ["npx rimraf node_modules dist"],
-        "cwd": "packages/axiom-cloudflare-workers"
+        "cwd": "packages/database"
       }
     }
   },
-  "tags": ["type:axiom", "platform:cloudflare"]
+  "tags": ["type:database", "platform:cloudflare"]
 }

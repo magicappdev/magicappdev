@@ -1,0 +1,44 @@
+{
+  "name": "shared",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/shared/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["tsc"],
+        "cwd": "packages/shared"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["tsc --noEmit"],
+        "cwd": "packages/shared"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["eslint ."],
+        "cwd": "packages/shared"
+      }
+    },
+    "lint:fix": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["eslint . --fix"],
+        "cwd": "packages/shared"
+      }
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["npx rimraf node_modules dist"],
+        "cwd": "packages/shared"
+      }
+    }
+  },
+  "tags": ["type:shared", "platform:node"]
+}

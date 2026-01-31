@@ -1,58 +1,58 @@
 {
-  "name": "axiom-cloudflare-workers",
+  "name": "llmchat",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "packages/axiom-cloudflare-workers/src",
+  "sourceRoot": "packages/llmchat/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "nx:run-commands",
       "options": {
         "commands": ["tsc"],
-        "cwd": "packages/axiom-cloudflare-workers"
+        "cwd": "packages/llmchat"
       }
     },
     "deploy": {
       "executor": "nx:run-commands",
       "options": {
         "commands": ["wrangler deploy"],
-        "cwd": "packages/axiom-cloudflare-workers"
+        "cwd": "packages/llmchat"
       }
     },
     "dev": {
       "executor": "nx:run-commands",
       "options": {
         "commands": ["wrangler dev"],
-        "cwd": "packages/axiom-cloudflare-workers"
+        "cwd": "packages/llmchat"
       }
     },
     "typecheck": {
       "executor": "nx:run-commands",
       "options": {
         "commands": ["tsc --noEmit"],
-        "cwd": "packages/axiom-cloudflare-workers"
+        "cwd": "packages/llmchat"
       }
     },
     "lint": {
       "executor": "nx:run-commands",
       "options": {
         "commands": ["eslint ."],
-        "cwd": "packages/axiom-cloudflare-workers"
+        "cwd": "packages/llmchat"
       }
     },
     "lint:fix": {
       "executor": "nx:run-commands",
       "options": {
         "commands": ["eslint . --fix"],
-        "cwd": "packages/axiom-cloudflare-workers"
+        "cwd": "packages/llmchat"
       }
     },
     "clean": {
       "executor": "nx:run-commands",
       "options": {
         "commands": ["npx rimraf node_modules dist"],
-        "cwd": "packages/axiom-cloudflare-workers"
+        "cwd": "packages/llmchat"
       }
     }
   },
-  "tags": ["type:axiom", "platform:cloudflare"]
+  "tags": ["type:llmchat", "platform:cloudflare"]
 }

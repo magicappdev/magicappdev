@@ -3,34 +3,38 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build", "format", "typecheck", "lint"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
-    },
-    "build:cli": {
-      "dependsOn": ["@magicappdev/cli#build"]
-    },
-    "build:web": {
-      "dependsOn": ["@magicappdev/web#build"]
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"],
+      "cache": false
     },
     "build:api": {
       "dependsOn": ["@magicappdev/api#build"]
     },
-    "build:agent": {
-      "dependsOn": ["@magicappdev/agent#build"]
+    "build:cli": {
+      "dependsOn": ["@magicappdev/cli#build"]
     },
     "build:db": {
       "dependsOn": ["@magicappdev/database#build"]
     },
-    "build:templates": {
-      "dependsOn": ["@magicappdev/templates#build"]
+    "build:mobile": {
+      "dependsOn": ["@magicappdev/mobile#build"]
     },
     "build:shared": {
       "dependsOn": ["@magicappdev/shared#build"]
     },
+    "build:web": {
+      "dependsOn": ["@magicappdev/web#build"]
+    },
+    "build:agent": {
+      "dependsOn": ["@magicappdev/agent#build"]
+    },
     "build:llmchat": {
       "dependsOn": ["@magicappdev/llmchat#build"]
     },
-    "build:mobile": {
-      "dependsOn": ["@magicappdev/mobile#build"]
+    "build:templates": {
+      "dependsOn": ["@magicappdev/templates#build"]
+    },
+    "build:axiom": {
+      "dependsOn": ["@magicappdev/axiom-cloudflare-workers#build"]
     },
     "dev": {
       "cache": false,
@@ -45,6 +49,10 @@
     },
     "lint:fix": {
       "dependsOn": ["^lint:fix"],
+      "outputs": []
+    },
+    "test": {
+      "dependsOn": ["^test"],
       "outputs": []
     },
     "typecheck": {
