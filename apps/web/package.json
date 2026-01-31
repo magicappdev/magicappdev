@@ -27,7 +27,7 @@
     "hono": "^4.11.5",
     "lucide-react": "^0.562.0",
     "react": "19.1.0",
-    "react-dom": "19.1.0",
+    "react-dom": "19.2.4",
     "react-router-dom": "^7.1.5",
     "zod": "^4.3.6"
   },
