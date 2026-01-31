@@ -13,8 +13,10 @@ import {
   Sparkles,
   Trash2,
   User as UserIcon,
+  Monitor,
 } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import Preview, { type PreviewFile } from "@/components/ui/Preview.js";
 import { Typography } from "@/components/ui/Typography";
 // import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/Button";
@@ -62,6 +64,8 @@ export default function ChatPage() {
     useState<GeneratedProject | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [expandedFiles, setExpandedFiles] = useState<Set<string>>(new Set());
+  const [showPreview, setShowPreview] = useState(true);
+  const [previewFile, setPreviewFile] = useState<string | null>(null);
   const pendingFilesRef = useRef<GeneratedFile[]>([]);
 
   const wsRef = useRef<WebSocket | null>(null);
@@ -498,7 +502,7 @@ export default function ChatPage() {
 
         {/* Generated Project Display */}
         {generatedProject && (
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-7xl mx-auto">
             <Card className="overflow-hidden border-primary/20">
               <div className="flex items-center justify-between p-4 border-b bg-primary/5 border-primary/10">
                 <div className="flex items-center gap-2">
@@ -511,6 +515,14 @@ export default function ChatPage() {
                   </span>
                 </div>
                 <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outlined"
+                    onClick={() => setShowPreview(!showPreview)}
+                  >
+                    <Monitor className="w-4 h-4 mr-2" />
+                    {showPreview ? "Hide Preview" : "Show Preview"}
+                  </Button>
                   <Button
                     size="sm"
                     variant="outlined"
@@ -529,28 +541,64 @@ export default function ChatPage() {
                 </div>
               </div>
 
-              <div className="divide-y divide-outline/10 max-h-[60vh] overflow-y-auto">
-                {generatedProject.files.map(file => (
-                  <div key={file.path}>
-                    <button
-                      onClick={() => toggleFileExpanded(file.path)}
-                      className="flex items-center w-full gap-2 p-3 text-left hover:bg-surface/50"
-                    >
-                      {expandedFiles.has(file.path) ? (
-                        <ChevronDown className="w-4 h-4 text-foreground/60" />
-                      ) : (
-                        <ChevronRight className="w-4 h-4 text-foreground/60" />
+              <div
+                className={cn(
+                  "flex min-h-[60vh]",
+                  showPreview ? "flex-row" : "flex-col",
+                )}
+              >
+                {/* Code View */}
+                <div
+                  className={cn(
+                    "divide-y divide-outline/10 overflow-y-auto",
+                    showPreview
+                      ? "flex-1 border-r border-outline/10"
+                      : "w-full",
+                  )}
+                >
+                  {generatedProject.files.map(file => (
+                    <div key={file.path}>
+                      <button
+                        onClick={() => {
+                          toggleFileExpanded(file.path);
+                          setPreviewFile(file.path);
+                        }}
+                        className="flex items-center w-full gap-2 p-3 text-left hover:bg-surface/50"
+                      >
+                        {expandedFiles.has(file.path) ? (
+                          <ChevronDown className="w-4 h-4 text-foreground/60" />
+                        ) : (
+                          <ChevronRight className="w-4 h-4 text-foreground/60" />
+                        )}
+                        <FileCode className="w-4 h-4 text-primary" />
+                        <span className="font-mono text-sm">{file.path}</span>
+                      </button>
+                      {expandedFiles.has(file.path) && (
+                        <pre className="p-4 overflow-x-auto text-sm bg-black/50">
+                          <code className="text-green-400">{file.content}</code>
+                        </pre>
                       )}
-                      <FileCode className="w-4 h-4 text-primary" />
-                      <span className="font-mono text-sm">{file.path}</span>
-                    </button>
-                    {expandedFiles.has(file.path) && (
-                      <pre className="p-4 overflow-x-auto text-sm bg-black/50">
-                        <code className="text-green-400">{file.content}</code>
-                      </pre>
-                    )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Preview View */}
+                {showPreview && (
+                  <div className="flex-1">
+                    <Preview
+                      files={generatedProject.files.map(
+                        f =>
+                          ({
+                            path: f.path,
+                            content: f.content,
+                          }) as PreviewFile,
+                      )}
+                      activeFile={previewFile || undefined}
+                      onFileSelect={setPreviewFile}
+                      className="h-[60vh]"
+                    />
                   </div>
-                ))}
+                )}
               </div>
 
               {Object.keys(generatedProject.dependencies).length > 0 && (
