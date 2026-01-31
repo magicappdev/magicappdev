@@ -40,6 +40,10 @@ export interface Env {
   MOBILE_REDIRECT_URI?: string;
   /** Cloudflare AI Gateway ID */
   AI_GATEWAY_ID?: string;
+  /** Admin API keys (comma-separated) */
+  ADMIN_API_KEYS?: string;
+  /** Rate limiting KV namespace */
+  RATE_LIMIT_KV?: KVNamespace;
 }
 
 /** App context variables */

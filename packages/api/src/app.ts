@@ -2,6 +2,7 @@
  * Hono app configuration
  */
 
+import { rateLimitMiddleware } from "./middlewares/rate-limit.js";
 import { createDatabase } from "@magicappdev/database";
 import { authMiddleware } from "./middlewares/auth.js";
 import { projectsRoutes } from "./routes/projects.js";
@@ -40,11 +41,14 @@ export function createApp() {
         return allowedOrigins[2]; // Default to production
       },
       allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-      allowHeaders: ["Content-Type", "Authorization"],
+      allowHeaders: ["Content-Type", "Authorization", "X-API-Key"],
       credentials: true,
       maxAge: 86400,
     }),
   );
+
+  // Rate limiting middleware (applies to all routes)
+  app.use("*", rateLimitMiddleware);
 
   // Database middleware - initialize database client
   app.use("*", async (c, next) => {
