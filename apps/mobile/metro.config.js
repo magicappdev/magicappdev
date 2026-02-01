@@ -41,21 +41,25 @@ config.resolver.nodeModulesPaths = [
   path.resolve(workspaceRoot, "node_modules"),
 ];
 
+// Helper to robustly resolve packages in a monorepo
+const resolvePkg = pkg => {
+  try {
+    return path.dirname(
+      require.resolve(`${pkg}/package.json`, { paths: [projectRoot, workspaceRoot] }),
+    );
+  } catch (e) {
+    return path.resolve(workspaceRoot, "node_modules", pkg);
+  }
+};
+
 // Force resolution to use node_modules for workspace packages
 config.resolver.extraNodeModules = {
   "@magicappdev/shared": path.resolve(workspaceRoot, "packages/shared"),
-  "@expo/metro-runtime": path.resolve(
-    workspaceRoot,
-    "node_modules/@expo/metro-runtime",
-  ),
-  "expo-router": path.resolve(workspaceRoot, "node_modules/expo-router"),
-  "react-native": path.resolve(workspaceRoot, "node_modules/react-native"),
-  react: path.resolve(workspaceRoot, "node_modules/react"),
-  // Point @babel/runtime to the pnpm installation location
-  "@babel/runtime": path.resolve(
-    workspaceRoot,
-    "node_modules/.pnpm/@babel+runtime@7.28.6/node_modules/@babel/runtime",
-  ),
+  "@expo/metro-runtime": resolvePkg("@expo/metro-runtime"),
+  "expo-router": resolvePkg("expo-router"),
+  "react-native": resolvePkg("react-native"),
+  react: resolvePkg("react"),
+  "@babel/runtime": resolvePkg("@babel/runtime"),
 };
 
 // Add support for 3D model files
