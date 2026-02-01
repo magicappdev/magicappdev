@@ -6,9 +6,17 @@ const workspaceRoot = path.resolve(projectRoot, "../..");
 
 const config = getDefaultConfig(projectRoot);
 
-// Helper to resolve package paths dynamically using require.resolve
-const resolvePackage = name => {
-  return path.dirname(require.resolve(path.join(name, "package.json")));
+// Helper to robustly resolve packages in a monorepo
+const resolvePkg = pkg => {
+  try {
+    return path.dirname(
+      require.resolve(`${pkg}/package.json`, {
+        paths: [projectRoot, workspaceRoot],
+      }),
+    );
+  } catch (e) {
+    return path.resolve(workspaceRoot, "node_modules", pkg);
+  }
 };
 
 // 1. Watch all files within the monorepo
@@ -49,11 +57,11 @@ config.resolver.extraNodeModules = {
   // Workspace packages should resolve from their source directory for hot-reloading
   "@magicappdev/shared": path.resolve(workspaceRoot, "packages/shared"),
   // Use require.resolve for third-party packages to handle pnpm's symlink structure robustly
-  "@expo/metro-runtime": resolvePackage("@expo/metro-runtime"),
-  "expo-router": resolvePackage("expo-router"),
-  "react-native": resolvePackage("react-native"),
-  react: resolvePackage("react"),
-  "@babel/runtime": resolvePackage("@babel/runtime"),
+  "@expo/metro-runtime": resolvePkg("@expo/metro-runtime"),
+  "expo-router": resolvePkg("expo-router"),
+  "react-native": resolvePkg("react-native"),
+  react: resolvePkg("react"),
+  "@babel/runtime": resolvePkg("@babel/runtime"),
 };
 
 // Add support for 3D model files

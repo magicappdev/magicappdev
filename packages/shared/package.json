@@ -47,6 +47,7 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.lib.json && node scripts/fix-imports.js",
+    "clean": "rm -rf dist node_modules",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "vitest run --passWithNoTests",

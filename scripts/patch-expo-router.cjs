@@ -1,44 +1,91 @@
 #!/usr/bin/env node
 
 /**
- * Patch expo-router to replace React 19's use() with React 18's useContext()
- * and inject missing babel helpers
- *
- * This script is needed because expo-router@6.0.22 was built with React 19
- * and uses the use() API which doesn't exist in React 18.
- * Expo SDK 54 requires React 18, so we need to patch the package.
+ * Robust patch for expo-router to replace React 19's use() with React 18's useContext()
+ * and inject missing babel helpers.
  */
 
 const path = require("path");
 const fs = require("fs");
 
 const rootDir = path.resolve(__dirname, "..");
-const nodeModulesDir = path.join(rootDir, "node_modules", ".pnpm");
 
-console.log("🔧 Patching expo-router for React 18 compatibility...");
+console.log("🔧 Running robust patch for expo-router...");
+
+function findPackageDirs(startDir, packageName) {
+  const results = [];
+  
+  function walk(dir) {
+    if (!fs.existsSync(dir)) return;
+    
+    // Skip common non-package directories
+    if (dir.includes(".git") || dir.includes(".nx") || dir.includes(".turbo")) return;
+
+    try {
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        
+        if (entry.isDirectory()) {
+          if (entry.name === "node_modules") {
+            const pkgPath = path.join(fullPath, packageName);
+            if (fs.existsSync(pkgPath)) {
+              results.push(pkgPath);
+            }
+            // Also look inside .pnpm virtual store if it exists
+            const pnpmStore = path.join(fullPath, ".pnpm");
+            if (fs.existsSync(pnpmStore)) {
+              try {
+                const pnpmEntries = fs.readdirSync(pnpmStore, { withFileTypes: true });
+                for (const pnpmEntry of pnpmEntries) {
+                  if (pnpmEntry.isDirectory() && pnpmEntry.name.includes(packageName.replace("/", "+"))) {
+                    const nestedPkgPath = path.join(pnpmStore, pnpmEntry.name, "node_modules", packageName);
+                    if (fs.existsSync(nestedPkgPath)) {
+                      results.push(nestedPkgPath);
+                    }
+                  }
+                }
+              } catch (e) {
+                // Ignore errors reading .pnpm
+              }
+            }
+          } else {
+            walk(fullPath);
+          }
+        }
+      }
+    } catch (e) {
+      // Ignore errors reading directory
+    }
+  }
+  
+  walk(startDir);
+  return [...new Set(results.map(p => {
+    try {
+      return fs.realpathSync(p);
+    } catch (e) {
+      return p;
+    }
+  }))];
+}
 
 try {
-  // Find all expo-router directories
-  const expoRouterDirs = fs
-    .readdirSync(nodeModulesDir)
-    .filter(dir => dir.startsWith("expo-router@6.0.22"))
-    .map(dir =>
-      path.join(nodeModulesDir, dir, "node_modules", "expo-router", "build"),
-    )
+  const expoRouterPkgDirs = findPackageDirs(rootDir, "expo-router");
+  const buildDirs = expoRouterPkgDirs
+    .map(pkgDir => path.join(pkgDir, "build"))
     .filter(dir => fs.existsSync(dir));
 
-  if (expoRouterDirs.length === 0) {
-    console.log(
-      "✅ No expo-router directories found to patch (already patched or not installed)",
-    );
+  if (buildDirs.length === 0) {
+    console.log("✅ No expo-router installations found to patch.");
     process.exit(0);
   }
 
-  let patchedFiles = 0;
-  let patchedDirs = 0;
+  console.log(`🔍 Found ${buildDirs.length} expo-router installations to check.`);
 
-  // Helper function to inject
-  const babelHelperInjection = `// Polyfill for _objectWithoutPropertiesLoose helper
+  let patchedFilesCount = 0;
+
+  const babelHelperInjection = `"use strict";
+// Polyfill for _objectWithoutPropertiesLoose helper
 function _objectWithoutPropertiesLoose(source, excluded) {
   if (source == null) return {};
   var target = {};
@@ -57,106 +104,66 @@ var _objectWithoutPropertiesLoose3 = _objectWithoutPropertiesLoose;
 var _objectWithoutPropertiesLoose4 = _objectWithoutPropertiesLoose;
 `;
 
-  // Patterns to find files that need patching
   const reactUsePatterns = [
-    [/\(0,\s*react_1\.use\)\(/g, "(0, react_1.useContext)("],
-    [/React\.use\(/g, "React.useContext("],
+    { pattern: /\(0,\s*react_1\.use\)\(/g, replacement: "(0, react_1.useContext)(" },
+    { pattern: /React\.use\(/g, replacement: "React.useContext(" },
   ];
 
-  // Walk through each expo-router build directory
-  for (const buildDir of expoRouterDirs) {
-    const filesToPatch = [];
+  function patchFile(filePath) {
+    let content = fs.readFileSync(filePath, "utf8");
+    const originalContent = content;
 
-    // Find all JavaScript files
-    const findJsFiles = dir => {
-      const entries = fs.readdirSync(dir, { withFileTypes: true });
-      for (const entry of entries) {
-        const fullPath = path.join(dir, entry.name);
-        if (entry.isDirectory()) {
-          findJsFiles(fullPath);
-        } else if (entry.isFile() && entry.name.endsWith(".js")) {
-          const content = fs.readFileSync(fullPath, "utf8");
-          // Check if any pattern matches or if it needs babel helper injection
-          const needsReactUsePatch = reactUsePatterns.some(([pattern]) =>
-            pattern.test(content),
-          );
-          const needsBabelHelper =
-            content.includes("_objectWithoutPropertiesLoose") &&
-            !content.includes("var _objectWithoutPropertiesLoose = function");
-          const isExpoRoot = fullPath.endsWith("ExpoRoot.js");
+    const needsBabelHelper = 
+      content.includes("_objectWithoutPropertiesLoose") && 
+      !content.includes("var _objectWithoutPropertiesLoose = function") &&
+      !content.includes("function _objectWithoutPropertiesLoose");
+    
+    const isExpoRoot = filePath.endsWith("ExpoRoot.js");
 
-          if (needsReactUsePatch || needsBabelHelper || isExpoRoot) {
-            filesToPatch.push({
-              path: fullPath,
-              needsReactUsePatch,
-              needsBabelHelper,
-              isExpoRoot,
-            });
-          }
-        }
-      }
-    };
-
-    findJsFiles(buildDir);
-
-    // Patch each file
-    for (const {
-      path: filePath,
-      needsReactUsePatch,
-      needsBabelHelper,
-      isExpoRoot,
-    } of filesToPatch) {
-      try {
-        let content = fs.readFileSync(filePath, "utf8");
-        const originalContent = content;
-
-        // Inject babel helper if needed (for ExpoRoot.js and files that use it)
-        if (isExpoRoot || needsBabelHelper) {
-          if (
-            !content.includes("var _objectWithoutPropertiesLoose = function")
-          ) {
-            // Insert after the "use strict" directive
-            content = content.replace(
-              /"use strict";/,
-              `"use strict";\n${babelHelperInjection}`,
-            );
-          }
-        }
-
-        // Replace React.use with React.useContext
-        if (needsReactUsePatch) {
-          for (const [pattern, replacement] of reactUsePatterns) {
-            content = content.replace(pattern, replacement);
-          }
-        }
-
-        // Write back if changed
-        if (content !== originalContent) {
-          fs.writeFileSync(filePath, content, "utf8");
-          patchedFiles++;
-          console.log(`  ✓ Patched: ${path.relative(rootDir, filePath)}`);
-        }
-      } catch (err) {
-        console.warn(
-          `  ⚠️  Failed to patch: ${path.relative(rootDir, filePath)}`,
-          err.message,
-        );
+    // Inject babel helpers if needed
+    if (isExpoRoot || needsBabelHelper) {
+      if (!content.includes("function _objectWithoutPropertiesLoose")) {
+        content = content.replace(/"use strict";/, babelHelperInjection);
       }
     }
 
-    if (filesToPatch.length > 0) {
-      patchedDirs++;
+    // Replace React.use with React.useContext
+    for (const { pattern, replacement } of reactUsePatterns) {
+      content = content.replace(pattern, replacement);
+    }
+
+    if (content !== originalContent) {
+      fs.writeFileSync(filePath, content, "utf8");
+      console.log(`  ✓ Patched: ${path.relative(rootDir, filePath)}`);
+      patchedFilesCount++;
+      return true;
+    }
+    return false;
+  }
+
+  function walkAndPatch(dir) {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        walkAndPatch(fullPath);
+      } else if (entry.isFile() && entry.name.endsWith(".js")) {
+        patchFile(fullPath);
+      }
     }
   }
 
-  if (patchedFiles > 0) {
-    console.log(
-      `\n✅ Successfully patched ${patchedFiles} files in ${patchedDirs} expo-router installations`,
-    );
+  for (const buildDir of buildDirs) {
+    walkAndPatch(buildDir);
+  }
+
+  if (patchedFilesCount > 0) {
+    console.log(`\n✅ Successfully patched ${patchedFilesCount} files across ${buildDirs.length} installations.`);
   } else {
-    console.log("✅ No files needed patching (already patched)");
+    console.log("\n✅ All expo-router installations are already up to date.");
   }
+
 } catch (err) {
-  console.error("❌ Failed to patch expo-router:", err.message);
+  console.error("❌ Error during expo-router patching:", err);
   process.exit(1);
 }

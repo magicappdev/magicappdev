@@ -2,9 +2,16 @@
   "$schema": "https://turborepo.dev/schema.json",
   "tasks": {
     "build": {
-      "dependsOn": ["^build", "format", "typecheck", "lint"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"],
-      "cache": false
+      "dependsOn": ["^build", "typecheck"],
+      "inputs": [
+        "**/*",
+        "!node_modules/**",
+        "!dist/**",
+        "!.next/**",
+        "!build/**"
+      ],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**", "build/**"],
+      "cache": true
     },
     "build:api": {
       "dependsOn": ["@magicappdev/api#build"]
@@ -41,25 +48,69 @@
       "persistent": true
     },
     "format": {
-      "outputs": []
+      "inputs": [
+        "**/*",
+        "!node_modules/**",
+        "!dist/**",
+        "!.next/**",
+        "!build/**"
+      ],
+      "outputs": [],
+      "cache": true
     },
     "lint": {
       "dependsOn": ["^lint"],
-      "outputs": []
+      "inputs": [
+        "**/*",
+        "!node_modules/**",
+        "!dist/**",
+        "!.next/**",
+        "!build/**"
+      ],
+      "outputs": [],
+      "cache": true
     },
     "lint:fix": {
       "dependsOn": ["^lint:fix"],
-      "outputs": []
+      "inputs": [
+        "**/*",
+        "!node_modules/**",
+        "!dist/**",
+        "!.next/**",
+        "!build/**"
+      ],
+      "outputs": [],
+      "cache": false
     },
     "test": {
-      "dependsOn": ["^test"],
-      "outputs": []
+      "dependsOn": ["^build"],
+      "inputs": [
+        "**/*",
+        "!node_modules/**",
+        "!dist/**",
+        "!.next/**",
+        "!build/**"
+      ],
+      "outputs": [],
+      "cache": true
     },
     "typecheck": {
-      "dependsOn": ["^build", "^typecheck"]
+      "dependsOn": ["^build"],
+      "inputs": [
+        "**/*",
+        "!node_modules/**",
+        "!dist/**",
+        "!.next/**",
+        "!build/**"
+      ],
+      "outputs": ["tsconfig.tsbuildinfo"],
+      "cache": true
     },
     "deploy": {
       "dependsOn": ["build", "lint", "typecheck"],
+      "cache": false
+    },
+    "clean": {
       "cache": false
     }
   }
