@@ -70,19 +70,4 @@ config.resolver.assetExts.push("fbx", "glb", "gltf");
 // Add TypeScript extensions for source resolution
 config.resolver.sourceExts.push("ts", "tsx");
 
-// Enable package.json exports field support
-config.resolver.unstable_enablePackageExports = true;
-
-// Use react-native condition for package.json exports
-config.resolver.unstable_conditionNames = ["react-native", "require", "import"];
-
-// Prioritize react-native exports in package.json
-config.resolver.resolverMainFields = ["react-native", "browser", "main"];
-
-// Handle uuid import for newer versions - use modern import
-// This might be redundant if uuid is correctly resolved via extraNodeModules or hoisting
-config.resolver.alias = {
-  "uuid/v4": "uuid",
-};
-
 module.exports = config;

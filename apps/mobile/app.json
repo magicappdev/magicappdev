@@ -36,7 +36,20 @@
       "output": "single"
     },
     "scheme": "magicappdev",
-    "plugins": ["expo-router", "expo-secure-store"],
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "extraProp": {
+              "android.cxx.cacheDir": "C:\\Users\\lukas\\.gemini\\tmp\\magic-cxx"
+            }
+          }
+        }
+      ]
+    ],
     "extra": {
       "router": {},
       "eas": {

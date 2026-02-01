@@ -28,7 +28,7 @@
     "android:apk": {
       "executor": "nx:run-commands",
       "options": {
-        "commands": ["cd android && ./gradlew assembleRelease"],
+        "commands": ["cd android && gradlew assembleRelease"],
         "cwd": "apps/mobile"
       }
     },
