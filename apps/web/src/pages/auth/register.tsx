@@ -9,7 +9,7 @@ import { Github } from "lucide-react";
 import { api } from "@/lib/api";
 
 export default function RegisterPage() {
-  const { user, loginWithGitHub, isLoading } = useAuth();
+  const { user, loginWithGitHub, loginWithDiscord, isLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -31,6 +31,22 @@ export default function RegisterPage() {
       }
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : "An error occurred");
+    }
+  };
+
+  const handleGitHubLogin = async () => {
+    try {
+      await loginWithGitHub();
+    } catch (err: unknown) {
+      console.error(err);
+    }
+  };
+
+  const handleDiscordLogin = async () => {
+    try {
+      await loginWithDiscord();
+    } catch (err: unknown) {
+      console.error(err);
     }
   };
 
@@ -105,13 +121,25 @@ export default function RegisterPage() {
         </div>
 
         <Button
-          onClick={loginWithGitHub}
+          onClick={handleGitHubLogin}
           variant="outlined"
-          className="w-full"
+          className="w-full flex items-center justify-center gap-3"
           disabled={isLoading}
         >
-          <Github size={20} className="mr-2" />
+          <Github size={20} />
           GitHub
+        </Button>
+
+        <Button
+          onClick={handleDiscordLogin}
+          variant="outlined"
+          className="w-full flex items-center justify-center gap-3 mt-4"
+          disabled={isLoading}
+        >
+          <div className="w-5 h-5 bg-[#5865F2] rounded-full flex items-center justify-center">
+            <span className="text-white text-xs font-bold">D</span>
+          </div>
+          Discord
         </Button>
 
         <div className="text-center text-sm">

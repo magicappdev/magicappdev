@@ -79,6 +79,15 @@ export async function downloadAndGenerateProject(
     const finalContent = replacePlaceholders(fullContent, variables);
 
     const outputPath = path.join(outputDir, file.path);
+
+    // Security: Ensure the output path is within the output directory (prevent traversal)
+    const relative = path.relative(outputDir, outputPath);
+    if (relative.startsWith("..") || path.isAbsolute(relative)) {
+      throw new Error(
+        `Security violation: Invalid template file path ${file.path}`,
+      );
+    }
+
     const outputDirPath = path.dirname(outputPath);
 
     // Create parent directories if they don't exist

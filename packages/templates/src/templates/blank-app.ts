@@ -46,17 +46,29 @@ export const blankAppTemplate: Template = {
       content: `{
   "name": "{{kebabCase name}}",
   "version": "1.0.0",
+  {{#if (eq framework 'expo')}}
   "main": "expo-router/entry",
+  {{else}}
+  "main": "index.js",
+  {{/if}}
   "scripts": {
+    {{#if (eq framework 'expo')}}
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web"
+    {{else}}
+    "start": "react-native start",
+    "android": "react-native run-android",
+    "ios": "react-native run-ios"
+    {{/if}}
   },
   "dependencies": {
+    {{#if (eq framework 'expo')}}
     "expo": "~53.0.0",
     "expo-router": "~5.0.0",
     "expo-status-bar": "~2.2.0",
+    {{/if}}
     "react": "18.3.1",
     "react-native": "0.79.0"
   },
@@ -69,6 +81,7 @@ export const blankAppTemplate: Template = {
     },
     {
       path: "app.json",
+      condition: "framework === 'expo'",
       content: `{
   "expo": {
     "name": "{{name}}",
@@ -115,6 +128,7 @@ export const blankAppTemplate: Template = {
     },
     {
       path: "app/_layout.tsx",
+      condition: "framework === 'expo'",
       content: `{{{{raw}}}}import { Stack } from 'expo-router';
 
 export default function RootLayout() {
@@ -124,6 +138,7 @@ export default function RootLayout() {
     },
     {
       path: "app/index.tsx",
+      condition: "framework === 'expo'",
       content: `{{{{raw}}}}import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -156,6 +171,56 @@ const styles = StyleSheet.create({
   },
 });
 {{{{/raw}}}}`,
+    },
+    {
+      path: "index.js",
+      condition: "framework !== 'expo'",
+      content: `import { AppRegistry } from 'react-native';
+import App from './App';
+import { name as appName } from './package.json';
+
+AppRegistry.registerComponent(appName, () => App);
+`,
+    },
+    {
+      path: "App.tsx",
+      condition: "framework !== 'expo'",
+      content: `import React from 'react';
+import { StyleSheet, Text, View, SafeAreaView } from 'react-native';
+
+export default function App() {
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.content}>
+        <Text style={styles.title}>Welcome to {{name}}</Text>
+        <Text style={styles.subtitle}>React Native App created with MagicAppDev</Text>
+      </View>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  content: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#666',
+  },
+});
+`,
     },
     {
       path: "assets/.gitkeep",

@@ -7,12 +7,14 @@ import {
   TextInput,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useAuth } from "../contexts/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { router } from "expo-router";
 import { api } from "../lib/api";
 
 export default function RegisterScreen() {
+  const { loginWithGitHub, loginWithDiscord } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -87,6 +89,30 @@ export default function RegisterScreen() {
               <Text style={styles.buttonText}>Create Account</Text>
             )}
           </TouchableOpacity>
+
+          <View style={styles.divider}>
+            <View style={styles.line} />
+            <Text style={styles.dividerText}>OR</Text>
+            <View style={styles.line} />
+          </View>
+
+          <TouchableOpacity
+            style={styles.githubButton}
+            onPress={loginWithGitHub}
+            disabled={isLoading}
+          >
+            <Ionicons name="logo-github" size={24} color="#fff" />
+            <Text style={styles.buttonText}>Continue with GitHub</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.discordButton}
+            onPress={loginWithDiscord}
+            disabled={isLoading}
+          >
+            <Ionicons name="logo-discord" size={24} color="#fff" />
+            <Text style={styles.buttonText}>Continue with Discord</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>
@@ -140,6 +166,42 @@ const styles = StyleSheet.create({
   buttonText: {
     color: "#fff",
     fontSize: 18,
+    fontWeight: "600",
+  },
+  githubButton: {
+    backgroundColor: "#000",
+    flexDirection: "row",
+    height: 56,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+    marginTop: 12,
+  },
+  discordButton: {
+    backgroundColor: "#5865F2",
+    flexDirection: "row",
+    height: 56,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+    marginTop: 12,
+  },
+  divider: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 12,
+  },
+  line: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "#E5E5EA",
+  },
+  dividerText: {
+    marginHorizontal: 10,
+    color: "#8E8E93",
+    fontSize: 12,
     fontWeight: "600",
   },
 });

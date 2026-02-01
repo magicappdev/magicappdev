@@ -6,10 +6,15 @@ const workspaceRoot = path.resolve(projectRoot, "../..");
 
 const config = getDefaultConfig(projectRoot);
 
+// Helper to resolve package paths dynamically using require.resolve
+const resolvePackage = name => {
+  return path.dirname(require.resolve(path.join(name, "package.json")));
+};
+
 // 1. Watch all files within the monorepo
 config.watchFolders = [...(config.watchFolders || []), workspaceRoot];
 
-// 2. Configure watcher options for Windows/pnpm
+// 2. Configure watcher options
 config.watcher = {
   ...config.watcher,
   watchman: {
@@ -20,42 +25,35 @@ config.watcher = {
   },
 };
 
-// 3. Block problematic directories from watching (use resolver.blockList)
-// NOTE: Removed pnpm .pnpm blocking to allow @babel/runtime helpers to resolve
+// 3. Block problematic directories from watching
 config.resolver.blockList = [
-  // Exclude pnpm dlx cache (used by bun/pnpm)
-  /[A-Z]:\\.+\\pnpm-cache\\+.*/,
-  /.*\/pnpm-cache\/.*/,
+  // Exclude pnpm cache directories (works on both Windows and Linux)
+  /pnpm-cache/,
   // Exclude Metro's own cache
   /.*\/metro-.*/,
-  // Exclude Windows AppData
-  /[A-Z]:\\.+\\AppData\.+/,
 ];
 
-// 4. Reduce workers on Windows to prevent file handle issues
-config.maxWorkers = 2;
+// 4. Reduce workers on Windows to prevent file handle issues (optional, can be removed if not Windows-specific)
+if (process.platform === "win32") {
+  config.maxWorkers = 2;
+}
 
-// 5. Let Metro know where to resolve packages and in what order
+// 5. Set nodeModulesPaths to include local and root node_modules
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, "node_modules"),
   path.resolve(workspaceRoot, "node_modules"),
 ];
 
-// Force resolution to use node_modules for workspace packages
+// 6. Force resolution for critical workspace packages using dynamic paths
 config.resolver.extraNodeModules = {
+  // Workspace packages should resolve from their source directory for hot-reloading
   "@magicappdev/shared": path.resolve(workspaceRoot, "packages/shared"),
-  "@expo/metro-runtime": path.resolve(
-    workspaceRoot,
-    "node_modules/@expo/metro-runtime",
-  ),
-  "expo-router": path.resolve(workspaceRoot, "node_modules/expo-router"),
-  "react-native": path.resolve(workspaceRoot, "node_modules/react-native"),
-  react: path.resolve(workspaceRoot, "node_modules/react"),
-  // Point @babel/runtime to the pnpm installation location
-  "@babel/runtime": path.resolve(
-    workspaceRoot,
-    "node_modules/.pnpm/@babel+runtime@7.28.6/node_modules/@babel/runtime",
-  ),
+  // Use require.resolve for third-party packages to handle pnpm's symlink structure robustly
+  "@expo/metro-runtime": resolvePackage("@expo/metro-runtime"),
+  "expo-router": resolvePackage("expo-router"),
+  "react-native": resolvePackage("react-native"),
+  react: resolvePackage("react"),
+  "@babel/runtime": resolvePackage("@babel/runtime"),
 };
 
 // Add support for 3D model files
@@ -74,6 +72,7 @@ config.resolver.unstable_conditionNames = ["react-native", "require", "import"];
 config.resolver.resolverMainFields = ["react-native", "browser", "main"];
 
 // Handle uuid import for newer versions - use modern import
+// This might be redundant if uuid is correctly resolved via extraNodeModules or hoisting
 config.resolver.alias = {
   "uuid/v4": "uuid",
 };

@@ -7,9 +7,16 @@ import { api } from "../lib/api.js";
 import { Command } from "commander";
 import open from "open";
 import http from "http";
-export const authCommand = new Command("auth").description(
-  "Authentication commands",
-);
+export const authCommand = new Command("auth")
+  .description("Authentication commands")
+  .addHelpText(
+    "after",
+    `
+Examples:
+  $ magicappdev auth login
+  $ magicappdev auth whoami
+`,
+  );
 authCommand
   .command("login")
   .description("Login to MagicAppDev using GitHub")
@@ -18,6 +25,7 @@ authCommand
     header("Authentication");
     info("Opening GitHub login in your browser...");
     // Setup local callback server
+    const authState = crypto.randomUUID();
     const server = http.createServer(async (req, res) => {
       const url = new URL(req.url, `http://${req.headers.host}`);
       // Ignore favicon and other non-callback requests
@@ -28,11 +36,21 @@ authCommand
       }
       const accessToken = url.searchParams.get("accessToken");
       const refreshToken = url.searchParams.get("refreshToken");
+      const returnedState = url.searchParams.get("state");
       // If no tokens yet, this is just the initial browser request - wait for callback
       if (!accessToken && !refreshToken) {
         res.writeHead(200, { "Content-Type": "text/html" });
         res.end(
           "<h1>Authenticating...</h1><p>Please complete the GitHub login in the popup.</p>",
+        );
+        return;
+      }
+      // Verify state to prevent CSRF/bypass
+      if (returnedState !== authState) {
+        error("Login failed: Security state mismatch");
+        res.writeHead(403, { "Content-Type": "text/html" });
+        res.end(
+          "<h1>Login Failed</h1><p>Security state mismatch. Please try again.</p>",
         );
         return;
       }
@@ -86,7 +104,8 @@ authCommand
       const redirectUri = `http://localhost:${port}`;
       const loginUrl =
         api.getGitHubLoginUrl("mobile") +
-        `&redirect_uri=${encodeURIComponent(redirectUri)}`;
+        `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+        `&state=${authState}`;
       await open(loginUrl);
       info(`If the browser didn't open, visit: ${loginUrl}`);
     });

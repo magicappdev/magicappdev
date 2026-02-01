@@ -1127,9 +1127,7 @@ authRoutes.post("/api-keys", async c => {
 
     const apiKey = await generateUserApiKey();
     const keyPrefix = apiKey.substring(0, 8);
-    console.log("[POST /auth/api-keys] Generated key prefix:", keyPrefix);
 
-    console.log("[POST /auth/api-keys] Inserting into adminApiKeys...");
     const newKey = await db
       .insert(adminApiKeys)
       .values({
@@ -1145,7 +1143,6 @@ authRoutes.post("/api-keys", async c => {
       .returning()
       .get();
 
-    console.log("[POST /auth/api-keys] Key created successfully:", newKey);
     return c.json({
       success: true,
       data: {

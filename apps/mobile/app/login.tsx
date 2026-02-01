@@ -13,7 +13,7 @@ import React, { useState } from "react";
 import { router } from "expo-router";
 
 export default function LoginScreen() {
-  const { loginWithGitHub, login, isLoading } = useAuth();
+  const { loginWithGitHub, loginWithDiscord, login, isLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -73,6 +73,15 @@ export default function LoginScreen() {
           >
             <Ionicons name="logo-github" size={24} color="#fff" />
             <Text style={styles.buttonText}>Continue with GitHub</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.discordButton}
+            onPress={loginWithDiscord}
+            disabled={isLoading}
+          >
+            <Ionicons name="logo-discord" size={24} color="#fff" />
+            <Text style={styles.buttonText}>Continue with Discord</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -149,6 +158,15 @@ const styles = StyleSheet.create({
   },
   githubButton: {
     backgroundColor: "#000",
+    flexDirection: "row",
+    height: 56,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+  },
+  discordButton: {
+    backgroundColor: "#5865F2",
     flexDirection: "row",
     height: 56,
     borderRadius: 16,

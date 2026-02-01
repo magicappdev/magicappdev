@@ -28,6 +28,14 @@ interface GenerateOptions {
 export const generateCommand = new Command("generate")
   .alias("g")
   .description("Generate code from templates")
+  .addHelpText(
+    "after",
+    `
+Examples:
+  $ magicappdev generate component MyButton
+  $ magicappdev generate screen SettingsScreen --path ./app/settings
+`,
+  )
   .addCommand(
     new Command("component")
       .alias("c")

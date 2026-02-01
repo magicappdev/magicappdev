@@ -55,6 +55,17 @@ export function createProgram() {
     .description("CLI for creating and managing MagicAppDev apps")
     .version(VERSION, "-V, --version", "Display version number")
     .option("-d, --debug", "Enable debug mode for verbose logging")
+    .option("--no-update-check", "Skip checking for updates")
+    .addHelpText(
+      "after",
+      `
+Examples:
+  $ magicappdev init my-app
+  $ magicappdev chat
+  $ magicappdev auth login
+  $ magicappdev doctor
+`,
+    )
     .hook("preAction", thisCommand => {
       const opts = thisCommand.opts();
       if (opts.debug) {
@@ -83,10 +94,14 @@ export async function run(argv) {
   process.on("SIGTERM", () => {
     process.exit(0);
   });
+  const args = argv || process.argv;
+  const noUpdateCheck = args.includes("--no-update-check");
   // Check for updates (non-blocking)
-  checkForUpdates();
+  if (!noUpdateCheck) {
+    checkForUpdates();
+  }
   const program = createProgram();
-  await program.parseAsync(argv || process.argv);
+  await program.parseAsync(args);
 }
 // Run if executed directly
 if (import.meta.url.endsWith(process.argv[1].replace(/\\/g, "/"))) {

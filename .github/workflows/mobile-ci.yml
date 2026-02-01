@@ -30,13 +30,13 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@feaa28bfa4d01858c988c0525bd56a852e44c97b # v4.0.0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@1d429da20d2215f1d3d0098f983d22a907109bca # v4.2.1
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
@@ -57,19 +57,19 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@feaa28bfa4d01858c988c0525bd56a852e44c97b # v4.0.0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@1d429da20d2215f1d3d0098f983d22a907109bca # v4.2.1
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
 
       - name: Setup Java JDK
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@3a4f611168a3e460aead4c2ca2d72e566ca3f1fd # v4.2.2
         with:
           distribution: "temurin"
           java-version: ${{ env.JAVA_VERSION }}
@@ -78,13 +78,13 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@91056c3607ee99797555cbd2490190c1262ab5fa # v3.2.1
 
       - name: Run Expo prebuild
         run: pnpm nx run mobile:prebuild:clean
 
       - name: Cache Gradle dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
         with:
           path: |
             ~/.gradle/caches
@@ -103,7 +103,7 @@ jobs:
           NODE_OPTIONS: "--max-old-space-size=4096"
 
       - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@4cedc5d8ad05778b173c796e28adceb2173f605a # v4.6.0
         with:
           name: android-release-apk
           path: apps/mobile/android/app/build/outputs/apk/release/app-release.apk

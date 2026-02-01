@@ -114,7 +114,9 @@ export default function ChatScreen() {
       // Invalid or undefined host; do not attempt to connect
       return;
     }
-    console.log("Connecting to WebSocket:", wsUrl);
+    // Sanitize URL for logging to prevent log injection
+    const sanitizedUrl = wsUrl.replace(/[\r\n]/g, "");
+    console.log("Connecting to WebSocket:", sanitizedUrl);
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {

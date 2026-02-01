@@ -79,6 +79,15 @@ export const initCommand = new Command("init")
   .option("--typescript", "Use TypeScript", true)
   .option("-y, --yes", "Skip prompts and use defaults")
   .option("--no-install", "Skip installing dependencies")
+  .addHelpText(
+    "after",
+    `
+Examples:
+  $ magicappdev init my-app
+  $ magicappdev init my-app --template tabs --framework expo
+  $ magicappdev init my-app -y
+`,
+  )
   .action(async (name: string | undefined, options: InitOptions) => {
     logo();
     header("Create a new project");

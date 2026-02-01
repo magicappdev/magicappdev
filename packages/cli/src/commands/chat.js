@@ -9,6 +9,10 @@ import prompts from "prompts";
 import WebSocket from "ws";
 import chalk from "chalk";
 import ora from "ora";
+/** Sanitize user-controlled strings for logging to prevent log injection */
+function sanitize(str) {
+  return str.replace(/[\r\n]/g, " ");
+}
 // Handle Ctrl+C in prompts
 const onCancel = () => {
   console.log(chalk.dim("\nGoodbye!"));
@@ -17,6 +21,14 @@ const onCancel = () => {
 export const chatCommand = new Command("chat")
   .description("Chat with the Magic AI App Builder")
   .option("-d, --debug", "Enable debug logging")
+  .addHelpText(
+    "after",
+    `
+Examples:
+  $ magicappdev chat
+  $ magicappdev chat --debug
+`,
+  )
   .action(async options => {
     const debug = options.debug || process.env.DEBUG === "true";
     logo();
@@ -53,7 +65,7 @@ export const chatCommand = new Command("chat")
     });
     ws.on("close", (code, reason) => {
       clearTimeout(connectionTimeout);
-      const reasonStr = reason?.toString() || "Connection closed";
+      const reasonStr = sanitize(reason?.toString() || "Connection closed");
       if (debug) {
         console.log(
           chalk.dim(`\n[DEBUG] WebSocket closed: ${code} - ${reasonStr}`),
@@ -96,7 +108,11 @@ async function startChatLoop(ws, debug) {
       switch (message.type) {
         case "chat_start":
           if (debug) {
-            console.log(chalk.dim(`[DEBUG] Using model: ${message.model}`));
+            console.log(
+              chalk.dim(
+                `[DEBUG] Using model: ${sanitize(message.model || "unknown")}`,
+              ),
+            );
           }
           break;
         case "chat_chunk":
@@ -105,8 +121,11 @@ async function startChatLoop(ws, debug) {
             if (responseSpinner) {
               // Show last line of response in spinner
               const lastLine = currentResponse.split("\n").pop() || "...";
+              const sanitizedLine = sanitize(lastLine);
               responseSpinner.text = chalk.gray(
-                lastLine.length > 60 ? lastLine.slice(-60) + "..." : lastLine,
+                sanitizedLine.length > 60
+                  ? sanitizedLine.slice(-60) + "..."
+                  : sanitizedLine,
               );
             }
           }
@@ -123,11 +142,11 @@ async function startChatLoop(ws, debug) {
           if (message.suggestedTemplate) {
             console.log(
               chalk.yellow("\nSuggested Template:"),
-              chalk.bold(message.suggestedTemplate),
+              chalk.bold(sanitize(message.suggestedTemplate)),
             );
             console.log(
               chalk.dim(
-                `Run 'magicappdev init --template ${message.suggestedTemplate}' to use it.`,
+                `Run 'magicappdev init --template ${sanitize(message.suggestedTemplate)}' to use it.`,
               ),
             );
           }
@@ -142,9 +161,10 @@ async function startChatLoop(ws, debug) {
           break;
         case "error":
           if (responseSpinner) {
-            responseSpinner.fail(
-              `Error: ${message.error || message.message || "Unknown error"}`,
+            const errorMsg = sanitize(
+              message.error || message.message || "Unknown error",
             );
+            responseSpinner.fail(`Error: ${errorMsg}`);
           }
           currentResponse = "";
           waitingForResponse = false;

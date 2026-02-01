@@ -27,6 +27,14 @@ interface DoctorCheck {
 export const doctorCommand = new Command("doctor")
   .description("Diagnose project issues and check environment")
   .option("--fix", "Attempt to fix issues automatically")
+  .addHelpText(
+    "after",
+    `
+Examples:
+  $ magicappdev doctor
+  $ magicappdev doctor --fix
+`,
+  )
   .action(async () => {
     header("Project Diagnostics");
 

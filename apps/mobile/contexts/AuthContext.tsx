@@ -10,6 +10,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   loginWithGitHub: () => Promise<void>;
+  loginWithDiscord: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -149,6 +150,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const loginWithDiscord = async () => {
+    const redirectUri = Linking.createURL("auth/callback");
+    const authUrl =
+      api.getDiscordLoginUrl("mobile") +
+      `&redirect_uri=${encodeURIComponent(redirectUri)}`;
+
+    console.log("Starting Discord login with redirect:", redirectUri);
+
+    try {
+      const result = await WebBrowser.openAuthSessionAsync(
+        authUrl,
+        redirectUri,
+      );
+
+      if (result.type === "success") {
+        await handleDeepLink(result.url);
+      }
+    } catch (e) {
+      console.error("Discord login failed", e);
+    }
+  };
+
   const handleLogout = async () => {
     const refreshToken = await storage.getItemAsync("refresh_token");
     if (refreshToken) {
@@ -166,7 +189,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, isLoading, loginWithGitHub, login, logout: handleLogout }}
+      value={{
+        user,
+        isLoading,
+        loginWithGitHub,
+        loginWithDiscord,
+        login,
+        logout: handleLogout,
+      }}
     >
       {children}
     </AuthContext.Provider>

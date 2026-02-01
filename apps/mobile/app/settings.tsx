@@ -6,20 +6,85 @@ import {
   Text,
   TouchableOpacity,
   View,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../contexts/ThemeContext";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 import * as Theme from "../constants/theme";
 import { router } from "expo-router";
 import { Stack } from "expo-router";
-import React from "react";
+import { api } from "../lib/api";
+
+interface LinkedAccount {
+  id: string;
+  provider: string;
+  providerAccountId: string;
+  createdAt: string;
+}
 
 export default function SettingsScreen() {
-  const { user, logout } = useAuth();
+  const { user, logout, loginWithGitHub, loginWithDiscord } = useAuth();
   const { theme, mode, setMode } = useTheme();
   const [notifications, setNotifications] = React.useState(true);
+
+  const [linkedAccounts, setLinkedAccounts] = useState<LinkedAccount[]>([]);
+  const [isLoadingAccounts, setIsLoadingAccounts] = useState(false);
+  const [unlinkingProvider, setUnlinkingProvider] = useState<string | null>(
+    null,
+  );
+
+  useEffect(() => {
+    loadLinkedAccounts();
+  }, []);
+
+  const loadLinkedAccounts = async () => {
+    setIsLoadingAccounts(true);
+    try {
+      const accounts = await api.getLinkedAccounts();
+      setLinkedAccounts(accounts);
+    } catch (error) {
+      console.error("Failed to load linked accounts:", error);
+    } finally {
+      setIsLoadingAccounts(false);
+    }
+  };
+
+  const handleUnlink = async (provider: string) => {
+    Alert.alert(
+      "Unlink Account",
+      `Are you sure you want to unlink your ${provider} account?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Unlink",
+          style: "destructive",
+          onPress: async () => {
+            setUnlinkingProvider(provider);
+            try {
+              await api.unlinkAccount(provider);
+              setLinkedAccounts(prev =>
+                prev.filter(a => a.provider !== provider),
+              );
+            } catch (error) {
+              Alert.alert(
+                "Error",
+                error instanceof Error ? error.message : "Failed to unlink",
+              );
+            } finally {
+              setUnlinkingProvider(null);
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const isLinked = (provider: string) =>
+    linkedAccounts.some(a => a.provider === provider);
 
   if (!user) return null;
 
@@ -208,6 +273,93 @@ export default function SettingsScreen() {
             </Text>
             <Switch value={notifications} onValueChange={setNotifications} />
           </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text
+            style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}
+          >
+            Connected Accounts
+          </Text>
+
+          {isLoadingAccounts ? (
+            <ActivityIndicator
+              style={{ margin: 20 }}
+              color={theme.colors.primary}
+            />
+          ) : (
+            <>
+              {/* GitHub */}
+              <View
+                style={[
+                  styles.item,
+                  {
+                    backgroundColor: theme.colors.card,
+                    borderBottomColor: theme.colors.border,
+                  },
+                ]}
+              >
+                <Ionicons
+                  name="logo-github"
+                  size={24}
+                  color={theme.colors.text}
+                />
+                <Text
+                  style={[
+                    styles.itemTitle,
+                    { flex: 1, marginLeft: 12, color: theme.colors.text },
+                  ]}
+                >
+                  GitHub
+                </Text>
+                {isLinked("github") ? (
+                  <TouchableOpacity
+                    onPress={() => handleUnlink("github")}
+                    disabled={!!unlinkingProvider}
+                  >
+                    <Text style={{ color: theme.colors.error }}>Unlink</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity onPress={loginWithGitHub}>
+                    <Text style={{ color: theme.colors.primary }}>Connect</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              {/* Discord */}
+              <View
+                style={[
+                  styles.item,
+                  {
+                    backgroundColor: theme.colors.card,
+                    borderBottomColor: theme.colors.border,
+                  },
+                ]}
+              >
+                <Ionicons name="logo-discord" size={24} color="#5865F2" />
+                <Text
+                  style={[
+                    styles.itemTitle,
+                    { flex: 1, marginLeft: 12, color: theme.colors.text },
+                  ]}
+                >
+                  Discord
+                </Text>
+                {isLinked("discord") ? (
+                  <TouchableOpacity
+                    onPress={() => handleUnlink("discord")}
+                    disabled={!!unlinkingProvider}
+                  >
+                    <Text style={{ color: theme.colors.error }}>Unlink</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity onPress={loginWithDiscord}>
+                    <Text style={{ color: theme.colors.primary }}>Connect</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </>
+          )}
         </View>
 
         {/* Admin Section - Only visible for admin users */}
