@@ -207,7 +207,8 @@
       "Bash(Select-Object -Last 20)",
       "Bash(docker-compose -f ../../docker-compose.android.yml run --rm android-builder bash -c 'which node && node --version')",
       "Bash(docker-compose:*)",
-      "Bash(docker run:*)"
+      "Bash(docker run:*)",
+      "Bash(if not exist agents mkdir agents)"
     ]
   },
   "enableAllProjectMcpServers": true,

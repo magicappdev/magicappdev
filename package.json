@@ -39,7 +39,6 @@
     "deploy:web": "turbo run deploy --filter=@magicappdev/web",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "postinstall": "node scripts/patch-expo-router.cjs",
     "knip": "knip",
     "lint": "turbo lint",
     "lint:fix": "turbo lint:fix",
@@ -98,6 +97,9 @@
       "react-dom": "18.3.1",
       "react-native": "0.81.5",
       "tar": ">=7.5.7"
+    },
+    "patchedDependencies": {
+      "expo-router": "patches/expo-router.patch"
     }
   }
 }

@@ -1,0 +1,247 @@
+diff --git a/build/ExpoRoot.js b/build/ExpoRoot.js
+index 4bef11427677129a15978980db217960d5be25ad..933dd7798474c0e3b0ad5c23b0aa21a004247d2f 100644
+--- a/build/ExpoRoot.js
++++ b/build/ExpoRoot.js
+@@ -1,4 +1,22 @@
+ "use strict";
++// Polyfill for _objectWithoutPropertiesLoose helper
++function _objectWithoutPropertiesLoose(source, excluded) {
++  if (source == null) return {};
++  var target = {};
++  var sourceKeys = Object.keys(source);
++  var key, i;
++  for (i = 0; i < sourceKeys.length; i++) {
++    key = sourceKeys[i];
++    if (excluded.indexOf(key) >= 0) continue;
++    target[key] = source[key];
++  }
++  return target;
++}
++// Also define numbered variants that Metro bundler might create
++var _objectWithoutPropertiesLoose2 = _objectWithoutPropertiesLoose;
++var _objectWithoutPropertiesLoose3 = _objectWithoutPropertiesLoose;
++var _objectWithoutPropertiesLoose4 = _objectWithoutPropertiesLoose;
++
+ 'use client';
+ var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+     if (k2 === undefined) k2 = k;
+diff --git a/build/Route.js b/build/Route.js
+index 77b1543581cc9498b3e42a6788c490f2d233958e..1eebff062e942c07396cb72f3dddeae4aa445492 100644
+--- a/build/Route.js
++++ b/build/Route.js
+@@ -17,7 +17,7 @@ if (process.env.NODE_ENV !== 'production') {
+ }
+ /** Return the RouteNode at the current contextual boundary. */
+ function useRouteNode() {
+-    return (0, react_1.use)(CurrentRouteContext);
++    return (0, react_1.useContext)(CurrentRouteContext);
+ }
+ function useContextKey() {
+     const node = useRouteNode();
+diff --git a/build/fork/native-stack/NativeStackView.js b/build/fork/native-stack/NativeStackView.js
+index 00f941af5f58a5d2c29052c86bb388da980874b5..f63f17042a65e6108eb73387fffe50486db88af5 100644
+--- a/build/fork/native-stack/NativeStackView.js
++++ b/build/fork/native-stack/NativeStackView.js
+@@ -10,7 +10,7 @@ function NativeStackView(props) {
+     </RootModal_1.RootModalProvider>);
+ }
+ function NativeStackViewInner(props) {
+-    const rootModals = (0, react_1.use)(RootModal_1.RootModalContext);
++    const rootModals = (0, react_1.useContext)(RootModal_1.RootModalContext);
+     // Append the root modals to the state
+     const state = (0, react_1.useMemo)(() => {
+         if (rootModals.routes.length === 0) {
+diff --git a/build/global-state/storeContext.js b/build/global-state/storeContext.js
+index 6ab7a59e2b4e55a86150f02a421c5a189c62dea5..e8849bc9f9ae4f348bb655540cbe4c07fcd5211b 100644
+--- a/build/global-state/storeContext.js
++++ b/build/global-state/storeContext.js
+@@ -4,6 +4,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.useExpoRouterStore = exports.StoreContext = void 0;
+ const react_1 = require("react");
+ exports.StoreContext = (0, react_1.createContext)(null);
+-const useExpoRouterStore = () => (0, react_1.use)(exports.StoreContext);
++const useExpoRouterStore = () => (0, react_1.useContext)(exports.StoreContext);
+ exports.useExpoRouterStore = useExpoRouterStore;
+ //# sourceMappingURL=storeContext.js.map
+\ No newline at end of file
+diff --git a/build/layouts/RootModal.js b/build/layouts/RootModal.js
+index a2daddaa330dc402d1c91999ead2c845535d1cd8..abfd0f28ac641cb930486e963a65903e3b7a00f9 100644
+--- a/build/layouts/RootModal.js
++++ b/build/layouts/RootModal.js
+@@ -10,7 +10,7 @@ exports.RootModalContext = (0, react_1.createContext)({
+     removeModal: () => { },
+ });
+ function RootModalProvider({ children }) {
+-    const parent = (0, react_1.use)(exports.RootModalContext);
++    const parent = (0, react_1.useContext)(exports.RootModalContext);
+     const [state, setState] = (0, react_1.useState)(() => ({
+         root: false,
+         routes: [],
+diff --git a/build/link/elements.js b/build/link/elements.js
+index b00c10de8e06e6a6b1b816528d9a0d75e15fab6b..5dfcce68704748d26120c014efb890e1c0895ddc 100644
+--- a/build/link/elements.js
++++ b/build/link/elements.js
+@@ -53,7 +53,7 @@ const Slot_1 = require("../ui/Slot");
+  * @platform ios
+  */
+ function LinkMenuAction(props) {
+-    if ((0, PreviewRouteContext_1.useIsPreview)() || process.env.EXPO_OS !== 'ios' || !(0, react_1.use)(InternalLinkPreviewContext_1.InternalLinkPreviewContext)) {
++    if ((0, PreviewRouteContext_1.useIsPreview)() || process.env.EXPO_OS !== 'ios' || !(0, react_1.useContext)(InternalLinkPreviewContext_1.InternalLinkPreviewContext)) {
+         return null;
+     }
+     const { unstable_keepPresented, onPress, ...rest } = props;
+@@ -78,7 +78,7 @@ function LinkMenuAction(props) {
+  * @platform ios
+  */
+ const LinkMenu = (props) => {
+-    if ((0, PreviewRouteContext_1.useIsPreview)() || process.env.EXPO_OS !== 'ios' || !(0, react_1.use)(InternalLinkPreviewContext_1.InternalLinkPreviewContext)) {
++    if ((0, PreviewRouteContext_1.useIsPreview)() || process.env.EXPO_OS !== 'ios' || !(0, react_1.useContext)(InternalLinkPreviewContext_1.InternalLinkPreviewContext)) {
+         return null;
+     }
+     const children = react_1.default.Children.toArray(props.children).filter((child) => (0, react_1.isValidElement)(child) && (child.type === LinkMenuAction || child.type === exports.LinkMenu));
+@@ -116,7 +116,7 @@ exports.LinkMenu = LinkMenu;
+  */
+ function LinkPreview(props) {
+     const { children, style } = props;
+-    const internalPreviewContext = (0, react_1.use)(InternalLinkPreviewContext_1.InternalLinkPreviewContext);
++    const internalPreviewContext = (0, react_1.useContext)(InternalLinkPreviewContext_1.InternalLinkPreviewContext);
+     if ((0, PreviewRouteContext_1.useIsPreview)() || process.env.EXPO_OS !== 'ios' || !internalPreviewContext) {
+         return null;
+     }
+diff --git a/build/link/preview/LinkPreviewContext.js b/build/link/preview/LinkPreviewContext.js
+index 7d1728e8fba4c765af92583dcb5bba83137fdd54..6f18e2d33b48d889805ba2df7b2c968170160ff8 100644
+--- a/build/link/preview/LinkPreviewContext.js
++++ b/build/link/preview/LinkPreviewContext.js
+@@ -12,7 +12,7 @@ function LinkPreviewContextProvider({ children }) {
+     </LinkPreviewContext.Provider>);
+ }
+ const useLinkPreviewContext = () => {
+-    const context = (0, react_1.use)(LinkPreviewContext);
++    const context = (0, react_1.useContext)(LinkPreviewContext);
+     if (context == null) {
+         throw new Error('useLinkPreviewContext must be used within a LinkPreviewContextProvider. This is likely a bug in Expo Router.');
+     }
+diff --git a/build/link/preview/PreviewRouteContext.js b/build/link/preview/PreviewRouteContext.js
+index 2b96a4f03502260605046749d965c5ff92090ab1..a2be24bce16f18b9899742bbc8f4d9eb5e0aad0e 100644
+--- a/build/link/preview/PreviewRouteContext.js
++++ b/build/link/preview/PreviewRouteContext.js
+@@ -10,7 +10,7 @@ exports.PreviewRouteContext = (0, react_1.createContext)(undefined);
+  * Returns information about the current route if it is displayed in preview mode.
+  */
+ function usePreviewInfo() {
+-    const paramsContext = (0, react_1.use)(exports.PreviewRouteContext);
++    const paramsContext = (0, react_1.useContext)(exports.PreviewRouteContext);
+     return {
+         isPreview: !!paramsContext,
+         ...paramsContext,
+diff --git a/build/native-tabs/NativeBottomTabs/NativeBottomTabsNavigator.js b/build/native-tabs/NativeBottomTabs/NativeBottomTabsNavigator.js
+index dc1ef7bbd273ee4b937ae41adc822bd978f3fa54..19857ae9b78b970aaa5ff2b35bbbfcd0c8dd277a 100644
+--- a/build/native-tabs/NativeBottomTabs/NativeBottomTabsNavigator.js
++++ b/build/native-tabs/NativeBottomTabs/NativeBottomTabsNavigator.js
+@@ -47,7 +47,7 @@ const linking_1 = require("../../link/linking");
+ const defaultBackBehavior = 'initialRoute';
+ exports.NativeTabsContext = react_1.default.createContext(false);
+ function NativeTabsNavigator({ children, backBehavior = defaultBackBehavior, shadowColor, ...rest }) {
+-    if ((0, react_1.use)(exports.NativeTabsContext)) {
++    if ((0, react_1.useContext)(exports.NativeTabsContext)) {
+         throw new Error('Nesting Native Tabs inside each other is not supported natively. Use JS tabs for nesting instead.');
+     }
+     const selectedLabelStyle = (0, utils_1.convertLabelStylePropToObject)(rest.labelStyle).selected;
+diff --git a/build/rsc/router/client.js b/build/rsc/router/client.js
+index 0cb43844cefb01d08ca2848b0cfa5a1151237de8..7a59e8a40cf6a7d1f94320c357643c23b6bd0aca 100644
+--- a/build/rsc/router/client.js
++++ b/build/rsc/router/client.js
+@@ -212,7 +212,7 @@ function getHistory() {
+     };
+ }
+ function useRouter_UNSTABLE() {
+-    const router = (0, react_1.use)(RouterContext);
++    const router = (0, react_1.useContext)(RouterContext);
+     if (!router) {
+         throw new Error('Missing Router');
+     }
+@@ -356,7 +356,7 @@ children, ...props }, ref) {
+         }
+         return (0, href_1.resolveHref)(href);
+     }, [href]);
+-    const router = (0, react_1.use)(RouterContext);
++    const router = (0, react_1.useContext)(RouterContext);
+     const changeRoute = router
+         ? router.changeRoute
+         : () => {
+diff --git a/build/rsc/router/host.js b/build/rsc/router/host.js
+index cfa0c376d3043ae7cd2aa2b204005b0fa1655a2b..f6c94b759bf461a06038775d67fdd8f1e3a0d8b3 100644
+--- a/build/rsc/router/host.js
++++ b/build/rsc/router/host.js
+@@ -275,16 +275,16 @@ const Root = ({ initialInput, initialParams, fetchCache = defaultFetchCache, uns
+     return (0, react_1.createElement)(RefetchContext.Provider, { value: refetch }, (0, react_1.createElement)(ElementsContext.Provider, { value: elements }, children));
+ };
+ exports.Root = Root;
+-const useRefetch = () => (0, react_1.use)(RefetchContext);
++const useRefetch = () => (0, react_1.useContext)(RefetchContext);
+ exports.useRefetch = useRefetch;
+ const ChildrenContext = (0, react_1.createContext)(undefined);
+ const ChildrenContextProvider = (0, react_1.memo)(ChildrenContext.Provider);
+ const Slot = ({ id, children, fallback, }) => {
+-    const elementsPromise = (0, react_1.use)(ElementsContext);
++    const elementsPromise = (0, react_1.useContext)(ElementsContext);
+     if (!elementsPromise) {
+         throw new Error('Missing Root component');
+     }
+-    const elements = (0, react_1.use)(elementsPromise);
++    const elements = (0, react_1.useContext)(elementsPromise);
+     if (!(id in elements)) {
+         if (fallback) {
+             return fallback;
+@@ -294,7 +294,7 @@ const Slot = ({ id, children, fallback, }) => {
+     return (0, react_1.createElement)(ChildrenContextProvider, { value: children }, elements[id]);
+ };
+ exports.Slot = Slot;
+-const Children = () => (0, react_1.use)(ChildrenContext);
++const Children = () => (0, react_1.useContext)(ChildrenContext);
+ exports.Children = Children;
+ /**
+  * ServerRoot for SSR
+diff --git a/build/ui/TabTrigger.js b/build/ui/TabTrigger.js
+index d5287f00c7f9ff60a10285e4436e894a9be39e58..a55ec27cbcdf42fab6cebd982e666c73286f6395 100644
+--- a/build/ui/TabTrigger.js
++++ b/build/ui/TabTrigger.js
+@@ -62,7 +62,7 @@ function isTabTrigger(child) {
+ function useTabTrigger(options) {
+     const { state, navigation } = (0, Navigator_1.useNavigatorContext)();
+     const { name, reset, onPress, onLongPress } = options;
+-    const triggerMap = (0, react_1.use)(TabContext_1.TabTriggerMapContext);
++    const triggerMap = (0, react_1.useContext)(TabContext_1.TabTriggerMapContext);
+     const getTrigger = (0, react_1.useCallback)((name) => {
+         const config = triggerMap[name];
+         if (!config) {
+diff --git a/build/ui/Tabs.js b/build/ui/Tabs.js
+index 63ec89d8cccf0d5f9762ec9335c0bc193a8802be..8046f4383b0ed6cecfb6dca7c56484de7d699490 100644
+--- a/build/ui/Tabs.js
++++ b/build/ui/Tabs.js
+@@ -106,10 +106,10 @@ function useTabsWithChildren(options) {
+ function useTabsWithTriggers(options) {
+     const { triggers, ...rest } = options;
+     // Ensure we extend the parent triggers, so we can trigger them as well
+-    const parentTriggerMap = (0, react_1.use)(TabContext_1.TabTriggerMapContext);
++    const parentTriggerMap = (0, react_1.useContext)(TabContext_1.TabTriggerMapContext);
+     const routeNode = (0, Route_1.useRouteNode)();
+     const contextKey = (0, Route_1.useContextKey)();
+-    const linking = (0, react_1.use)(native_1.LinkingContext).options;
++    const linking = (0, react_1.useContext)(native_1.LinkingContext).options;
+     const routeInfo = (0, hooks_1.useRouteInfo)();
+     if (!routeNode || !linking) {
+         throw new Error('No RouteNode. This is likely a bug in expo-router.');
+diff --git a/build/views/ErrorBoundary.js b/build/views/ErrorBoundary.js
+index 57143217122789a909da5950e3615573f8617740..36a7a44d867afabf66016d4a1e1d488a56317d9e 100644
+--- a/build/views/ErrorBoundary.js
++++ b/build/views/ErrorBoundary.js
+@@ -24,7 +24,7 @@ function StandardErrorView({ error }) {
+     </react_native_1.View>);
+ }
+ function ErrorBoundary({ error, retry }) {
+-    const inTabBar = (0, react_1.use)(bottom_tabs_1.BottomTabBarHeightContext);
++    const inTabBar = (0, react_1.useContext)(bottom_tabs_1.BottomTabBarHeightContext);
+     const Wrapper = inTabBar ? react_native_1.View : react_native_safe_area_context_1.SafeAreaView;
+     const isServerError = error instanceof errors_1.ReactServerError;
+     return (<react_native_1.View style={styles.container}>
