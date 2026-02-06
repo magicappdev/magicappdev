@@ -25,6 +25,9 @@
     "build:mobile": {
       "dependsOn": ["@magicappdev/mobile#build"]
     },
+    "build:expo": {
+      "dependsOn": ["@magicappdev/expo#build"]
+    },
     "build:shared": {
       "dependsOn": ["@magicappdev/shared#build"]
     },
