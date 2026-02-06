@@ -35,7 +35,7 @@ export interface Profile {
 export type ProjectStatus = "draft" | "active" | "archived" | "deployed";
 
 /** Project framework */
-export type ProjectFramework = "react-native" | "expo" | "next" | "remix";
+export type ProjectFramework = "react-native" | "expo" | "next" | "remix" | "ionic";
 
 /** Project configuration */
 export interface ProjectConfig {
