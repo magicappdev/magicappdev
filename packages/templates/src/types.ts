@@ -64,6 +64,8 @@ export interface Template extends TemplateMetadata {
   dependencies?: Record<string, string>;
   /** Dev dependencies to install */
   devDependencies?: Record<string, string>;
+  /** Post-install scripts to run */
+  postInstall?: string[];
 }
 
 /** Template generation options */
