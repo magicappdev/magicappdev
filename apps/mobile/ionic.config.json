@@ -1,7 +1,0 @@
-{
-  "name": "Magic App Dev",
-  "integrations": {
-    "capacitor": {}
-  },
-  "type": "react-vite"
-}

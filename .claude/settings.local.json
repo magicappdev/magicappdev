@@ -208,9 +208,39 @@
       "Bash(docker-compose -f ../../docker-compose.android.yml run --rm android-builder bash -c 'which node && node --version')",
       "Bash(docker-compose:*)",
       "Bash(docker run:*)",
-      "Bash(if not exist agents mkdir agents)"
+      "Bash(if not exist agents mkdir agents)",
+      "Bash(set:*)",
+      "mcp__mira__mira_init",
+      "Bash(./gradlew.bat:*)",
+      "Bash(export JAVA_HOME=\"C:\\\\Program Files\\\\Microsoft\\\\jdk-17.0.18.10-hotspot\":*)",
+      "Bash(adb:*)",
+      "Bash(unzip:*)",
+      "Bash(bun react-native bundle:*)",
+      "Bash(npm ls:*)",
+      "Bash(winget search:*)",
+      "Bash(winget install:*)",
+      "Bash(pkill:*)",
+      "Bash(npm outdated:*)",
+      "Bash(emulator:*)",
+      "Bash(readlink:*)",
+      "Bash(npm config get:*)",
+      "Bash(avdmanager:*)",
+      "Bash(sdkmanager:*)",
+      "Bash(export:*)",
+      "Bash(export PATH=\"C:\\\\Users\\\\lukas\\\\AppData\\\\Local\\\\Android\\\\Sdk\\\\platform-tools;C:\\\\Users\\\\lukas\\\\AppData\\\\Local\\\\Android\\\\Sdk\\\\cmdline-tools\\\\latest\\\\bin;C:\\\\Users\\\\lukas\\\\AppData\\\\Local\\\\Android\\\\Sdk\\\\emulator;$PATH\":*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run dev:*)",
+      "Bash(sh:*)",
+      "Bash(npm publish:*)",
+      "Bash(Get-ChildItem -Path \"D:\\\\repos\\\\magicappdev\\\\apps\\\\mobile\" -Force)",
+      "Bash(Select-Object:*)",
+      "Bash(Test-Path:*)",
+      "Bash(git init:*)",
+      "Bash(npm config list:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": ["cloudflare-builds"]
+  "enabledMcpjsonServers": [
+    "cloudflare-builds"
+  ]
 }

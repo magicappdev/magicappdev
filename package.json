@@ -12,8 +12,7 @@
   },
   "workspaces": [
     "packages/*",
-    "apps/web",
-    "apps/mobile"
+    "apps/web"
   ],
   "scripts": {
     "build": "turbo build",
@@ -99,7 +98,7 @@
       "tar": ">=7.5.7",
       "@modelcontextprotocol/sdk": "^1.26.0",
       "undici": "^7.0.0",
-      "@conventional-changelog/git-client": "^5.0.0",
+      "@conventional-changelog/git-client": "^2.5.1",
       "js-yaml": "^4.1.1"
     },
     "patchedDependencies": {
