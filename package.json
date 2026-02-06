@@ -96,7 +96,12 @@
       "jsondiffpatch": ">=0.6.0",
       "react": "^19.0.0",
       "react-dom": "^19.0.0",
-      "tar": ">=7.5.7"
+      "tar": ">=7.5.7",
+      "@modelcontextprotocol/sdk": "^1.26.0",
+      "agents": "^0.3.12",
+      "undici": "^7.0.0",
+      "@conventional-changelog/git-client": "^5.0.0",
+      "js-yaml": "^4.1.1"
     },
     "patchedDependencies": {
       "expo-router": "patches/expo-router.patch"
