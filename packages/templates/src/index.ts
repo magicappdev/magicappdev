@@ -40,6 +40,7 @@ export {
   builtInTemplates,
   buttonComponentTemplate,
   screenTemplate,
+  ionicAppTemplate,
 } from "./templates/index.js";
 
 // Initialize registry with built-in templates

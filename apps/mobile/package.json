@@ -11,7 +11,8 @@
     "dev": "vite",
     "ionic:build": "ionic build",
     "ionic:sync": "ionic cap sync",
-    "lint": "eslint",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
     "preview": "vite preview",
     "test.e2e": "cypress run",
     "test.unit": "vitest"

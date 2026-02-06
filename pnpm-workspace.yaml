@@ -1,5 +1,5 @@
 packages:
-  - apps/*
+  - apps/web
   - packages/*
 
 onlyBuiltDependencies:
@@ -12,12 +12,26 @@ onlyBuiltDependencies:
   - sharp
   - unrs-resolver
   - workerd
+  # React Native native modules
+  - "@react-native-async-storage/async-storage"
+  - "@react-native-community/cli"
+  - "@react-native/babel-preset"
+  - "react-native-get-random-values"
+  - "react-native-gesture-handler"
+  - "react-native-reanimated"
+  - "react-native-safe-area-context"
+  - "react-native-screens"
+  - "react-native-svg"
+  - "react-native-worklets"
 
 # Ensure React is deduplicated across all packages
 public-hoist-pattern-allowlist:
   - react
   - react-dom
   - react-native
+  - '@react-native/*'
+  - react-native-*
+  - '@react-navigation/*'
 
 overrides:
   "@conventional-changelog/git-client@<2.0.0": ">=2.0.0"
