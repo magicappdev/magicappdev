@@ -9,6 +9,9 @@ import { projectsRoutes } from "./routes/projects.js";
 import { ticketsRoutes } from "./routes/tickets.js";
 import { adminRoutes } from "./routes/admin.js";
 import { authRoutes } from "./routes/auth.js";
+import { projectFilesRoutes } from "./routes/project-files.js";
+import { chatContextRoutes } from "./routes/chat-context.js";
+import { exportRoutes } from "./routes/export.js";
 import type { AppContext } from "./types.js";
 import { aiRoutes } from "./routes/ai.js";
 import { cors } from "hono/cors";
@@ -86,6 +89,11 @@ export function createApp() {
   // Protected routes
   app.use("/projects/*", authMiddleware);
   app.route("/projects", projectsRoutes);
+  app.route("/projects", projectFilesRoutes);
+  app.route("/projects", exportRoutes);
+
+  app.use("/chat/*", authMiddleware);
+  app.route("/chat", chatContextRoutes);
 
   app.use("/ai/*", authMiddleware);
   app.route("/ai", aiRoutes);

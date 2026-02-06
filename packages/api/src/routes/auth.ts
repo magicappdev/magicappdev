@@ -548,6 +548,7 @@ authRoutes.get("/login/github", c => {
   const clientId = c.env.GITHUB_CLIENT_ID;
   const platform = c.req.query("platform") || "web";
   const clientRedirectUri = c.req.query("redirect_uri");
+  const clientState = c.req.query("state"); // Original state from CLI/mobile
 
   const apiRedirectUri =
     c.env.GITHUB_REDIRECT_URI ||
@@ -557,10 +558,11 @@ authRoutes.get("/login/github", c => {
     return c.json({ error: "Missing GITHUB_CLIENT_ID" }, 500);
   }
 
-  // Encode platform and client redirect URI into state
+  // Encode platform, client redirect URI, AND original state into state
   const state = JSON.stringify({
     platform,
     redirect_uri: clientRedirectUri,
+    clientState, // Preserve original state for CLI validation
   });
 
   const params = new URLSearchParams({
@@ -585,6 +587,7 @@ authRoutes.get("/callback/github", async c => {
   let platform = "web";
   let clientRedirectUri: string | undefined;
   let linkUserId: string | undefined;
+  let clientState: string | undefined; // Original CLI state
 
   try {
     if (stateStr) {
@@ -593,6 +596,7 @@ authRoutes.get("/callback/github", async c => {
       if (typeof state === "object") {
         platform = state.platform || "web";
         clientRedirectUri = state.redirect_uri;
+        clientState = state.clientState; // Extract original CLI state
         if (state.action === "link" && state.userId) {
           linkUserId = state.userId;
         }
@@ -874,13 +878,16 @@ authRoutes.get("/callback/github", async c => {
     console.log("Authentication successful, redirecting...");
 
     // 6. Redirect back to app
+    // Use clientState for CLI validation (preserve original state parameter)
+    const stateForRedirect = clientState || "";
+
     if (platform === "mobile") {
       const mobileUri =
         clientRedirectUri ||
         c.env.MOBILE_REDIRECT_URI ||
         "magicappdev://auth/callback";
 
-      const deeplinkUrl = `${mobileUri}?accessToken=${accessToken}&refreshToken=${refreshToken}`;
+      const deeplinkUrl = `${mobileUri}?accessToken=${accessToken}&refreshToken=${refreshToken}&state=${encodeURIComponent(stateForRedirect)}`;
 
       console.log("Redirecting to mobile URI:", mobileUri);
 
@@ -952,7 +959,7 @@ authRoutes.get("/callback/github", async c => {
         : "https://app.magicappdev.workers.dev");
 
     return c.redirect(
-      `${frontendUrl}/auth/callback?accessToken=${accessToken}&refreshToken=${refreshToken}`,
+      `${frontendUrl}/auth/callback?accessToken=${accessToken}&refreshToken=${refreshToken}&state=${encodeURIComponent(stateForRedirect)}`,
     );
   } catch (err) {
     console.error("Fatal Error in GitHub Callback:", err);

@@ -628,4 +628,341 @@ export class ApiClient {
       }
     }
   }
+
+  // Project Files API
+  async getProjectFiles(projectId: string): Promise<
+    Array<{
+      id: string;
+      projectId: string;
+      path: string;
+      content: string;
+      language: string;
+      size: number;
+      createdAt: string;
+      updatedAt: string;
+    }>
+  > {
+    const response =
+      await this.request<ApiResponse<typeof this.getProjectFiles extends Promise<infer T> ? T : never>>(
+        `/projects/${projectId}/files`,
+      );
+    if (!response.success) {
+      throw new Error(response.error.message);
+    }
+    return response.data;
+  }
+
+  async getProjectFile(
+    projectId: string,
+    path: string,
+  ): Promise<{
+    id: string;
+    projectId: string;
+    path: string;
+    content: string;
+    language: string;
+    size: number;
+    createdAt: string;
+    updatedAt: string;
+  }> {
+    const response =
+      await this.request<ApiResponse<typeof this.getProjectFile extends Promise<infer T> ? T : never>>(
+        `/projects/${projectId}/files/${encodeURIComponent(path)}`,
+      );
+    if (!response.success) {
+      throw new Error(response.error.message);
+    }
+    return response.data;
+  }
+
+  async saveProjectFile(
+    projectId: string,
+    file: { path: string; content: string; language?: string },
+  ): Promise<{
+    id: string;
+    projectId: string;
+    path: string;
+    content: string;
+    language: string;
+    size: number;
+    createdAt: string;
+    updatedAt: string;
+  }> {
+    const response =
+      await this.request<ApiResponse<typeof this.saveProjectFile extends Promise<infer T> ? T : never>>(
+        `/projects/${projectId}/files`,
+        {
+          method: "POST",
+          body: JSON.stringify(file),
+        },
+      );
+    if (!response.success) {
+      throw new Error(response.error.message);
+    }
+    return response.data;
+  }
+
+  async deleteProjectFile(projectId: string, path: string): Promise<void> {
+    const response = await this.request<ApiResponse<void>>(
+      `/projects/${projectId}/files/${encodeURIComponent(path)}`,
+      {
+        method: "DELETE",
+      },
+    );
+    if (!response.success) {
+      throw new Error(response.error.message);
+    }
+  }
+
+  async bulkSaveProjectFiles(
+    projectId: string,
+    files: Array<{ path: string; content: string; language?: string }>,
+  ): Promise<
+    Array<{
+      id: string;
+      projectId: string;
+      path: string;
+      content: string;
+      language: string;
+      size: number;
+      createdAt: string;
+      updatedAt: string;
+    }>
+  > {
+    const response =
+      await this.request<ApiResponse<typeof this.bulkSaveProjectFiles extends Promise<infer T> ? T : never>>(
+        `/projects/${projectId}/files/bulk`,
+        {
+          method: "POST",
+          body: JSON.stringify({ files }),
+        },
+      );
+    if (!response.success) {
+      throw new Error(response.error.message);
+    }
+    return response.data;
+  }
+
+  // Chat Context API
+  async createChatSession(data: {
+    projectId?: string;
+    title?: string;
+  }): Promise<{
+    id: string;
+    projectId: string | null;
+    userId: string;
+    title: string;
+    createdAt: string;
+    updatedAt: string;
+  }> {
+    const response =
+      await this.request<ApiResponse<typeof this.createChatSession extends Promise<infer T> ? T : never>>(
+        "/chat/sessions",
+        {
+          method: "POST",
+          body: JSON.stringify(data),
+        },
+      );
+    if (!response.success) {
+      throw new Error(response.error.message);
+    }
+    return response.data;
+  }
+
+  async getChatSessions(): Promise<
+    Array<{
+      id: string;
+      projectId: string | null;
+      userId: string;
+      title: string;
+      createdAt: string;
+      updatedAt: string;
+    }>
+  > {
+    const response =
+      await this.request<ApiResponse<typeof this.getChatSessions extends Promise<infer T> ? T : never>>(
+        "/chat/sessions",
+      );
+    if (!response.success) {
+      throw new Error(response.error.message);
+    }
+    return response.data;
+  }
+
+  async getChatSession(
+    sessionId: string,
+  ): Promise<{
+    session: {
+      id: string;
+      projectId: string | null;
+      userId: string;
+      title: string;
+      createdAt: string;
+      updatedAt: string;
+    };
+    messages: Array<{
+      id: string;
+      sessionId: string;
+      role: "user" | "assistant" | "system";
+      content: string;
+      timestamp: number;
+    }>;
+  }> {
+    const response =
+      await this.request<ApiResponse<typeof this.getChatSession extends Promise<infer T> ? T : never>>(
+        `/chat/sessions/${sessionId}`,
+      );
+    if (!response.success) {
+      throw new Error(response.error.message);
+    }
+    return response.data;
+  }
+
+  async getChatContext(sessionId: string): Promise<{
+    files: Array<{
+      id: string;
+      projectId: string;
+      path: string;
+      content: string;
+      language: string;
+      size: number;
+      createdAt: string;
+      updatedAt: string;
+    }>;
+    errors: Array<{
+      id: string;
+      projectId: string;
+      errorType: string;
+      message: string;
+      stackTrace: string | null;
+      filePath: string | null;
+      lineNumber: number | null;
+      occurredAt: string;
+      resolved: boolean;
+    }>;
+    commands: Array<{
+      id: string;
+      projectId: string;
+      command: string;
+      exitCode: number | null;
+      output: string | null;
+      error: string | null;
+      executedAt: string;
+    }>;
+    unresolvedErrors: number;
+  }> {
+    const response =
+      await this.request<ApiResponse<typeof this.getChatContext extends Promise<infer T> ? T : never>>(
+        `/chat/sessions/${sessionId}/context`,
+      );
+    if (!response.success) {
+      throw new Error(response.error.message);
+    }
+    return response.data;
+  }
+
+  async addChatMessage(
+    sessionId: string,
+    message: { role: "user" | "assistant" | "system"; content: string },
+  ): Promise<{
+    id: string;
+    sessionId: string;
+    role: "user" | "assistant" | "system";
+    content: string;
+    timestamp: number;
+  }> {
+    const response =
+      await this.request<ApiResponse<typeof this.addChatMessage extends Promise<infer T> ? T : never>>(
+        `/chat/sessions/${sessionId}/message`,
+        {
+          method: "POST",
+          body: JSON.stringify(message),
+        },
+      );
+    if (!response.success) {
+      throw new Error(response.error.message);
+    }
+    return response.data;
+  }
+
+  // Export API
+  async exportProject(projectId: string): Promise<{
+    version: string;
+    exportedAt: string;
+    project: {
+      id: string;
+      name: string;
+      slug: string;
+      description: string | null;
+      status: string;
+      framework: string;
+      config: Record<string, unknown> | null;
+      githubUrl: string | null;
+      deploymentUrl: string | null;
+      createdAt: string;
+      updatedAt: string;
+    };
+    files: Array<{
+      path: string;
+      content: string;
+      language: string;
+      size: number;
+      createdAt: string;
+      updatedAt: string;
+    }>;
+    metadata: {
+      fileCount: number;
+      totalSize: number;
+      commandCount: number;
+      errorCount: number;
+      unresolvedErrorCount: number;
+    };
+    commands: Array<{
+      command: string;
+      exitCode: number | null;
+      output: string | null;
+      error: string | null;
+      executedAt: string;
+    }>;
+    errors: Array<{
+      errorType: string;
+      message: string;
+      stackTrace: string | null;
+      filePath: string | null;
+      lineNumber: number | null;
+      occurredAt: string;
+      resolved: boolean;
+    }>;
+  }> {
+    const response =
+      await this.request<ApiResponse<typeof this.exportProject extends Promise<infer T> ? T : never>>(
+        `/projects/${projectId}/export`,
+      );
+    if (!response.success) {
+      throw new Error(response.error.message);
+    }
+    return response.data;
+  }
+
+  async listExportableProjects(): Promise<
+    Array<{
+      id: string;
+      name: string;
+      slug: string;
+      description: string | null;
+      framework: string;
+      status: string;
+      fileCount: number;
+      updatedAt: string;
+    }>
+  > {
+    const response =
+      await this.request<ApiResponse<typeof this.listExportableProjects extends Promise<infer T> ? T : never>>(
+        "/projects/export/list",
+      );
+    if (!response.success) {
+      throw new Error(response.error.message);
+    }
+    return response.data;
+  }
 }

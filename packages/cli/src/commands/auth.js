@@ -35,7 +35,7 @@ authCommand
         const refreshToken = url.searchParams.get("refreshToken");
         const returnedState = url.searchParams.get("state");
         // If no tokens yet, this is just the initial browser request - wait for callback
-        if (!accessToken && !refreshToken) {
+        if (!accessToken || !refreshToken) {
             res.writeHead(200, { "Content-Type": "text/html" });
             res.end("<h1>Authenticating...</h1><p>Please complete the GitHub login in the popup.</p>");
             return;
@@ -62,8 +62,8 @@ authCommand
                 await api.getCurrentUser();
                 // Store tokens
                 await saveConfig({
-                    accessToken: accessToken,
-                    refreshToken: refreshToken,
+                    accessToken,
+                    refreshToken,
                 });
                 info(`Access Token verified and saved`);
                 res.writeHead(200, { "Content-Type": "text/html" });

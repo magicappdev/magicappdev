@@ -7,6 +7,7 @@ import { doctorCommand } from "./commands/doctor.js";
 import { initCommand } from "./commands/init.js";
 import { chatCommand } from "./commands/chat.js";
 import { authCommand } from "./commands/auth.js";
+import { cloneCommand } from "./commands/clone.js";
 import { createRequire } from "module";
 import { Command } from "commander";
 const require = createRequire(import.meta.url);
@@ -57,6 +58,7 @@ Examples:
   $ magicappdev init my-app
   $ magicappdev chat
   $ magicappdev auth login
+  $ magicappdev clone --list
   $ magicappdev doctor
 `)
         .hook("preAction", thisCommand => {
@@ -72,6 +74,7 @@ Examples:
     program.addCommand(initCommand);
     program.addCommand(authCommand);
     program.addCommand(chatCommand);
+    program.addCommand(cloneCommand);
     program.addCommand(generateCommand);
     program.addCommand(doctorCommand);
     program.addCommand(completionsCommand);

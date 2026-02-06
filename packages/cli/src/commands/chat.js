@@ -74,9 +74,9 @@ Examples:
     });
     ws.on("error", (err) => {
         clearTimeout(connectionTimeout);
-        spinner.fail(`Connection error: ${err.message}`);
+        spinner.fail(`Connection error: ${sanitize(err.message)}`);
         if (debug) {
-            console.error(chalk.red(`\n[DEBUG] WebSocket error:`), err);
+            console.error(chalk.red(`\n[DEBUG] WebSocket error:`), sanitize(err.toString()));
         }
         process.exit(1);
     });
@@ -94,8 +94,8 @@ async function startChatLoop(ws, debug) {
             const raw = data.toString();
             const message = JSON.parse(raw);
             if (debug) {
-                console.log(chalk.dim(`\n[DEBUG] Received: ${message.type || "unknown"}`));
-                console.log(chalk.dim(`[DEBUG] Raw: ${raw.substring(0, 200)}...`));
+                console.log(chalk.dim(`\n[DEBUG] Received: ${sanitize(message.type || "unknown")}`));
+                console.log(chalk.dim(`[DEBUG] Raw: ${sanitize(raw.substring(0, 200))}...`));
             }
             // Handle different message types
             switch (message.type) {
@@ -122,7 +122,7 @@ async function startChatLoop(ws, debug) {
                         responseSpinner.stop();
                     }
                     if (currentResponse) {
-                        console.log(chalk.green("\nMagic AI:"), currentResponse);
+                        console.log(chalk.green("\nMagic AI:"), sanitize(currentResponse));
                     }
                     else {
                         console.log(chalk.yellow("\nMagic AI: (No response received)"));
@@ -158,13 +158,13 @@ async function startChatLoop(ws, debug) {
                     break;
                 default:
                     if (debug) {
-                        console.log(chalk.dim(`[DEBUG] Ignored message type: ${message.type}`));
+                        console.log(chalk.dim(`[DEBUG] Ignored message type: ${sanitize(message.type)}`));
                     }
             }
         }
         catch (err) {
             if (debug) {
-                console.error(chalk.red("[DEBUG] Parse error:"), err);
+                console.error(chalk.red("[DEBUG] Parse error:"), sanitize(err?.toString() || "Unknown"));
             }
         }
     });
