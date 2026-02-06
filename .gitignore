@@ -76,6 +76,17 @@ packages/axiom-cloudflare-workers/*.vars
 packages/axiom-cloudflare-workers/.dev.vars.example
 
 apps/mobile/.idea
+# Ionic/Capacitor build artifacts
+apps/mobile/dist/
+apps/mobile/.capacitor/
+# Mobile app
+apps/mobile/node_modules/
+apps/mobile/.idea
+apps/mobile/android/.gradle/
+apps/mobile/android/build/
+apps/mobile/android/captures/
+apps/mobile/android/app/build/
+apps/mobile/.vscode/
 
 .pnpm-store
 
