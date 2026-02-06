@@ -120,6 +120,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loadAuth();
     // Set up deep link handler for OAuth callbacks
     const handleDeepLink = (event: MessageEvent) => {
+      // Verify origin to prevent XSS attacks - only accept messages from our API
+      const allowedOrigins = [
+        "https://magicappdev-api.magicappdev.workers.dev",
+        "https://magicappdev-llmchat.magicappdev.workers.dev",
+        window.location.origin, // Allow same origin
+      ];
+      if (!event.origin || !allowedOrigins.includes(event.origin)) {
+        console.warn("Rejected message from unauthorized origin:", event.origin);
+        return;
+      }
       if (event.data?.type === "oauth_callback") {
         const { accessToken, refreshToken } = event.data;
         if (accessToken && refreshToken) {

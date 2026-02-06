@@ -47,7 +47,7 @@ authCommand
       const returnedState = url.searchParams.get("state");
 
       // If no tokens yet, this is just the initial browser request - wait for callback
-      if (!accessToken && !refreshToken) {
+      if (!accessToken || !refreshToken) {
         res.writeHead(200, { "Content-Type": "text/html" });
         res.end(
           "<h1>Authenticating...</h1><p>Please complete the GitHub login in the popup.</p>",
@@ -79,16 +79,16 @@ authCommand
           token,
         );
 
-      if (isValidJwt(accessToken!) && isValidUuid(refreshToken!)) {
+      if (isValidJwt(accessToken) && isValidUuid(refreshToken)) {
         try {
           // Verify token with API before saving (fixes user-controlled bypass)
-          api.setToken(accessToken!);
+          api.setToken(accessToken);
           await api.getCurrentUser();
 
           // Store tokens
           await saveConfig({
-            accessToken: accessToken!,
-            refreshToken: refreshToken!,
+            accessToken,
+            refreshToken,
           });
 
           info(`Access Token verified and saved`);
