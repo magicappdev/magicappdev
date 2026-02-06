@@ -12,7 +12,8 @@
   },
   "workspaces": [
     "packages/*",
-    "apps/*"
+    "apps/web",
+    "apps/mobile"
   ],
   "scripts": {
     "build": "turbo build",
@@ -89,17 +90,39 @@
     "overrides": {
       "@babel/runtime": "^7.28.6",
       "@expo/metro-runtime": "^6.1.2",
-      "@types/react": "^18.3.12",
-      "@types/react-dom": "^18.3.5",
+      "@types/react": "^19.0.0",
+      "@types/react-dom": "^19.0.0",
       "esbuild": ">=0.25.0",
       "jsondiffpatch": ">=0.6.0",
-      "react": "18.3.1",
-      "react-dom": "18.3.1",
-      "react-native": "0.81.5",
+      "react": "^19.0.0",
+      "react-dom": "^19.0.0",
       "tar": ">=7.5.7"
     },
     "patchedDependencies": {
       "expo-router": "patches/expo-router.patch"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "@react-native-async-storage/async-storage",
+      "@react-native-community/cli",
+      "@react-native/babel-preset",
+      "@swc/core",
+      "canvas",
+      "core-js",
+      "core-js-pure",
+      "cypress",
+      "esbuild",
+      "expo",
+      "nx",
+      "react-native-gesture-handler",
+      "react-native-get-random-values",
+      "react-native-reanimated",
+      "react-native-safe-area-context",
+      "react-native-screens",
+      "react-native-svg",
+      "react-native-worklets",
+      "sharp",
+      "unrs-resolver",
+      "workerd"
+    ]
   }
 }
