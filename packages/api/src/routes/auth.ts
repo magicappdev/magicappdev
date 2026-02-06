@@ -465,9 +465,67 @@ authRoutes.get("/callback/discord", async c => {
         c.env.MOBILE_REDIRECT_URI ||
         "magicappdev://auth/callback";
 
-      return c.redirect(
-        `${mobileUri}?accessToken=${accessToken}&refreshToken=${refreshToken}`,
-      );
+      const deeplinkUrl = `${mobileUri}?accessToken=${accessToken}&refreshToken=${refreshToken}`;
+
+      // Return HTML with JavaScript for reliable deep link handling
+      return c.html(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Opening MagicAppDev...</title>
+            <style>
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+              }
+              .container {
+                text-align: center;
+                padding: 20px;
+              }
+              .spinner {
+                border: 4px solid rgba(255,255,255,0.3);
+                border-top: 4px solid white;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                animation: spin 1s linear infinite;
+                margin: 20px auto;
+              }
+              @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+              }
+              a {
+                color: white;
+                text-decoration: underline;
+              }
+            </style>
+            <script>
+              // Immediately redirect using JavaScript for reliable deep link handling
+              (function() {
+                const deeplinkUrl = "${deeplinkUrl}";
+                // Try to open the deep link
+                window.location.replace(deeplinkUrl);
+              })();
+            </script>
+          </head>
+          <body>
+            <div class="container">
+              <div class="spinner"></div>
+              <h2>Opening MagicAppDev...</h2>
+              <p>If you're not redirected automatically, <a href="${deeplinkUrl}">click here</a>.</p>
+            </div>
+          </body>
+        </html>
+      `);
     }
 
     const frontendUrl =
@@ -822,11 +880,69 @@ authRoutes.get("/callback/github", async c => {
         c.env.MOBILE_REDIRECT_URI ||
         "magicappdev://auth/callback";
 
+      const deeplinkUrl = `${mobileUri}?accessToken=${accessToken}&refreshToken=${refreshToken}`;
+
       console.log("Redirecting to mobile URI:", mobileUri);
 
-      return c.redirect(
-        `${mobileUri}?accessToken=${accessToken}&refreshToken=${refreshToken}`,
-      );
+      // Return HTML with JavaScript for reliable deep link handling
+      return c.html(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Opening MagicAppDev...</title>
+            <style>
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+              }
+              .container {
+                text-align: center;
+                padding: 20px;
+              }
+              .spinner {
+                border: 4px solid rgba(255,255,255,0.3);
+                border-top: 4px solid white;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                animation: spin 1s linear infinite;
+                margin: 20px auto;
+              }
+              @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+              }
+              a {
+                color: white;
+                text-decoration: underline;
+              }
+            </style>
+            <script>
+              // Immediately redirect using JavaScript for reliable deep link handling
+              (function() {
+                const deeplinkUrl = "${deeplinkUrl}";
+                // Try to open the deep link
+                window.location.replace(deeplinkUrl);
+              })();
+            </script>
+          </head>
+          <body>
+            <div class="container">
+              <div class="spinner"></div>
+              <h2>Opening MagicAppDev...</h2>
+              <p>If you're not redirected automatically, <a href="${deeplinkUrl}">click here</a>.</p>
+            </div>
+          </body>
+        </html>
+      `);
     }
 
     const frontendUrl =
