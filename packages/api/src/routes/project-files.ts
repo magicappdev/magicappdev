@@ -12,8 +12,8 @@ import {
   type NewProjectFile,
   type NewFileHistory,
 } from "@magicappdev/database";
+import { eq, and, desc } from "@magicappdev/database";
 import type { AppContext } from "../types.js";
-import { eq, and, desc } from "drizzle-orm";
 import { Hono, type Context } from "hono";
 
 export const projectFilesRoutes = new Hono<AppContext>();

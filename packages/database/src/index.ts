@@ -7,6 +7,9 @@
 // Schema
 export * from "./schema/index.js";
 
+// Re-export common drizzle-orm members
+export * from "drizzle-orm";
+
 // Client
 export {
   createDatabase,

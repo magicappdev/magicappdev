@@ -9,18 +9,15 @@ import {
   tickets,
   users,
 } from "@magicappdev/database";
-import { and, count, desc, eq, gt, isNull, sql } from "drizzle-orm";
+import { and, count, desc, eq, gt, isNull, sql } from "@magicappdev/database";
 import type { AppContext } from "../types.js";
 import { Hono } from "hono";
-
-// Crypto polyfill for Cloudflare Workers
-const crypto = globalThis.crypto as Required<typeof globalThis.crypto>;
 
 export const adminRoutes = new Hono<AppContext>();
 
 // Get platform stats
 adminRoutes.get("/stats", async c => {
-  const userRole = c.get("userRole") as string;
+  const userRole = c.get("userRole");
   const db = c.get("db");
 
   if (userRole !== "admin") {
@@ -40,15 +37,11 @@ adminRoutes.get("/stats", async c => {
     const totalUsers = userCountResult?.value || 0;
 
     // New Users (last 30 days)
-    // Note: Drizzle with D1/SQLite might need a custom query for date comparison if iso strings are used
-    const newUsersResult = await db
+    await db
       .select({ value: count() })
       .from(users)
       .where(gt(users.createdAt, thirtyDaysAgoIso))
       .get();
-    const newUsers = newUsersResult?.value || 0;
-    const growth =
-      totalUsers > 0 ? Math.round((newUsers / totalUsers) * 100) : 0;
 
     // Open Tickets
     const ticketCountResult = await db
@@ -58,7 +51,7 @@ adminRoutes.get("/stats", async c => {
       .get();
     const openTickets = ticketCountResult?.value || 0;
 
-    // Active Sessions (all-time for now, or could filter by expiresAt)
+    // Active Sessions
     const activeSessionsResult = await db
       .select({ value: count() })
       .from(sessions)
@@ -70,10 +63,8 @@ adminRoutes.get("/stats", async c => {
       data: {
         totalUsers,
         openTickets,
-        databaseSize: "0.8 MB", // Mocked as D1 doesn't expose this yet
+        databaseSize: "0.8 MB",
         activeSessions: totalSessions,
-        userGrowth: `+${growth}%`,
-        ticketUrgency: `${openTickets} high priority`,
       },
     });
   } catch (err) {
@@ -84,7 +75,7 @@ adminRoutes.get("/stats", async c => {
 
 // List all users
 adminRoutes.get("/users", async c => {
-  const userRole = c.get("userRole") as string;
+  const userRole = c.get("userRole");
   const db = c.get("db");
 
   if (userRole !== "admin") {
@@ -108,7 +99,7 @@ adminRoutes.get("/users", async c => {
 
 // Update user role
 adminRoutes.patch("/users/:id/role", async c => {
-  const adminRole = c.get("userRole") as string;
+  const adminRole = c.get("userRole");
   const db = c.get("db");
   const targetUserId = c.req.param("id");
   const { role } = await c.req.json();
@@ -124,7 +115,8 @@ adminRoutes.patch("/users/:id/role", async c => {
   await db
     .update(users)
     .set({ role, updatedAt: new Date().toISOString() })
-    .where(eq(users.id, targetUserId));
+    .where(eq(users.id, targetUserId))
+    .run();
 
   return c.json({ success: true });
 });
@@ -144,7 +136,7 @@ const generateApiKey = async () => {
 
 // Get all admin API keys
 adminRoutes.get("/api-keys", async c => {
-  const adminRole = c.get("userRole") as string;
+  const adminRole = c.get("userRole");
   const db = c.get("db");
   const limit = parseInt(c.req.query("limit") || "100");
   const offset = parseInt(c.req.query("offset") || "0");
@@ -155,29 +147,24 @@ adminRoutes.get("/api-keys", async c => {
   }
 
   try {
-    // Build base query
-    const baseQuery = db
+    const active =
+      isActive === "true" ? 1 : isActive === "false" ? 0 : undefined;
+
+    const keys = await db
       .select()
       .from(adminApiKeys)
-      .orderBy(desc(adminApiKeys.createdAt));
-
-    // Apply filters and pagination
-    let keys;
-    if (isActive !== undefined) {
-      const active = isActive === "true" ? 1 : 0;
-      keys = await baseQuery
-        .where(eq(adminApiKeys.isActive, active))
-        .offset(offset)
-        .limit(limit)
-        .all();
-    } else {
-      keys = await baseQuery.offset(offset).limit(limit).all();
-    }
+      .where(
+        active !== undefined ? eq(adminApiKeys.isActive, active) : undefined,
+      )
+      .orderBy(desc(adminApiKeys.createdAt))
+      .offset(offset)
+      .limit(limit)
+      .all();
 
     // Remove sensitive data (full key)
     const sanitizedKeys = keys.map(key => ({
       ...key,
-      key: key.keyPrefix, // Only show prefix
+      key: key.keyPrefix,
     }));
 
     return c.json({ success: true, data: sanitizedKeys, limit, offset });
@@ -189,7 +176,7 @@ adminRoutes.get("/api-keys", async c => {
 
 // Create a new admin API key
 adminRoutes.post("/api-keys", async c => {
-  const adminRole = c.get("userRole") as string;
+  const adminRole = c.get("userRole");
   const db = c.get("db");
   const userId = c.get("userId") as string;
 
@@ -215,11 +202,12 @@ adminRoutes.post("/api-keys", async c => {
     const newKey = await db
       .insert(adminApiKeys)
       .values({
+        id: crypto.randomUUID(),
         name: body.name,
-        key: apiKey, // Store the actual key (consider encryption for production)
+        key: apiKey,
         keyPrefix,
         description: body.description,
-        scopes: JSON.stringify(body.scopes), // Store as JSON string
+        scopes: JSON.stringify(body.scopes),
         createdBy: userId,
         isActive: 1,
       })
@@ -230,7 +218,7 @@ adminRoutes.post("/api-keys", async c => {
       success: true,
       data: {
         ...newKey,
-        key: keyPrefix, // Don't return the full key
+        key: keyPrefix,
       },
     });
   } catch (err) {
@@ -241,7 +229,7 @@ adminRoutes.post("/api-keys", async c => {
 
 // Delete an admin API key
 adminRoutes.delete("/api-keys/:id", async c => {
-  const adminRole = c.get("userRole") as string;
+  const adminRole = c.get("userRole");
   const db = c.get("db");
 
   if (adminRole !== "admin") {
@@ -250,9 +238,7 @@ adminRoutes.delete("/api-keys/:id", async c => {
 
   try {
     const keyId = c.req.param("id");
-
-    await db.delete(adminApiKeys).where(eq(adminApiKeys.id, keyId));
-
+    await db.delete(adminApiKeys).where(eq(adminApiKeys.id, keyId)).run();
     return c.json({ success: true });
   } catch (err) {
     console.error("Failed to delete admin API key:", err);
@@ -262,7 +248,7 @@ adminRoutes.delete("/api-keys/:id", async c => {
 
 // Get system logs
 adminRoutes.get("/logs", async c => {
-  const adminRole = c.get("userRole") as string;
+  const adminRole = c.get("userRole");
   const db = c.get("db");
   const limit = parseInt(c.req.query("limit") || "100");
   const offset = parseInt(c.req.query("offset") || "0");
@@ -275,35 +261,19 @@ adminRoutes.get("/logs", async c => {
   }
 
   try {
-    // Build base query
-    const baseQuery = db
+    const conditions = [];
+    if (level) conditions.push(eq(systemLogs.level, level));
+    if (category) conditions.push(eq(systemLogs.category, category));
+    if (userId) conditions.push(eq(systemLogs.userId, userId));
+
+    const logs = await db
       .select()
       .from(systemLogs)
-      .orderBy(desc(systemLogs.createdAt));
-
-    // Build filter conditions
-    const conditions = [];
-    if (level) {
-      conditions.push(eq(systemLogs.level, level));
-    }
-    if (category) {
-      conditions.push(eq(systemLogs.category, category));
-    }
-    if (userId) {
-      conditions.push(eq(systemLogs.userId, userId));
-    }
-
-    // Apply filters and pagination
-    let logs;
-    if (conditions.length > 0) {
-      logs = await baseQuery
-        .where(and(...conditions))
-        .offset(offset)
-        .limit(limit)
-        .all();
-    } else {
-      logs = await baseQuery.offset(offset).limit(limit).all();
-    }
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(systemLogs.createdAt))
+      .offset(offset)
+      .limit(limit)
+      .all();
 
     return c.json({ success: true, data: logs, limit, offset });
   } catch (err) {
@@ -312,7 +282,7 @@ adminRoutes.get("/logs", async c => {
   }
 });
 
-// Log an event (public endpoint that logs without auth)
+// Log an event
 adminRoutes.post("/logs", async c => {
   const body = await c.req.json<{
     level: "debug" | "info" | "warn" | "error";
@@ -327,6 +297,7 @@ adminRoutes.post("/logs", async c => {
     const db = c.get("db");
 
     await db.insert(systemLogs).values({
+      id: crypto.randomUUID(),
       level: body.level,
       category: body.category,
       message: body.message,
@@ -344,7 +315,7 @@ adminRoutes.post("/logs", async c => {
 
 // Get system logs count
 adminRoutes.get("/logs/stats", async c => {
-  const adminRole = c.get("userRole") as string;
+  const adminRole = c.get("userRole");
   const db = c.get("db");
 
   if (adminRole !== "admin") {
@@ -358,7 +329,6 @@ adminRoutes.get("/logs/stats", async c => {
       .get();
     const totalLogs = totalLogsResult?.value || 0;
 
-    // Count by level
     const counts = await db
       .select({
         level: systemLogs.level,
@@ -391,7 +361,7 @@ adminRoutes.get("/logs/stats", async c => {
 
 // Get global config
 adminRoutes.get("/config", async c => {
-  const adminRole = c.get("userRole") as string;
+  const adminRole = c.get("userRole");
   const db = c.get("db");
 
   if (adminRole !== "admin") {
@@ -399,7 +369,6 @@ adminRoutes.get("/config", async c => {
   }
 
   try {
-    // Get current config values
     const configResult = await db
       .select()
       .from(adminApiKeys)
@@ -421,7 +390,7 @@ adminRoutes.get("/config", async c => {
       try {
         return c.json({
           success: true,
-          data: JSON.parse(configResult.keyPrefix), // Store JSON in keyPrefix field for simplicity
+          data: JSON.parse(configResult.keyPrefix),
         });
       } catch {
         return c.json({ success: true, data: defaultConfig });
@@ -437,7 +406,7 @@ adminRoutes.get("/config", async c => {
 
 // Update global config
 adminRoutes.put("/config", async c => {
-  const adminRole = c.get("userRole") as string;
+  const adminRole = c.get("userRole");
   const db = c.get("db");
 
   if (adminRole !== "admin") {
@@ -478,20 +447,20 @@ adminRoutes.put("/config", async c => {
     const newConfig = { ...currentConfig, ...body };
 
     if (configResult) {
-      // Update existing config
       await db
         .update(adminApiKeys)
         .set({
           keyPrefix: JSON.stringify(newConfig),
           updatedAt: new Date().toISOString(),
         })
-        .where(eq(adminApiKeys.id, configResult.id));
+        .where(eq(adminApiKeys.id, configResult.id))
+        .run();
     } else {
-      // Create new config
       await db.insert(adminApiKeys).values({
+        id: crypto.randomUUID(),
         name: "global_config",
         key: JSON.stringify(newConfig),
-        keyPrefix: JSON.stringify(newConfig), // For simplicity, store as JSON string
+        keyPrefix: JSON.stringify(newConfig),
         description: "Global application configuration",
         scopes: JSON.stringify(["read", "write"]),
         isActive: 1,
@@ -506,9 +475,9 @@ adminRoutes.put("/config", async c => {
   }
 });
 
-// Get active session count (for rate limiting)
+// Get active session count
 adminRoutes.get("/config/session-stats", async c => {
-  const adminRole = c.get("userRole") as string;
+  const adminRole = c.get("userRole");
   const db = c.get("db");
 
   if (adminRole !== "admin") {
@@ -531,7 +500,7 @@ adminRoutes.get("/config/session-stats", async c => {
       .where(
         and(
           isNull(sessions.expiresAt),
-          gt(sql`${sessions.expiresAt}`, now.toISOString()),
+          gt(sql`datetime(\${sessions.expiresAt})`, now.toISOString()),
         ),
       )
       .get();

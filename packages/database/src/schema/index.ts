@@ -2,21 +2,21 @@
  * Database schema exports
  */
 
+import { tickets, ticketsRelations } from "./tickets.js";
+import { projectCommands } from "./project-commands.js";
+import { projectErrors } from "./project-errors.js";
 import { adminApiKeys } from "./admin-api-keys.js";
+import { projectFiles } from "./project-files.js";
+import { chatSessions } from "./chat-sessions.js";
+import { chatMessages } from "./chat-messages.js";
+import { fileHistory } from "./file-history.js";
 import { systemLogs } from "./system-logs.js";
 import { sessions } from "./sessions.js";
 import { projects } from "./projects.js";
 import { profiles } from "./profiles.js";
 import { accounts } from "./accounts.js";
 import { apiKeys } from "./api-keys.js";
-import { tickets } from "./tickets.js";
 import { users } from "./users.js";
-import { projectFiles } from "./project-files.js";
-import { fileHistory } from "./file-history.js";
-import { projectCommands } from "./project-commands.js";
-import { projectErrors } from "./project-errors.js";
-import { chatSessions } from "./chat-sessions.js";
-import { chatMessages } from "./chat-messages.js";
 
 export const schema = {
   users,
@@ -25,6 +25,7 @@ export const schema = {
   accounts,
   profiles,
   tickets,
+  ticketsRelations,
   apiKeys,
   systemLogs,
   adminApiKeys,

@@ -3,6 +3,7 @@
  */
 
 import { sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { relations } from "drizzle-orm";
 import { users } from "./users.js";
 
 /** Tickets table */
@@ -25,6 +26,14 @@ export const tickets = sqliteTable("tickets", {
     .notNull()
     .$defaultFn(() => new Date().toISOString()),
 });
+
+/** Relations for tickets table */
+export const ticketsRelations = relations(tickets, ({ one }) => ({
+  user: one(users, {
+    fields: [tickets.userId],
+    references: [users.id],
+  }),
+}));
 
 /** Ticket type inferred from schema */
 export type Ticket = typeof tickets.$inferSelect;

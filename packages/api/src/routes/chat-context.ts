@@ -14,8 +14,8 @@ import {
   type NewChatSession,
   type NewChatMessage,
 } from "@magicappdev/database";
+import { eq, desc } from "@magicappdev/database";
 import type { AppContext } from "../types.js";
-import { eq, desc } from "drizzle-orm";
 import { Hono } from "hono";
 
 export const chatContextRoutes = new Hono<AppContext>();
@@ -26,8 +26,7 @@ chatContextRoutes.post("/sessions", async c => {
     projectId?: string;
     title?: string;
   }>();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = c.var.db as any;
+  const db = c.var.db;
   const userId = c.var.userId;
 
   if (!userId) {
@@ -66,12 +65,10 @@ chatContextRoutes.post("/sessions", async c => {
 // Get chat session with messages
 chatContextRoutes.get("/sessions/:id", async c => {
   const sessionId = c.req.param("id");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = c.var.db as any;
+  const db = c.var.db;
 
   const session = await db.query.chatSessions.findFirst({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    where: eq((chatSessions as any).id, sessionId),
+    where: eq(chatSessions.id, sessionId),
   });
 
   if (!session) {
@@ -85,10 +82,8 @@ chatContextRoutes.get("/sessions/:id", async c => {
   }
 
   const messages = await db.query.chatMessages.findMany({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    where: eq((chatMessages as any).sessionId, sessionId),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    orderBy: [(chatMessages as any).timestamp],
+    where: eq(chatMessages.sessionId, sessionId),
+    orderBy: [chatMessages.timestamp],
   });
 
   return c.json({
@@ -102,8 +97,7 @@ chatContextRoutes.get("/sessions/:id", async c => {
 
 // List user's chat sessions
 chatContextRoutes.get("/sessions", async c => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = c.var.db as any;
+  const db = c.var.db;
   const userId = c.var.userId;
 
   if (!userId) {
@@ -117,10 +111,8 @@ chatContextRoutes.get("/sessions", async c => {
   }
 
   const sessions = await db.query.chatSessions.findMany({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    where: eq((chatSessions as any).userId, userId),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    orderBy: [desc((chatSessions as any).updatedAt)],
+    where: eq(chatSessions.userId, userId),
+    orderBy: [desc(chatSessions.updatedAt)],
   });
 
   return c.json({
@@ -132,12 +124,10 @@ chatContextRoutes.get("/sessions", async c => {
 // Get project context for AI (files, errors, commands)
 chatContextRoutes.get("/sessions/:id/context", async c => {
   const sessionId = c.req.param("id");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = c.var.db as any;
+  const db = c.var.db;
 
   const session = await db.query.chatSessions.findFirst({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    where: eq((chatSessions as any).id, sessionId),
+    where: eq(chatSessions.id, sessionId),
   });
 
   if (!session) {
@@ -165,16 +155,13 @@ chatContextRoutes.get("/sessions/:id/context", async c => {
   if (session.projectId) {
     // Get project files
     context.files = await db.query.projectFiles.findMany({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      where: eq((projectFiles as any).projectId, session.projectId),
+      where: eq(projectFiles.projectId, session.projectId),
     });
 
     // Get project errors
     context.errors = await db.query.projectErrors.findMany({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      where: eq((projectErrors as any).projectId, session.projectId),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      orderBy: [desc((projectErrors as any).occurredAt)],
+      where: eq(projectErrors.projectId, session.projectId),
+      orderBy: [desc(projectErrors.occurredAt)],
     });
 
     // Count unresolved errors
@@ -184,10 +171,8 @@ chatContextRoutes.get("/sessions/:id/context", async c => {
 
     // Get recent commands
     context.commands = await db.query.projectCommands.findMany({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      where: eq((projectCommands as any).projectId, session.projectId),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      orderBy: [desc((projectCommands as any).executedAt)],
+      where: eq(projectCommands.projectId, session.projectId),
+      orderBy: [desc(projectCommands.executedAt)],
       limit: 10,
     });
   }
@@ -205,12 +190,10 @@ chatContextRoutes.post("/sessions/:id/message", async c => {
     role: "user" | "assistant" | "system";
     content: string;
   }>();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = c.var.db as any;
+  const db = c.var.db;
 
   const session = await db.query.chatSessions.findFirst({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    where: eq((chatSessions as any).id, sessionId),
+    where: eq(chatSessions.id, sessionId),
   });
 
   if (!session) {
@@ -240,8 +223,7 @@ chatContextRoutes.post("/sessions/:id/message", async c => {
     .set({
       updatedAt: new Date().toISOString(),
     })
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .where(eq((chatSessions as any).id, sessionId))
+    .where(eq(chatSessions.id, sessionId))
     .run();
 
   return c.json(
@@ -260,12 +242,10 @@ chatContextRoutes.patch("/sessions/:id", async c => {
     projectId?: string | null;
     title?: string;
   }>();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = c.var.db as any;
+  const db = c.var.db;
 
   const existing = await db.query.chatSessions.findFirst({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    where: eq((chatSessions as any).id, sessionId),
+    where: eq(chatSessions.id, sessionId),
   });
 
   if (!existing) {
@@ -285,8 +265,7 @@ chatContextRoutes.patch("/sessions/:id", async c => {
       ...(body.title && { title: body.title }),
       updatedAt: new Date().toISOString(),
     })
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .where(eq((chatSessions as any).id, sessionId))
+    .where(eq(chatSessions.id, sessionId))
     .returning()
     .get();
 
@@ -299,13 +278,11 @@ chatContextRoutes.patch("/sessions/:id", async c => {
 // Delete session
 chatContextRoutes.delete("/sessions/:id", async c => {
   const sessionId = c.req.param("id");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = c.var.db as any;
+  const db = c.var.db;
 
   const result = await db
     .delete(chatSessions)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .where(eq((chatSessions as any).id, sessionId))
+    .where(eq(chatSessions.id, sessionId))
     .returning()
     .get();
 

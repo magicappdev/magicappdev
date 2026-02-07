@@ -12,7 +12,7 @@ import {
   projectErrors,
 } from "@magicappdev/database";
 import type { AppContext } from "../types.js";
-import { eq } from "drizzle-orm";
+import { eq } from "@magicappdev/database";
 import { Hono } from "hono";
 
 export const exportRoutes = new Hono<AppContext>();

@@ -3,8 +3,8 @@
  */
 
 import { projects, PROJECT_STATUS } from "@magicappdev/database";
+import { eq, desc } from "@magicappdev/database";
 import type { AppContext } from "../types.js";
-import { eq, desc } from "drizzle-orm";
 import { Hono } from "hono";
 
 export const projectsRoutes = new Hono<AppContext>();

@@ -3,8 +3,8 @@
  */
 
 import { accounts, profiles, sessions, users } from "@magicappdev/database";
+import { eq, and, desc } from "@magicappdev/database";
 import type { AppContext } from "../types.js";
-import { eq, and } from "drizzle-orm";
 import { sign } from "hono/jwt";
 import bcrypt from "bcryptjs";
 import { Hono } from "hono";
@@ -83,13 +83,11 @@ authRoutes.post("/register", async c => {
     return c.json({ error: "Missing required fields" }, 400);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = c.var.db as any;
+  const db = c.var.db;
 
   // Check if user exists
   const existingUser = await db.query.users.findFirst({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    where: (u: any, { eq }: any) => eq(u.email, email),
+    where: eq(users.email, email),
   });
 
   if (existingUser) {
@@ -123,12 +121,10 @@ authRoutes.post("/login", async c => {
     return c.json({ error: "Email and password required" }, 400);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = c.var.db as any;
+  const db = c.var.db;
 
   const user = await db.query.users.findFirst({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    where: (u: any, { eq }: any) => eq(u.email, email),
+    where: eq(users.email, email),
   });
 
   if (!user || !user.passwordHash) {
@@ -265,7 +261,6 @@ authRoutes.get("/callback/discord", async c => {
   let platform = "web";
   let clientRedirectUri: string | undefined;
   let linkUserId: string | undefined;
-  // let clientState: string | undefined;
 
   try {
     if (stateStr) {
@@ -273,7 +268,6 @@ authRoutes.get("/callback/discord", async c => {
       if (typeof state === "object") {
         platform = state.platform || "web";
         clientRedirectUri = state.redirect_uri;
-        //        clientState = state.clientState;
         if (state.action === "link" && state.userId) {
           linkUserId = state.userId;
         }
@@ -357,8 +351,7 @@ authRoutes.get("/callback/discord", async c => {
     const discordUser = (await userResponse.json()) as DiscordUser;
     console.log("Discord User received:", discordUser.username);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = c.var.db as any;
+    const db = c.var.db;
 
     let userId = "";
 
@@ -366,8 +359,7 @@ authRoutes.get("/callback/discord", async c => {
     if (linkUserId) {
       console.log("Linking Discord account to user:", linkUserId);
       const targetUser = await db.query.users.findFirst({
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        where: (u: any, { eq }: any) => eq(u.id, linkUserId),
+        where: eq(users.id, linkUserId),
       });
 
       if (!targetUser) {
@@ -375,12 +367,10 @@ authRoutes.get("/callback/discord", async c => {
       }
 
       const existingAccount = await db.query.accounts.findFirst({
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        where: (acc: any, { and, eq }: any) =>
-          and(
-            eq(acc.provider, "discord"),
-            eq(acc.providerAccountId, discordUser.id),
-          ),
+        where: and(
+          eq(accounts.provider, "discord"),
+          eq(accounts.providerAccountId, discordUser.id),
+        ),
       });
 
       if (existingAccount) {
@@ -420,12 +410,10 @@ authRoutes.get("/callback/discord", async c => {
       // 3. Find or Create User
       console.log("Checking for existing Discord account...");
       const existingAccount = await db.query.accounts.findFirst({
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        where: (acc: any, { and, eq }: any) =>
-          and(
-            eq(acc.provider, "discord"),
-            eq(acc.providerAccountId, discordUser.id),
-          ),
+        where: and(
+          eq(accounts.provider, "discord"),
+          eq(accounts.providerAccountId, discordUser.id),
+        ),
       });
 
       if (existingAccount) {
@@ -437,8 +425,7 @@ authRoutes.get("/callback/discord", async c => {
       } else {
         console.log("No existing account, checking for user with email...");
         const existingUser = await db.query.users.findFirst({
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          where: (u: any, { eq }: any) => eq(u.email, email),
+          where: eq(users.email, email),
         });
 
         if (existingUser) {
@@ -461,8 +448,7 @@ authRoutes.get("/callback/discord", async c => {
                 discordUser.username,
               avatarUrl: existingUser.avatarUrl || avatarUrl,
             })
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            .where(eq(users.id as any, userId));
+            .where(eq(users.id, userId));
         } else {
           console.log("Creating new user from Discord...");
           userId = crypto.randomUUID();
@@ -503,8 +489,7 @@ authRoutes.get("/callback/discord", async c => {
     console.log("Creating session...");
 
     const user = await db.query.users.findFirst({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      where: (u: any, { eq }: any) => eq(u.id, userId),
+      where: eq(users.id, userId),
     });
 
     const jwtSecret = c.env.JWT_SECRET;
@@ -820,7 +805,7 @@ authRoutes.get("/callback/github", async c => {
     // 2. Fetch User Info
     const userResponse = await fetch("https://api.github.com/user", {
       headers: {
-        Authorization: `Bearer ${tokenData.access_token}`,
+        Authorization: `Bearer \${tokenData.access_token}`,
         "User-Agent": "MagicAppDev",
       },
     });
@@ -834,8 +819,7 @@ authRoutes.get("/callback/github", async c => {
     const githubUser = (await userResponse.json()) as GitHubUser;
     console.log("GitHub User received:", githubUser.login);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = c.var.db as any;
+    const db = c.var.db;
 
     let userId = "";
 
@@ -843,8 +827,7 @@ authRoutes.get("/callback/github", async c => {
     if (linkUserId) {
       console.log("Linking GitHub account to user:", linkUserId);
       const targetUser = await db.query.users.findFirst({
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        where: (u: any, { eq }: any) => eq(u.id, linkUserId),
+        where: eq(users.id, linkUserId),
       });
 
       if (!targetUser) {
@@ -852,12 +835,10 @@ authRoutes.get("/callback/github", async c => {
       }
 
       const existingAccount = await db.query.accounts.findFirst({
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        where: (acc: any, { and, eq }: any) =>
-          and(
-            eq(acc.provider, "github"),
-            eq(acc.providerAccountId, String(githubUser.id)),
-          ),
+        where: and(
+          eq(accounts.provider, "github"),
+          eq(accounts.providerAccountId, String(githubUser.id)),
+        ),
       });
 
       if (existingAccount) {
@@ -891,7 +872,7 @@ authRoutes.get("/callback/github", async c => {
           "https://api.github.com/user/emails",
           {
             headers: {
-              Authorization: `Bearer ${tokenData.access_token}`,
+              Authorization: `Bearer \${tokenData.access_token}`,
               "User-Agent": "MagicAppDev",
             },
           },
@@ -916,12 +897,10 @@ authRoutes.get("/callback/github", async c => {
       // 4. Find or Create User
       console.log("Checking for existing account...");
       const existingAccount = await db.query.accounts.findFirst({
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        where: (acc: any, { and, eq }: any) =>
-          and(
-            eq(acc.provider, "github"),
-            eq(acc.providerAccountId, String(githubUser.id)),
-          ),
+        where: and(
+          eq(accounts.provider, "github"),
+          eq(accounts.providerAccountId, String(githubUser.id)),
+        ),
       });
 
       if (existingAccount) {
@@ -931,8 +910,7 @@ authRoutes.get("/callback/github", async c => {
         console.log("No existing account, checking for user with email...");
         // Check if user with email exists (link account)
         const existingUser = await db.query.users.findFirst({
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          where: (u: any, { eq }: any) => eq(u.email, email),
+          where: eq(users.email, email),
         });
 
         if (existingUser) {
@@ -946,8 +924,7 @@ authRoutes.get("/callback/github", async c => {
               name: existingUser.name || githubUser.name || githubUser.login,
               avatarUrl: existingUser.avatarUrl || githubUser.avatar_url,
             })
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            .where(eq(users.id as any, userId));
+            .where(eq(users.id, userId));
         } else {
           console.log("Creating new user...");
           // Create new user
@@ -991,8 +968,7 @@ authRoutes.get("/callback/github", async c => {
 
     // Fetch latest user data to get role
     const user = await db.query.users.findFirst({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      where: (u: any, { eq }: any) => eq(u.id, userId),
+      where: eq(users.id, userId),
     });
 
     const jwtSecret = c.env.JWT_SECRET;
@@ -1185,12 +1161,10 @@ authRoutes.post("/refresh", async c => {
   const { refreshToken } = await c.req.json<{ refreshToken: string }>();
   if (!refreshToken) return c.json({ error: "Missing refresh token" }, 400);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = c.var.db as any;
+  const db = c.var.db;
 
   const session = await db.query.sessions.findFirst({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    where: (s: any, { eq }: any) => eq(s.refreshToken, refreshToken),
+    where: eq(sessions.refreshToken, refreshToken),
   });
 
   if (!session || new Date(session.expiresAt) < new Date()) {
@@ -1198,8 +1172,7 @@ authRoutes.post("/refresh", async c => {
   }
 
   const user = await db.query.users.findFirst({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    where: (u: any, { eq }: any) => eq(u.id, session.userId),
+    where: eq(users.id, session.userId),
   });
 
   const jwtSecret = c.env.JWT_SECRET;
@@ -1225,13 +1198,9 @@ authRoutes.post("/logout", async c => {
   const { refreshToken } = await c.req.json<{ refreshToken: string }>();
   if (!refreshToken) return c.json({ success: true }); // Silent fail
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = c.var.db as any;
+  const db = c.var.db;
 
-  await db
-    .delete(sessions)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .where(eq((sessions as any).refreshToken, refreshToken));
+  await db.delete(sessions).where(eq(sessions.refreshToken, refreshToken));
 
   return c.json({ success: true });
 });
@@ -1243,16 +1212,14 @@ authRoutes.get("/me", async c => {
     return c.json({ error: "Unauthorized" }, 401);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = c.var.db as any;
+  const db = c.var.db;
 
   try {
     // Use simple select to avoid relation issues for now
     const user = await db
       .select()
       .from(users)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .where(eq((users as any).id, userId))
+      .where(eq(users.id, userId))
       .get();
 
     if (!user) {
@@ -1263,8 +1230,7 @@ authRoutes.get("/me", async c => {
     const userProfile = await db
       .select()
       .from(profiles)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .where(eq((profiles as any).userId, userId))
+      .where(eq(profiles.userId, userId))
       .get();
 
     return c.json({
@@ -1310,12 +1276,10 @@ authRoutes.post("/change-password", async c => {
     return c.json({ error: "New password must be at least 6 characters" }, 400);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = c.var.db as any;
+  const db = c.var.db;
 
   const user = await db.query.users.findFirst({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    where: (u: any, { eq }: any) => eq(u.id, userId),
+    where: eq(users.id, userId),
   });
 
   if (!user) {
@@ -1338,8 +1302,7 @@ authRoutes.post("/change-password", async c => {
   await db
     .update(users)
     .set({ passwordHash: newPasswordHash, updatedAt: new Date().toISOString() })
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .where(eq((users as any).id, userId));
+    .where(eq(users.id, userId));
 
   return c.json({ success: true, message: "Password updated successfully" });
 });
@@ -1363,8 +1326,7 @@ authRoutes.put("/profile", async c => {
     region?: string;
   }>();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = c.var.db as any;
+  const db = c.var.db;
 
   try {
     // Update user name if provided
@@ -1372,22 +1334,22 @@ authRoutes.put("/profile", async c => {
       await db
         .update(users)
         .set({ name, updatedAt: new Date().toISOString() })
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .where(eq((users as any).id, userId));
+        .where(eq(users.id, userId));
     }
 
     // Update profile bio/region if provided
     if (bio !== undefined || region !== undefined) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const updates: any = { updatedAt: new Date().toISOString() };
+      const updates: Record<string, unknown> = {
+        updatedAt: new Date().toISOString(),
+      };
       if (bio !== undefined) updates.bio = bio;
       if (region !== undefined) updates.region = region;
 
       await db
         .update(profiles)
         .set(updates)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .where(eq((profiles as any).userId, userId));
+        .where(eq(profiles.userId, userId))
+        .run();
     }
 
     return c.json({ success: true, message: "Profile updated successfully" });
@@ -1410,7 +1372,6 @@ authRoutes.put("/profile", async c => {
 // ==================== User API Keys ====================
 
 import { adminApiKeys } from "@magicappdev/database";
-import { desc } from "drizzle-orm";
 
 // Generate a random API key (Local helper)
 const generateUserApiKey = async () => {
@@ -1429,8 +1390,7 @@ authRoutes.get("/api-keys", async c => {
   if (!userId) {
     return c.json({ error: "Unauthorized" }, 401);
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = c.var.db as any;
+  const db = c.var.db;
 
   try {
     const keys = await db
@@ -1443,7 +1403,7 @@ authRoutes.get("/api-keys", async c => {
         lastUsedAt: adminApiKeys.lastUsedAt,
       })
       .from(adminApiKeys)
-      .where(eq(adminApiKeys.createdBy, userId))
+      .where(eq(adminApiKeys.createdBy, userId || ""))
       .orderBy(desc(adminApiKeys.createdAt))
       .all();
 
@@ -1458,8 +1418,7 @@ authRoutes.get("/api-keys", async c => {
 authRoutes.post("/api-keys", async c => {
   const userId = c.var.userId;
   console.log("[POST /auth/api-keys] Creating key for userId:", userId);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = c.var.db as any;
+  const db = c.var.db;
 
   try {
     const { name } = await c.req.json<{ name: string }>();
@@ -1478,7 +1437,7 @@ authRoutes.post("/api-keys", async c => {
         keyPrefix,
         description: "User API Key",
         scopes: JSON.stringify(["read", "write"]), // Standard user scopes
-        createdBy: userId,
+        createdBy: userId || "",
         isActive: 1,
       })
       .returning()
@@ -1503,8 +1462,7 @@ authRoutes.delete("/api-keys/:id", async c => {
   if (!userId) {
     return c.json({ error: "Unauthorized" }, 401);
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = c.var.db as any;
+  const db = c.var.db;
   const keyId = c.req.param("id");
 
   try {
@@ -1541,30 +1499,17 @@ authRoutes.delete("/account", async c => {
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = c.var.db as any;
+  const db = c.var.db;
 
   try {
     // Delete in order: sessions, accounts, profiles, then users
-    await db
-      .delete(sessions)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .where(eq((sessions as any).userId, userId));
+    await db.delete(sessions).where(eq(sessions.userId, userId));
 
-    await db
-      .delete(accounts)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .where(eq((accounts as any).userId, userId));
+    await db.delete(accounts).where(eq(accounts.userId, userId));
 
-    await db
-      .delete(profiles)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .where(eq((profiles as any).userId, userId));
+    await db.delete(profiles).where(eq(profiles.userId, userId));
 
-    await db
-      .delete(users)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .where(eq((users as any).id, userId));
+    await db.delete(users).where(eq(users.id, userId));
 
     return c.json({ success: true, message: "Account deleted successfully" });
   } catch (err) {
@@ -1599,8 +1544,7 @@ authRoutes.get("/accounts", async c => {
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = c.var.db as any;
+  const db = c.var.db;
 
   try {
     const linkedAccounts = await db
@@ -1611,14 +1555,12 @@ authRoutes.get("/accounts", async c => {
         createdAt: accounts.createdAt,
       })
       .from(accounts)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .where(eq((accounts as any).userId, userId));
+      .where(eq(accounts.userId, userId));
 
     console.log("[GET /auth/accounts] Found accounts:", linkedAccounts);
 
     // Format dates as ISO strings for frontend
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const formattedAccounts = linkedAccounts.map((account: any) => ({
+    const formattedAccounts = linkedAccounts.map(account => ({
       ...account,
       createdAt: account.createdAt
         ? new Date(account.createdAt).toISOString()
@@ -1658,24 +1600,21 @@ authRoutes.delete("/accounts/:provider", async c => {
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = c.var.db as any;
+  const db = c.var.db;
 
   try {
     // Check if user has a password set (can't unlink all OAuth if no password)
     const user = await db.query.users.findFirst({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      where: (u: any, { eq }: any) => eq(u.id, userId),
+      where: eq(users.id, userId),
     });
 
     const linkedAccounts = await db
       .select()
       .from(accounts)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .where(eq((accounts as any).userId, userId));
+      .where(eq(accounts.userId, userId));
 
     // Prevent unlinking if it's the only auth method
-    if (!user.passwordHash && linkedAccounts.length <= 1) {
+    if (!user?.passwordHash && linkedAccounts.length <= 1) {
       return c.json(
         {
           success: false,
@@ -1689,18 +1628,13 @@ authRoutes.delete("/accounts/:provider", async c => {
       );
     }
 
-    await db.delete(accounts).where(
-      and(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        eq((accounts as any).userId, userId),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        eq((accounts as any).provider, provider),
-      ),
-    );
+    await db
+      .delete(accounts)
+      .where(and(eq(accounts.userId, userId), eq(accounts.provider, provider)));
 
     return c.json({
       success: true,
-      message: `${provider} account unlinked successfully`,
+      message: `\${provider} account unlinked successfully`,
     });
   } catch (err) {
     console.error("Error unlinking account:", err);
@@ -1789,7 +1723,7 @@ authRoutes.get("/link/:provider", c => {
       );
     }
 
-    const params = new URLSearchParams({
+    const discordParams = new URLSearchParams({
       client_id: clientId,
       redirect_uri: redirectUri,
       response_type: "code",
@@ -1798,7 +1732,7 @@ authRoutes.get("/link/:provider", c => {
     });
 
     return c.redirect(
-      `https://discord.com/api/oauth2/authorize?${params.toString()}`,
+      `https://discord.com/api/oauth2/authorize?${discordParams.toString()}`,
     );
   }
 
