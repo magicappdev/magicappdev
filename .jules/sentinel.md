@@ -1,0 +1,4 @@
+## 2026-02-07 - CodeQL Workflow Conflict
+**Vulnerability:** CI Failure (CodeQL Analysis)
+**Learning:** Custom CodeQL workflows (.github/workflows/codeql.yml) can conflict with GitHub's "Default Setup" for code scanning. This happens when the repository settings have "Default setup" enabled, which automatically handles the analysis and upload. A manual workflow attempting to upload the same analysis results will be rejected with the error: "CodeQL analyses from advanced configurations cannot be processed when the default setup is enabled".
+**Prevention:** If "Default setup" is enabled in repository settings, do not include a manual `codeql.yml` workflow file. If advanced configuration is needed, "Default setup" must be disabled in the GitHub UI before the manual workflow can successfully upload results.

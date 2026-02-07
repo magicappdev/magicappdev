@@ -5,6 +5,7 @@
  */
 
 import {
+  projects,
   projectFiles,
   fileHistory,
   type ProjectFile,
@@ -13,7 +14,7 @@ import {
 } from "@magicappdev/database";
 import type { AppContext } from "../types.js";
 import { eq, and, desc } from "drizzle-orm";
-import { Hono } from "hono";
+import { Hono, type Context } from "hono";
 
 export const projectFilesRoutes = new Hono<AppContext>();
 
@@ -49,10 +50,36 @@ function detectLanguage(path: string): string {
   return languageMap[ext || ""] || "text";
 }
 
+/**
+ * Verify project ownership
+ * Returns the project if owned/admin, otherwise throws or returns null
+ */
+async function verifyProjectAccess(c: Context<AppContext>, projectId: string) {
+  const db = c.var.db;
+  const userId = c.var.userId;
+  const userRole = c.var.userRole;
+
+  const project = await db.query.projects.findFirst({
+    where: eq(projects.id, projectId),
+  });
+
+  if (!project) return null;
+
+  if (userRole !== "admin" && project.userId !== userId) {
+    return "FORBIDDEN";
+  }
+
+  return project;
+}
+
 // List all files for a project
 projectFilesRoutes.get("/:projectId/files", async c => {
   const projectId = c.req.param("projectId");
   const db = c.var.db;
+
+  const access = await verifyProjectAccess(c, projectId);
+  if (!access) return c.json({ error: "Project not found" }, 404);
+  if (access === "FORBIDDEN") return c.json({ error: "Forbidden" }, 403);
 
   const results = await db.query.projectFiles.findMany({
     where: eq(projectFiles.projectId, projectId),
@@ -70,6 +97,10 @@ projectFilesRoutes.get("/:projectId/files/*", async c => {
   const projectId = c.req.param("projectId");
   const path = c.req.param("*");
   const db = c.var.db;
+
+  const access = await verifyProjectAccess(c, projectId);
+  if (!access) return c.json({ error: "Project not found" }, 404);
+  if (access === "FORBIDDEN") return c.json({ error: "Forbidden" }, 403);
 
   if (!path) {
     return c.json(
@@ -109,6 +140,10 @@ projectFilesRoutes.get("/:projectId/files/*/history", async c => {
   const projectId = c.req.param("projectId");
   const path = c.req.param("*");
   const db = c.var.db;
+
+  const access = await verifyProjectAccess(c, projectId);
+  if (!access) return c.json({ error: "Project not found" }, 404);
+  if (access === "FORBIDDEN") return c.json({ error: "Forbidden" }, 403);
 
   if (!path) {
     return c.json(
@@ -160,6 +195,10 @@ projectFilesRoutes.post("/:projectId/files", async c => {
   }>();
   const db = c.var.db;
   const userId = c.var.userId || "system";
+
+  const access = await verifyProjectAccess(c, projectId);
+  if (!access) return c.json({ error: "Project not found" }, 404);
+  if (access === "FORBIDDEN") return c.json({ error: "Forbidden" }, 403);
 
   if (!body.path || body.content === undefined) {
     return c.json(
@@ -254,6 +293,10 @@ projectFilesRoutes.delete("/:projectId/files/*", async c => {
   const db = c.var.db;
   const userId = c.var.userId || "system";
 
+  const access = await verifyProjectAccess(c, projectId);
+  if (!access) return c.json({ error: "Project not found" }, 404);
+  if (access === "FORBIDDEN") return c.json({ error: "Forbidden" }, 403);
+
   if (!path) {
     return c.json(
       {
@@ -307,6 +350,10 @@ projectFilesRoutes.post("/:projectId/files/bulk", async c => {
   }>();
   const db = c.var.db;
   const userId = c.var.userId || "system";
+
+  const access = await verifyProjectAccess(c, projectId);
+  if (!access) return c.json({ error: "Project not found" }, 404);
+  if (access === "FORBIDDEN") return c.json({ error: "Forbidden" }, 403);
 
   const results: ProjectFile[] = [];
 
