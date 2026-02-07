@@ -18,6 +18,7 @@ projectsRoutes.get("/", async c => {
   const db = c.var.db as any;
 
   const userId = c.var.userId;
+  const userRole = c.var.userRole;
 
   const results = await db.query.projects.findMany({
     limit,
@@ -25,7 +26,7 @@ projectsRoutes.get("/", async c => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     orderBy: [desc((projects as any).updatedAt)],
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    where: eq((projects as any).userId, userId),
+    where: userRole === "admin" ? undefined : eq((projects as any).userId, userId),
   });
 
   // Get total count (simplified for now)
@@ -49,6 +50,8 @@ projectsRoutes.get("/", async c => {
 // Get project by ID
 projectsRoutes.get("/:id", async c => {
   const id = c.req.param("id");
+  const userId = c.var.userId;
+  const userRole = c.var.userRole;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = c.var.db as any;
 
@@ -64,6 +67,17 @@ projectsRoutes.get("/:id", async c => {
         error: { code: "NOT_FOUND", message: "Project not found" },
       },
       404,
+    );
+  }
+
+  // Check ownership
+  if (userRole !== "admin" && project.userId !== userId) {
+    return c.json(
+      {
+        success: false,
+        error: { code: "FORBIDDEN", message: "Forbidden" },
+      },
+      403,
     );
   }
 
@@ -154,6 +168,8 @@ projectsRoutes.post("/", async c => {
 // Update project
 projectsRoutes.patch("/:id", async c => {
   const id = c.req.param("id");
+  const userId = c.var.userId;
+  const userRole = c.var.userRole;
   const body = await c.req.json<{
     name?: string;
     description?: string;
@@ -176,6 +192,17 @@ projectsRoutes.patch("/:id", async c => {
         error: { code: "NOT_FOUND", message: "Project not found" },
       },
       404,
+    );
+  }
+
+  // Check ownership
+  if (userRole !== "admin" && existing.userId !== userId) {
+    return c.json(
+      {
+        success: false,
+        error: { code: "FORBIDDEN", message: "Forbidden" },
+      },
+      403,
     );
   }
 
@@ -202,17 +229,18 @@ projectsRoutes.patch("/:id", async c => {
 // Delete project
 projectsRoutes.delete("/:id", async c => {
   const id = c.req.param("id");
+  const userId = c.var.userId;
+  const userRole = c.var.userRole;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = c.var.db as any;
 
-  const result = await db
-    .delete(projects)
+  // Verify existence
+  const existing = await db.query.projects.findFirst({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .where(eq((projects as any).id, id))
-    .returning()
-    .get();
+    where: eq((projects as any).id, id),
+  });
 
-  if (!result) {
+  if (!existing) {
     return c.json(
       {
         success: false,
@@ -221,6 +249,23 @@ projectsRoutes.delete("/:id", async c => {
       404,
     );
   }
+
+  // Check ownership
+  if (userRole !== "admin" && existing.userId !== userId) {
+    return c.json(
+      {
+        success: false,
+        error: { code: "FORBIDDEN", message: "Forbidden" },
+      },
+      403,
+    );
+  }
+
+  await db
+    .delete(projects)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .where(eq((projects as any).id, id))
+    .run();
 
   return c.json({ success: true, data: { id } });
 });

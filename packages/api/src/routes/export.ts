@@ -23,6 +23,8 @@ export const exportRoutes = new Hono<AppContext>();
  */
 exportRoutes.get("/:id/export", async c => {
   const projectId = c.req.param("id");
+  const userId = c.var.userId;
+  const userRole = c.var.userRole;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = c.var.db as any;
 
@@ -39,6 +41,17 @@ exportRoutes.get("/:id/export", async c => {
         error: { code: "NOT_FOUND", message: "Project not found" },
       },
       404,
+    );
+  }
+
+  // Check ownership
+  if (userRole !== "admin" && project.userId !== userId) {
+    return c.json(
+      {
+        success: false,
+        error: { code: "FORBIDDEN", message: "Forbidden" },
+      },
+      403,
     );
   }
 
@@ -126,6 +139,8 @@ exportRoutes.get("/:id/export", async c => {
  */
 exportRoutes.get("/:id/export/minimal", async c => {
   const projectId = c.req.param("id");
+  const userId = c.var.userId;
+  const userRole = c.var.userRole;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = c.var.db as any;
 
@@ -141,6 +156,17 @@ exportRoutes.get("/:id/export/minimal", async c => {
         error: { code: "NOT_FOUND", message: "Project not found" },
       },
       404,
+    );
+  }
+
+  // Check ownership
+  if (userRole !== "admin" && project.userId !== userId) {
+    return c.json(
+      {
+        success: false,
+        error: { code: "FORBIDDEN", message: "Forbidden" },
+      },
+      403,
     );
   }
 
@@ -171,12 +197,15 @@ exportRoutes.get("/:id/export/minimal", async c => {
 exportRoutes.get("/export/list", async c => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = c.var.db as any;
-  // const userId = c.var.userId;
+  const userId = c.var.userId;
+  const userRole = c.var.userRole;
 
-  // For now, list all projects (in production, filter by user/public status)
+  // List user's own projects (or all projects for admin)
   const projects_list = await db.query.projects.findMany({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     orderBy: [(projects as any).updatedAt],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    where: userRole === "admin" ? undefined : eq((projects as any).userId, userId),
   });
 
   // Get file counts for each project
