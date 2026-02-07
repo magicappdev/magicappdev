@@ -25,13 +25,11 @@ exportRoutes.get("/:id/export", async c => {
   const projectId = c.req.param("id");
   const userId = c.var.userId;
   const userRole = c.var.userRole;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = c.var.db as any;
+  const db = c.var.db;
 
   // Get project details
   const project = await db.query.projects.findFirst({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    where: eq((projects as any).id, projectId),
+    where: eq(projects.id, projectId),
   });
 
   if (!project) {
@@ -57,20 +55,17 @@ exportRoutes.get("/:id/export", async c => {
 
   // Get all project files
   const files = await db.query.projectFiles.findMany({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    where: eq((projectFiles as any).projectId, projectId),
+    where: eq(projectFiles.projectId, projectId),
   });
 
   // Get project commands
   const commands = await db.query.projectCommands.findMany({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    where: eq((projectCommands as any).projectId, projectId),
+    where: eq(projectCommands.projectId, projectId),
   });
 
   // Get project errors
   const errors = await db.query.projectErrors.findMany({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    where: eq((projectErrors as any).projectId, projectId),
+    where: eq(projectErrors.projectId, projectId),
   });
 
   // Build export structure
@@ -141,12 +136,10 @@ exportRoutes.get("/:id/export/minimal", async c => {
   const projectId = c.req.param("id");
   const userId = c.var.userId;
   const userRole = c.var.userRole;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = c.var.db as any;
+  const db = c.var.db;
 
   const project = await db.query.projects.findFirst({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    where: eq((projects as any).id, projectId),
+    where: eq(projects.id, projectId),
   });
 
   if (!project) {
@@ -171,8 +164,7 @@ exportRoutes.get("/:id/export/minimal", async c => {
   }
 
   const files = await db.query.projectFiles.findMany({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    where: eq((projectFiles as any).projectId, projectId),
+    where: eq(projectFiles.projectId, projectId),
   });
 
   const exportData = {
@@ -195,25 +187,21 @@ exportRoutes.get("/:id/export/minimal", async c => {
  * Returns public projects or user's own projects
  */
 exportRoutes.get("/export/list", async c => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = c.var.db as any;
+  const db = c.var.db;
   const userId = c.var.userId;
   const userRole = c.var.userRole;
 
   // List user's own projects (or all projects for admin)
   const projects_list = await db.query.projects.findMany({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    orderBy: [(projects as any).updatedAt],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    where: userRole === "admin" ? undefined : eq((projects as any).userId, userId),
+    orderBy: [projects.updatedAt],
+    where: userRole === "admin" ? undefined : eq(projects.userId, userId || ""),
   });
 
   // Get file counts for each project
   const projectsWithCounts = await Promise.all(
     projects_list.map(async (p: typeof projects.$inferSelect) => {
       const files = await db.query.projectFiles.findMany({
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        where: eq((projectFiles as any).projectId, p.id),
+        where: eq(projectFiles.projectId, p.id),
       });
 
       return {

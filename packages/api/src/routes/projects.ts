@@ -23,11 +23,8 @@ projectsRoutes.get("/", async c => {
   const results = await db.query.projects.findMany({
     limit,
     offset,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    orderBy: [desc((projects as any).updatedAt)],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    where:
-      userRole === "admin" ? undefined : eq((projects as any).userId, userId),
+    orderBy: [desc(projects.updatedAt)],
+    where: userRole === "admin" ? undefined : eq(projects.userId, userId || ""),
   });
 
   // Get total count (simplified for now)
@@ -53,12 +50,10 @@ projectsRoutes.get("/:id", async c => {
   const id = c.req.param("id");
   const userId = c.var.userId;
   const userRole = c.var.userRole;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = c.var.db as any;
+  const db = c.var.db;
 
   const project = await db.query.projects.findFirst({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    where: eq((projects as any).id, id),
+    where: eq(projects.id, id),
   });
 
   if (!project) {
@@ -95,8 +90,7 @@ projectsRoutes.post("/", async c => {
     description?: string;
     config: Record<string, unknown>;
   }>();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = c.var.db as any;
+  const db = c.var.db;
 
   const id = crypto.randomUUID();
   const baseSlug = body.name
@@ -184,13 +178,11 @@ projectsRoutes.patch("/:id", async c => {
     status?: (typeof PROJECT_STATUS)[number];
     config?: Record<string, unknown>;
   }>();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = c.var.db as any;
+  const db = c.var.db;
 
   // Verify existence
   const existing = await db.query.projects.findFirst({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    where: eq((projects as any).id, id),
+    where: eq(projects.id, id),
   });
 
   if (!existing) {
@@ -223,8 +215,7 @@ projectsRoutes.patch("/:id", async c => {
       config: body.config,
       updatedAt: new Date().toISOString(),
     })
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .where(eq((projects as any).id, id))
+    .where(eq(projects.id, id))
     .returning()
     .get();
 
@@ -239,13 +230,11 @@ projectsRoutes.delete("/:id", async c => {
   const id = c.req.param("id");
   const userId = c.var.userId;
   const userRole = c.var.userRole;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = c.var.db as any;
+  const db = c.var.db;
 
   // Verify existence
   const existing = await db.query.projects.findFirst({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    where: eq((projects as any).id, id),
+    where: eq(projects.id, id),
   });
 
   if (!existing) {
@@ -269,11 +258,7 @@ projectsRoutes.delete("/:id", async c => {
     );
   }
 
-  await db
-    .delete(projects)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .where(eq((projects as any).id, id))
-    .run();
+  await db.delete(projects).where(eq(projects.id, id)).run();
 
   return c.json({ success: true, data: { id } });
 });
