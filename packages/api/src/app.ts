@@ -3,15 +3,15 @@
  */
 
 import { rateLimitMiddleware } from "./middlewares/rate-limit.js";
+import { projectFilesRoutes } from "./routes/project-files.js";
+import { chatContextRoutes } from "./routes/chat-context.js";
 import { createDatabase } from "@magicappdev/database";
 import { authMiddleware } from "./middlewares/auth.js";
 import { projectsRoutes } from "./routes/projects.js";
 import { ticketsRoutes } from "./routes/tickets.js";
+import { exportRoutes } from "./routes/export.js";
 import { adminRoutes } from "./routes/admin.js";
 import { authRoutes } from "./routes/auth.js";
-import { projectFilesRoutes } from "./routes/project-files.js";
-import { chatContextRoutes } from "./routes/chat-context.js";
-import { exportRoutes } from "./routes/export.js";
 import type { AppContext } from "./types.js";
 import { aiRoutes } from "./routes/ai.js";
 import { cors } from "hono/cors";
@@ -29,10 +29,13 @@ export function createApp() {
         const allowedOrigins = [
           "http://localhost:3000",
           "http://localhost:3100",
+          "http://localhost:8100", // Standard Ionic Dev
           "https://app.magicappdev.workers.dev",
+          "capacitor://localhost",
+          "http://localhost",
         ];
 
-        if (!origin) return allowedOrigins[2];
+        if (!origin) return allowedOrigins[3];
 
         if (
           allowedOrigins.includes(origin) ||
@@ -41,7 +44,8 @@ export function createApp() {
           return origin;
         }
 
-        return allowedOrigins[2]; // Default to production
+        // For development, allow all origins if origin is provided
+        return origin;
       },
       allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
       allowHeaders: ["Content-Type", "Authorization", "X-API-Key"],

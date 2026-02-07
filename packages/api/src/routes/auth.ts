@@ -606,42 +606,18 @@ authRoutes.get("/callback/discord", async c => {
             <script>
               (function() {
                 const deeplinkUrl = "${deeplinkUrl}";
-                const intentUrl = "${intentUrl}";
-                console.log('Deeplink URL:', deeplinkUrl);
-                console.log('Intent URL:', intentUrl);
+                console.log('Attempting redirect to:', deeplinkUrl);
 
-                // Method 1: Try Android Intent URL (works best on Chrome Custom Tabs)
+                // Try direct location change as primary for custom scheme
                 setTimeout(function() {
                   try {
-                    window.location.href = intentUrl;
-                    console.log('Attempted intent URL redirect');
+                    window.location.replace(deeplinkUrl);
                   } catch(e) {
-                    console.log('Intent redirect failed:', e);
+                    console.log('Redirect failed:', e);
                   }
                 }, 100);
 
-                // Method 2: Try iframe approach for some devices
-                setTimeout(function() {
-                  try {
-                    var iframe = document.getElementById('deeplink-iframe');
-                    iframe.src = deeplinkUrl;
-                    console.log('Attempted iframe redirect');
-                  } catch(e) {
-                    console.log('Iframe method failed:', e);
-                  }
-                }, 300);
-
-                // Method 3: Try direct location change as fallback
-                setTimeout(function() {
-                  try {
-                    window.location.href = deeplinkUrl;
-                    console.log('Attempted direct deeplink redirect');
-                  } catch(e) {
-                    console.log('Direct deeplink redirect failed:', e);
-                  }
-                }, 500);
-
-                // Method 4: Try to close the browser window
+                // Method 2: Try to close the browser window after a delay
                 // On some devices this will trigger the app to handle the deeplink
                 setTimeout(function() {
                   try {
@@ -649,7 +625,7 @@ authRoutes.get("/callback/discord", async c => {
                   } catch(e) {
                     console.log('Window close failed:', e);
                   }
-                }, 700);
+                }, 3000);
               })();
             </script>
           </body>
@@ -1115,42 +1091,18 @@ authRoutes.get("/callback/github", async c => {
             <script>
               (function() {
                 const deeplinkUrl = "${deeplinkUrl}";
-                const intentUrl = "${intentUrl}";
-                console.log('Deeplink URL:', deeplinkUrl);
-                console.log('Intent URL:', intentUrl);
+                console.log('Attempting redirect to:', deeplinkUrl);
 
-                // Method 1: Try Android Intent URL (works best on Chrome Custom Tabs)
+                // Try direct location change as primary for custom scheme
                 setTimeout(function() {
                   try {
-                    window.location.href = intentUrl;
-                    console.log('Attempted intent URL redirect');
+                    window.location.replace(deeplinkUrl);
                   } catch(e) {
-                    console.log('Intent redirect failed:', e);
+                    console.log('Redirect failed:', e);
                   }
                 }, 100);
 
-                // Method 2: Try iframe approach for some devices
-                setTimeout(function() {
-                  try {
-                    var iframe = document.getElementById('deeplink-iframe');
-                    iframe.src = deeplinkUrl;
-                    console.log('Attempted iframe redirect');
-                  } catch(e) {
-                    console.log('Iframe method failed:', e);
-                  }
-                }, 300);
-
-                // Method 3: Try direct location change as fallback
-                setTimeout(function() {
-                  try {
-                    window.location.href = deeplinkUrl;
-                    console.log('Attempted direct deeplink redirect');
-                  } catch(e) {
-                    console.log('Direct deeplink redirect failed:', e);
-                  }
-                }, 500);
-
-                // Method 4: Try to close the browser window
+                // Method 2: Try to close the browser window after a delay
                 // On some devices this will trigger the app to handle the deeplink
                 setTimeout(function() {
                   try {
@@ -1158,7 +1110,7 @@ authRoutes.get("/callback/github", async c => {
                   } catch(e) {
                     console.log('Window close failed:', e);
                   }
-                }, 700);
+                }, 3000);
               })();
             </script>
           </body>
