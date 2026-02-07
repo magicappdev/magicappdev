@@ -4,13 +4,6 @@
   "sourceRoot": "packages/axiom-cloudflare-workers/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "nx:run-commands",
-      "options": {
-        "commands": ["tsc"],
-        "cwd": "packages/axiom-cloudflare-workers"
-      }
-    },
     "deploy": {
       "executor": "nx:run-commands",
       "options": {
@@ -22,13 +15,6 @@
       "executor": "nx:run-commands",
       "options": {
         "commands": ["wrangler dev"],
-        "cwd": "packages/axiom-cloudflare-workers"
-      }
-    },
-    "typecheck": {
-      "executor": "nx:run-commands",
-      "options": {
-        "commands": ["tsc --noEmit"],
         "cwd": "packages/axiom-cloudflare-workers"
       }
     },
