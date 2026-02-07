@@ -26,7 +26,7 @@
     "ai": "^6.0.75",
     "hono": "^4.11.5",
     "lucide-react": "^0.562.0",
-    "react": "19.1.0",
+    "react": "19.2.4",
     "react-dom": "19.1.0",
     "react-router-dom": "^7.1.5",
     "zod": "^4.3.6"
@@ -36,7 +36,7 @@
     "@hono/node-server": "^1.13.8",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/node": "^25.0.10",
-    "@types/react": "19.2.9",
+    "@types/react": "19.2.13",
     "@types/react-dom": "19.2.3",
     "@types/react-router-dom": "^5.3.3",
     "@vitejs/plugin-react": "^5.1.2",
