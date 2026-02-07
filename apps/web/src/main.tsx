@@ -1,4 +1,6 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import ProjectSettingsPage from "./pages/projects/settings";
+import ProjectPreviewPage from "./pages/projects/preview";
 import ProjectDetailPage from "./pages/projects/detail";
 import TicketDetailPage from "./pages/tickets/detail";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -33,6 +35,14 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/projects" element={<ProjectsPage />} />
             <Route path="/projects/:id" element={<ProjectDetailPage />} />
+            <Route
+              path="/projects/:id/settings"
+              element={<ProjectSettingsPage />}
+            />
+            <Route
+              path="/projects/:id/preview"
+              element={<ProjectPreviewPage />}
+            />
             <Route path="/tickets" element={<TicketsPage />} />
             <Route path="/tickets/:id" element={<TicketDetailPage />} />
             <Route path="/admin" element={<AdminPage />} />

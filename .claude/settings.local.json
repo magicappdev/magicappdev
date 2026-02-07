@@ -236,11 +236,10 @@
       "Bash(Select-Object:*)",
       "Bash(Test-Path:*)",
       "Bash(git init:*)",
-      "Bash(npm config list:*)"
+      "Bash(npm config list:*)",
+      "Bash(npm run lint:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": [
-    "cloudflare-builds"
-  ]
+  "enabledMcpjsonServers": ["cloudflare-builds"]
 }

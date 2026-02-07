@@ -105,10 +105,17 @@ export default function ProjectDetailPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="outlined" size="sm">
+          <Button
+            variant="outlined"
+            size="sm"
+            onClick={() => navigate(`/projects/${project.id}/settings`)}
+          >
             <Settings size={16} className="mr-2" /> Settings
           </Button>
-          <Button size="sm">
+          <Button
+            size="sm"
+            onClick={() => navigate(`/projects/${project.id}/preview`)}
+          >
             <ExternalLink size={16} className="mr-2" /> Open Preview
           </Button>
         </div>
