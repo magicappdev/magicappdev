@@ -26,7 +26,8 @@ projectsRoutes.get("/", async c => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     orderBy: [desc((projects as any).updatedAt)],
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    where: userRole === "admin" ? undefined : eq((projects as any).userId, userId),
+    where:
+      userRole === "admin" ? undefined : eq((projects as any).userId, userId),
   });
 
   // Get total count (simplified for now)
@@ -93,7 +94,6 @@ projectsRoutes.post("/", async c => {
     name: string;
     description?: string;
     config: Record<string, unknown>;
-    userId: string; // Temporary: explicit userId until auth middleware
   }>();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = c.var.db as any;
@@ -108,8 +108,16 @@ projectsRoutes.post("/", async c => {
   const suffix = Math.random().toString(36).substring(2, 7);
   const slug = `${baseSlug}-${suffix}`;
 
-  // Use body.userId if provided (for testing), or fallback to context user
-  const userId = body.userId || c.var.userId || "placeholder-user-id";
+  const userId = c.var.userId;
+  if (!userId) {
+    return c.json(
+      {
+        success: false,
+        error: { code: "AUTH_REQUIRED", message: "Authentication required" },
+      },
+      401,
+    );
+  }
 
   try {
     const newProject = await db

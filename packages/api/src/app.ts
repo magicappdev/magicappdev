@@ -91,21 +91,21 @@ export function createApp() {
   app.route("/auth", authRoutes);
 
   // Protected routes
-  app.use("/projects/*", authMiddleware);
+  app.use("/projects*", authMiddleware);
   app.route("/projects", projectsRoutes);
   app.route("/projects", projectFilesRoutes);
   app.route("/projects", exportRoutes);
 
-  app.use("/chat/*", authMiddleware);
+  app.use("/chat*", authMiddleware);
   app.route("/chat", chatContextRoutes);
 
-  app.use("/ai/*", authMiddleware);
+  app.use("/ai*", authMiddleware);
   app.route("/ai", aiRoutes);
 
-  app.use("/tickets/*", authMiddleware);
+  app.use("/tickets*", authMiddleware);
   app.route("/tickets", ticketsRoutes);
 
-  app.use("/admin/*", authMiddleware);
+  app.use("/admin*", authMiddleware);
   app.route("/admin", adminRoutes);
 
   // Public routes
