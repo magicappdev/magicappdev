@@ -28,7 +28,7 @@
     "tslib": "^2.3.0"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260123.0",
+    "@cloudflare/workers-types": "^4.20260207.0",
     "@types/bcryptjs": "^3.0.0",
     "@types/node": "^25.0.10",
     "drizzle-orm": "^0.45.1",
