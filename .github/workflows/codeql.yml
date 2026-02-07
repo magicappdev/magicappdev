@@ -39,16 +39,16 @@ jobs:
         run: pnpm install
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@c36620d31ac7c299deb6ced1daa1f4e67547370f # v3.28.9
+        uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
           queries: security-extended,security-and-quality
           source-root: packages/
 
       - name: Autobuild
-        uses: github/codeql-action/autobuild@c36620d31ac7c299deb6ced1daa1f4e67547370f # v3.28.9
+        uses: github/codeql-action/autobuild@v3
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@c36620d31ac7c299deb6ced1daa1f4e67547370f # v3.28.9
+        uses: github/codeql-action/analyze@v3
         with:
           category: "/language:${{ matrix.language }}"
