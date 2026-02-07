@@ -49,11 +49,21 @@ export const authMiddleware = createMiddleware<AppContext>(async (c, next) => {
     );
   }
 
-  const secret = c.env.JWT_SECRET || "secret-fallback-do-not-use-in-prod";
-  console.log(
-    "[Auth Middleware] JWT Secret:",
-    secret ? "Set" : "Using fallback",
-  );
+  const secret = c.env.JWT_SECRET;
+  if (!secret) {
+    console.error("[Auth Middleware] JWT_SECRET is not configured");
+    return c.json(
+      {
+        success: false,
+        error: {
+          code: "AUTH_CONFIG_ERROR",
+          message: "Server configuration error",
+        },
+      },
+      500,
+    );
+  }
+  console.log("[Auth Middleware] JWT Secret: Set");
 
   try {
     const payload = (await verify(

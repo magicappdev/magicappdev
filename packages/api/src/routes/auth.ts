@@ -11,12 +11,37 @@ import { Hono } from "hono";
 
 export const authRoutes = new Hono<AppContext>();
 
-// In-memory cache for OAuth sessions (in production, use KV or similar)
+// In-memory cache for OAuth sessions.
+// NOTE: This implementation is intended only for non-production environments.
+// In production, configure a persistent store (e.g. KV storage or database)
+// and replace the helpers below with calls to that backend.
 const oauthSessions = new Map<
   string,
   { accessToken: string; refreshToken: string; timestamp?: number }
 >();
 const OAUTH_SESSION_TTL = 120000; // 2 minutes
+
+// In production, replace these with KV storage or database-backed sessions
+function setOAuthSession(
+  sessionId: string,
+  accessToken: string,
+  refreshToken: string,
+) {
+  oauthSessions.set(sessionId, {
+    accessToken,
+    refreshToken,
+    timestamp: Date.now(),
+  });
+}
+
+function getOAuthSession(sessionId: string) {
+  cleanExpiredSessions();
+  return oauthSessions.get(sessionId);
+}
+
+function deleteOAuthSession(sessionId: string) {
+  oauthSessions.delete(sessionId);
+}
 
 // Clean up expired sessions (called lazily when sessions are accessed)
 function cleanExpiredSessions() {
@@ -30,17 +55,15 @@ function cleanExpiredSessions() {
 
 // Check session endpoint for mobile polling
 authRoutes.get("/check-session", c => {
-  cleanExpiredSessions(); // Clean up expired sessions before checking
-
   const sessionId = c.req.query("sessionId");
   if (!sessionId) {
     return c.json({ success: false, error: "Missing session ID" }, 400);
   }
 
-  const session = oauthSessions.get(sessionId);
+  const session = getOAuthSession(sessionId);
   if (session) {
     // Return tokens and delete session
-    oauthSessions.delete(sessionId);
+    deleteOAuthSession(sessionId);
     return c.json({
       success: true,
       data: {
@@ -118,13 +141,21 @@ authRoutes.post("/login", async c => {
   }
 
   // Create Session
+  const jwtSecret = c.env.JWT_SECRET;
+  if (!jwtSecret) {
+    console.error("JWT_SECRET is not configured; cannot create access token.");
+    return c.json(
+      { error: "Server configuration error: missing JWT secret" },
+      500,
+    );
+  }
   const accessToken = await sign(
     {
       sub: user.id,
       role: user.role,
       exp: Math.floor(Date.now() / 1000) + 60 * 60,
     },
-    c.env.JWT_SECRET || "secret-fallback-do-not-use-in-prod",
+    jwtSecret,
     "HS256",
   );
 
@@ -476,13 +507,17 @@ authRoutes.get("/callback/discord", async c => {
       where: (u: any, { eq }: any) => eq(u.id, userId),
     });
 
+    const jwtSecret = c.env.JWT_SECRET;
+    if (!jwtSecret) {
+      throw new Error("JWT_SECRET is not configured");
+    }
     const accessToken = await sign(
       {
         sub: userId,
         role: user?.role || "user",
         exp: Math.floor(Date.now() / 1000) + 60 * 60, // 1 hour
       },
-      c.env.JWT_SECRET || "secret-fallback-do-not-use-in-prod",
+      jwtSecret,
       "HS256",
     );
 
@@ -504,16 +539,20 @@ authRoutes.get("/callback/discord", async c => {
 
     // 5. Redirect back to app
     if (platform === "mobile") {
+      // Generate a session ID for secure token retrieval via polling
+      const sessionId = crypto.randomUUID();
+      setOAuthSession(sessionId, accessToken, refreshToken);
+
       const mobileUri =
         clientRedirectUri ||
         c.env.MOBILE_REDIRECT_URI ||
         "magicappdev://auth/callback";
 
-      const deeplinkUrl = `${mobileUri}?accessToken=${accessToken}&refreshToken=${refreshToken}`;
+      const deeplinkUrl = `${mobileUri}?sessionId=${sessionId}`;
 
       // Create Android Intent URL for Chrome Custom Tabs compatibility
       // This format tells Android to open the app with the specified package and scheme
-      const intentUrl = `intent://auth/callback?accessToken=${encodeURIComponent(accessToken)}&refreshToken=${encodeURIComponent(refreshToken)}#Intent;scheme=magicappdev;package=com.magicappdev;S.browser_fallback_url=${encodeURIComponent(deeplinkUrl)};end`;
+      const intentUrl = `intent://auth/callback?sessionId=${encodeURIComponent(sessionId)}#Intent;scheme=magicappdev;package=com.magicappdev;S.browser_fallback_url=${encodeURIComponent(deeplinkUrl)};end`;
 
       // For mobile OAuth, we need to handle the deep link specially
       // Chrome Custom Tabs block custom scheme redirects, so we return a page
@@ -956,13 +995,17 @@ authRoutes.get("/callback/github", async c => {
       where: (u: any, { eq }: any) => eq(u.id, userId),
     });
 
+    const jwtSecret = c.env.JWT_SECRET;
+    if (!jwtSecret) {
+      throw new Error("JWT_SECRET is not configured");
+    }
     const accessToken = await sign(
       {
         sub: userId,
         role: user?.role || "user",
         exp: Math.floor(Date.now() / 1000) + 60 * 60, // 1 hour
       },
-      c.env.JWT_SECRET || "secret-fallback-do-not-use-in-prod",
+      jwtSecret,
       "HS256",
     );
 
@@ -987,15 +1030,19 @@ authRoutes.get("/callback/github", async c => {
     const stateForRedirect = clientState || "";
 
     if (platform === "mobile") {
+      // Generate a session ID for secure token retrieval via polling
+      const sessionId = crypto.randomUUID();
+      setOAuthSession(sessionId, accessToken, refreshToken);
+
       const mobileUri =
         clientRedirectUri ||
         c.env.MOBILE_REDIRECT_URI ||
         "magicappdev://auth/callback";
 
-      const deeplinkUrl = `${mobileUri}?accessToken=${accessToken}&refreshToken=${refreshToken}&state=${encodeURIComponent(stateForRedirect)}`;
+      const deeplinkUrl = `${mobileUri}?sessionId=${sessionId}&state=${encodeURIComponent(stateForRedirect)}`;
 
       // Create Android Intent URL for Chrome Custom Tabs compatibility
-      const intentUrl = `intent://auth/callback?accessToken=${encodeURIComponent(accessToken)}&refreshToken=${encodeURIComponent(refreshToken)}&state=${encodeURIComponent(stateForRedirect)}#Intent;scheme=magicappdev;package=com.magicappdev;S.browser_fallback_url=${encodeURIComponent(deeplinkUrl)};end`;
+      const intentUrl = `intent://auth/callback?sessionId=${encodeURIComponent(sessionId)}&state=${encodeURIComponent(stateForRedirect)}#Intent;scheme=magicappdev;package=com.magicappdev;S.browser_fallback_url=${encodeURIComponent(deeplinkUrl)};end`;
 
       console.log("Redirecting to mobile URI:", mobileUri);
 
@@ -1155,13 +1202,18 @@ authRoutes.post("/refresh", async c => {
     where: (u: any, { eq }: any) => eq(u.id, session.userId),
   });
 
+  const jwtSecret = c.env.JWT_SECRET;
+  if (!jwtSecret) {
+    console.error("JWT_SECRET is not configured; cannot create access token.");
+    return c.json({ error: "Internal server error" }, 500);
+  }
   const accessToken = await sign(
     {
       sub: session.userId,
       role: user?.role || "user",
       exp: Math.floor(Date.now() / 1000) + 60 * 60,
     },
-    c.env.JWT_SECRET || "secret-fallback-do-not-use-in-prod",
+    jwtSecret,
     "HS256",
   );
 
