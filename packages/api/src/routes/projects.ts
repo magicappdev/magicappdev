@@ -85,36 +85,70 @@ projectsRoutes.post("/", async c => {
   const db = c.var.db as any;
 
   const id = crypto.randomUUID();
-  const slug = body.name
+  const baseSlug = body.name
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
 
+  // Add a small random suffix to ensure uniqueness
+  const suffix = Math.random().toString(36).substring(2, 7);
+  const slug = `${baseSlug}-${suffix}`;
+
   // Use body.userId if provided (for testing), or fallback to context user
   const userId = body.userId || c.var.userId || "placeholder-user-id";
 
-  const newProject = await db
-    .insert(projects)
-    .values({
-      id,
-      userId,
-      name: body.name,
-      slug,
-      description: body.description,
-      status: "draft",
-      framework: "expo", // Default
-      config: body.config,
-    })
-    .returning()
-    .get();
+  try {
+    const newProject = await db
+      .insert(projects)
+      .values({
+        id,
+        userId,
+        name: body.name,
+        slug,
+        description: body.description,
+        status: "draft",
+        framework: "expo", // Default
+        config: body.config || {},
+      })
+      .returning()
+      .get();
 
-  return c.json(
-    {
-      success: true,
-      data: newProject,
-    },
-    201,
-  );
+    return c.json(
+      {
+        success: true,
+        data: newProject,
+      },
+      201,
+    );
+  } catch (err) {
+    console.error("Database error creating project:", err);
+    const message =
+      err instanceof Error ? err.message : "Failed to create project";
+
+    if (message.includes("UNIQUE constraint failed")) {
+      return c.json(
+        {
+          success: false,
+          error: {
+            code: "CONFLICT",
+            message: "A project with this name or slug already exists",
+          },
+        },
+        409,
+      );
+    }
+
+    return c.json(
+      {
+        success: false,
+        error: {
+          code: "DB_ERROR",
+          message: `Database error: ${message}`,
+        },
+      },
+      500,
+    );
+  }
 });
 
 // Update project

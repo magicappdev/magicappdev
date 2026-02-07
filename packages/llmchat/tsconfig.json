@@ -43,13 +43,5 @@
     "baseUrl": "."
   },
   "exclude": ["test"],
-  "include": ["worker-configuration.d.ts", "src/**/*.ts"],
-  "references": [
-    {
-      "path": "../shared"
-    },
-    {
-      "path": "../database"
-    }
-  ]
+  "include": ["worker-configuration.d.ts", "src/**/*.ts"]
 }

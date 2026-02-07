@@ -92,3 +92,4 @@ apps/mobile/.vscode/
 
 .devcontainer/.env
 package.json
+packages/templates/templates

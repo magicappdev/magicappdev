@@ -21,6 +21,16 @@
       }
     }
   ],
+  "targetDefaults": {
+    "typecheck": {
+      "dependsOn": ["^build"],
+      "cache": true
+    },
+    "build": {
+      "dependsOn": ["^build"],
+      "cache": true
+    }
+  },
   "sync": {
     "applyChanges": true
   }

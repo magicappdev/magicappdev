@@ -10,10 +10,10 @@
   "exclude": ["node_modules", "dist"],
   "references": [
     {
-      "path": "../templates"
+      "path": "../shared"
     },
     {
-      "path": "../shared"
+      "path": "../templates"
     }
   ]
 }

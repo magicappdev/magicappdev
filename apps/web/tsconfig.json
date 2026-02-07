@@ -24,9 +24,6 @@
   "references": [
     {
       "path": "../../packages/shared"
-    },
-    {
-      "path": "../../packages/database"
     }
   ]
 }

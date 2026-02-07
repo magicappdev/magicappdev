@@ -13,10 +13,22 @@
       "path": "./packages/shared"
     },
     {
+      "path": "./packages/agent"
+    },
+    {
       "path": "./packages/api"
     },
     {
       "path": "./packages/cli"
+    },
+    {
+      "path": "./packages/llmchat"
+    },
+    {
+      "path": "./apps/mobile"
+    },
+    {
+      "path": "./apps/web"
     }
   ]
 }
