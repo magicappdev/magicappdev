@@ -15,17 +15,15 @@ import {
   Folder,
   ChevronRight,
   ChevronDown,
-  X,
   Plus,
   Trash2,
 } from "lucide-react";
+import { LivePreview } from "@/components/workspace/LivePreview";
 import { useParams, useNavigate } from "react-router-dom";
+import { Typography } from "@/components/ui/Typography";
+import { Button } from "@/components/ui/Button";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
-import { Typography } from "@/components/ui/Typography";
-import { LivePreview } from "@/components/workspace/LivePreview";
 
 interface ProjectFile {
   id: string;
@@ -56,8 +54,9 @@ export default function ProjectWorkspacePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set(["src", "app", "components"]));
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(
+    new Set(["src", "app", "components"]),
+  );
 
   // Load project files
   useEffect(() => {
@@ -73,7 +72,9 @@ export default function ProjectWorkspacePage() {
           setFileContent(files[0].content);
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load project files");
+        setError(
+          err instanceof Error ? err.message : "Failed to load project files",
+        );
       } finally {
         setIsLoading(false);
       }
@@ -95,7 +96,9 @@ export default function ProjectWorkspacePage() {
         language: selectedFile.language,
       });
       setSelectedFile(updated);
-      setProjectFiles(files => files.map(f => f.id === updated.id ? updated : f));
+      setProjectFiles(files =>
+        files.map(f => (f.id === updated.id ? updated : f)),
+      );
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to save file");
     } finally {
@@ -147,7 +150,9 @@ export default function ProjectWorkspacePage() {
     if (!id) return;
     try {
       const exportData = await api.exportProject(id);
-      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+        type: "application/json",
+      });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -185,7 +190,9 @@ export default function ProjectWorkspacePage() {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
-        <Typography variant="headline" className="text-error">{error}</Typography>
+        <Typography variant="headline" className="text-error">
+          {error}
+        </Typography>
         <Button onClick={() => navigate("/projects")}>
           <ArrowLeft size={16} className="mr-2" /> Back to Projects
         </Button>
@@ -225,10 +232,18 @@ export default function ProjectWorkspacePage() {
         {/* File Tree Sidebar */}
         <div className="w-64 border-r border-outline/10 bg-surface-variant/5 flex flex-col">
           <div className="p-3 border-b border-outline/10 flex items-center justify-between">
-            <Typography variant="label" className="text-xs uppercase tracking-wider">
+            <Typography
+              variant="label"
+              className="text-xs uppercase tracking-wider"
+            >
               Files ({projectFiles.length})
             </Typography>
-            <Button variant="text" size="sm" className="h-6 w-6 p-0" onClick={() => handleCreateFile("")}>
+            <Button
+              variant="text"
+              size="sm"
+              className="h-6 w-6 p-0"
+              onClick={() => handleCreateFile("")}
+            >
               <Plus size={14} />
             </Button>
           </div>
@@ -237,8 +252,14 @@ export default function ProjectWorkspacePage() {
             {fileTree.length === 0 ? (
               <div className="text-center py-8 text-foreground/40">
                 <FileText size={24} className="mx-auto mb-2 opacity-50" />
-                <Typography variant="body" className="text-sm">No files yet</Typography>
-                <Button size="sm" className="mt-2" onClick={() => handleCreateFile("")}>
+                <Typography variant="body" className="text-sm">
+                  No files yet
+                </Typography>
+                <Button
+                  size="sm"
+                  className="mt-2"
+                  onClick={() => handleCreateFile("")}
+                >
                   <Plus size={14} className="mr-1" /> Create File
                 </Button>
               </div>
@@ -278,7 +299,12 @@ export default function ProjectWorkspacePage() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <Button variant="outlined" size="sm" onClick={handleSave} disabled={isSaving}>
+                  <Button
+                    variant="outlined"
+                    size="sm"
+                    onClick={handleSave}
+                    disabled={isSaving}
+                  >
                     {isSaving ? (
                       <Loader2 size={14} className="animate-spin mr-1" />
                     ) : (
@@ -286,7 +312,12 @@ export default function ProjectWorkspacePage() {
                     )}
                     Save
                   </Button>
-                  <Button variant="text" size="sm" className="text-error" onClick={handleDeleteFile}>
+                  <Button
+                    variant="text"
+                    size="sm"
+                    className="text-error"
+                    onClick={handleDeleteFile}
+                  >
                     <Trash2 size={14} />
                   </Button>
                 </div>
@@ -321,7 +352,10 @@ export default function ProjectWorkspacePage() {
         {/* Live Preview Sidebar */}
         <div className="w-96 border-l border-outline/10 flex flex-col">
           <div className="p-3 border-b border-outline/10 flex items-center justify-between">
-            <Typography variant="label" className="text-xs uppercase tracking-wider">
+            <Typography
+              variant="label"
+              className="text-xs uppercase tracking-wider"
+            >
               Preview
             </Typography>
             <Button variant="text" size="sm" className="h-6 w-6 p-0">
@@ -389,17 +423,19 @@ function FileTree({
             )}
           </div>
 
-          {node.type === "directory" && expandedFolders.has(node.path) && node.children && (
-            <FileTree
-              nodes={node.children}
-              level={level + 1}
-              expandedFolders={expandedFolders}
-              selectedPath={selectedPath}
-              onSelect={onSelect}
-              onToggle={onToggle}
-              onCreateFile={onCreateFile}
-            />
-          )}
+          {node.type === "directory" &&
+            expandedFolders.has(node.path) &&
+            node.children && (
+              <FileTree
+                nodes={node.children}
+                level={level + 1}
+                expandedFolders={expandedFolders}
+                selectedPath={selectedPath}
+                onSelect={onSelect}
+                onToggle={onToggle}
+                onCreateFile={onCreateFile}
+              />
+            )}
 
           {node.type === "directory" && expandedFolders.has(node.path) && (
             <div

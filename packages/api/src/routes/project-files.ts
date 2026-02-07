@@ -52,14 +52,11 @@ function detectLanguage(path: string): string {
 // List all files for a project
 projectFilesRoutes.get("/:projectId/files", async c => {
   const projectId = c.req.param("projectId");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = c.var.db as any;
+  const db = c.var.db;
 
   const results = await db.query.projectFiles.findMany({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    where: eq((projectFiles as any).projectId, projectId),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    orderBy: [(projectFiles as any).path],
+    where: eq(projectFiles.projectId, projectId),
+    orderBy: [projectFiles.path],
   });
 
   return c.json({
@@ -72,14 +69,22 @@ projectFilesRoutes.get("/:projectId/files", async c => {
 projectFilesRoutes.get("/:projectId/files/*", async c => {
   const projectId = c.req.param("projectId");
   const path = c.req.param("*");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = c.var.db as any;
+  const db = c.var.db;
+
+  if (!path) {
+    return c.json(
+      {
+        success: false,
+        error: { code: "BAD_REQUEST", message: "path is required" },
+      },
+      400,
+    );
+  }
 
   const file = await db.query.projectFiles.findFirst({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     where: and(
-      eq((projectFiles as any).projectId, projectId),
-      eq((projectFiles as any).path, path),
+      eq(projectFiles.projectId, projectId),
+      eq(projectFiles.path, path),
     ),
   });
 
@@ -103,15 +108,23 @@ projectFilesRoutes.get("/:projectId/files/*", async c => {
 projectFilesRoutes.get("/:projectId/files/*/history", async c => {
   const projectId = c.req.param("projectId");
   const path = c.req.param("*");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = c.var.db as any;
+  const db = c.var.db;
+
+  if (!path) {
+    return c.json(
+      {
+        success: false,
+        error: { code: "BAD_REQUEST", message: "path is required" },
+      },
+      400,
+    );
+  }
 
   // First get the file
   const file = await db.query.projectFiles.findFirst({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     where: and(
-      eq((projectFiles as any).projectId, projectId),
-      eq((projectFiles as any).path, path),
+      eq(projectFiles.projectId, projectId),
+      eq(projectFiles.path, path),
     ),
   });
 
@@ -127,10 +140,8 @@ projectFilesRoutes.get("/:projectId/files/*/history", async c => {
 
   // Get history
   const history = await db.query.fileHistory.findMany({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    where: eq((fileHistory as any).fileId, file.id),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    orderBy: [desc((fileHistory as any).changedAt)],
+    where: eq(fileHistory.fileId, file.id),
+    orderBy: [desc(fileHistory.changedAt)],
   });
 
   return c.json({
@@ -147,15 +158,17 @@ projectFilesRoutes.post("/:projectId/files", async c => {
     content: string;
     language?: string;
   }>();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = c.var.db as any;
+  const db = c.var.db;
   const userId = c.var.userId || "system";
 
   if (!body.path || body.content === undefined) {
     return c.json(
       {
         success: false,
-        error: { code: "BAD_REQUEST", message: "path and content are required" },
+        error: {
+          code: "BAD_REQUEST",
+          message: "path and content are required",
+        },
       },
       400,
     );
@@ -163,10 +176,9 @@ projectFilesRoutes.post("/:projectId/files", async c => {
 
   // Check if file exists
   const existing = await db.query.projectFiles.findFirst({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     where: and(
-      eq((projectFiles as any).projectId, projectId),
-      eq((projectFiles as any).path, body.path),
+      eq(projectFiles.projectId, projectId),
+      eq(projectFiles.path, body.path),
     ),
   });
 
@@ -183,8 +195,7 @@ projectFilesRoutes.post("/:projectId/files", async c => {
         size,
         updatedAt: new Date().toISOString(),
       })
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .where(eq((projectFiles as any).id, existing.id))
+      .where(eq(projectFiles.id, existing.id))
       .returning()
       .get();
 
@@ -240,15 +251,23 @@ projectFilesRoutes.post("/:projectId/files", async c => {
 projectFilesRoutes.delete("/:projectId/files/*", async c => {
   const projectId = c.req.param("projectId");
   const path = c.req.param("*");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = c.var.db as any;
+  const db = c.var.db;
   const userId = c.var.userId || "system";
 
+  if (!path) {
+    return c.json(
+      {
+        success: false,
+        error: { code: "BAD_REQUEST", message: "path is required" },
+      },
+      400,
+    );
+  }
+
   const existing = await db.query.projectFiles.findFirst({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     where: and(
-      eq((projectFiles as any).projectId, projectId),
-      eq((projectFiles as any).path, path),
+      eq(projectFiles.projectId, projectId),
+      eq(projectFiles.path, path),
     ),
   });
 
@@ -272,11 +291,7 @@ projectFilesRoutes.delete("/:projectId/files/*", async c => {
   } satisfies NewFileHistory);
 
   // Delete file (history entries are cascade deleted)
-  await db
-    .delete(projectFiles)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .where(eq((projectFiles as any).id, existing.id))
-    .run();
+  await db.delete(projectFiles).where(eq(projectFiles.id, existing.id)).run();
 
   return c.json({
     success: true,
@@ -290,8 +305,7 @@ projectFilesRoutes.post("/:projectId/files/bulk", async c => {
   const body = await c.req.json<{
     files: Array<{ path: string; content: string; language?: string }>;
   }>();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = c.var.db as any;
+  const db = c.var.db;
   const userId = c.var.userId || "system";
 
   const results: ProjectFile[] = [];
@@ -301,10 +315,9 @@ projectFilesRoutes.post("/:projectId/files/bulk", async c => {
     const size = fileData.content.length;
 
     const existing = await db.query.projectFiles.findFirst({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       where: and(
-        eq((projectFiles as any).projectId, projectId),
-        eq((projectFiles as any).path, fileData.path),
+        eq(projectFiles.projectId, projectId),
+        eq(projectFiles.path, fileData.path),
       ),
     });
 
@@ -317,8 +330,7 @@ projectFilesRoutes.post("/:projectId/files/bulk", async c => {
           size,
           updatedAt: new Date().toISOString(),
         })
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .where(eq((projectFiles as any).id, existing.id))
+        .where(eq(projectFiles.id, existing.id))
         .returning()
         .get();
 

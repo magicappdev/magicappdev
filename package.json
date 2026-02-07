@@ -22,7 +22,6 @@
     "build:cli": "turbo build --filter=@magicappdev/cli",
     "build:db": "turbo build --filter=@magicappdev/database",
     "build:llmchat": "turbo build --filter=@magicappdev/llmchat",
-    "build:mobile": "turbo build --filter=@magicappdev/mobile",
     "build:shared": "turbo build --filter=@magicappdev/shared",
     "build:templates": "turbo build --filter=@magicappdev/templates",
     "build:web": "turbo build --filter=@magicappdev/web",
@@ -35,7 +34,6 @@
     "deploy:cli": "turbo run deploy --filter=@magicappdev/cli",
     "deploy:db": "turbo run deploy --filter=@magicappdev/database",
     "deploy:llm": "turbo run deploy --filter=@magicappdev/llmchat",
-    "deploy:mobile": "turbo run deploy --filter=@magicappdev/mobile",
     "deploy:web": "turbo run deploy --filter=@magicappdev/web",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -63,7 +61,6 @@
     "@commitlint/cli": "^20.3.1",
     "@commitlint/config-conventional": "^20.3.1",
     "@conventional-changelog/git-client": "^2.5.1",
-    "@expo/metro-runtime": "^6.1.2",
     "@nx/js": "22.4.1",
     "@swc-node/register": "~1.11.1",
     "@swc/core": "~1.15.10",
@@ -87,8 +84,6 @@
   "packageManager": "pnpm@10.28.2",
   "pnpm": {
     "overrides": {
-      "@babel/runtime": "^7.28.6",
-      "@expo/metro-runtime": "^6.1.2",
       "@types/react": "^19.0.0",
       "@types/react-dom": "^19.0.0",
       "esbuild": ">=0.25.0",
@@ -101,28 +96,14 @@
       "@conventional-changelog/git-client": "^2.5.1",
       "js-yaml": "^4.1.1"
     },
-    "patchedDependencies": {
-      "expo-router": "patches/expo-router.patch"
-    },
     "onlyBuiltDependencies": [
-      "@react-native-async-storage/async-storage",
-      "@react-native-community/cli",
-      "@react-native/babel-preset",
       "@swc/core",
       "canvas",
       "core-js",
       "core-js-pure",
       "cypress",
       "esbuild",
-      "expo",
       "nx",
-      "react-native-gesture-handler",
-      "react-native-get-random-values",
-      "react-native-reanimated",
-      "react-native-safe-area-context",
-      "react-native-screens",
-      "react-native-svg",
-      "react-native-worklets",
       "sharp",
       "unrs-resolver",
       "workerd"

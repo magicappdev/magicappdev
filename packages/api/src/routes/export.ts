@@ -87,10 +87,15 @@ exportRoutes.get("/:id/export", async c => {
     })),
     metadata: {
       fileCount: files.length,
-      totalSize: files.reduce((acc: number, f: typeof projectFiles.$inferSelect) => acc + f.size, 0),
+      totalSize: files.reduce(
+        (acc: number, f: typeof projectFiles.$inferSelect) => acc + f.size,
+        0,
+      ),
       commandCount: commands.length,
       errorCount: errors.length,
-      unresolvedErrorCount: errors.filter((e: typeof projectErrors.$inferSelect) => !e.resolved).length,
+      unresolvedErrorCount: errors.filter(
+        (e: typeof projectErrors.$inferSelect) => !e.resolved,
+      ).length,
     },
     commands: commands.map((cmd: typeof projectCommands.$inferSelect) => ({
       command: cmd.command,
@@ -166,7 +171,7 @@ exportRoutes.get("/:id/export/minimal", async c => {
 exportRoutes.get("/export/list", async c => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = c.var.db as any;
-  const userId = c.var.userId;
+  // const userId = c.var.userId;
 
   // For now, list all projects (in production, filter by user/public status)
   const projects_list = await db.query.projects.findMany({

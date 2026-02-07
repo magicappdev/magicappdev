@@ -11,6 +11,48 @@ import { Hono } from "hono";
 
 export const authRoutes = new Hono<AppContext>();
 
+// In-memory cache for OAuth sessions (in production, use KV or similar)
+const oauthSessions = new Map<
+  string,
+  { accessToken: string; refreshToken: string; timestamp?: number }
+>();
+const OAUTH_SESSION_TTL = 120000; // 2 minutes
+
+// Clean up expired sessions (called lazily when sessions are accessed)
+function cleanExpiredSessions() {
+  const now = Date.now();
+  for (const [key, value] of oauthSessions.entries()) {
+    if (value.timestamp && now - value.timestamp > OAUTH_SESSION_TTL) {
+      oauthSessions.delete(key);
+    }
+  }
+}
+
+// Check session endpoint for mobile polling
+authRoutes.get("/check-session", c => {
+  cleanExpiredSessions(); // Clean up expired sessions before checking
+
+  const sessionId = c.req.query("sessionId");
+  if (!sessionId) {
+    return c.json({ success: false, error: "Missing session ID" }, 400);
+  }
+
+  const session = oauthSessions.get(sessionId);
+  if (session) {
+    // Return tokens and delete session
+    oauthSessions.delete(sessionId);
+    return c.json({
+      success: true,
+      data: {
+        accessToken: session.accessToken,
+        refreshToken: session.refreshToken,
+      },
+    });
+  }
+
+  return c.json({ success: false, pending: true });
+});
+
 // Manual Register
 authRoutes.post("/register", async c => {
   const { email, password, name } = await c.req.json();
@@ -192,6 +234,7 @@ authRoutes.get("/callback/discord", async c => {
   let platform = "web";
   let clientRedirectUri: string | undefined;
   let linkUserId: string | undefined;
+  // let clientState: string | undefined;
 
   try {
     if (stateStr) {
@@ -199,6 +242,7 @@ authRoutes.get("/callback/discord", async c => {
       if (typeof state === "object") {
         platform = state.platform || "web";
         clientRedirectUri = state.redirect_uri;
+        //        clientState = state.clientState;
         if (state.action === "link" && state.userId) {
           linkUserId = state.userId;
         }
@@ -467,62 +511,147 @@ authRoutes.get("/callback/discord", async c => {
 
       const deeplinkUrl = `${mobileUri}?accessToken=${accessToken}&refreshToken=${refreshToken}`;
 
-      // Return HTML with JavaScript for reliable deep link handling
+      // Create Android Intent URL for Chrome Custom Tabs compatibility
+      // This format tells Android to open the app with the specified package and scheme
+      const intentUrl = `intent://auth/callback?accessToken=${encodeURIComponent(accessToken)}&refreshToken=${encodeURIComponent(refreshToken)}#Intent;scheme=magicappdev;package=com.magicappdev;S.browser_fallback_url=${encodeURIComponent(deeplinkUrl)};end`;
+
+      // For mobile OAuth, we need to handle the deep link specially
+      // Chrome Custom Tabs block custom scheme redirects, so we return a page
+      // that attempts to close the browser and trigger the deep link
       return c.html(`
         <!DOCTYPE html>
         <html>
           <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Opening MagicAppDev...</title>
+            <title>Authentication Successful</title>
             <style>
+              * { margin: 0; padding: 0; box-sizing: border-box; }
               body {
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
                 display: flex;
+                flex-direction: column;
                 justify-content: center;
                 align-items: center;
-                height: 100vh;
-                margin: 0;
+                min-height: 100vh;
+                padding: 20px;
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                 color: white;
-              }
-              .container {
                 text-align: center;
-                padding: 20px;
               }
-              .spinner {
-                border: 4px solid rgba(255,255,255,0.3);
-                border-top: 4px solid white;
+              .success-icon {
+                width: 80px;
+                height: 80px;
+                background: white;
                 border-radius: 50%;
-                width: 40px;
-                height: 40px;
-                animation: spin 1s linear infinite;
-                margin: 20px auto;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-bottom: 24px;
               }
-              @keyframes spin {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
+              .success-icon svg {
+                width: 48px;
+                height: 48px;
+                fill: #667eea;
               }
-              a {
-                color: white;
-                text-decoration: underline;
+              h1 {
+                font-size: 28px;
+                margin-bottom: 12px;
+              }
+              p {
+                font-size: 16px;
+                opacity: 0.9;
+                margin-bottom: 24px;
+                max-width: 320px;
+              }
+              #open-btn {
+                display: inline-block;
+                padding: 14px 32px;
+                background: white;
+                color: #667eea;
+                text-decoration: none;
+                border-radius: 8px;
+                font-weight: bold;
+                font-size: 16px;
+                margin-bottom: 16px;
+                transition: transform 0.2s, background 0.2s;
+              }
+              #open-btn:hover {
+                background: #f0f0f0;
+                transform: scale(1.05);
+              }
+              #open-btn:active {
+                transform: scale(0.98);
+              }
+              .fallback {
+                font-size: 14px;
+                opacity: 0.8;
+              }
+              #deeplink-iframe {
+                display: none;
               }
             </style>
-            <script>
-              // Immediately redirect using JavaScript for reliable deep link handling
-              (function() {
-                const deeplinkUrl = "${deeplinkUrl}";
-                // Try to open the deep link
-                window.location.replace(deeplinkUrl);
-              })();
-            </script>
           </head>
           <body>
-            <div class="container">
-              <div class="spinner"></div>
-              <h2>Opening MagicAppDev...</h2>
-              <p>If you're not redirected automatically, <a href="${deeplinkUrl}">click here</a>.</p>
+            <div class="success-icon">
+              <svg viewBox="0 0 24 24">
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+              </svg>
             </div>
+            <h1>Authentication Successful!</h1>
+            <p>You can close this window and return to the app.</p>
+            <a id="open-btn" href="${intentUrl}">Open App</a>
+            <p class="fallback">If the app doesn't open automatically, tap the button above</p>
+            <iframe id="deeplink-iframe"></iframe>
+            <script>
+              (function() {
+                const deeplinkUrl = "${deeplinkUrl}";
+                const intentUrl = "${intentUrl}";
+                console.log('Deeplink URL:', deeplinkUrl);
+                console.log('Intent URL:', intentUrl);
+
+                // Method 1: Try Android Intent URL (works best on Chrome Custom Tabs)
+                setTimeout(function() {
+                  try {
+                    window.location.href = intentUrl;
+                    console.log('Attempted intent URL redirect');
+                  } catch(e) {
+                    console.log('Intent redirect failed:', e);
+                  }
+                }, 100);
+
+                // Method 2: Try iframe approach for some devices
+                setTimeout(function() {
+                  try {
+                    var iframe = document.getElementById('deeplink-iframe');
+                    iframe.src = deeplinkUrl;
+                    console.log('Attempted iframe redirect');
+                  } catch(e) {
+                    console.log('Iframe method failed:', e);
+                  }
+                }, 300);
+
+                // Method 3: Try direct location change as fallback
+                setTimeout(function() {
+                  try {
+                    window.location.href = deeplinkUrl;
+                    console.log('Attempted direct deeplink redirect');
+                  } catch(e) {
+                    console.log('Direct deeplink redirect failed:', e);
+                  }
+                }, 500);
+
+                // Method 4: Try to close the browser window
+                // On some devices this will trigger the app to handle the deeplink
+                setTimeout(function() {
+                  try {
+                    window.close();
+                  } catch(e) {
+                    console.log('Window close failed:', e);
+                  }
+                }, 700);
+              })();
+            </script>
           </body>
         </html>
       `);
@@ -889,64 +1018,149 @@ authRoutes.get("/callback/github", async c => {
 
       const deeplinkUrl = `${mobileUri}?accessToken=${accessToken}&refreshToken=${refreshToken}&state=${encodeURIComponent(stateForRedirect)}`;
 
+      // Create Android Intent URL for Chrome Custom Tabs compatibility
+      const intentUrl = `intent://auth/callback?accessToken=${encodeURIComponent(accessToken)}&refreshToken=${encodeURIComponent(refreshToken)}&state=${encodeURIComponent(stateForRedirect)}#Intent;scheme=magicappdev;package=com.magicappdev;S.browser_fallback_url=${encodeURIComponent(deeplinkUrl)};end`;
+
       console.log("Redirecting to mobile URI:", mobileUri);
 
-      // Return HTML with JavaScript for reliable deep link handling
+      // For mobile OAuth, we need to handle the deep link specially
+      // Chrome Custom Tabs block custom scheme redirects, so we return a page
+      // that attempts to close the browser and trigger the deep link
+
       return c.html(`
         <!DOCTYPE html>
         <html>
           <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Opening MagicAppDev...</title>
+            <title>Authentication Successful</title>
             <style>
+              * { margin: 0; padding: 0; box-sizing: border-box; }
               body {
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
                 display: flex;
+                flex-direction: column;
                 justify-content: center;
                 align-items: center;
-                height: 100vh;
-                margin: 0;
+                min-height: 100vh;
+                padding: 20px;
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                 color: white;
-              }
-              .container {
                 text-align: center;
-                padding: 20px;
               }
-              .spinner {
-                border: 4px solid rgba(255,255,255,0.3);
-                border-top: 4px solid white;
+              .success-icon {
+                width: 80px;
+                height: 80px;
+                background: white;
                 border-radius: 50%;
-                width: 40px;
-                height: 40px;
-                animation: spin 1s linear infinite;
-                margin: 20px auto;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-bottom: 24px;
               }
-              @keyframes spin {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
+              .success-icon svg {
+                width: 48px;
+                height: 48px;
+                fill: #667eea;
               }
-              a {
-                color: white;
-                text-decoration: underline;
+              h1 {
+                font-size: 28px;
+                margin-bottom: 12px;
+              }
+              p {
+                font-size: 16px;
+                opacity: 0.9;
+                margin-bottom: 24px;
+                max-width: 320px;
+              }
+              #open-btn {
+                display: inline-block;
+                padding: 14px 32px;
+                background: white;
+                color: #667eea;
+                text-decoration: none;
+                border-radius: 8px;
+                font-weight: bold;
+                font-size: 16px;
+                margin-bottom: 16px;
+                transition: transform 0.2s, background 0.2s;
+              }
+              #open-btn:hover {
+                background: #f0f0f0;
+                transform: scale(1.05);
+              }
+              #open-btn:active {
+                transform: scale(0.98);
+              }
+              .fallback {
+                font-size: 14px;
+                opacity: 0.8;
+              }
+              #deeplink-iframe {
+                display: none;
               }
             </style>
-            <script>
-              // Immediately redirect using JavaScript for reliable deep link handling
-              (function() {
-                const deeplinkUrl = "${deeplinkUrl}";
-                // Try to open the deep link
-                window.location.replace(deeplinkUrl);
-              })();
-            </script>
           </head>
           <body>
-            <div class="container">
-              <div class="spinner"></div>
-              <h2>Opening MagicAppDev...</h2>
-              <p>If you're not redirected automatically, <a href="${deeplinkUrl}">click here</a>.</p>
+            <div class="success-icon">
+              <svg viewBox="0 0 24 24">
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+              </svg>
             </div>
+            <h1>Authentication Successful!</h1>
+            <p>You can close this window and return to the app.</p>
+            <a id="open-btn" href="${intentUrl}">Open App</a>
+            <p class="fallback">If the app doesn't open automatically, tap the button above</p>
+            <iframe id="deeplink-iframe"></iframe>
+            <script>
+              (function() {
+                const deeplinkUrl = "${deeplinkUrl}";
+                const intentUrl = "${intentUrl}";
+                console.log('Deeplink URL:', deeplinkUrl);
+                console.log('Intent URL:', intentUrl);
+
+                // Method 1: Try Android Intent URL (works best on Chrome Custom Tabs)
+                setTimeout(function() {
+                  try {
+                    window.location.href = intentUrl;
+                    console.log('Attempted intent URL redirect');
+                  } catch(e) {
+                    console.log('Intent redirect failed:', e);
+                  }
+                }, 100);
+
+                // Method 2: Try iframe approach for some devices
+                setTimeout(function() {
+                  try {
+                    var iframe = document.getElementById('deeplink-iframe');
+                    iframe.src = deeplinkUrl;
+                    console.log('Attempted iframe redirect');
+                  } catch(e) {
+                    console.log('Iframe method failed:', e);
+                  }
+                }, 300);
+
+                // Method 3: Try direct location change as fallback
+                setTimeout(function() {
+                  try {
+                    window.location.href = deeplinkUrl;
+                    console.log('Attempted direct deeplink redirect');
+                  } catch(e) {
+                    console.log('Direct deeplink redirect failed:', e);
+                  }
+                }, 500);
+
+                // Method 4: Try to close the browser window
+                // On some devices this will trigger the app to handle the deeplink
+                setTimeout(function() {
+                  try {
+                    window.close();
+                  } catch(e) {
+                    console.log('Window close failed:', e);
+                  }
+                }, 700);
+              })();
+            </script>
           </body>
         </html>
       `);

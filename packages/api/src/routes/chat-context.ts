@@ -15,7 +15,7 @@ import {
   type NewChatMessage,
 } from "@magicappdev/database";
 import type { AppContext } from "../types.js";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { Hono } from "hono";
 
 export const chatContextRoutes = new Hono<AppContext>();
@@ -151,9 +151,9 @@ chatContextRoutes.get("/sessions/:id/context", async c => {
   }
 
   const context: {
-    files: typeof projectFiles.$inferSelect[];
-    errors: typeof projectErrors.$inferSelect[];
-    commands: typeof projectCommands.$inferSelect[];
+    files: (typeof projectFiles.$inferSelect)[];
+    errors: (typeof projectErrors.$inferSelect)[];
+    commands: (typeof projectCommands.$inferSelect)[];
     unresolvedErrors: number;
   } = {
     files: [],
@@ -178,7 +178,9 @@ chatContextRoutes.get("/sessions/:id/context", async c => {
     });
 
     // Count unresolved errors
-    context.unresolvedErrors = context.errors.filter((e: typeof projectErrors.$inferSelect) => !e.resolved).length;
+    context.unresolvedErrors = context.errors.filter(
+      (e: typeof projectErrors.$inferSelect) => !e.resolved,
+    ).length;
 
     // Get recent commands
     context.commands = await db.query.projectCommands.findMany({
@@ -186,7 +188,6 @@ chatContextRoutes.get("/sessions/:id/context", async c => {
       where: eq((projectCommands as any).projectId, session.projectId),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       orderBy: [desc((projectCommands as any).executedAt)],
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       limit: 10,
     });
   }

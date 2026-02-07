@@ -91,3 +91,4 @@ apps/mobile/.vscode/
 .pnpm-store
 
 .devcontainer/.env
+package.json

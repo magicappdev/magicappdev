@@ -10,7 +10,7 @@ This document provides detailed documentation for each package in the MagicAppDe
 - **Backend**: Cloudflare Workers with Hono framework
 - **Database**: Cloudflare D1 with Drizzle ORM
 - **Frontend (Web)**: Next.js with TypeScript
-- **Frontend (Mobile)**: React Native with Expo
+- **Frontend (Mobile)**: Ionic with Capacitor
 - **Authentication**: GitHub OAuth with JWT session management
 - **AI Integration**: Cloudflare AI Gateway for optimized model access
 - **Build System**: Hybrid Nx + Turborepo setup (in progress of consolidation)
@@ -323,12 +323,11 @@ Next.js-based web application providing the primary user interface for MagicAppD
 
 #### Description
 
-React Native-based mobile application mirroring the web interface features, providing on-the-go access to MagicAppDev capabilities.
+Ionicframeworkd based mobile application mirroring the web interface features, providing on-the-go access to MagicAppDev capabilities.
 
 #### Architecture
 
-- **Framework**: React Native with Expo
-- **Navigation**: Expo Router
+- **Framework**: Ionicframework with Capacitor
 - **UI**: Native components with custom styling
 - **State Management**: React Context API
 - **Authentication**: GitHub OAuth with JWT
@@ -337,7 +336,7 @@ React Native-based mobile application mirroring the web interface features, prov
 
 #### Current Status (January 24, 2026)
 
-- ✅ React Native app with Expo Router
+- ✅ Ionicframework with Capacitor
 - ✅ GitHub Auth integration
 - ✅ Projects listing interface
 - ✅ Streaming AI Chat

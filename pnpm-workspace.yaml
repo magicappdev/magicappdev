@@ -7,31 +7,15 @@ onlyBuiltDependencies:
   - canvas
   - core-js-pure
   - esbuild
-  - expo
   - nx
   - sharp
   - unrs-resolver
   - workerd
-  # React Native native modules
-  - "@react-native-async-storage/async-storage"
-  - "@react-native-community/cli"
-  - "@react-native/babel-preset"
-  - "react-native-get-random-values"
-  - "react-native-gesture-handler"
-  - "react-native-reanimated"
-  - "react-native-safe-area-context"
-  - "react-native-screens"
-  - "react-native-svg"
-  - "react-native-worklets"
 
 # Ensure React is deduplicated across all packages
-public-hoist-pattern-allowlist:
-  - react
-  - react-dom
-  - react-native
-  - '@react-native/*'
-  - react-native-*
-  - '@react-navigation/*'
+public-hoist-pattern:
+  - react*
+  - react-dom*
 
 overrides:
   "@conventional-changelog/git-client@<2.0.0": ">=2.0.0"
@@ -46,10 +30,3 @@ overrides:
   undici: ">=7.18.2"
   wrangler@>=4.0.0 <4.59.1: ">=4.59.1"
   js-yaml: ">=4.1.0"
-
-# Prevent duplicate React copies
-packageExtensions:
-  "expo-keep-awake@*":
-    peerDependencies:
-      react: "*"
-      react-native: "*"

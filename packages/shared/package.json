@@ -6,37 +6,30 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "react-native": "./dist/index.js",
       "import": "./dist/index.js"
     },
     "./types": {
       "types": "./dist/types/index.d.ts",
-      "react-native": "./dist/types/index.js",
       "import": "./dist/types/index.js"
     },
     "./constants": {
       "types": "./dist/constants/index.d.ts",
-      "react-native": "./dist/constants/index.js",
       "import": "./dist/constants/index.js"
     },
     "./schemas": {
       "types": "./dist/schemas/index.d.ts",
-      "react-native": "./dist/schemas/index.js",
       "import": "./dist/schemas/index.js"
     },
     "./utils": {
       "types": "./dist/utils/index.d.ts",
-      "react-native": "./dist/utils/index.js",
       "import": "./dist/utils/index.js"
     },
     "./errors": {
       "types": "./dist/errors/index.d.ts",
-      "react-native": "./dist/errors/index.js",
       "import": "./dist/errors/index.js"
     },
     "./api": {
       "types": "./dist/api/index.d.ts",
-      "react-native": "./dist/api/index.js",
       "import": "./dist/api/index.js"
     }
   },
