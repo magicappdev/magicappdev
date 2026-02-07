@@ -23,7 +23,7 @@
     "@magicappdev/shared": "workspace:*",
     "@radix-ui/themes": "^3.2.1",
     "agents": "^0.3.6",
-    "ai": "^4.3.19",
+    "ai": "^6.0.75",
     "hono": "^4.11.5",
     "lucide-react": "^0.562.0",
     "react": "19.1.0",
