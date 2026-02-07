@@ -16,8 +16,8 @@
     "typecheck": "tsc -b"
   },
   "devDependencies": {
-    "@cloudflare/vitest-pool-workers": "0.12.6",
-    "@cloudflare/workers-types": "^4.20260123.0",
+    "@cloudflare/vitest-pool-workers": "0.12.10",
+    "@cloudflare/workers-types": "^4.20260207.0",
     "@magicappdev/database": "workspace:*",
     "@magicappdev/shared": "workspace:*",
     "@types/node": "25.0.10",

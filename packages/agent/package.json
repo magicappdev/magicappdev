@@ -15,7 +15,7 @@
   "dependencies": {
     "@magicappdev/shared": "workspace:*",
     "@magicappdev/templates": "workspace:*",
-    "agents": "latest",
+    "agents": "0.3.7",
     "zod": "^4.3.6"
   },
   "devDependencies": {
