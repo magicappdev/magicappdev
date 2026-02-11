@@ -19,7 +19,7 @@
     "@magicappdev/database": "workspace:*",
     "@magicappdev/shared": "workspace:*",
     "@types/sha256": "^0.2.2",
-    "axios": "^1.13.2",
+    "axios": "^1.13.5",
     "bcryptjs": "^3.0.3",
     "crypto": "^1.0.1",
     "hono": "^4.11.5",
