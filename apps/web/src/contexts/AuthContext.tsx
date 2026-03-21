@@ -34,6 +34,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const accessToken = localStorage.getItem("access_token");
     const refreshToken = localStorage.getItem("refresh_token");
 
+    // Register token-refresh callback so ApiClient can persist new tokens
+    api.onTokenRefresh = (newToken: string) => {
+      localStorage.setItem("access_token", newToken);
+    };
+
+    // Register auth-failure callback so ApiClient can trigger logout
+    api.onAuthFailure = () => {
+      handleLogout();
+    };
+
+    if (refreshToken) {
+      api.setRefreshToken(refreshToken);
+    }
+
     if (accessToken) {
       fetchUser(accessToken)
         .catch(async error => {
@@ -72,6 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     localStorage.setItem("access_token", accessToken);
     localStorage.setItem("refresh_token", refreshToken);
+    api.setRefreshToken(refreshToken);
     try {
       await fetchUser(accessToken);
     } finally {
@@ -91,6 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
     api.setToken(null);
+    api.setRefreshToken(null);
     setUser(null);
   };
 

@@ -73,11 +73,19 @@ export interface LogsStats {
 
 export class ApiClient {
   private accessToken: string | null = null;
+  private refreshTokenValue: string | null = null;
+  private isRefreshing = false;
+  onTokenRefresh: ((newToken: string) => void) | null = null;
+  onAuthFailure: (() => void) | null = null;
 
   constructor(private baseUrl: string) {}
 
   setToken(token: string | null) {
     this.accessToken = token;
+  }
+
+  setRefreshToken(token: string | null) {
+    this.refreshTokenValue = token;
   }
 
   async request<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -96,6 +104,54 @@ export class ApiClient {
       ...options,
       headers,
     });
+
+    // Auto-refresh on 401 (expired token), then retry once
+    if (
+      response.status === 401 &&
+      this.refreshTokenValue &&
+      !this.isRefreshing &&
+      // Don't retry refresh/logout endpoints to avoid loops
+      !path.includes("/auth/refresh") &&
+      !path.includes("/auth/logout")
+    ) {
+      this.isRefreshing = true;
+      try {
+        const newToken = await this.refresh(this.refreshTokenValue);
+        this.onTokenRefresh?.(newToken);
+      } catch {
+        // Refresh token is also expired or invalid — force logout
+        this.isRefreshing = false;
+        this.onAuthFailure?.();
+        throw new Error("Session expired. Please log in again.");
+      } finally {
+        this.isRefreshing = false;
+      }
+
+      // Retry original request with refreshed token
+      const retryHeaders: Record<string, string> = {
+        "Content-Type": "application/json",
+        ...((options.headers as Record<string, string>) || {}),
+      };
+      if (this.accessToken) {
+        retryHeaders["Authorization"] = `Bearer ${this.accessToken}`;
+      }
+      const retryResponse = await fetch(url, {
+        ...options,
+        headers: retryHeaders,
+      });
+
+      if (!retryResponse.ok) {
+        const errorData = await retryResponse.json().catch(() => ({}));
+        const message =
+          (errorData as { error?: { message?: string } })?.error?.message ||
+          (errorData as { error?: string })?.error ||
+          `API Request failed: ${retryResponse.statusText}`;
+        throw new Error(message);
+      }
+
+      const retryData = await retryResponse.json();
+      return retryData as T;
+    }
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -642,10 +698,11 @@ export class ApiClient {
       updatedAt: string;
     }>
   > {
-    const response =
-      await this.request<ApiResponse<typeof this.getProjectFiles extends Promise<infer T> ? T : never>>(
-        `/projects/${projectId}/files`,
-      );
+    const response = await this.request<
+      ApiResponse<
+        typeof this.getProjectFiles extends Promise<infer T> ? T : never
+      >
+    >(`/projects/${projectId}/files`);
     if (!response.success) {
       throw new Error(response.error.message);
     }
@@ -665,10 +722,11 @@ export class ApiClient {
     createdAt: string;
     updatedAt: string;
   }> {
-    const response =
-      await this.request<ApiResponse<typeof this.getProjectFile extends Promise<infer T> ? T : never>>(
-        `/projects/${projectId}/files/${encodeURIComponent(path)}`,
-      );
+    const response = await this.request<
+      ApiResponse<
+        typeof this.getProjectFile extends Promise<infer T> ? T : never
+      >
+    >(`/projects/${projectId}/files/${encodeURIComponent(path)}`);
     if (!response.success) {
       throw new Error(response.error.message);
     }
@@ -688,14 +746,14 @@ export class ApiClient {
     createdAt: string;
     updatedAt: string;
   }> {
-    const response =
-      await this.request<ApiResponse<typeof this.saveProjectFile extends Promise<infer T> ? T : never>>(
-        `/projects/${projectId}/files`,
-        {
-          method: "POST",
-          body: JSON.stringify(file),
-        },
-      );
+    const response = await this.request<
+      ApiResponse<
+        typeof this.saveProjectFile extends Promise<infer T> ? T : never
+      >
+    >(`/projects/${projectId}/files`, {
+      method: "POST",
+      body: JSON.stringify(file),
+    });
     if (!response.success) {
       throw new Error(response.error.message);
     }
@@ -729,14 +787,14 @@ export class ApiClient {
       updatedAt: string;
     }>
   > {
-    const response =
-      await this.request<ApiResponse<typeof this.bulkSaveProjectFiles extends Promise<infer T> ? T : never>>(
-        `/projects/${projectId}/files/bulk`,
-        {
-          method: "POST",
-          body: JSON.stringify({ files }),
-        },
-      );
+    const response = await this.request<
+      ApiResponse<
+        typeof this.bulkSaveProjectFiles extends Promise<infer T> ? T : never
+      >
+    >(`/projects/${projectId}/files/bulk`, {
+      method: "POST",
+      body: JSON.stringify({ files }),
+    });
     if (!response.success) {
       throw new Error(response.error.message);
     }
@@ -755,14 +813,14 @@ export class ApiClient {
     createdAt: string;
     updatedAt: string;
   }> {
-    const response =
-      await this.request<ApiResponse<typeof this.createChatSession extends Promise<infer T> ? T : never>>(
-        "/chat/sessions",
-        {
-          method: "POST",
-          body: JSON.stringify(data),
-        },
-      );
+    const response = await this.request<
+      ApiResponse<
+        typeof this.createChatSession extends Promise<infer T> ? T : never
+      >
+    >("/chat/sessions", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
     if (!response.success) {
       throw new Error(response.error.message);
     }
@@ -780,18 +838,18 @@ export class ApiClient {
     }>
   > {
     const response =
-      await this.request<ApiResponse<typeof this.getChatSessions extends Promise<infer T> ? T : never>>(
-        "/chat/sessions",
-      );
+      await this.request<
+        ApiResponse<
+          typeof this.getChatSessions extends Promise<infer T> ? T : never
+        >
+      >("/chat/sessions");
     if (!response.success) {
       throw new Error(response.error.message);
     }
     return response.data;
   }
 
-  async getChatSession(
-    sessionId: string,
-  ): Promise<{
+  async getChatSession(sessionId: string): Promise<{
     session: {
       id: string;
       projectId: string | null;
@@ -808,10 +866,11 @@ export class ApiClient {
       timestamp: number;
     }>;
   }> {
-    const response =
-      await this.request<ApiResponse<typeof this.getChatSession extends Promise<infer T> ? T : never>>(
-        `/chat/sessions/${sessionId}`,
-      );
+    const response = await this.request<
+      ApiResponse<
+        typeof this.getChatSession extends Promise<infer T> ? T : never
+      >
+    >(`/chat/sessions/${sessionId}`);
     if (!response.success) {
       throw new Error(response.error.message);
     }
@@ -851,10 +910,11 @@ export class ApiClient {
     }>;
     unresolvedErrors: number;
   }> {
-    const response =
-      await this.request<ApiResponse<typeof this.getChatContext extends Promise<infer T> ? T : never>>(
-        `/chat/sessions/${sessionId}/context`,
-      );
+    const response = await this.request<
+      ApiResponse<
+        typeof this.getChatContext extends Promise<infer T> ? T : never
+      >
+    >(`/chat/sessions/${sessionId}/context`);
     if (!response.success) {
       throw new Error(response.error.message);
     }
@@ -871,14 +931,14 @@ export class ApiClient {
     content: string;
     timestamp: number;
   }> {
-    const response =
-      await this.request<ApiResponse<typeof this.addChatMessage extends Promise<infer T> ? T : never>>(
-        `/chat/sessions/${sessionId}/message`,
-        {
-          method: "POST",
-          body: JSON.stringify(message),
-        },
-      );
+    const response = await this.request<
+      ApiResponse<
+        typeof this.addChatMessage extends Promise<infer T> ? T : never
+      >
+    >(`/chat/sessions/${sessionId}/message`, {
+      method: "POST",
+      body: JSON.stringify(message),
+    });
     if (!response.success) {
       throw new Error(response.error.message);
     }
@@ -934,10 +994,11 @@ export class ApiClient {
       resolved: boolean;
     }>;
   }> {
-    const response =
-      await this.request<ApiResponse<typeof this.exportProject extends Promise<infer T> ? T : never>>(
-        `/projects/${projectId}/export`,
-      );
+    const response = await this.request<
+      ApiResponse<
+        typeof this.exportProject extends Promise<infer T> ? T : never
+      >
+    >(`/projects/${projectId}/export`);
     if (!response.success) {
       throw new Error(response.error.message);
     }
@@ -956,10 +1017,11 @@ export class ApiClient {
       updatedAt: string;
     }>
   > {
-    const response =
-      await this.request<ApiResponse<typeof this.listExportableProjects extends Promise<infer T> ? T : never>>(
-        "/projects/export/list",
-      );
+    const response = await this.request<
+      ApiResponse<
+        typeof this.listExportableProjects extends Promise<infer T> ? T : never
+      >
+    >("/projects/export/list");
     if (!response.success) {
       throw new Error(response.error.message);
     }

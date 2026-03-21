@@ -35,6 +35,7 @@
     "deploy:db": "turbo run deploy --filter=@magicappdev/database",
     "deploy:llm": "turbo run deploy --filter=@magicappdev/llmchat",
     "deploy:web": "turbo run deploy --filter=@magicappdev/web",
+    "deploy:all": "powershell -F scripts/deploy.ps1",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "knip": "knip",
