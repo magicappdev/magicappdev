@@ -5,6 +5,7 @@
 import { rateLimitMiddleware } from "./middlewares/rate-limit.js";
 import { projectFilesRoutes } from "./routes/project-files.js";
 import { chatContextRoutes } from "./routes/chat-context.js";
+import { projectAiRoutes } from "./routes/project-ai.js";
 import { createDatabase } from "@magicappdev/database";
 import { authMiddleware } from "./middlewares/auth.js";
 import { projectsRoutes } from "./routes/projects.js";
@@ -94,6 +95,7 @@ export function createApp() {
   app.use("/projects*", authMiddleware);
   app.route("/projects", projectsRoutes);
   app.route("/projects", projectFilesRoutes);
+  app.route("/projects", projectAiRoutes);
   app.route("/projects", exportRoutes);
 
   app.use("/chat*", authMiddleware);

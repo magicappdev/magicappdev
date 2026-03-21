@@ -21,6 +21,7 @@
     "@cloudflare/vite-plugin": "^1.21.2",
     "@magicappdev/database": "workspace:*",
     "@magicappdev/shared": "workspace:*",
+    "@monaco-editor/react": "^4.7.0",
     "@radix-ui/themes": "^3.2.1",
     "agents": "^0.3.6",
     "ai": "^6.0.75",
