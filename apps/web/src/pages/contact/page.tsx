@@ -1,4 +1,5 @@
 import { Mail, MessageCircle, Send, CheckCircle2 } from "lucide-react";
+import { TurnstileWidget } from "@/components/ui/TurnstileWidget";
 import { Typography } from "@/components/ui/Typography";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -25,6 +26,8 @@ export default function ContactPage() {
   const [submitted, setSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileKey, setTurnstileKey] = useState(0);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -38,12 +41,21 @@ export default function ContactPage() {
     setIsLoading(true);
 
     try {
-      await api.submitContactForm(formData);
+      await api.submitContactForm({
+        ...formData,
+        turnstileToken: turnstileToken ?? undefined,
+      });
       setSubmitted(true);
     } catch (error) {
       console.error("Failed to send message", error);
-      setErrorMessage("Something went wrong. Please try again.");
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Something went wrong. Please try again.",
+      );
     } finally {
+      setTurnstileToken(null);
+      setTurnstileKey(current => current + 1);
       setIsLoading(false);
     }
   };
@@ -71,6 +83,9 @@ export default function ContactPage() {
                 subject: "",
                 message: "",
               });
+              setErrorMessage(null);
+              setTurnstileToken(null);
+              setTurnstileKey(current => current + 1);
               setSubmitted(false);
             }}
           >
@@ -183,10 +198,17 @@ export default function ContactPage() {
               />
             </div>
 
+            <TurnstileWidget
+              key={turnstileKey}
+              onSuccess={setTurnstileToken}
+              onError={() => setTurnstileToken(null)}
+              onExpire={() => setTurnstileToken(null)}
+            />
+
             <Button
               type="submit"
               className="w-full h-12 px-12 rounded-full md:w-auto"
-              disabled={isLoading}
+              disabled={isLoading || !turnstileToken}
             >
               {isLoading ? (
                 "Sending..."

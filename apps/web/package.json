@@ -18,14 +18,18 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@cloudflare/kumo": "^1.15.0",
     "@cloudflare/vite-plugin": "^1.21.2",
+    "@google/stitch-sdk": "^0.0.3",
     "@magicappdev/database": "workspace:*",
     "@magicappdev/shared": "workspace:*",
     "@radix-ui/themes": "^3.2.1",
     "agents": "^0.3.6",
     "ai": "^6.0.75",
     "hono": "^4.11.5",
+    "@marsidev/react-turnstile": "^1.1.0",
     "lucide-react": "^0.562.0",
+    "@phosphor-icons/react": "^2.1.10",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-router-dom": "^7.1.5",

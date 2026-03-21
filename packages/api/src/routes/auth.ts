@@ -3,6 +3,7 @@
  */
 
 import { accounts, profiles, sessions, users } from "@magicappdev/database";
+import { verifyTurnstile } from "../utils/turnstile.js";
 import { eq, and, desc } from "@magicappdev/database";
 import type { AppContext } from "../types.js";
 import { sign } from "hono/jwt";
@@ -78,9 +79,16 @@ authRoutes.get("/check-session", c => {
 
 // Manual Register
 authRoutes.post("/register", async c => {
-  const { email, password, name } = await c.req.json();
+  const { email, password, name, turnstileToken } = await c.req.json();
   if (!email || !password || !name) {
     return c.json({ error: "Missing required fields" }, 400);
+  }
+
+  if (
+    c.env.TURNSTILE_SECRET_KEY &&
+    !(await verifyTurnstile(turnstileToken, c.env.TURNSTILE_SECRET_KEY))
+  ) {
+    return c.json({ error: "CAPTCHA verification failed" }, 400);
   }
 
   const db = c.var.db;
@@ -116,9 +124,16 @@ authRoutes.post("/register", async c => {
 
 // Manual Login
 authRoutes.post("/login", async c => {
-  const { email, password } = await c.req.json();
+  const { email, password, turnstileToken } = await c.req.json();
   if (!email || !password) {
     return c.json({ error: "Email and password required" }, 400);
+  }
+
+  if (
+    c.env.TURNSTILE_SECRET_KEY &&
+    !(await verifyTurnstile(turnstileToken, c.env.TURNSTILE_SECRET_KEY))
+  ) {
+    return c.json({ error: "CAPTCHA verification failed" }, 400);
   }
 
   const db = c.var.db;

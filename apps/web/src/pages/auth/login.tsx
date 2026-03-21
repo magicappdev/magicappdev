@@ -1,3 +1,4 @@
+import { TurnstileWidget } from "@/components/ui/TurnstileWidget";
 import { Typography } from "@/components/ui/Typography";
 import { useAuth } from "../../contexts/AuthContext";
 import { Navigate, Link } from "react-router-dom";
@@ -14,6 +15,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileKey, setTurnstileKey] = useState(0);
 
   if (user) {
     return <Navigate to="/" replace />;
@@ -25,7 +28,11 @@ export default function LoginPage() {
     setIsProcessing(true);
 
     try {
-      const response = await api.login({ email, password });
+      const response = await api.login({
+        email,
+        password,
+        turnstileToken: turnstileToken ?? undefined,
+      });
 
       if (response.success) {
         const { accessToken, refreshToken } = response.data;
@@ -41,6 +48,8 @@ export default function LoginPage() {
         err instanceof Error ? err.message : "An error occurred during login",
       );
     } finally {
+      setTurnstileToken(null);
+      setTurnstileKey(current => current + 1);
       setIsProcessing(false);
     }
   };
@@ -124,7 +133,17 @@ export default function LoginPage() {
               required
             />
           </div>
-          <Button type="submit" className="w-full" disabled={isProcessing}>
+          <TurnstileWidget
+            key={turnstileKey}
+            onSuccess={setTurnstileToken}
+            onError={() => setTurnstileToken(null)}
+            onExpire={() => setTurnstileToken(null)}
+          />
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isProcessing || !turnstileToken}
+          >
             {isProcessing ? "Signing in..." : "Sign In"}
           </Button>
         </form>

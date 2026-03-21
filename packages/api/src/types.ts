@@ -42,6 +42,8 @@ export interface Env {
   AI_GATEWAY_ID?: string;
   /** Admin API keys (comma-separated) */
   ADMIN_API_KEYS?: string;
+  /** Cloudflare Turnstile secret key for CAPTCHA verification */
+  TURNSTILE_SECRET_KEY?: string;
   /** Rate limiting KV namespace */
   RATE_LIMIT_KV?: KVNamespace;
 }

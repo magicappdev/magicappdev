@@ -1,3 +1,4 @@
+import { TurnstileWidget } from "@/components/ui/TurnstileWidget";
 import { Typography } from "@/components/ui/Typography";
 import { useAuth } from "../../contexts/AuthContext";
 import { Navigate, Link } from "react-router-dom";
@@ -13,6 +14,10 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [registerError, setRegisterError] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileKey, setTurnstileKey] = useState(0);
 
   if (user) {
     return <Navigate to="/" replace />;
@@ -20,17 +25,29 @@ export default function RegisterPage() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    setRegisterError(null);
+    setIsProcessing(true);
     try {
-      const response = await api.register({ email, password, name });
+      const response = await api.register({
+        email,
+        password,
+        name,
+        turnstileToken: turnstileToken ?? undefined,
+      });
 
       if (response.success) {
-        alert("Registration successful! Please login.");
-        window.location.href = "/login";
+        window.location.href = "/login?registered=1";
       } else {
-        alert(response.error?.message || "Registration failed");
+        setRegisterError(response.error?.message || "Registration failed");
       }
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "An error occurred");
+      setRegisterError(
+        err instanceof Error ? err.message : "An error occurred",
+      );
+    } finally {
+      setTurnstileToken(null);
+      setTurnstileKey(current => current + 1);
+      setIsProcessing(false);
     }
   };
 
@@ -75,6 +92,11 @@ export default function RegisterPage() {
         </Typography>
 
         <form onSubmit={handleRegister} className="space-y-4">
+          {registerError && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
+              {registerError}
+            </div>
+          )}
           <div className="space-y-2">
             <label className="text-sm font-medium">Full Name</label>
             <Input
@@ -104,8 +126,18 @@ export default function RegisterPage() {
               required
             />
           </div>
-          <Button type="submit" className="w-full">
-            Create Account
+          <TurnstileWidget
+            key={turnstileKey}
+            onSuccess={setTurnstileToken}
+            onError={() => setTurnstileToken(null)}
+            onExpire={() => setTurnstileToken(null)}
+          />
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isProcessing || !turnstileToken}
+          >
+            {isProcessing ? "Creating account..." : "Create Account"}
           </Button>
         </form>
 

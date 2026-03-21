@@ -23,11 +23,10 @@ import { useAuth } from "../../contexts/AuthContext";
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { Navigate } from "react-router-dom";
 import { api } from "../../lib/api";
 
 export default function AdminDashboard() {
-  const { user: currentUser } = useAuth();
+  const { logout, refreshUser } = useAuth();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -39,26 +38,22 @@ export default function AdminDashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [permissionsError, setPermissionsError] = useState<string | null>(null);
 
   // View states
   const [view, setView] = useState<"users" | "logs" | "config">("users");
   const [logs, setLogs] = useState<SystemLog[]>([]);
   const [config, setConfig] = useState<GlobalConfig | null>(null);
   const [isActionLoading, setIsActionLoading] = useState(false);
+  const [hasAdminAccess, setHasAdminAccess] = useState(false);
 
   const fetchData = async () => {
-    try {
-      const [usersData, statsData] = await Promise.all([
-        api.getAdminUsers(),
-        api.getAdminStats(),
-      ]);
-      setUsers(usersData);
-      setStats(statsData);
-    } catch (err) {
-      console.error("Failed to fetch admin data", err);
-    } finally {
-      setLoading(false);
-    }
+    const [usersData, statsData] = await Promise.all([
+      api.getAdminUsers(),
+      api.getAdminStats(),
+    ]);
+    setUsers(usersData);
+    setStats(statsData);
   };
 
   const fetchLogs = async () => {
@@ -88,14 +83,73 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
-    if (currentUser?.role === "admin") {
-      fetchData();
-    }
-  }, [currentUser]);
+    let isCancelled = false;
 
-  if (currentUser?.role !== "admin") {
-    return <Navigate to="/" replace />;
-  }
+    const initializeAdmin = async () => {
+      setLoading(true);
+      setPermissionsError(null);
+
+      try {
+        const refreshToken = localStorage.getItem("refresh_token");
+        if (!refreshToken) {
+          setHasAdminAccess(false);
+          setPermissionsError(
+            "Please sign in again to access the admin panel.",
+          );
+          return;
+        }
+
+        const freshAccessToken = await api.refresh(refreshToken);
+        localStorage.setItem("access_token", freshAccessToken);
+
+        const refreshedUser = await refreshUser();
+        if (!refreshedUser) {
+          setHasAdminAccess(false);
+          setPermissionsError(
+            "Unable to refresh your session. Please sign in again.",
+          );
+          return;
+        }
+
+        if (refreshedUser.role !== "admin") {
+          setHasAdminAccess(false);
+          setPermissionsError(
+            "This account does not have admin access. Use an admin account to continue.",
+          );
+          return;
+        }
+
+        await fetchData();
+        if (!isCancelled) {
+          setHasAdminAccess(true);
+        }
+      } catch (err) {
+        if (isCancelled) {
+          return;
+        }
+
+        console.error("Failed to fetch admin data", err);
+        setHasAdminAccess(false);
+        const msg = err instanceof Error ? err.message : String(err);
+        setPermissionsError(
+          msg.toLowerCase().includes("forbidden") ||
+            msg.toLowerCase().includes("403")
+            ? "Your session permissions are outdated. Please log out and sign back in to access the admin panel."
+            : msg,
+        );
+      } finally {
+        if (!isCancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    initializeAdmin();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [refreshUser]);
 
   const filteredUsers = users.filter(
     u =>
@@ -138,6 +192,22 @@ export default function AdminDashboard() {
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 className="animate-spin text-primary" size={32} />
+      </div>
+    );
+  }
+
+  if (!hasAdminAccess) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center px-4">
+        <Shield className="w-12 h-12 text-yellow-500" />
+        <h2 className="text-xl font-semibold">Access Denied</h2>
+        <p className="text-sm text-muted-foreground max-w-sm">
+          {permissionsError ||
+            "You do not have permission to access the admin panel."}
+        </p>
+        <Button onClick={logout} className="mt-2">
+          Log out
+        </Button>
       </div>
     );
   }

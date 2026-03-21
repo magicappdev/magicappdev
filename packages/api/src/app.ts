@@ -7,6 +7,7 @@ import { projectFilesRoutes } from "./routes/project-files.js";
 import { chatContextRoutes } from "./routes/chat-context.js";
 import { createDatabase } from "@magicappdev/database";
 import { authMiddleware } from "./middlewares/auth.js";
+import { verifyTurnstile } from "./utils/turnstile.js";
 import { projectsRoutes } from "./routes/projects.js";
 import { ticketsRoutes } from "./routes/tickets.js";
 import { exportRoutes } from "./routes/export.js";
@@ -110,7 +111,16 @@ export function createApp() {
 
   // Public routes
   app.post("/contact", async c => {
-    const { name, email, subject, message } = await c.req.json();
+    const { name, email, subject, message, turnstileToken } =
+      await c.req.json();
+
+    if (
+      c.env.TURNSTILE_SECRET_KEY &&
+      !(await verifyTurnstile(turnstileToken, c.env.TURNSTILE_SECRET_KEY))
+    ) {
+      return c.json({ error: "CAPTCHA verification failed" }, 400);
+    }
+
     console.log(`Contact form submission from ${name} (${email}): ${subject}`);
     console.log(`Message: ${message}`);
     console.log(`Email would be sent to: dev.magicapp@gmail.com`);

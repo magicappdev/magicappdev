@@ -178,6 +178,7 @@ export class ApiClient {
   async login(credentials: {
     email: string;
     password: string;
+    turnstileToken?: string;
   }): Promise<ApiResponse<AuthResponse>> {
     return this.request("/auth/login", {
       method: "POST",
@@ -189,6 +190,7 @@ export class ApiClient {
     email: string;
     password: string;
     name: string;
+    turnstileToken?: string;
   }): Promise<ApiResponse<{ success: boolean; message: string }>> {
     return this.request("/auth/register", {
       method: "POST",
@@ -282,6 +284,7 @@ export class ApiClient {
     email: string;
     subject: string;
     message: string;
+    turnstileToken?: string;
   }): Promise<{ success: boolean }> {
     return this.request("/contact", {
       method: "POST",
