@@ -1,0 +1,24 @@
+# Default: auto-detect text files, normalize to LF in repo
+* text=auto eol=lf
+
+# Shell scripts always LF
+*.sh text eol=lf
+*.bash text eol=lf
+
+# Husky hooks always LF (no extension)
+.husky/pre-commit text eol=lf
+.husky/commit-msg text eol=lf
+
+# Windows batch files use CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.woff2 binary
+*.woff binary
+*.ttf binary
+*.eot binary
