@@ -5,7 +5,15 @@
 import type { ProjectFramework } from "@magicappdev/shared";
 
 /** Template category */
-export type TemplateCategory = "app" | "component" | "screen" | "hook" | "api";
+export type TemplateCategory =
+  | "app"
+  | "component"
+  | "screen"
+  | "hook"
+  | "api"
+  | "page"
+  | "service"
+  | "context";
 
 /** Template variable type */
 export type TemplateVariableType = "string" | "boolean" | "number" | "select";

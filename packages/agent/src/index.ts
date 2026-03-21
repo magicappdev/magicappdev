@@ -1,3 +1,12 @@
+import type { Template, TemplateMetadata } from "@magicappdev/templates";
+import {
+  compileFilePath,
+  compileTemplate,
+  evaluateCondition,
+} from "@magicappdev/templates";
+import { registry } from "@magicappdev/templates/registry";
+import type { Connection, WSMessage } from "agents";
+import { Agent, routeAgentRequest } from "agents";
 import {
   AGENT_TOOLS,
   type PendingApproval,
@@ -8,16 +17,8 @@ import {
   getToolsPrompt,
   parseToolCalls,
   requiresApproval,
-} from "./tools";
-import {
-  compileTemplate,
-  compileFilePath,
-  evaluateCondition,
-} from "@magicappdev/templates";
-import type { Template, TemplateMetadata } from "@magicappdev/templates";
-import { registry } from "@magicappdev/templates/registry";
-import type { Connection, WSMessage } from "agents";
-import { Agent, routeAgentRequest } from "agents";
+} from "./tools.js";
+import { handleMcpRequest } from "./mcp.js";
 
 /** Generated file result */
 interface GeneratedFile {
@@ -929,6 +930,11 @@ export default {
         env,
       ) as unknown as Response | null;
       return response ?? new Response("Agent not found", { status: 404 });
+    }
+
+    if (path === "/mcp" || path.startsWith("/mcp/")) {
+      const agentId = url.searchParams.get("agent") || "default";
+      return handleMcpRequest(request, agentId);
     }
 
     if (path.startsWith("/api/agent/")) {

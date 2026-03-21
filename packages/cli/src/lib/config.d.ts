@@ -1,8 +1,8 @@
 export interface Config {
-  accessToken?: string;
-  refreshToken?: string;
-  apiUrl?: string;
-  agentHost?: string;
+    accessToken?: string;
+    refreshToken?: string;
+    apiUrl?: string;
+    agentHost?: string;
 }
 export declare function saveConfig(config: Partial<Config>): Promise<void>;
 export declare function loadConfig(): Promise<Config>;

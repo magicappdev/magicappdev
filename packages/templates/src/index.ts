@@ -13,7 +13,7 @@ export type {
   TemplateFile,
   TemplateMetadata,
   TemplateVariable,
-  TemplateVariableType,
+  TemplateVariableType
 } from "./types.js";
 
 // Registry
@@ -24,7 +24,7 @@ export {
   generateApp,
   generateComponent,
   generateFromTemplate,
-  generateScreen,
+  generateScreen
 } from "./generators/index.js";
 
 // Utilities
@@ -32,19 +32,17 @@ export {
   compileFilePath,
   compileTemplate,
   evaluateCondition,
-  validateVariables,
+  validateVariables
 } from "./utils/index.js";
 
 // Built-in templates
 export {
   builtInTemplates,
-  buttonComponentTemplate,
-  screenTemplate,
-  ionicAppTemplate,
+  buttonComponentTemplate, contextTemplate, hookTemplate, ionicAppTemplate, pageTemplate, screenTemplate, serviceTemplate
 } from "./templates/index.js";
 
 // Initialize registry with built-in templates
-import { builtInTemplates } from "./templates/index.js";
 import { registry } from "./registry/index.js";
+import { builtInTemplates } from "./templates/index.js";
 
 registry.registerAll(builtInTemplates);
