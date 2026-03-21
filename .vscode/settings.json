@@ -215,8 +215,9 @@
       "source": "PowerShell"
     }
   },
-  "typescript.tsc.autoDetect": "on",
-  "typescript.tsdk": "node_modules\\typescript\\lib",
+  "js/ts.tsc.autoDetect": "on",
+  "js/ts.autoClosingTags.enabled": true,
+  "js/ts.format.enabled": true,
   "vscode-edge-devtools.browserFlavor": "Default",
   "vscode-edge-devtools.defaultUrl": "localhost:3030",
   "vscode-edge-devtools.webRoot": "${workspaceFolder}/apps/web",
@@ -231,5 +232,8 @@
   },
   "errorLens.excludePatterns": ["**/*.{jsonc}"],
   "DockerRun.DisableAutoGenerateConfig": true,
-  "jest.enable": false
+  "jest.enable": false,
+  "[github-actions-workflow]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml"
+  }
 }
