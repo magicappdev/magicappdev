@@ -805,7 +805,7 @@ authRoutes.get("/callback/github", async c => {
     // 2. Fetch User Info
     const userResponse = await fetch("https://api.github.com/user", {
       headers: {
-        Authorization: `Bearer \${tokenData.access_token}`,
+        Authorization: `Bearer ${tokenData.access_token}`,
         "User-Agent": "MagicAppDev",
       },
     });
@@ -872,7 +872,7 @@ authRoutes.get("/callback/github", async c => {
           "https://api.github.com/user/emails",
           {
             headers: {
-              Authorization: `Bearer \${tokenData.access_token}`,
+              Authorization: `Bearer ${tokenData.access_token}`,
               "User-Agent": "MagicAppDev",
             },
           },

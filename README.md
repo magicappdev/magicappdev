@@ -116,13 +116,16 @@ The mobile app is built using React Native and mirrors the features of the web i
 
 ### Environment Variables
 
-Create a `.env` file in the root directory and add the following environment variables:
+Environment variables are configured per app/package instead of through a
+single root `.env` file.
 
-```env
-NODE_ENV=development
-API_KEY=your_api_key_here
-DATABASE_URL=your_database_url_here
-```
+- `apps/web/.env.example` documents the public Vite variables used by the web
+  app.
+- `packages/api/.env.example` documents the auth-related API variables,
+  including the secrets required for GitHub, Discord, and JWT signing.
+
+The web app only needs `VITE_*` variables. OAuth client secrets and
+`JWT_SECRET` belong to `@magicappdev/api`.
 
 ### Settings
 
