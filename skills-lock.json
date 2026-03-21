@@ -1,6 +1,61 @@
 {
   "version": 1,
   "skills": {
+    "capacitor-app-upgrades": {
+      "source": "capawesome-team/skills",
+      "sourceType": "github",
+      "computedHash": "15dbba2b8bce382e7f6c37e746a958ffeec74976e2ba77da8e0cd18a8a716435"
+    },
+    "capacitor-plugin-spm-support": {
+      "source": "capawesome-team/skills",
+      "sourceType": "github",
+      "computedHash": "8747d32963494b0022f3ffa6d4cd8ad797e4b5522aa751c45af4f4d07df0a883"
+    },
+    "capacitor-plugin-upgrades": {
+      "source": "capawesome-team/skills",
+      "sourceType": "github",
+      "computedHash": "44b0a627942f17d8e4f66a32bc56de5c5737cd776492ce431627d376a7955567"
+    },
+    "capacitor-plugins": {
+      "source": "capawesome-team/skills",
+      "sourceType": "github",
+      "computedHash": "6f27d184f442ccfaf159800fdf5b58d2313f6841243acc0334ea6a9468746659"
+    },
+    "capacitor-push-notifications": {
+      "source": "capawesome-team/skills",
+      "sourceType": "github",
+      "computedHash": "52b18de6987ace9dfb3d71b844eadefcd8e6c3f20eb43ce4456939de0914089f"
+    },
+    "cli-mastery": {
+      "source": "involvex/awesome-copilot",
+      "sourceType": "github",
+      "computedHash": "adc13add373b57d92d9e74dc7b864636ad48b4be3c3b600269440ab71c70b30d"
+    },
+    "copilot-instructions-blueprint-generator": {
+      "source": "involvex/awesome-copilot",
+      "sourceType": "github",
+      "computedHash": "45fd25e507349b05f80a0cafc159109071ed6c24ac5f014b9c749fd6846bd62b"
+    },
+    "copilot-sdk": {
+      "source": "involvex/awesome-copilot",
+      "sourceType": "github",
+      "computedHash": "3265212ec108eb3967ac061bf501d5f019d1e1ffef1d1f043d5346d0e4fa5097"
+    },
+    "create-agentsmd": {
+      "source": "involvex/awesome-copilot",
+      "sourceType": "github",
+      "computedHash": "bfbdbb76b17cca970d1d624e36ce72b6847860d740581c8865da796c1fef8552"
+    },
+    "create-implementation-plan": {
+      "source": "involvex/awesome-copilot",
+      "sourceType": "github",
+      "computedHash": "4764bacd34af8e5c27a85ca01a90197afcf1f1ed1785975ba91d9b80dff60e2d"
+    },
+    "create-web-form": {
+      "source": "involvex/awesome-copilot",
+      "sourceType": "github",
+      "computedHash": "2fb5aaf1a1d352e6c32e765668475e1221486f5df8f3cd164e5f3dab4c6cec86"
+    },
     "design-md": {
       "source": "google-labs-code/stitch-skills",
       "sourceType": "github",
@@ -11,10 +66,50 @@
       "sourceType": "github",
       "computedHash": "28c47bcbc0e8d81f48fbbbe41d227efe4018a32c5d4674b0d052a70d215072d3"
     },
+    "image-manipulation-image-magick": {
+      "source": "involvex/awesome-copilot",
+      "sourceType": "github",
+      "computedHash": "f4f81a1054a423c5eff04f05c1b72335beae2251201c5b5729b0dce4bee06f7e"
+    },
+    "index-knowledge": {
+      "source": "cloudflare/kumo",
+      "sourceType": "github",
+      "computedHash": "8ffa11e882d2dc45d346be53163650de075ca4d174b5cd8ab8da27b5b1c24d74"
+    },
+    "ionic-appflow-migration": {
+      "source": "capawesome-team/skills",
+      "sourceType": "github",
+      "computedHash": "9a6d139db8f2610966a010add465c72f9edcadbbc8d1170a22e69c4c84a38e13"
+    },
+    "javascript-typescript-jest": {
+      "source": "involvex/awesome-copilot",
+      "sourceType": "github",
+      "computedHash": "0073d19ab0275eb6a8200aced6789a53744667bd717b5d1f44ce708a1740e5d4"
+    },
+    "mcp-cli": {
+      "source": "involvex/awesome-copilot",
+      "sourceType": "github",
+      "computedHash": "8133a09f06ac79d66b1c1b62f7a50537e179a481f25ef1ce0e823167d61d49b4"
+    },
+    "mcp-configure": {
+      "source": "involvex/awesome-copilot",
+      "sourceType": "github",
+      "computedHash": "237a234584c1af310bb85e2ab42daa6f06dbb4413f144fa2a9508ebaac050493"
+    },
     "react:components": {
       "source": "google-labs-code/stitch-skills",
       "sourceType": "github",
       "computedHash": "5e786773a89012ae15b01b5c11942db30b09f935929283d8eb8a30b2da5fabf7"
+    },
+    "refactor": {
+      "source": "involvex/awesome-copilot",
+      "sourceType": "github",
+      "computedHash": "87789a786b96f99ba0680e89345a975106e10e7db1071c7cdc2e76d507c449d6"
+    },
+    "refactor-plan": {
+      "source": "involvex/awesome-copilot",
+      "sourceType": "github",
+      "computedHash": "e4b09e28e20bcfcd1c48b7a2504fb3cdab4c36b455f2d7689574470c76ea5c2c"
     },
     "remotion": {
       "source": "google-labs-code/stitch-skills",
@@ -26,6 +121,11 @@
       "sourceType": "github",
       "computedHash": "119a14a004bd30fa99d386df599bd0db8d057cca146f7ee08349daed48b2ea55"
     },
+    "skill-creator": {
+      "source": "capawesome-team/skills",
+      "sourceType": "github",
+      "computedHash": "6652f5fc988b7314e18eafd5a0ad197f52f3ecb711426364c52b0efdbec116be"
+    },
     "stitch-design": {
       "source": "google-labs-code/stitch-skills",
       "sourceType": "github",
@@ -35,6 +135,26 @@
       "source": "google-labs-code/stitch-skills",
       "sourceType": "github",
       "computedHash": "cf47da05045ce0c11f1a8b21dc4ef9bbfed0122d68548a48786cb1608257d574"
+    },
+    "typescript-mcp-server-generator": {
+      "source": "involvex/awesome-copilot",
+      "sourceType": "github",
+      "computedHash": "d7add3c0bf0b16006283fcb77748eb7025d574c5e2d15306d767fb901d47ad37"
+    },
+    "web-design-guidelines": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "computedHash": "d8e7d3afe37dcc8a97b99ffb5afdb4d0919ae0092ea8b68f44eb201f035e33ac"
+    },
+    "web-design-reviewer": {
+      "source": "involvex/awesome-copilot",
+      "sourceType": "github",
+      "computedHash": "10c6fad8b4f01dbeae969009d81d6c306c8a96d56077cad9bfe2a73a38f5dcbe"
+    },
+    "webapp-testing": {
+      "source": "involvex/awesome-copilot",
+      "sourceType": "github",
+      "computedHash": "0476c68137c136ffd66f2af3367093d32060e0f1676b1e989497932510c9d3d8"
     }
   }
 }
