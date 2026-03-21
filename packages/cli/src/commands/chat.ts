@@ -103,7 +103,10 @@ Examples:
       clearTimeout(connectionTimeout);
       spinner.fail(`Connection error: ${sanitize(err.message)}`);
       if (debug) {
-        console.error(chalk.red(`\n[DEBUG] WebSocket error:`), sanitize(err.toString()));
+        console.error(
+          chalk.red(`\n[DEBUG] WebSocket error:`),
+          sanitize(err.toString()),
+        );
       }
       process.exit(1);
     });
@@ -126,9 +129,13 @@ async function startChatLoop(ws: WebSocket, debug: boolean) {
 
       if (debug) {
         console.log(
-          chalk.dim(`\n[DEBUG] Received: ${sanitize(message.type || "unknown")}`),
+          chalk.dim(
+            `\n[DEBUG] Received: ${sanitize(message.type || "unknown")}`,
+          ),
         );
-        console.log(chalk.dim(`[DEBUG] Raw: ${sanitize(raw.substring(0, 200))}...`));
+        console.log(
+          chalk.dim(`[DEBUG] Raw: ${sanitize(raw.substring(0, 200))}...`),
+        );
       }
 
       // Handle different message types
@@ -214,13 +221,18 @@ async function startChatLoop(ws: WebSocket, debug: boolean) {
         default:
           if (debug) {
             console.log(
-              chalk.dim(`[DEBUG] Ignored message type: ${sanitize(message.type)}`),
+              chalk.dim(
+                `[DEBUG] Ignored message type: ${sanitize(message.type)}`,
+              ),
             );
           }
       }
     } catch (err) {
       if (debug) {
-        console.error(chalk.red("[DEBUG] Parse error:"), sanitize(err?.toString() || "Unknown"));
+        console.error(
+          chalk.red("[DEBUG] Parse error:"),
+          sanitize(err?.toString() || "Unknown"),
+        );
       }
     }
   });

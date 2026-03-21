@@ -6,56 +6,56 @@ import * as fs from "node:fs/promises";
 import { Command } from "commander";
 import * as path from "node:path";
 export const completionsCommand = new Command("completions")
-    .description("Generate shell completion script")
-    .argument("<shell>", "Shell type (bash, zsh, fish, pwsh)")
-    .option("-p, --print", "Print completion script to stdout", false)
-    .option("-i, --install", "Attempt to install completion script", false)
-    .action(async (shell, options) => {
+  .description("Generate shell completion script")
+  .argument("<shell>", "Shell type (bash, zsh, fish, pwsh)")
+  .option("-p, --print", "Print completion script to stdout", false)
+  .option("-i, --install", "Attempt to install completion script", false)
+  .action(async (shell, options) => {
     try {
-        const program = completionsCommand.parent;
-        if (!program) {
-            throw new Error("Unable to get program configuration");
+      const program = completionsCommand.parent;
+      if (!program) {
+        throw new Error("Unable to get program configuration");
+      }
+      const script = generateCompletionScript(shell, program);
+      const shouldPrint = options.print || (!options.install && !options.print);
+      if (shouldPrint) {
+        console.log(script);
+        if (!options.print) {
+          newline();
+          info("To install completions, add the above to your shell config:");
+          printInstallInstructions(shell);
+          newline();
         }
-        const script = generateCompletionScript(shell, program);
-        const shouldPrint = options.print || (!options.install && !options.print);
-        if (shouldPrint) {
-            console.log(script);
-            if (!options.print) {
-                newline();
-                info("To install completions, add the above to your shell config:");
-                printInstallInstructions(shell);
-                newline();
-            }
-        }
-        else if (options.install) {
-            await installCompletionScript(shell, script);
-        }
-        if (!shouldPrint || options.print) {
-            success(`Completion script generated for ${shell}`);
-        }
+      } else if (options.install) {
+        await installCompletionScript(shell, script);
+      }
+      if (!shouldPrint || options.print) {
+        success(`Completion script generated for ${shell}`);
+      }
+    } catch (err) {
+      error(`Failed to generate completions: ${err.message}`);
+      process.exit(1);
     }
-    catch (err) {
-        error(`Failed to generate completions: ${err.message}`);
-        process.exit(1);
-    }
-});
+  });
 function generateCompletionScript(shell, program) {
-    switch (shell.toLowerCase()) {
-        case "bash":
-            return generateBashCompletion(program);
-        case "zsh":
-            return generateZshCompletion(program);
-        case "fish":
-            return generateFishCompletion(program);
-        case "pwsh":
-            return generatePwshCompletion(program);
-        default:
-            throw new Error(`Unsupported shell: ${shell}. Supported: bash, zsh, fish, pwsh`);
-    }
+  switch (shell.toLowerCase()) {
+    case "bash":
+      return generateBashCompletion(program);
+    case "zsh":
+      return generateZshCompletion(program);
+    case "fish":
+      return generateFishCompletion(program);
+    case "pwsh":
+      return generatePwshCompletion(program);
+    default:
+      throw new Error(
+        `Unsupported shell: ${shell}. Supported: bash, zsh, fish, pwsh`,
+      );
+  }
 }
 function generateBashCompletion(program) {
-    const commands = program.commands.map(cmd => cmd.name()).join(" ");
-    return `# Bash completion for magicappdev
+  const commands = program.commands.map(cmd => cmd.name()).join(" ");
+  return `# Bash completion for magicappdev
 _magicappdev_completion() {
     local cur prev words cword
     _init_completion || return
@@ -67,10 +67,10 @@ complete -F _magicappdev_completion magicappdev mad createmagicapp
 `;
 }
 function generateZshCompletion(program) {
-    const commandDescriptions = program.commands
-        .map(cmd => `"${cmd.name()}":"${cmd.description()}"`)
-        .join("\n  ");
-    return `#compdef magicappdev mad createmagicapp
+  const commandDescriptions = program.commands
+    .map(cmd => `"${cmd.name()}":"${cmd.description()}"`)
+    .join("\n  ");
+  return `#compdef magicappdev mad createmagicapp
 
 _magicappdev() {
   local -a commands
@@ -87,8 +87,8 @@ _magicappdev "$@"
 `;
 }
 function generateFishCompletion(program) {
-    const commands = program.commands.map(cmd => cmd.name()).join(" ");
-    return `# Fish completion for magicappdev
+  const commands = program.commands.map(cmd => cmd.name()).join(" ");
+  return `# Fish completion for magicappdev
 
 complete -c magicappdev -f
 complete -c mad -f
@@ -100,8 +100,8 @@ complete -c createmagicapp -a '${commands}' -d 'MagicAppDev command'
 `;
 }
 function generatePwshCompletion(program) {
-    const commands = program.commands.map(cmd => cmd.name());
-    return `# PowerShell completion for magicappdev
+  const commands = program.commands.map(cmd => cmd.name());
+  return `# PowerShell completion for magicappdev
 
 using namespace System.Management.Automation
 using namespace System.Management.Automation.Language
@@ -123,61 +123,76 @@ Register-ArgumentCompleter -Native -CommandName 'magicappdev', 'mad', 'createmag
 `;
 }
 async function installCompletionScript(shell, script) {
-    const home = process.env.HOME || process.env.USERPROFILE;
-    if (!home) {
-        throw new Error("Unable to determine home directory");
-    }
-    let configPath;
-    switch (shell.toLowerCase()) {
-        case "bash":
-            configPath = path.join(home, ".bashrc");
-            break;
-        case "zsh":
-            configPath = path.join(home, ".zshrc");
-            break;
-        case "fish":
-            configPath = path.join(home, ".config", "fish", "completions", "magicappdev.fish");
-            break;
-        case "pwsh":
-            configPath = path.join(home, ".config", "powershell", "MagicAppDev_completions.ps1");
-            break;
-        default:
-            throw new Error(`Unable to determine config file for shell: ${shell}`);
-    }
-    // For fish, create the completion file directly
-    if (shell.toLowerCase() === "fish") {
-        await fs.mkdir(path.dirname(configPath), { recursive: true });
-        await fs.writeFile(configPath, script);
-        success(`Completion script installed to ${configPath}`);
-        info("Restart your shell for completions to take effect");
-        return;
-    }
-    // For other shells, append to config
-    try {
-        await fs.appendFile(configPath, `\n\n# MagicAppDev CLI completions\n${script}\n`);
-        success(`Completion script added to ${configPath}`);
-        info("Restart your shell for completions to take effect");
-    }
-    catch (err) {
-        error(`Failed to install: ${err.message}`);
-        info("You can manually add the script to your shell config");
-    }
+  const home = process.env.HOME || process.env.USERPROFILE;
+  if (!home) {
+    throw new Error("Unable to determine home directory");
+  }
+  let configPath;
+  switch (shell.toLowerCase()) {
+    case "bash":
+      configPath = path.join(home, ".bashrc");
+      break;
+    case "zsh":
+      configPath = path.join(home, ".zshrc");
+      break;
+    case "fish":
+      configPath = path.join(
+        home,
+        ".config",
+        "fish",
+        "completions",
+        "magicappdev.fish",
+      );
+      break;
+    case "pwsh":
+      configPath = path.join(
+        home,
+        ".config",
+        "powershell",
+        "MagicAppDev_completions.ps1",
+      );
+      break;
+    default:
+      throw new Error(`Unable to determine config file for shell: ${shell}`);
+  }
+  // For fish, create the completion file directly
+  if (shell.toLowerCase() === "fish") {
+    await fs.mkdir(path.dirname(configPath), { recursive: true });
+    await fs.writeFile(configPath, script);
+    success(`Completion script installed to ${configPath}`);
+    info("Restart your shell for completions to take effect");
+    return;
+  }
+  // For other shells, append to config
+  try {
+    await fs.appendFile(
+      configPath,
+      `\n\n# MagicAppDev CLI completions\n${script}\n`,
+    );
+    success(`Completion script added to ${configPath}`);
+    info("Restart your shell for completions to take effect");
+  } catch (err) {
+    error(`Failed to install: ${err.message}`);
+    info("You can manually add the script to your shell config");
+  }
 }
 function printInstallInstructions(shell) {
-    switch (shell.toLowerCase()) {
-        case "bash":
-            info('  echo "$(magicappdev completions bash)" >> ~/.bashrc');
-            info("  source ~/.bashrc");
-            break;
-        case "zsh":
-            info('  echo "$(magicappdev completions zsh)" >> ~/.zshrc');
-            info("  source ~/.zshrc");
-            break;
-        case "fish":
-            info("  magicappdev completions fish > ~/.config/fish/completions/magicappdev.fish");
-            break;
-        case "pwsh":
-            info("  magicappdev completions pwsh > $PROFILE");
-            break;
-    }
+  switch (shell.toLowerCase()) {
+    case "bash":
+      info('  echo "$(magicappdev completions bash)" >> ~/.bashrc');
+      info("  source ~/.bashrc");
+      break;
+    case "zsh":
+      info('  echo "$(magicappdev completions zsh)" >> ~/.zshrc');
+      info("  source ~/.zshrc");
+      break;
+    case "fish":
+      info(
+        "  magicappdev completions fish > ~/.config/fish/completions/magicappdev.fish",
+      );
+      break;
+    case "pwsh":
+      info("  magicappdev completions pwsh > $PROFILE");
+      break;
+  }
 }

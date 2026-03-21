@@ -139,12 +139,17 @@ export class MagicAgent extends DurableObject {
     // Also save to D1 if we have a session
     if (this.sessionData.sessionId && this.env.DB) {
       try {
-        await this.env.DB
-          .prepare(
-            `INSERT INTO chat_messages (id, session_id, role, content, timestamp)
+        await this.env.DB.prepare(
+          `INSERT INTO chat_messages (id, session_id, role, content, timestamp)
              VALUES (?, ?, ?, ?, ?)`,
+        )
+          .bind(
+            message.id,
+            this.sessionData.sessionId,
+            message.role,
+            message.content,
+            message.timestamp,
           )
-          .bind(message.id, this.sessionData.sessionId, message.role, message.content, message.timestamp)
           .run();
       } catch (err) {
         console.error("Failed to save message to D1:", err);
@@ -181,17 +186,23 @@ export class MagicAgent extends DurableObject {
   /**
    * Load project context from D1 database
    */
-  private async loadProjectContext(sessionId: string): Promise<ProjectContext | null> {
+  private async loadProjectContext(
+    sessionId: string,
+  ): Promise<ProjectContext | null> {
     if (!this.env.DB) return null;
 
     try {
       // Get session info
-      const sessionResult = await this.env.DB
-        .prepare(
-          `SELECT id, project_id, user_id, title FROM chat_sessions WHERE id = ?`,
-        )
+      const sessionResult = await this.env.DB.prepare(
+        `SELECT id, project_id, user_id, title FROM chat_sessions WHERE id = ?`,
+      )
         .bind(sessionId)
-        .first<{ id: string; project_id: string | null; user_id: string; title: string }>();
+        .first<{
+          id: string;
+          project_id: string | null;
+          user_id: string;
+          title: string;
+        }>();
 
       if (!sessionResult) {
         console.log("Session not found:", sessionId);
@@ -212,37 +223,33 @@ export class MagicAgent extends DurableObject {
       }
 
       // Load project files - map snake_case columns to camelCase
-      const filesResult = await this.env.DB
-        .prepare(
-          `SELECT id, project_id, path, content, language, size, created_at, updated_at
+      const filesResult = await this.env.DB.prepare(
+        `SELECT id, project_id, path, content, language, size, created_at, updated_at
            FROM project_files WHERE project_id = ?`,
-        )
+      )
         .bind(sessionResult.project_id)
         .all();
 
       // Load project errors - map snake_case columns to camelCase
-      const errorsResult = await this.env.DB
-        .prepare(
-          `SELECT id, project_id, error_type, message, stack_trace, file_path as filePath, line_number as lineNumber, occurred_at, resolved
+      const errorsResult = await this.env.DB.prepare(
+        `SELECT id, project_id, error_type, message, stack_trace, file_path as filePath, line_number as lineNumber, occurred_at, resolved
            FROM project_errors WHERE project_id = ? ORDER BY occurred_at DESC LIMIT 20`,
-        )
+      )
         .bind(sessionResult.project_id)
         .all();
 
       // Load recent commands
-      const commandsResult = await this.env.DB
-        .prepare(
-          `SELECT id, project_id, command, exit_code, output, error, executed_at
+      const commandsResult = await this.env.DB.prepare(
+        `SELECT id, project_id, command, exit_code, output, error, executed_at
            FROM project_commands WHERE project_id = ? ORDER BY executed_at DESC LIMIT 10`,
-        )
+      )
         .bind(sessionResult.project_id)
         .all();
 
       // Count unresolved errors
-      const unresolvedErrorsResult = await this.env.DB
-        .prepare(
-          `SELECT COUNT(*) as count FROM project_errors WHERE project_id = ? AND resolved = 0`,
-        )
+      const unresolvedErrorsResult = await this.env.DB.prepare(
+        `SELECT COUNT(*) as count FROM project_errors WHERE project_id = ? AND resolved = 0`,
+      )
         .bind(sessionResult.project_id)
         .first<{ count: number }>();
 
@@ -271,7 +278,9 @@ export class MagicAgent extends DurableObject {
       prompt += `The user is working on a project with ${context.files.length} files.\n\n`;
 
       // Show file tree
-      const fileTree = context.files.map(f => `  - ${f.path} (${f.language})`).join("\n");
+      const fileTree = context.files
+        .map(f => `  - ${f.path} (${f.language})`)
+        .join("\n");
       prompt += `### Files:\n${fileTree}\n\n`;
 
       // Include some file contents for context
@@ -456,7 +465,9 @@ export class MagicAgent extends DurableObject {
       // Load project context if we have a session
       let projectContext: ProjectContext | null = null;
       if (this.sessionData.sessionId) {
-        projectContext = await this.loadProjectContext(this.sessionData.sessionId);
+        projectContext = await this.loadProjectContext(
+          this.sessionData.sessionId,
+        );
       }
 
       // Get conversation history for context
@@ -579,7 +590,12 @@ export default {
       return Response.json({
         status: "ok",
         message: "Enhanced MagicAgent worker is running",
-        features: ["D1 storage", "Project context", "Session management", "Dynamic prompts"],
+        features: [
+          "D1 storage",
+          "Project context",
+          "Session management",
+          "Dynamic prompts",
+        ],
       });
     }
 

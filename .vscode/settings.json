@@ -64,9 +64,9 @@
   "editor.wordWrap": "on",
   "eslint.codeActionsOnSave.mode": "problems",
   "eslint.enable": false,
-  "typescript.inlayHints.variableTypes.suppressWhenTypeMatchesName": true,
+  "js/ts.inlayHints.variableTypes.suppressWhenTypeMatchesName": true,
   "path-intellisense.ignoreTsConfigBaseUrl": true,
-  "typescript.workspaceSymbols.excludeLibrarySymbols": true,
+  "js/ts.workspaceSymbols.excludeLibrarySymbols": true,
   "eslint.workingDirectories": [
     "packages/web/**",
     "packages/app/**",
@@ -235,5 +235,10 @@
   "jest.enable": false,
   "[github-actions-workflow]": {
     "editor.defaultFormatter": "redhat.vscode-yaml"
-  }
+  },
+  "markdownlint.config": {
+    "MD010": false,
+    "fence": false
+  },
+  "vscode-edge-devtools.webhint": false
 }

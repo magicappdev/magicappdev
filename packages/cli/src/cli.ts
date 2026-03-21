@@ -5,10 +5,10 @@
 import { generateCommand } from "./commands/generate/index.js";
 import { completionsCommand } from "./commands/completions.js";
 import { doctorCommand } from "./commands/doctor.js";
+import { cloneCommand } from "./commands/clone.js";
 import { initCommand } from "./commands/init.js";
 import { chatCommand } from "./commands/chat.js";
 import { authCommand } from "./commands/auth.js";
-import { cloneCommand } from "./commands/clone.js";
 import { createRequire } from "module";
 import { Command } from "commander";
 const require = createRequire(import.meta.url);

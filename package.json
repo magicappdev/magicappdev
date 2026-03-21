@@ -15,6 +15,7 @@
     "apps/web"
   ],
   "scripts": {
+    "prebuild": "pnpm run format && pnpm run lint:fix && pnpm run typecheck",
     "build": "turbo build",
     "build:agent": "turbo build --filter=@magicappdev/agent",
     "build:api": "turbo build --filter=@magicappdev/api",

@@ -13,12 +13,12 @@ import {
   newline,
   divider,
 } from "../lib/ui.js";
-import { api } from "../lib/api.js";
 import { withSpinner } from "../lib/spinner.js";
 import { spawn } from "child_process";
-import * as fs from "fs";
-import * as path from "path";
+import { api } from "../lib/api.js";
 import { Command } from "commander";
+import * as path from "path";
+import * as fs from "fs";
 
 interface CloneOptions {
   output?: string;
@@ -40,7 +40,9 @@ function writeFile(filePath: string, content: string): void {
 }
 
 /** Install dependencies for the project */
-async function installDependencies(projectDir: string): Promise<{ success: boolean; error?: string }> {
+async function installDependencies(
+  projectDir: string,
+): Promise<{ success: boolean; error?: string }> {
   return new Promise(resolve => {
     // Detect package manager
     let pm = "npm";
@@ -160,7 +162,10 @@ Examples:
       keyValue("Name", exportData.project.name);
       keyValue("Framework", exportData.project.framework);
       keyValue("Files", String(exportData.metadata.fileCount));
-      keyValue("Size", `${(exportData.metadata.totalSize / 1024).toFixed(1)} KB`);
+      keyValue(
+        "Size",
+        `${(exportData.metadata.totalSize / 1024).toFixed(1)} KB`,
+      );
       divider();
       newline();
 
@@ -172,7 +177,9 @@ Examples:
       if (fs.existsSync(projectPath)) {
         error(`Directory already exists: ${outputDir}`);
         newline();
-        info("Please choose a different output directory or remove the existing one.");
+        info(
+          "Please choose a different output directory or remove the existing one.",
+        );
         command(`rm -rf "${outputDir}"`);
         process.exit(1);
       }
@@ -209,12 +216,19 @@ Examples:
 
       // Write export metadata
       const metadataPath = path.join(projectPath, ".magicappdev.json");
-      writeFile(metadataPath, JSON.stringify({
-        version: exportData.version,
-        exportedAt: exportData.exportedAt,
-        project: exportData.project,
-        metadata: exportData.metadata,
-      }, null, 2));
+      writeFile(
+        metadataPath,
+        JSON.stringify(
+          {
+            version: exportData.version,
+            exportedAt: exportData.exportedAt,
+            project: exportData.project,
+            metadata: exportData.metadata,
+          },
+          null,
+          2,
+        ),
+      );
 
       // Install dependencies if requested
       const shouldInstall = options.install !== false;
@@ -232,7 +246,9 @@ Examples:
 
           if (!installResult.success) {
             newline();
-            error(`Failed to install dependencies: ${installResult.error || "Unknown error"}`);
+            error(
+              `Failed to install dependencies: ${installResult.error || "Unknown error"}`,
+            );
             info("You can install them manually:");
             command(`cd ${outputDir}`);
             command("npm install"); // or pnpm install, yarn install, etc.
@@ -245,7 +261,10 @@ Examples:
       command(`cd ${outputDir}`);
 
       // Suggest start command based on framework
-      if (exportData.project.framework === "expo" || exportData.project.framework === "react-native") {
+      if (
+        exportData.project.framework === "expo" ||
+        exportData.project.framework === "react-native"
+      ) {
         command("npm start # or expo start");
       } else if (exportData.project.framework === "next") {
         command("npm run dev");

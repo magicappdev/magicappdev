@@ -498,7 +498,7 @@ export default tseslint.config(
     "@capacitor/android": "^8.0.2",
     "@capacitor/app": "^8.0.0",
     "@capacitor/core": "^8.0.2",
-    "ionicons": "^7.4.0",
+    ionicons: "^7.4.0",
     react: "^18.3.0",
     "react-dom": "^18.3.0",
     "react-router-dom": "^6.28.0",
@@ -506,10 +506,8 @@ export default tseslint.config(
   devDependencies: {
     "@capacitor/cli": "^8.0.2",
     "@vitejs/plugin-react": "^4.3.4",
-    "typescript": "~5.9.3",
-    "vite": "^6.0.11",
+    typescript: "~5.9.3",
+    vite: "^6.0.11",
   },
-  postInstall: [
-    "npx cap sync",
-  ],
+  postInstall: ["npx cap sync"],
 };

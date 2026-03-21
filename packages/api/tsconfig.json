@@ -6,6 +6,7 @@
     "composite": true,
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
+    "paths": {},
     "types": ["@cloudflare/workers-types"]
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],

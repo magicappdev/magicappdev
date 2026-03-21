@@ -7,12 +7,16 @@ import { projects } from "./projects.js";
 
 export const projectCommands = sqliteTable("project_commands", {
   id: text("id").primaryKey(),
-  projectId: text("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+  projectId: text("project_id")
+    .notNull()
+    .references(() => projects.id, { onDelete: "cascade" }),
   command: text("command").notNull(),
   exitCode: integer("exit_code"),
   output: text("output"),
   error: text("error"),
-  executedAt: text("executed_at").notNull().$defaultFn(() => new Date().toISOString()),
+  executedAt: text("executed_at")
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
 });
 
 export type ProjectCommand = typeof projectCommands.$inferSelect;

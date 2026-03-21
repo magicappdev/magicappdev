@@ -3,10 +3,10 @@
  */
 
 import { buttonComponentTemplate } from "./button-component.js";
+import { ionicAppTemplate } from "./ionic-app.js";
 import { blankAppTemplate } from "./blank-app.js";
 import { tabsAppTemplate } from "./tabs-app.js";
 import { screenTemplate } from "./screen.js";
-import { ionicAppTemplate } from "./ionic-app.js";
 
 /** All built-in templates */
 export const builtInTemplates = [

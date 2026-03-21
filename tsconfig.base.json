@@ -14,16 +14,16 @@
     "skipLibCheck": true,
     "strict": true,
     "target": "es2022",
-    "baseUrl": ".",
+    "rootDir": ".",
     "paths": {
-      "@magicappdev/agent": ["packages/agent/src/index.ts"],
-      "@magicappdev/api": ["packages/api/src/index.ts"],
-      "@magicappdev/cli": ["packages/cli/src/index.ts"],
-      "@magicappdev/database": ["packages/database/src/index.ts"],
-      "@magicappdev/llmchat": ["packages/llmchat/src/index.ts"],
-      "@magicappdev/shared": ["packages/shared/src/index.ts"],
-      "@magicappdev/shared/*": ["packages/shared/src/*"],
-      "@magicappdev/templates": ["packages/templates/src/index.ts"]
+      "@magicappdev/agent": ["./packages/agent/src/index.ts"],
+      "@magicappdev/api": ["./packages/api/src/index.ts"],
+      "@magicappdev/cli": ["./packages/cli/src/index.ts"],
+      "@magicappdev/database": ["./packages/database/src/index.ts"],
+      "@magicappdev/llmchat": ["./packages/llmchat/src/index.ts"],
+      "@magicappdev/shared": ["./packages/shared/src/index.ts"],
+      "@magicappdev/shared/*": ["./packages/shared/src/*"],
+      "@magicappdev/templates": ["./packages/templates/src/index.ts"]
     }
   },
   "exclude": ["node_modules"]
