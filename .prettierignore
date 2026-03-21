@@ -10,3 +10,13 @@ node_modules
 /*/*/dist
 build
 packages/templates/templates
+
+# Agent/AI tool directories — not source code, skip formatting
+.agent
+.agents
+.kilo
+.kilocode
+.claude
+.gemini
+agents
+docs/skills
