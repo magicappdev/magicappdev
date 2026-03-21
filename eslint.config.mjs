@@ -19,5 +19,14 @@ export default defineConfig([
     "**/.wrangler/**",
     "**/coverage/**",
     "**/metro.config.js",
+    // Agent / AI tool directories
+    ".agent/**",
+    ".agents/**",
+    ".kilo/**",
+    ".kilocode/**",
+    ".claude/**",
+    ".gemini/**",
+    "agents/**",
+    "docs/skills/**",
   ]),
 ]);
