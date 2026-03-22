@@ -12,59 +12,74 @@ import { Hono } from "hono";
 
 export const authRoutes = new Hono<AppContext>();
 
-// In-memory cache for OAuth sessions.
-// NOTE: This implementation is intended only for non-production environments.
-// In production, configure a persistent store (e.g. KV storage or database)
-// and replace the helpers below with calls to that backend.
-const oauthSessions = new Map<
-  string,
-  { accessToken: string; refreshToken: string; timestamp?: number }
->();
-const OAUTH_SESSION_TTL = 120000; // 2 minutes
+// KV-backed OAuth session storage.
+// Using KV ensures sessions are accessible across all Cloudflare Worker instances,
+// which is required because the callback worker (that stores the session) and the
+// check-session worker (that reads it) may be different instances.
+const KV_SESSION_PREFIX = "oauth_session:";
+const OAUTH_SESSION_TTL_SECONDS = 120; // 2 minutes
 
-// In production, replace these with KV storage or database-backed sessions
-function setOAuthSession(
+// Local dev fallback for when KV is not available (e.g. unit tests without wrangler)
+const _localSessionFallback = new Map<
+  string,
+  { accessToken: string; refreshToken: string }
+>();
+
+async function setOAuthSession(
+  kv: KVNamespace | undefined,
   sessionId: string,
   accessToken: string,
   refreshToken: string,
-) {
-  oauthSessions.set(sessionId, {
-    accessToken,
-    refreshToken,
-    timestamp: Date.now(),
-  });
+): Promise<void> {
+  if (kv) {
+    await kv.put(
+      `${KV_SESSION_PREFIX}${sessionId}`,
+      JSON.stringify({ accessToken, refreshToken }),
+      { expirationTtl: OAUTH_SESSION_TTL_SECONDS },
+    );
+  } else {
+    _localSessionFallback.set(sessionId, { accessToken, refreshToken });
+    setTimeout(
+      () => _localSessionFallback.delete(sessionId),
+      OAUTH_SESSION_TTL_SECONDS * 1000,
+    );
+  }
 }
 
-function getOAuthSession(sessionId: string) {
-  cleanExpiredSessions();
-  return oauthSessions.get(sessionId);
+async function getOAuthSession(
+  kv: KVNamespace | undefined,
+  sessionId: string,
+): Promise<{ accessToken: string; refreshToken: string } | null> {
+  if (kv) {
+    const raw = await kv.get(`${KV_SESSION_PREFIX}${sessionId}`);
+    if (!raw) return null;
+    return JSON.parse(raw) as { accessToken: string; refreshToken: string };
+  }
+  return _localSessionFallback.get(sessionId) ?? null;
 }
 
-function deleteOAuthSession(sessionId: string) {
-  oauthSessions.delete(sessionId);
-}
-
-// Clean up expired sessions (called lazily when sessions are accessed)
-function cleanExpiredSessions() {
-  const now = Date.now();
-  for (const [key, value] of oauthSessions.entries()) {
-    if (value.timestamp && now - value.timestamp > OAUTH_SESSION_TTL) {
-      oauthSessions.delete(key);
-    }
+async function deleteOAuthSession(
+  kv: KVNamespace | undefined,
+  sessionId: string,
+): Promise<void> {
+  if (kv) {
+    await kv.delete(`${KV_SESSION_PREFIX}${sessionId}`);
+  } else {
+    _localSessionFallback.delete(sessionId);
   }
 }
 
 // Check session endpoint for mobile polling
-authRoutes.get("/check-session", c => {
+authRoutes.get("/check-session", async c => {
   const sessionId = c.req.query("sessionId");
   if (!sessionId) {
     return c.json({ success: false, error: "Missing session ID" }, 400);
   }
 
-  const session = getOAuthSession(sessionId);
+  const session = await getOAuthSession(c.env.RATE_LIMIT_KV, sessionId);
   if (session) {
     // Return tokens and delete session
-    deleteOAuthSession(sessionId);
+    await deleteOAuthSession(c.env.RATE_LIMIT_KV, sessionId);
     return c.json({
       success: true,
       data: {
@@ -276,6 +291,7 @@ authRoutes.get("/callback/discord", async c => {
   let platform = "web";
   let clientRedirectUri: string | undefined;
   let linkUserId: string | undefined;
+  let webRedirectOrigin: string | undefined;
 
   try {
     if (stateStr) {
@@ -283,6 +299,7 @@ authRoutes.get("/callback/discord", async c => {
       if (typeof state === "object") {
         platform = state.platform || "web";
         clientRedirectUri = state.redirect_uri;
+        webRedirectOrigin = state.webRedirectOrigin;
         if (state.action === "link" && state.userId) {
           linkUserId = state.userId;
         }
@@ -541,7 +558,12 @@ authRoutes.get("/callback/discord", async c => {
     if (platform === "mobile") {
       // Generate a session ID for secure token retrieval via polling
       const sessionId = crypto.randomUUID();
-      setOAuthSession(sessionId, accessToken, refreshToken);
+      await setOAuthSession(
+        c.env.RATE_LIMIT_KV,
+        sessionId,
+        accessToken,
+        refreshToken,
+      );
 
       const mobileUri =
         clientRedirectUri ||
@@ -678,8 +700,21 @@ authRoutes.get("/callback/discord", async c => {
         ? "http://localhost:3100"
         : "https://app.magicappdev.workers.dev");
 
+    // If the OAuth originated from the mobile app running in a browser, redirect
+    // back to that origin so AuthContext's URL-param fallback can pick up tokens.
+    const isTrustedOrigin = (origin: string) =>
+      origin.startsWith("http://localhost") ||
+      origin.startsWith("http://127.0.0.1") ||
+      origin === "https://app.magicappdev.workers.dev" ||
+      origin === "https://magicappdev.pages.dev";
+
+    const redirectBase =
+      webRedirectOrigin && isTrustedOrigin(webRedirectOrigin)
+        ? webRedirectOrigin
+        : frontendUrl;
+
     return c.redirect(
-      `${frontendUrl}/auth/callback?accessToken=${accessToken}&refreshToken=${refreshToken}`,
+      `${redirectBase}/auth/callback?accessToken=${accessToken}&refreshToken=${refreshToken}`,
     );
   } catch (err) {
     console.error("Fatal Error in Discord Callback:", err);
@@ -732,6 +767,7 @@ authRoutes.get("/callback/github", async c => {
   let clientRedirectUri: string | undefined;
   let linkUserId: string | undefined;
   let clientState: string | undefined; // Original CLI state
+  let webRedirectOrigin: string | undefined;
 
   try {
     if (stateStr) {
@@ -741,6 +777,7 @@ authRoutes.get("/callback/github", async c => {
         platform = state.platform || "web";
         clientRedirectUri = state.redirect_uri;
         clientState = state.clientState; // Extract original CLI state
+        webRedirectOrigin = state.webRedirectOrigin;
         if (state.action === "link" && state.userId) {
           linkUserId = state.userId;
         }
@@ -1023,7 +1060,12 @@ authRoutes.get("/callback/github", async c => {
     if (platform === "mobile") {
       // Generate a session ID for secure token retrieval via polling
       const sessionId = crypto.randomUUID();
-      setOAuthSession(sessionId, accessToken, refreshToken);
+      await setOAuthSession(
+        c.env.RATE_LIMIT_KV,
+        sessionId,
+        accessToken,
+        refreshToken,
+      );
 
       const mobileUri =
         clientRedirectUri ||
@@ -1162,8 +1204,21 @@ authRoutes.get("/callback/github", async c => {
         ? "http://localhost:3100"
         : "https://app.magicappdev.workers.dev");
 
+    // If the OAuth originated from the mobile app running in a browser, redirect
+    // back to that origin so AuthContext's URL-param fallback can pick up tokens.
+    const isTrustedOrigin = (origin: string) =>
+      origin.startsWith("http://localhost") ||
+      origin.startsWith("http://127.0.0.1") ||
+      origin === "https://app.magicappdev.workers.dev" ||
+      origin === "https://magicappdev.pages.dev";
+
+    const redirectBase =
+      webRedirectOrigin && isTrustedOrigin(webRedirectOrigin)
+        ? webRedirectOrigin
+        : frontendUrl;
+
     return c.redirect(
-      `${frontendUrl}/auth/callback?accessToken=${accessToken}&refreshToken=${refreshToken}&state=${encodeURIComponent(stateForRedirect)}`,
+      `${redirectBase}/auth/callback?accessToken=${accessToken}&refreshToken=${refreshToken}&state=${encodeURIComponent(stateForRedirect)}`,
     );
   } catch (err) {
     console.error("Fatal Error in GitHub Callback:", err);
