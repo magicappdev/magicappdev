@@ -41,6 +41,10 @@ export {
   buttonComponentTemplate,
   screenTemplate,
   ionicAppTemplate,
+  reactSpaTemplate,
+  nextAppTemplate,
+  cfWorkersApiTemplate,
+  expoAppTemplate,
 } from "./templates/index.js";
 
 // Initialize registry with built-in templates

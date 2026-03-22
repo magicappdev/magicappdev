@@ -10,6 +10,7 @@ import { authMiddleware } from "./middlewares/auth.js";
 import { verifyTurnstile } from "./utils/turnstile.js";
 import { projectsRoutes } from "./routes/projects.js";
 import { ticketsRoutes } from "./routes/tickets.js";
+import { githubRoutes } from "./routes/github.js";
 import { exportRoutes } from "./routes/export.js";
 import { adminRoutes } from "./routes/admin.js";
 import { authRoutes } from "./routes/auth.js";
@@ -108,6 +109,9 @@ export function createApp() {
 
   app.use("/admin*", authMiddleware);
   app.route("/admin", adminRoutes);
+
+  app.use("/github*", authMiddleware);
+  app.route("/github", githubRoutes);
 
   // Public routes
   app.post("/contact", async c => {

@@ -570,11 +570,15 @@ authRoutes.get("/callback/discord", async c => {
         c.env.MOBILE_REDIRECT_URI ||
         "magicappdev://auth/callback";
 
-      const deeplinkUrl = `${mobileUri}?sessionId=${sessionId}`;
+      // Include tokens directly in deep link so the client doesn't depend on KV
+      // propagation (KV has eventual consistency across Cloudflare DCs)
+      const deeplinkUrl = `${mobileUri}?sessionId=${sessionId}&accessToken=${encodeURIComponent(accessToken)}&refreshToken=${encodeURIComponent(refreshToken)}`;
 
-      // Create Android Intent URL for Chrome Custom Tabs compatibility
-      // This format tells Android to open the app with the specified package and scheme
-      const intentUrl = `intent://auth/callback?sessionId=${encodeURIComponent(sessionId)}#Intent;scheme=magicappdev;package=com.magicappdev;S.browser_fallback_url=${encodeURIComponent(deeplinkUrl)};end`;
+      // Create Android Intent URL for Chrome Custom Tabs compatibility.
+      // Chrome 83+ silently blocks custom-scheme (magicappdev://) navigation
+      // without a user gesture; intent:// is the official Android mechanism
+      // that works inside Chrome Custom Tabs without requiring a gesture.
+      const intentUrl = `intent://auth/callback?sessionId=${encodeURIComponent(sessionId)}&accessToken=${encodeURIComponent(accessToken)}&refreshToken=${encodeURIComponent(refreshToken)}#Intent;scheme=magicappdev;package=com.magicappdev;S.browser_fallback_url=${encodeURIComponent(deeplinkUrl)};end`;
 
       // For mobile OAuth, we need to handle the deep link specially
       // Chrome Custom Tabs block custom scheme redirects, so we return a page
@@ -667,19 +671,24 @@ authRoutes.get("/callback/discord", async c => {
             <script>
               (function() {
                 const deeplinkUrl = "${deeplinkUrl}";
-                console.log('Attempting redirect to:', deeplinkUrl);
+                const intentUrl = "${intentUrl}";
+                // Chrome 83+ silently blocks custom-scheme (magicappdev://) auto-navigation
+                // without a user gesture. Use intent:// on Android (works in Chrome Custom
+                // Tabs without a gesture) and fall back to the custom scheme on iOS/other.
+                const isAndroid = /Android/.test(navigator.userAgent);
+                const redirectUrl = isAndroid ? intentUrl : deeplinkUrl;
+                console.log('Attempting redirect to:', redirectUrl);
 
-                // Try direct location change as primary for custom scheme
                 setTimeout(function() {
                   try {
-                    window.location.replace(deeplinkUrl);
+                    window.location.replace(redirectUrl);
                   } catch(e) {
-                    console.log('Redirect failed:', e);
+                    console.log('Redirect failed, trying fallback:', e);
+                    try { window.location.replace(deeplinkUrl); } catch(e2) {}
                   }
                 }, 100);
 
-                // Method 2: Try to close the browser window after a delay
-                // On some devices this will trigger the app to handle the deeplink
+                // Close the browser window after a delay as a last resort
                 setTimeout(function() {
                   try {
                     window.close();
@@ -1072,10 +1081,15 @@ authRoutes.get("/callback/github", async c => {
         c.env.MOBILE_REDIRECT_URI ||
         "magicappdev://auth/callback";
 
-      const deeplinkUrl = `${mobileUri}?sessionId=${sessionId}&state=${encodeURIComponent(stateForRedirect)}`;
+      // Include tokens directly in deep link so the client doesn't depend on KV
+      // propagation (KV has eventual consistency across Cloudflare DCs)
+      const deeplinkUrl = `${mobileUri}?sessionId=${sessionId}&accessToken=${encodeURIComponent(accessToken)}&refreshToken=${encodeURIComponent(refreshToken)}&state=${encodeURIComponent(stateForRedirect)}`;
 
-      // Create Android Intent URL for Chrome Custom Tabs compatibility
-      const intentUrl = `intent://auth/callback?sessionId=${encodeURIComponent(sessionId)}&state=${encodeURIComponent(stateForRedirect)}#Intent;scheme=magicappdev;package=com.magicappdev;S.browser_fallback_url=${encodeURIComponent(deeplinkUrl)};end`;
+      // Create Android Intent URL for Chrome Custom Tabs compatibility.
+      // Chrome 83+ silently blocks custom-scheme (magicappdev://) navigation
+      // without a user gesture; intent:// is the official Android mechanism
+      // that works inside Chrome Custom Tabs without requiring a gesture.
+      const intentUrl = `intent://auth/callback?sessionId=${encodeURIComponent(sessionId)}&accessToken=${encodeURIComponent(accessToken)}&refreshToken=${encodeURIComponent(refreshToken)}&state=${encodeURIComponent(stateForRedirect)}#Intent;scheme=magicappdev;package=com.magicappdev;S.browser_fallback_url=${encodeURIComponent(deeplinkUrl)};end`;
 
       console.log("Redirecting to mobile URI:", mobileUri);
 
@@ -1171,19 +1185,24 @@ authRoutes.get("/callback/github", async c => {
             <script>
               (function() {
                 const deeplinkUrl = "${deeplinkUrl}";
-                console.log('Attempting redirect to:', deeplinkUrl);
+                const intentUrl = "${intentUrl}";
+                // Chrome 83+ silently blocks custom-scheme (magicappdev://) auto-navigation
+                // without a user gesture. Use intent:// on Android (works in Chrome Custom
+                // Tabs without a gesture) and fall back to the custom scheme on iOS/other.
+                const isAndroid = /Android/.test(navigator.userAgent);
+                const redirectUrl = isAndroid ? intentUrl : deeplinkUrl;
+                console.log('Attempting redirect to:', redirectUrl);
 
-                // Try direct location change as primary for custom scheme
                 setTimeout(function() {
                   try {
-                    window.location.replace(deeplinkUrl);
+                    window.location.replace(redirectUrl);
                   } catch(e) {
-                    console.log('Redirect failed:', e);
+                    console.log('Redirect failed, trying fallback:', e);
+                    try { window.location.replace(deeplinkUrl); } catch(e2) {}
                   }
                 }, 100);
 
-                // Method 2: Try to close the browser window after a delay
-                // On some devices this will trigger the app to handle the deeplink
+                // Close the browser window after a delay as a last resort
                 setTimeout(function() {
                   try {
                     window.close();

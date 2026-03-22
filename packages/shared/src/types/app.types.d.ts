@@ -31,11 +31,14 @@ export interface Profile {
 export type ProjectStatus = "draft" | "active" | "archived" | "deployed";
 /** Project framework */
 export type ProjectFramework =
+  | "react"
   | "react-native"
   | "expo"
   | "next"
+  | "nextjs"
   | "remix"
-  | "ionic";
+  | "ionic"
+  | "cloudflare-workers";
 /** Project configuration */
 export interface ProjectConfig {
   framework: ProjectFramework;

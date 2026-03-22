@@ -62,6 +62,44 @@ Develop a comprehensive monorepo-based fullstack app building platform inspired 
 - **Mobile**: Expo-based app with GitHub Auth, Projects listing, streaming AI Chat, and **Dark Mode support**.
 - **CI/CD**: GitHub Actions active for automated testing and deployments.
 
+### Prompt → Fully-Featured App Pipeline ✅ (Completed)
+
+#### The Problem (Fixed)
+
+Previously, typing "Build a compound interest calculator" returned raw markdown text/code snippets — not a real exportable app.
+
+#### Root Cause
+
+`handleChat()` in `packages/agent/src/index.ts` parsed `SUGGEST_TEMPLATE:` from AI output but never called `handleGenerateProject()`. The frontend WebSocket event handlers (`generation_start/file/complete`) were already wired — they just never fired from the chat path.
+
+#### What Was Built
+
+**New App Templates** (`packages/templates/src/templates/`):
+
+- `react-spa` — React 18 + Vite + TypeScript + Tailwind, deploys to Cloudflare Pages
+- `next-app` — Next.js 14 App Router + `@cloudflare/next-on-pages` adapter
+- `cf-workers-api` — Hono REST API on Cloudflare Workers + D1
+- `expo-app` — Expo SDK 52 + Expo Router tab navigation
+
+**Agent Wiring** (`packages/agent/src/index.ts`):
+
+- Updated system prompts with `GENERATE: <slug> "<name>"` directive
+- `handleChat()` now parses `GENERATE:` from streamed content and immediately calls `handleGenerateProject()`
+- `inferTemplateSlug()` maps user intent to template slug
+- `extractProjectName()` extracts a meaningful project name from the prompt
+- Fallback: any message containing build/create/make intent triggers `react-spa` generation
+
+**Download & Export** (`apps/web/src/pages/chat/page.tsx`):
+
+- "Download ZIP" button uses real `jszip` to package all generated files
+- "Push to GitHub" modal calls `POST /github/create-repo` with the user's stored OAuth token
+
+**GitHub API Route** (`packages/api/src/routes/github.ts`):
+
+- `POST /github/create-repo` — creates a repo and pushes all files via GitHub Contents API
+- Uses the user's GitHub OAuth token from the `accounts` table
+- Returns `{ repoUrl, cloneUrl, failedFiles }`
+
 ### Recent Improvements (January 23, 2026)
 
 #### Mobile App Enhancements ✅
@@ -119,7 +157,7 @@ todoo:
 - [x] Building apps/mobile - react-native app with expo-router.
 - [x] Implement Settings/Profile Menu in Mobile.
 - [x] Implement real AI backend logic with streaming.
-- [ ] Implement actual code generation in CLI.
+- [x] Implement actual code generation in CLI and Web chat (prompt → full project).
 - [ ] MCP integration for developer tools.
 - [x] Update the .devcontainer.
 - [x] Set up CI/CD GitHub Actions.

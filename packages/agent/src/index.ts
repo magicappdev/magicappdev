@@ -153,24 +153,25 @@ export const PROMPT_TEMPLATES = {
 
   // App preview context
   app_preview: {
-    system: `You are a professional React developer and UI designer. Your task is to generate complete React applications with modern architecture and best practices. Focus on creating:
+    system: `You are MagicAppDev, an AI that scaffolds real, downloadable app projects.
 
-    1. Complete, runnable React applications
-    2. Modern architecture with proper component structure
-    3. State management where appropriate
-    4. Clean, maintainable code
-    5. Proper error handling
-    6. Responsive design
+When the user wants to BUILD, CREATE, MAKE, or GENERATE an app, website, API, or tool, you MUST output on its own line:
+GENERATE: <slug> "<Project Name>"
 
-    Generate applications that:
-    - Follow modern React patterns
-    - Use functional components with hooks
-    - Include proper state management
-    - Have clean file structure
-    - Include necessary dependencies
-    - Are production-ready
+Available template slugs:
+- react-spa   → React 18 + Vite + TypeScript + Tailwind CSS, deploys to Cloudflare Pages
+- next-app    → Next.js 14 App Router + Cloudflare Pages adapter (full-stack)
+- cf-workers-api → Hono REST API on Cloudflare Workers with D1 database
+- expo-app    → Expo SDK 52 + Expo Router for iOS/Android/Web
+- ionic       → Ionic + Capacitor mobile app
 
-    Create a complete React application with all necessary files and configuration.`,
+Examples:
+- "Build a compound interest calculator" → GENERATE: react-spa "Compound Interest Calculator"
+- "Create a React Native todo list" → GENERATE: expo-app "Todo List"
+- "Build a REST API for my blog" → GENERATE: cf-workers-api "Blog API"
+- "Make a Next.js e-commerce site" → GENERATE: next-app "E-Commerce Site"
+
+Default to react-spa for general web apps. After the GENERATE line, briefly explain what was scaffolded and suggest next steps. At the end output: SUGGEST_PROMPTS: ["prompt1", "prompt2", "prompt3"]`,
   },
 };
 
@@ -277,6 +278,57 @@ export class MagicAgent extends Agent<Env, AgentState> {
         })),
       }),
     );
+  }
+
+  /** Infer the best template slug from user message content */
+  private inferTemplateSlug(content: string): string {
+    const m = content.toLowerCase();
+    if (
+      m.includes("react native") ||
+      m.includes("expo") ||
+      m.includes("ios app") ||
+      m.includes("android app") ||
+      m.includes("mobile app")
+    )
+      return "expo-app";
+    if (m.includes("ionic")) return "ionic";
+    if (
+      m.includes("next.js") ||
+      m.includes("nextjs") ||
+      m.includes("ssr") ||
+      m.includes("full stack") ||
+      m.includes("fullstack")
+    )
+      return "next-app";
+    if (
+      m.includes(" api") ||
+      m.includes("rest api") ||
+      m.includes("backend") ||
+      m.includes("cloudflare workers") ||
+      m.includes("hono")
+    )
+      return "cf-workers-api";
+    return "react-spa";
+  }
+
+  /** Extract a project name from user message */
+  private extractProjectName(content: string): string {
+    const patterns = [
+      /(?:build|create|make|generate|scaffold)\s+(?:a\s+|an\s+)?(.+?)(?:\s+app|\s+application|\s+website|\s+api|\s+site|$)/i,
+      /(?:new|start)\s+(?:a\s+|an\s+)?(.+?)(?:\s+app|\s+application|\s+website|\s+api|$)/i,
+    ];
+    for (const pattern of patterns) {
+      const m = content.match(pattern);
+      if (m) {
+        const name = m[1]
+          .trim()
+          .replace(/\s+/g, "-")
+          .replace(/[^a-zA-Z0-9-]/g, "")
+          .slice(0, 50);
+        if (name.length > 2) return name;
+      }
+    }
+    return "my-app";
   }
 
   /**
@@ -640,11 +692,13 @@ ${templateContext}
 ${toolsContext}
 GOAL: Help the user build their app.
 1. Understand the user's intent.
-2. If a template fits, suggest it using "SUGGEST_TEMPLATE: [slug]" in your response.
-3. Use tools when appropriate to read files, write code, or execute commands.
-4. Provide code snippets, architectural advice, and commands using the CLI.
+2. If the user wants to BUILD, CREATE, MAKE, or GENERATE an app/website/API/tool, output on its own line: GENERATE: <slug> "<Project Name>"
+   Available slugs: react-spa (React + Vite + Tailwind), next-app (Next.js 14), cf-workers-api (Hono REST API + D1), expo-app (Expo mobile), ionic (Ionic mobile)
+   Default to react-spa for general web apps.
+3. If a template fits, also suggest it using "SUGGEST_TEMPLATE: [slug]".
+4. Use tools when appropriate to read files, write code, or execute commands.
 5. Be concise but helpful.
-6. At the end of your response, suggest 3 relevant follow-up prompts for the user. Format them as "SUGGEST_PROMPTS: ["prompt1", "prompt2", "prompt3"]".`;
+6. At the end of your response, suggest 3 relevant follow-up prompts: SUGGEST_PROMPTS: ["prompt1", "prompt2", "prompt3"]`;
     let userPrompt = content;
 
     // Detect context for dynamic prompt selection
@@ -755,6 +809,28 @@ User Request: ${userPrompt}`;
       const match = assistantContent.match(/SUGGEST_TEMPLATE: ([a-zA-Z0-9-]+)/);
       if (match) {
         this.setState({ ...this.state, suggestedTemplate: match[1] });
+      }
+
+      // Auto-trigger project generation from GENERATE directive
+      const generateMatch = assistantContent.match(
+        /GENERATE:\s*([a-zA-Z0-9-]+)\s+["']?([^"'\n]+?)["']?\s*(?:\n|$)/,
+      );
+      if (generateMatch) {
+        await this.handleGenerateProject(
+          connection,
+          generateMatch[1].trim(),
+          generateMatch[2].trim(),
+          {},
+        );
+      } else {
+        // Fallback: if user clearly wants to build an app but LLM skipped GENERATE directive
+        const buildAppRegex =
+          /\b(build|create|make|scaffold|generate)\b[^.]{0,150}\b(app|application|website|web\s*app|mobile\s*app|api|dashboard|portfolio|calculator|tracker|manager|todo|game|timer|converter|tool|platform|service)\b/i;
+        if (buildAppRegex.test(content)) {
+          const slug = this.inferTemplateSlug(content);
+          const projectName = this.extractProjectName(content);
+          await this.handleGenerateProject(connection, slug, projectName, {});
+        }
       }
 
       // Extract prompt suggestions
