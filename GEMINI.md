@@ -20,6 +20,13 @@ The project follows a monorepo structure:
 - `packages/`: Shared libraries and tools (e.g., `@magicappdev/cli`, `@magicappdev/shared`).
 - `scripts/`: Internal workspace utility scripts.
 
+### Mobile Repo Boundary
+
+- `apps/mobile` is an independent repo/workflow surface inside this repository.
+- For mobile-only tasks, interpret relative paths, local env files, and scripts from `apps/mobile`.
+- Mobile GitHub Actions live under `apps/mobile/.github/workflows/`; when operating within the mobile surface, treat that as the workflow root.
+- Avoid assuming the monorepo root `.github/workflows/` or root workspace commands apply to mobile-only work.
+
 ---
 
 ## Building and Running

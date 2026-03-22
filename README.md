@@ -37,7 +37,7 @@ A comprehensive monorepo-based fullstack app building platform inspired by Expo,
 - **Monorepo Structure**: Utilizes Turborepo with pnpm for package management, including local/remote caching, TypeScript, and Node.js/JS as preferred languages.
 - **CLI Tool**: Generate and manage app code, components, and packages with ease.
 - **Web Interface**: Interactive AI chat for app creation, hot reload preview, and prompt suggestions.
-- **Mobile App**: React Native-based app with interactive AI chat (SSE streaming), deep link authentication, and cross-platform component sharing.
+- **Mobile App**: Ionic + Capacitor-based app with interactive AI chat (SSE streaming), deep link authentication, and cross-platform component sharing.
 - **API & Database**: High-performance backend on Cloudflare Workers/D1 with integrated AI model routing and provider support.
 - **AI Integration**: Real-time streaming AI chat using Cloudflare Workers AI (Llama 3.1).
 - **Extensibility**: Highly customizable with plugins and good debugging utilities.
@@ -110,7 +110,9 @@ The web interface is hosted at `*.magicappdev.workers.dev` (Cloudflare Workers).
 
 ### Mobile App
 
-The mobile app is built using React Native and mirrors the features of the web interface. It includes optional packages like DevTools, Reanimated, Expo, Metro, and test setups.
+The mobile app is built using Ionic + Capacitor and mirrors the features of the web interface.
+
+> `apps/mobile` is treated as its own repo/workflow surface. For mobile-only work, use `apps/mobile` as the working root. Mobile workflow files live under `apps/mobile/.github/workflows/` in this repository and should not be confused with the root `.github/workflows/`.
 
 ## Configuration & Customization
 
@@ -158,7 +160,7 @@ magicappdev/
 ### Key Directories and Files
 
 - **`apps/web`**: Next.js-based web interface.
-- **`apps/mobile`**: React Native-based mobile app.
+- **`apps/mobile`**: Ionic + Capacitor mobile app with its own repo/workflow surface.
 - **`packages/cli`**: CLI tool for generating and managing app code.
 - **`packages/api`**: API for backend services.
 - **`packages/database`**: Database integration.

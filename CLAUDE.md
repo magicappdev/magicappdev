@@ -11,3 +11,10 @@
 - If the user needs help with an Nx configuration or project graph error, use the `nx_workspace` tool to get any errors
 
 <!-- nx configuration end-->
+
+## Mobile Repo Boundary
+
+- Treat `apps/mobile` as an independent repo/workflow surface when working on the mobile app.
+- For mobile-only tasks, resolve relative paths from `apps/mobile`, not from the monorepo root.
+- Mobile workflow files live at `apps/mobile/.github/workflows/` in this repository and should be interpreted as `.github/workflows/` for the mobile repo.
+- Do not assume root `.github/workflows/`, root env files, or root-only commands are the correct surface for mobile changes.

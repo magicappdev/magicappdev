@@ -4,6 +4,13 @@
 
 This document provides detailed documentation for each package in the MagicAppDev project, covering architecture, dependencies, usage guidelines, and integration points. MagicAppDev is a comprehensive monorepo-based fullstack app building platform inspired by Expo, utilizing Turborepo for efficient monorepo management, enabling rapid development, customization, and deployment of apps across web and mobile with no-code capabilities.
 
+## Mobile Repo Boundary
+
+- Treat `apps/mobile` as its own independent repo/workflow surface inside this repository.
+- When a task is scoped to mobile, interpret paths, commands, and docs relative to `apps/mobile` unless the task explicitly says it spans the root workspace.
+- Mobile GitHub Actions live under `apps/mobile/.github/workflows/` in this repository. When operating as the mobile repo, treat that directory as the workflow root rather than the monorepo root `.github/workflows/`.
+- Do not assume root-only commands, root `.env` files, or root workflow paths apply to mobile-only work.
+
 ## Tech Stack Overview
 
 - **Monorepo Management**: Turborepo with pnpm for package management, including local/remote caching

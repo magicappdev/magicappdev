@@ -38,6 +38,15 @@ packages/
   templates/  # Handlebars-based code generation templates
 ```
 
+## Mobile Repo / Workflow Boundary
+
+`apps/mobile` must be treated as an independent repo/workflow surface.
+
+- For mobile-only tasks, use `apps/mobile` as the working root for paths, scripts, env files, and documentation.
+- Mobile GitHub Actions are defined under `apps/mobile/.github/workflows/` in this repository. If a task talks about "the mobile repo workflow," interpret workflow paths relative to `apps/mobile`, not the root `.github/workflows/`.
+- Do not redirect mobile-only changes to root workspace paths unless the task explicitly requires cross-repo integration.
+- When giving instructions, prefer `cd apps/mobile && <command>` or clearly state that the command is relative to `apps/mobile`.
+
 ## Build, Test & Lint Commands
 
 ```bash
