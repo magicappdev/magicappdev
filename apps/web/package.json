@@ -18,7 +18,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@cloudflare/kumo": "^1.15.0",
+    "@cloudflare/kumo": "^1.16.0",
     "@cloudflare/vite-plugin": "^1.21.2",
     "@google/stitch-sdk": "^0.0.3",
     "@magicappdev/database": "workspace:*",
@@ -32,8 +32,8 @@
     "hono": "^4.11.5",
     "jszip": "^3.10.1",
     "lucide-react": "^0.562.0",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "react-router-dom": "^7.1.5",
     "zod": "^4.3.6"
   },
@@ -42,8 +42,8 @@
     "@hono/node-server": "^1.13.8",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/node": "^25.0.10",
-    "@types/react": "19.2.9",
-    "@types/react-dom": "19.2.3",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
     "@types/react-router-dom": "^5.3.3",
     "@vitejs/plugin-react": "^5.1.2",
     "eslint": "^9.39.2",
@@ -51,6 +51,6 @@
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.53.1",
     "vite": "^8.0.1",
-    "wrangler": "^4.76.0"
+    "wrangler": "^4.78.0"
   }
 }

@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "@magicappdev/shared": "workspace:*",
-    "handlebars": "^4.7.8",
+    "handlebars": "^4.7.9",
     "tslib": "^2.3.0"
   },
   "devDependencies": {
