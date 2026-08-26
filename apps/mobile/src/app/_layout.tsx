@@ -17,7 +17,7 @@ export default function RootLayout() {
           name="index"
           options={{
             title: "Sign In",
-            href: null, // Hidden until auth state check
+            href: null, // Hidden on tab bar
           }}
         />
         <Tabs.Screen
@@ -36,12 +36,6 @@ export default function RootLayout() {
           name="settings"
           options={{
             title: "Settings",
-          }}
-        />
-        <Tabs.Screen
-          name="explore"
-          options={{
-            href: null, // Hide template explore screen
           }}
         />
       </Tabs>
