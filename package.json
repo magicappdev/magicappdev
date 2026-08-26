@@ -11,7 +11,7 @@
     "name": "involvex"
   },
   "workspaces": [
-    "apps/web",
+    "apps/*",
     "packages/*"
   ],
   "engines": {
@@ -40,6 +40,10 @@
     "prebuild": "bun run format && bun run lint:fix && bun run typecheck",
     "build": "turbo build",
     "build:agent": "turbo build --filter=@magicappdev/agent",
+    "build:mobile": "turbo build --filter=@magicappdev/mobile",
+    "typecheck:mobile": "turbo typecheck --filter=@magicappdev/mobile",
+    "lint:mobile": "turbo lint --filter=@magicappdev/mobile",
+    "expo:check": "cd apps/mobile && bunx expo install --check",
     "build:api": "turbo build --filter=@magicappdev/api",
     "build:axiom": "turbo build --filter=@magicappdev/axiom-cloudflare-workers",
     "build:cli": "turbo build --filter=@magicappdev/cli",
