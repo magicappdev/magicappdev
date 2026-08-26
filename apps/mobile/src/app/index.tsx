@@ -13,8 +13,7 @@ export default function LoginScreen() {
   const router = useRouter();
 
   useEffect(() => {
-    // Check existing auth token
-    secureStorage.getItem("magicappdev_access_token").then(token => {
+    secureStorage.getItem("magicappdev_access_token").then((token: string | null) => {
       if (token) {
         api.setToken(token);
         router.replace("/projects");
@@ -48,7 +47,7 @@ export default function LoginScreen() {
       const loginUrl = api.getGitHubLoginUrl("mobile");
       const result = await WebBrowser.openAuthSessionAsync(
         loginUrl,
-        "com.magicappdev://auth/callback"
+        "magicappdev://auth/callback"
       );
 
       if (result.type === "success" && result.url) {
@@ -66,8 +65,9 @@ export default function LoginScreen() {
           router.replace("/projects");
         }
       }
-    } catch (err: any) {
-      setError(err?.message || "Authentication failed");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Authentication failed";
+      setError(message);
     } finally {
       setLoading(false);
     }
