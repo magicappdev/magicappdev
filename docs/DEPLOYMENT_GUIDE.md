@@ -9,7 +9,7 @@
 cd D:\repos\magicappdev\apps\mobile
 
 # Option A: Clean all caches and reinstall
-pnpm run clean:all
+bun run clean:all
 
 # Option B: Just clear Metro cache
 nx run mobile:start:reset
@@ -224,17 +224,17 @@ Check:
 
 The completions command is complete in source and passes lint/typecheck, but running the compiled CLI directly may fail with module resolution errors for the shared package (zod dependency not found).
 
-**Workaround**: Use `pnpm exec magicappdev <command>` or `nx run cli -- <command>` instead of running node directly on dist/cli.js.
+**Workaround**: Use `bunx magicappdev <command>` or `nx run cli -- <command>` instead of running node directly on dist/cli.js.
 
-**Root Cause**: pnpm workspace structure + Node.js ES subpath exports requires dist/package.json with dependencies. Added build script to create this, but direct node execution still has issues.
+**Root Cause**: Workspace layout + Node.js ES subpath exports requires dist/package.json with dependencies. Added build script to create this, but direct node execution still has issues.
 
 ### 2. Bun Package Manager
 
-Switching to bun caused React duplicate issues. **Stick with pnpm** for now.
+The monorepo migrated fully from pnpm to Bun (single root `bun.lock`, Bun workspaces). The earlier React duplicate issues were resolved via root dependency overrides pinning a single React version.
 
-### 3. Metro Bundler with pnpm dlx cache
+### 3. Metro Bundler cache
 
-Files in `C:\Users\lukas\AppData\Local\pnpm-cache\dlx\` are blocked but may still cause issues. Using polling helps mitigate this.
+Stale Metro/dlx caches (previously under the pnpm-cache directory) can still cause issues. Using polling helps mitigate this.
 
 ### 4. Fixed: Mobile package.json structure
 

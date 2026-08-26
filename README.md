@@ -34,7 +34,7 @@ A comprehensive monorepo-based fullstack app building platform inspired by Expo,
 
 ## Key Features
 
-- **Monorepo Structure**: Utilizes Turborepo with pnpm for package management, including local/remote caching, TypeScript, and Node.js/JS as preferred languages.
+- **Monorepo Structure**: Utilizes Turborepo with Bun for package management, including local/remote caching, TypeScript, and Node.js/JS as preferred languages.
 - **CLI Tool**: Generate and manage app code, components, and packages with ease.
 - **Web Interface**: Interactive AI chat for app creation, hot reload preview, and prompt suggestions.
 - **Mobile App**: Ionic + Capacitor-based app with interactive AI chat (SSE streaming), deep link authentication, and cross-platform component sharing.
@@ -46,8 +46,8 @@ A comprehensive monorepo-based fullstack app building platform inspired by Expo,
 
 ### Prerequisites
 
-- Node.js (v18 or higher)
-- pnpm (v8 or higher)
+- Node.js (v20 or higher)
+- Bun (v1.4 or higher; the build toolchain requires ^1.4 via `devEngines`)
 - Git
 
 ### Step-by-Step Installation
@@ -62,7 +62,7 @@ A comprehensive monorepo-based fullstack app building platform inspired by Expo,
 2. **Install Dependencies**:
 
    ```bash
-   pnpm install
+   bun install
    ```
 
 3. **Set Up Environment Variables**:
@@ -72,12 +72,12 @@ A comprehensive monorepo-based fullstack app building platform inspired by Expo,
 4. **Build the Project**:
 
    ```bash
-   pnpm run build
+   bun run build
    ```
 
 ### OS-Specific Notes
 
-- **Windows**: Ensure that you have the latest version of Node.js and pnpm installed. Use PowerShell or Git Bash for running commands.
+- **Windows**: Ensure that you have the latest version of Node.js and Bun installed. Use PowerShell or Git Bash for running commands.
 - **macOS/Linux**: Ensure that your system has the necessary permissions for installing global packages and running scripts.
 
 ## Usage & Examples
@@ -153,7 +153,7 @@ magicappdev/
 ├── docs/
 ├── scripts/
 ├── package.json
-├── pnpm-workspace.yaml
+├── bun.lock
 └── README.md
 ```
 
@@ -239,19 +239,19 @@ The system uses JWT for session management and stores profiles in Cloudflare D1.
 1. **Unit Tests**:
 
    ```bash
-   pnpm run test:unit
+   bun run test:unit
    ```
 
 2. **Integration Tests**:
 
    ```bash
-   pnpm run test:integration
+   bun run test:integration
    ```
 
 3. **End-to-End Tests**:
 
    ```bash
-   pnpm run test:e2e
+   bun run test:e2e
    ```
 
 ### Expected Outcomes
@@ -267,14 +267,14 @@ MagicAppDev is designed for Cloudflare.
 
 ```bash
 cd packages/api
-pnpm run deploy
+bun run deploy
 ```
 
 ### Web Application
 
 ```bash
 cd apps/web
-pnpm run deploy
+bun run deploy
 ```
 
 ### Docker Deployment
@@ -296,14 +296,14 @@ pnpm run deploy
 If you encounter "workspace out of sync" errors, run:
 
 ```bash
-pnpm nx sync
+bunx nx sync
 ```
 
 ## Troubleshooting & FAQ
 
 ### Common Pitfalls
 
-- **Dependency Issues**: Ensure all dependencies are installed correctly. Run `pnpm install` if you encounter dependency-related errors.
+- **Dependency Issues**: Ensure all dependencies are installed correctly. Run `bun install` if you encounter dependency-related errors.
 - **Environment Variables**: Double-check your `.env` file for missing or incorrect environment variables.
 - **Build Errors**: Ensure your code adheres to the project's coding standards and TypeScript types.
 
@@ -317,11 +317,11 @@ pnpm nx sync
 
 **Q: How do I update the CLI tool?**
 
-A: Run `pnpm update` to update all dependencies, including the CLI tool.
+A: Run `bun update` to update all dependencies, including the CLI tool.
 
 **Q: Can I use MagicAppDev with other package managers?**
 
-A: MagicAppDev is optimized for pnpm, but you can use other package managers like npm or yarn with some adjustments.
+A: MagicAppDev is optimized for Bun, but you can use other package managers like npm or yarn with some adjustments.
 
 **Q: How do I contribute to the project?**
 
@@ -336,7 +336,7 @@ MagicAppDev is licensed under the [MIT License](LICENSE).
 ### Attribution
 
 - **Turborepo**: For efficient monorepo management.
-- **pnpm**: For fast and disk-space-efficient package management.
+- **Bun**: For fast and disk-space-efficient package management.
 - **Next.js**: For the web interface.
 - **React Native**: For the mobile app.
 - **Cloudflare**: For API and database hosting.

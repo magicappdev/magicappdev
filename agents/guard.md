@@ -176,7 +176,7 @@ Format:
 
 **After implementation:**
 
-- Run security linters: `pnpm audit`
+- Run security linters: `bun audit`
 - Run all tests to ensure no regressions
 - Manual testing of security measures
 - Check for similar vulnerabilities elsewhere

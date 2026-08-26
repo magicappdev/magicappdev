@@ -6,31 +6,26 @@ echo "🚀 MagicAppDev development environment optimization..."
 # Ensure we're in the right directory
 cd /workspace
 
-# Verify and configure pnpm
-echo "📦 Configuring pnpm..."
-corepack enable
-corepack prepare pnpm@10.28.2 --activate
-export PNPM_HOME="/root/.local/share/pnpm"
-export PATH="$PNPM_HOME:$PATH"
+# Verify and configure Bun
+echo "📦 Configuring Bun..."
+if ! command -v bun > /dev/null 2>&1; then
+    curl -fsSL https://bun.sh/install | bash
+fi
+export BUN_INSTALL="/root/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
 export SHELL="/bin/bash"
-# Configure pnpm for monorepo
-pnpm config set store-dir /workspace/.pnpm-store
-pnpm config set cache-dir /workspace/.pnpm-cache
-# Create cache directories for pnpm
-mkdir -p /workspace/.pnpm-store
-mkdir -p /workspace/.pnpm-cache
-PNPM_VERSION=$(pnpm --version)
-echo "✅ pnpm version: $PNPM_VERSION"
+BUN_VERSION=$(bun --version)
+echo "✅ bun version: $BUN_VERSION"
 
 # Set up git hooks if husky is configured
 if [ -d ".husky" ] && [ -f "package.json" ]; then
     echo "🪝 Setting up git hooks..."
-    pnpm prepare || echo "⚠️  Git hooks setup skipped (not in git repository)"
+    bun run prepare || echo "⚠️  Git hooks setup skipped (not in git repository)"
 fi
 
 # Install global dependencies if needed
 echo "🔧 Installing global dependencies..."
-pnpm install -g @expo/cli @expo/metro-config @kilocode/cli@next @google/gemini-cli@latest nx@latest @anthropic-ai/claude-code@latest
+bun install -g @expo/cli @expo/metro-config @kilocode/cli@next @google/gemini-cli@latest nx@latest @anthropic-ai/claude-code@latest
 
 # Initialize Android SDK if needed
 if [ ! -d "/usr/local/android-sdk" ]; then
@@ -42,9 +37,9 @@ if [ ! -d "/usr/local/android-sdk" ]; then
     rm commandlinetools-linux-11076708_latest.zip
 fi
 
-# Optimize pnpm store permissions
-echo "📁 Optimizing pnpm store permissions..."
-chown -R root:root /root/.local/share/pnpm
+# Optimize Bun cache permissions
+echo "📁 Optimizing Bun cache permissions..."
+chown -R root:root /root/.bun
 
 # Create wrangler state directory
 mkdir -p /workspace/.wrangler/state
@@ -85,11 +80,11 @@ else
     exit 1
 fi
 
-# Check pnpm store
-if [ -d "/root/.local/share/pnpm" ]; then
-    echo "✅ pnpm store is available"
+# Check Bun installation
+if command -v bun > /dev/null 2>&1; then
+    echo "✅ Bun is available"
 else
-    echo "❌ pnpm store not found"
+    echo "❌ Bun not found"
     exit 1
 fi
 

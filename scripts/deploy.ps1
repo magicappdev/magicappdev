@@ -61,13 +61,13 @@ Write-Host "============================================================" -Foreg
 # ── 1. Build all packages ──────────────────────────────────────────────────────
 # turbo build handles dependency order: shared → database → web (vite) / api / agent
 Run "Build all packages (turbo)" $Root {
-    pnpm turbo build
+    bun run build
 }
 
 # ── 2. Apply D1 migrations (remote) ───────────────────────────────────────────
 if (-not $SkipMigrations) {
     Run "Apply D1 migrations (remote)" "$Root\packages\database" {
-        pnpm run migrate:prod
+        bun run migrate:prod
     }
 } else {
     Write-Host "`n  [SKIP] D1 migrations (-SkipMigrations flag set)" -ForegroundColor Yellow
@@ -76,21 +76,21 @@ if (-not $SkipMigrations) {
 # ── 3. Deploy API ──────────────────────────────────────────────────────────────
 if ($Only -eq "all" -or $Only -eq "api") {
     Run "Deploy API -> magicappdev-api.magicappdev.workers.dev" "$Root\packages\api" {
-        pnpm run deploy
+        bun run deploy
     }
 }
 
 # ── 4. Deploy Web ──────────────────────────────────────────────────────────────
 if ($Only -eq "all" -or $Only -eq "web") {
     Run "Deploy Web -> app.magicappdev.workers.dev" "$Root\apps\web" {
-        pnpm run deploy
+        bun run deploy
     }
 }
 
 # ── 5. Deploy Agent ────────────────────────────────────────────────────────────
 if ($Only -eq "all" -or $Only -eq "agent") {
     Run "Deploy Agent -> magicappdev-agent" "$Root\packages\agent" {
-        pnpm run deploy
+        bun run deploy
     }
 }
 

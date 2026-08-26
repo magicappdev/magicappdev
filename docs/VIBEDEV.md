@@ -106,7 +106,7 @@ After generation, summarize what was built:
 > - **New task form** — fill in a title, pick who it's for, and set a due date
 > - **Login** — uses your GitHub account to keep things private
 >
-> To add it to your project, run `pnpm dev` in your project folder. Want me to add anything else?"
+> To add it to your project, run `bun run dev` in your project folder. Want me to add anything else?"
 
 Never paste code snippets at users. If they want to see the code, they can open it in the editor.
 
@@ -251,7 +251,7 @@ Agent:  Creating your shift-log app…
         - **Log Shift form** — enter your name, then tap "Opened" or "Closed"
         - **History** — scroll back through past days to see all logs
 
-        Run `pnpm dev` to preview it. Want me to add anything — like a way to export
+        Run `bun run dev` to preview it. Want me to add anything — like a way to export
         the logs to a spreadsheet?
 ```
 

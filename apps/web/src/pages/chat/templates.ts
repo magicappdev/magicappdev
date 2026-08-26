@@ -1,9 +1,5 @@
 export type TemplateCategory =
-  | "all"
-  | "app"
-  | "landing"
-  | "component"
-  | "dashboard";
+  "all" | "app" | "landing" | "component" | "dashboard";
 
 export interface Template {
   id: string;

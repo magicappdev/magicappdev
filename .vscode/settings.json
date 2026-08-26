@@ -127,7 +127,7 @@
       "command": {
         "command": "run",
         "script": "build:app",
-        "type": "pnpm"
+        "type": "bun"
       },
       "enabled": true,
       "id": "buildapp",
@@ -140,7 +140,7 @@
       "command": {
         "command": "run",
         "script": "build:web",
-        "type": "pnpm"
+        "type": "bun"
       },
       "enabled": true,
       "id": "buildweb",
@@ -153,7 +153,7 @@
       "command": {
         "command": "run",
         "script": "check",
-        "type": "pnpm"
+        "type": "bun"
       },
       "enabled": true,
       "id": "check",
@@ -167,7 +167,7 @@
         "args": ["--target", "emulator-5554"],
         "command": "run",
         "script": "android",
-        "type": "pnpm"
+        "type": "bun"
       },
       "enabled": true,
       "id": "android",
@@ -180,7 +180,7 @@
       "command": {
         "command": "run",
         "script": "web",
-        "type": "pnpm"
+        "type": "bun"
       },
       "enabled": true,
       "id": "web",

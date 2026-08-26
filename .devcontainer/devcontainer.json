@@ -27,7 +27,7 @@
         "eslint.workingDirectories": ["src", "webview-ui", "cli"],
         "prettier.requireConfig": true,
         "editor.formatOnSave": true,
-        "npmPackageManager.defaultPackageManager": "pnpm",
+        "npmPackageManager.defaultPackageManager": "bun",
         "npmPackageManager.debug": true,
         "editor.codeActionsOnSave": {
           "source.fixAll.eslint": "explicit"
@@ -38,7 +38,7 @@
             "text": "🔨 Build",
             "tooltip": "Run build command",
             "command": {
-              "type": "pnpm",
+              "type": "bun",
               "command": "run",
               "script": "build"
             },
@@ -51,7 +51,7 @@
             "text": "🔨 Build Cli",
             "tooltip": "Run build command",
             "command": {
-              "type": "pnpm",
+              "type": "bun",
               "command": "run",
               "script": "cli:build"
             },
@@ -64,7 +64,7 @@
             "text": "⚠️ Check-types",
             "tooltip": "Run check-types command",
             "command": {
-              "type": "pnpm",
+              "type": "bun",
               "command": "run",
               "script": "check-types"
             },
@@ -77,7 +77,7 @@
             "text": "☁️ Cli Dev",
             "tooltip": "Run cli:dev command",
             "command": {
-              "type": "pnpm",
+              "type": "bun",
               "command": "run",
               "script": "cli:dev"
             },
@@ -115,7 +115,7 @@
   },
   "containerEnv": {
     "NODE_ENV": "development",
-    "PNPM_HOME": "/root/.local/share/pnpm"
+    "BUN_INSTALL": "/root/.bun"
   },
   "containerUser": "root",
   "remoteUser": "root",

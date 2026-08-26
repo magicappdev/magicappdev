@@ -6,7 +6,7 @@
 
 ### Key Technologies
 
-- **Package Manager**: `pnpm` (with workspaces)
+- **Package Manager**: `Bun` (with workspaces)
 - **Monorepo Orchestration**: `Turborepo` & `Nx`
 - **Language**: `TypeScript`
 - **Frameworks**: `Next.js` (intended for web), `React Native` (intended for mobile)
@@ -35,13 +35,13 @@ The workspace uses `Turborepo` and `Nx` for task execution.
 
 ### Key Commands
 
-- **Install Dependencies**: `pnpm install`
-- **Build All**: `pnpm build` (runs `nx run-many --target=build --all`)
-- **Typecheck All**: `pnpm typecheck` (runs `nx run-many --target=typecheck --all`)
-- **Format Code**: `pnpm format` (uses Prettier)
-- **Check Formatting**: `pnpm format:check`
-- **Linting**: Tasks defined in `turbo.json` (e.g., `pnpm turbo lint`)
-- **Nx release**: `npx nx release` (for versioning and publishing)
+- **Install Dependencies**: `bun install`
+- **Build All**: `bun run build` (runs `nx run-many --target=build --all`)
+- **Typecheck All**: `bun run typecheck` (runs `nx run-many --target=typecheck --all`)
+- **Format Code**: `bun run format` (uses Prettier)
+- **Check Formatting**: `bun run format:check`
+- **Linting**: Tasks defined in `turbo.json` (e.g., `bun run turbo lint`)
+- **Nx release**: `bunx nx release` (for versioning and publishing)
 
 ---
 
@@ -55,7 +55,7 @@ The workspace uses `Turborepo` and `Nx` for task execution.
 
 ### Workspace Management
 
-- **Adding Packages**: Use `pnpm nx g @nx/js:lib packages/<name>` for new libraries.
+- **Adding Packages**: Use `bunx nx g @nx/js:lib packages/<name>` for new libraries.
 - **Task Pipelines**: Defined in `turbo.json`. Build tasks typically depend on `typecheck` and `format`.
 - **Caching**: Local and remote caching is enabled via Turborepo and Nx.
 
@@ -70,7 +70,7 @@ The workspace uses `Turborepo` and `Nx` for task execution.
 
 The project is currently in the **initial scaffolding phase**.
 
-- **Root structure**: Established with `pnpm`, `Turbo`, and `Nx`.
+- **Root structure**: Established with `Bun`, `Turbo`, and `Nx`.
 - **Apps**: `@magicappdev/web` is initialized as a placeholder.
 - **Packages**: Ready for implementation as per `Plan.md`.
 

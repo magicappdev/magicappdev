@@ -74,11 +74,7 @@ export interface ListTemplatesRequest extends PaginationParams {
 export type ListTemplatesResponse = PaginatedResponse<Template>;
 /** AI provider type */
 export type AiProvider =
-  | "workers-ai"
-  | "openai"
-  | "anthropic"
-  | "gemini"
-  | "openrouter";
+  "workers-ai" | "openai" | "anthropic" | "gemini" | "openrouter";
 /** AI chat message role */
 export type AiMessageRole = "system" | "user" | "assistant";
 /** AI chat message */

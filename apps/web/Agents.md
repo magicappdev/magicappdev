@@ -42,8 +42,8 @@ The `@magicappdev/web` application is the primary Next.js-based interface for Ma
 
 ## Usage Guidelines
 
-- Run `pnpm dev` for local development.
-- Use `pnpm build` to prepare for Cloudflare deployment.
+- Run `bun run dev` for local development.
+- Use `bun run build` to prepare for Cloudflare deployment.
 - Leverage the `components/ui` directory for consistent design language.
 
 ## Next Steps

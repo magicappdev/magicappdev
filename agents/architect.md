@@ -151,9 +151,9 @@ Format:
 
 **After implementation:**
 
-- Run all tests: `pnpm test`
-- Run typecheck: `pnpm typecheck`
-- Run lint: `pnpm lint`
+- Run all tests: `bun run test`
+- Run typecheck: `bun run typecheck`
+- Run lint: `bun run lint`
 - Verify no circular dependencies (if tool available)
 - Check that the code still follows the same patterns
 
@@ -186,7 +186,7 @@ Format:
 - `apps/`: mobile, web, api, agent, llmchat
 - `packages/`: shared, ui, cli, db, templates, axiom
 - Nx for task orchestration
-- pnpm workspaces
+- Bun workspaces
 
 **Key Architectural Considerations:**
 

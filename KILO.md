@@ -25,7 +25,7 @@ MagicAppDev is a comprehensive fullstack app-building platform inspired by Expo 
 
 ### Technology Stack
 
-- **Package Management**: `pnpm` with workspaces
+- **Package Management**: `Bun` with workspaces
 - **Monorepo Orchestration**: `Turborepo` & `Nx`
 - **Language**: `TypeScript`
 - **Backend**: Cloudflare Workers with Hono framework
@@ -215,19 +215,19 @@ At the end of each interaction, Kilo Code:
 
 ```bash
 # Install dependencies
-pnpm install
+bun install
 
 # Build all packages
-pnpm build
+bun run build
 
 # Type check all projects
-pnpm typecheck
+bun run typecheck
 
 # Format code
-pnpm format
+bun run format
 
 # Run tests
-pnpm test
+bun run test
 ```
 
 ### Task Execution

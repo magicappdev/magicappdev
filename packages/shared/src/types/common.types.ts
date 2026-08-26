@@ -21,8 +21,7 @@ export type RequiredKeys<T, K extends keyof T> = T & Required<Pick<T, K>>;
 
 /** Result type for operations that can fail */
 export type Result<T, E = Error> =
-  | { success: true; data: T }
-  | { success: false; error: E };
+  { success: true; data: T } | { success: false; error: E };
 
 /** Async result type */
 export type AsyncResult<T, E = Error> = Promise<Result<T, E>>;

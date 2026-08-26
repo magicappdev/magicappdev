@@ -40,7 +40,7 @@ The `@magicappdev/cli` package is a command-line interface tool named `mad` (or 
 
 - Run `mad --help` to see available commands.
 - Use `mad completions install` to set up shell completions.
-- Ensure `node` and `pnpm` are installed in the environment.
+- Ensure `node` and `bun` are installed in the environment.
 
 ## Next Steps
 

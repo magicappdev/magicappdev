@@ -34,7 +34,7 @@ fi
 # Install dependencies (Node.js)
 if [ -f "$WORKTREE_PATH/package.json" ]; then
     cd "$WORKTREE_PATH"
-    pnpm install
+    bun install
 fi
 
 # Install dependencies (Python)

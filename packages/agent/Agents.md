@@ -36,7 +36,7 @@ The `@magicappdev/agent` package provides AI agent integration using the Cloudfl
 
 ## Usage Guidelines
 
-- Deploy using `pnpm run deploy` via Turborepo.
+- Deploy using `bun run deploy` via Turborepo.
 - Use `wrangler.test.toml` for verifying deployments in a test environment.
 - Leverage Durable Objects for cross-session state persistence.
 

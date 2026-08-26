@@ -6,7 +6,7 @@ Develop a comprehensive monorepo-based fullstack app building platform inspired 
 
 ## Core Components
 
-- **Monorepo Structure**: Use Turborepo with pnpm for package management, including local/remote caching, TypeScript, and Node.js/JS as preferred languages. Framework: Next.js for web components.
+- **Monorepo Structure**: Use Turborepo with Bun for package management, including local/remote caching, TypeScript, and Node.js/JS as preferred languages. Framework: Next.js for web components.
 - **CLI Tool**: Named `npx create-magicappdev-app`, similar to Ignite CLI. Features:
   - Generate/manage app code, components, packages.
   - Component generators for existing apps.
@@ -46,7 +46,7 @@ Develop a comprehensive monorepo-based fullstack app building platform inspired 
 - **AI Integration**: AI-powered code generation, error fixing, and suggestions.
 - **Deployment**: Seamless deploys to Cloudflare, with support for multiple providers.
 - **Development Tools**: Hot reload, linting, type checking, testing setups.
-- **Package Management**: pnpm + Turborepo with caching.
+- **Package Management**: Bun + Turborepo with caching.
 
 ## Repository & Publishing
 
@@ -55,7 +55,7 @@ Develop a comprehensive monorepo-based fullstack app building platform inspired 
 
 ## Project Status (January 2026)
 
-- **Monorepo**: Fully established with pnpm, Turbo, and Nx. Clean linting and typechecking across all 8 projects.
+- **Monorepo**: Fully established with Bun, Turbo, and Nx. Clean linting and typechecking across all 8 projects.
 - **API**: Functional Hono-based API on Cloudflare Workers with D1/Drizzle integration for Auth, Projects, and AI.
 - **Auth System**: Comprehensive GitHub OAuth system implemented for Web, Mobile, and CLI. Support for JWT and session management.
 - **Web**: Modern Next.js application with real-time AI Chat streaming and full Project management.
@@ -106,7 +106,7 @@ Previously, typing "Build a compound interest calculator" returned raw markdown 
 
 - **Dark Mode**: Implemented full dark mode support with Light/Dark/Auto theme modes
 - **App Icons**: Converted all icons from JPG to PNG with transparency support
-- **Metro Bundler**: Fixed SHA-1 errors and file watching issues on Windows/pnpm
+- **Metro Bundler**: Fixed SHA-1 errors and file watching issues on Windows
 - **Android Build**: Fixed CMake path length issues (205→~180 chars)
 - **Theme System**: Created comprehensive theme constants and ThemeProvider context
 
@@ -141,7 +141,7 @@ Previously, typing "Build a compound interest calculator" returned raw markdown 
 
 ## Implementation Steps
 
-1. [x] Set up Turborepo monorepo with pnpm.
+1. [x] Set up Turborepo monorepo.
 2. [ ] Develop CLI tool with core generators and management features.
 3. [x] Build Next.js webpage with AI chat and deployment tools.
 4. [x] Create React Native app with shared features.

@@ -37,8 +37,8 @@ The `@magicappdev/database` package provides the data persistence layer for Magi
 
 ## Usage Guidelines
 
-- Run `pnpm generate` to create migrations from schema changes.
-- Use `pnpm push:local` or `pnpm migrate:prod` for applying changes.
+- Run `bun run generate` to create migrations from schema changes.
+- Use `bun run migrate:local` or `bun run migrate:prod` for applying changes.
 - Handle relations carefully within Cloudflare Worker memory constraints.
 
 ## Next Steps

@@ -6,13 +6,7 @@ import type { ProjectConfig, ProjectFramework } from "./app.types";
 
 /** CLI command names */
 export type CliCommand =
-  | "init"
-  | "generate"
-  | "add"
-  | "doctor"
-  | "update"
-  | "build"
-  | "deploy";
+  "init" | "generate" | "add" | "doctor" | "update" | "build" | "deploy";
 
 /** Generator types */
 export type GeneratorType = "app" | "component" | "screen" | "api" | "hook";

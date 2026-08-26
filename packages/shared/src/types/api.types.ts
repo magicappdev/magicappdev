@@ -20,8 +20,7 @@ export interface ApiErrorResponse {
 
 /** API response wrapper */
 export type ApiResponse<T> =
-  | { success: true; data: T }
-  | { success: false; error: ApiErrorResponse };
+  { success: true; data: T } | { success: false; error: ApiErrorResponse };
 
 /** Auth request - login */
 export interface LoginRequest {
@@ -81,11 +80,7 @@ export type ListTemplatesResponse = PaginatedResponse<Template>;
 
 /** AI provider type */
 export type AiProvider =
-  | "workers-ai"
-  | "openai"
-  | "anthropic"
-  | "gemini"
-  | "openrouter";
+  "workers-ai" | "openai" | "anthropic" | "gemini" | "openrouter";
 
 /** AI chat message role */
 export type AiMessageRole = "system" | "user" | "assistant";

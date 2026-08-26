@@ -13,7 +13,7 @@ This document provides detailed documentation for each package in the MagicAppDe
 
 ## Tech Stack Overview
 
-- **Monorepo Management**: Turborepo with pnpm for package management, including local/remote caching
+- **Monorepo Management**: Turborepo with Bun for package management, including local/remote caching
 - **Backend**: Cloudflare Workers with Hono framework
 - **Database**: Cloudflare D1 with Drizzle ORM
 - **Frontend (Web)**: Next.js with TypeScript
@@ -62,7 +62,7 @@ Database utilities with Drizzle ORM for Cloudflare D1, providing the foundation 
 #### Usage Guidelines
 
 - Use Drizzle ORM for database operations.
-- Ensure proper schema management using Drizzle Kit (`pnpm generate`).
+- Ensure proper schema management using Drizzle Kit (`bun run generate`).
 - Use `migrate:prod` to apply migrations to Cloudflare D1.
 - Relations are currently handled manually via joined queries in the API to ensure stability in the Worker environment.
 
@@ -349,7 +349,7 @@ Ionicframeworkd based mobile application mirroring the web interface features, p
 - ✅ Streaming AI Chat
 - ✅ Dark Mode support with Light/Dark/Auto themes
 - ✅ App icons converted to PNG with transparency
-- ✅ Metro bundler fixes for Windows/pnpm
+- ✅ Metro bundler fixes for Windows
 - ✅ Android build path length issues resolved
 
 #### Usage Guidelines
@@ -375,7 +375,7 @@ Ionicframeworkd based mobile application mirroring the web interface features, p
 
 - **Turborepo**: Primary build system with caching
 - **Nx**: Secondary build system for project management
-- **pnpm**: Package management with workspaces
+- **Bun**: Package management with workspaces
 
 ### Current Issues & Optimizations Needed
 
@@ -471,14 +471,14 @@ This document provides a comprehensive overview of the architecture, dependencie
 
 ### 1. Build, Lint, and Quality Commands
 
-Always run these commands from the root directory using `pnpm`.
+Always run these commands from the root directory using Bun.
 
-- **Build Everything**: `pnpm build` (uses Turborepo)
+- **Build Everything**: `bun run build` (uses Turborepo)
 - **Build Package**: `turbo build --filter=@magicappdev/<package-name>`
-- **Format Code**: `pnpm format` (runs Prettier)
-- **Fix Linting**: `pnpm lint:fix` (runs ESLint)
-- **Typecheck All**: `pnpm typecheck` (runs Nx/TypeScript)
-- **Full Check**: `pnpm check` (format + lint:fix + typecheck + build)
+- **Format Code**: `bun run format` (runs Prettier)
+- **Fix Linting**: `bun run lint:fix` (runs ESLint)
+- **Typecheck All**: `bun run typecheck` (runs Nx/TypeScript)
+- **Full Check**: `bun run check` (format + lint:fix + typecheck + build)
 
 ### 2. Code Style Guidelines
 
@@ -558,6 +558,6 @@ Adhere to the `.prettierrc` configuration:
 ### 3. Testing and Quality Assurance
 
 - **Framework**: Vitest is used for unit and integration tests.
-- **Execution**: Run `pnpm test` to execute all tests in the workspace.
+- **Execution**: Run `bun run test` to execute all tests in the workspace.
 - **Continuous Integration**: GitHub Actions runs linting, typechecking, and tests on every push.
 - **Pre-commit Workflow**: Husky and lint-staged ensure code quality before commits.

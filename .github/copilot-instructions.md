@@ -22,12 +22,12 @@ guidelines, and generation pipeline details.
 
 ## Repository Overview
 
-MagicAppDev is a fullstack app-building platform (Expo/Ignite-inspired) deployed entirely on Cloudflare Workers. It is a **pnpm monorepo** orchestrated by both **Turborepo** (primary build pipeline) and **Nx** (project-graph awareness).
+MagicAppDev is a fullstack app-building platform (Expo/Ignite-inspired) deployed entirely on Cloudflare Workers. It is a **Bun monorepo** orchestrated by both **Turborepo** (primary build pipeline) and **Nx** (project-graph awareness).
 
 ```
 apps/
   web/        # React + Vite + Cloudflare Workers Pages (@magicappdev/web)
-  mobile/     # Ionic + Capacitor (separate pnpm workspace)
+  mobile/     # Ionic + Capacitor (separate Bun workspace)
 packages/
   api/        # Hono on Cloudflare Workers (@magicappdev/api)
   database/   # Drizzle ORM + Cloudflare D1 (@magicappdev/database)
@@ -51,12 +51,12 @@ packages/
 
 ```bash
 # Full workspace
-pnpm build              # Turborepo build pipeline (respects task deps)
-pnpm typecheck          # All projects
-pnpm lint               # All projects
-pnpm lint:fix           # Auto-fix linting
-pnpm format             # Prettier across repo
-pnpm test               # All unit tests (Vitest)
+bun run build           # Turborepo build pipeline (respects task deps)
+bun run typecheck       # All projects
+bun run lint            # All projects
+bun run lint:fix        # Auto-fix linting
+bun run format          # Prettier across repo
+bun run test            # All unit tests (Vitest)
 
 # Single project (prefer nx over direct tooling)
 nx run @magicappdev/api:build
@@ -64,26 +64,26 @@ nx run @magicappdev/web:typecheck
 nx run @magicappdev/shared:test
 
 # Single test file (from a package dir)
-pnpm vitest run src/path/to/file.test.ts
+bun run vitest run src/path/to/file.test.ts
 
 # API dev server (Wrangler)
-cd packages/api && pnpm dev          # http://localhost:8787
+cd packages/api && bun run dev      # http://localhost:8787
 
 # Web dev server
-cd apps/web && pnpm dev              # http://localhost:3100
+cd apps/web && bun run dev          # http://localhost:3100
 
 # Database
 cd packages/database
-pnpm generate          # Generate Drizzle migration files
-pnpm migrate:local     # Apply migrations to local Wrangler D1 state
-pnpm migrate:prod      # Apply migrations to production D1
+bun run generate        # Generate Drizzle migration files
+bun run migrate:local   # Apply migrations to local Wrangler D1 state
+bun run migrate:prod    # Apply migrations to production D1
 
 # Deploy individual packages
-pnpm deploy:api
-pnpm deploy:web
+bun run deploy:api
+bun run deploy:web
 ```
 
-**Important**: Turborepo's `build` task depends on `typecheck`. Running `pnpm build` will typecheck all packages first. Use `nx run-many --target=build` if you need to skip or isolate.
+**Important**: Turborepo's `build` task depends on `typecheck`. Running `bun run build` will typecheck all packages first. Use `nx run-many --target=build` if you need to skip or isolate.
 
 ## Architecture
 
@@ -192,8 +192,8 @@ chore: maintenance
 
 1. Create `packages/database/src/schema/<table>.ts` following the existing pattern
 2. Add it to `packages/database/src/schema/index.ts` (both `schema` object and `export *`)
-3. Run `pnpm generate` from `packages/database/` to create the migration
-4. Apply locally with `pnpm migrate:local`
+3. Run `bun run generate` from `packages/database/` to create the migration
+4. Apply locally with `bun run migrate:local`
 
 ### Adding a new API route
 

@@ -73,7 +73,7 @@
 
 ### Security Vulnerabilities (P2)
 
-- [x] Added pnpm overrides for `esbuild>=0.25.0` and `jsondiffpatch>=0.6.0`
+- [x] Added dependency overrides for `esbuild>=0.25.0` and `jsondiffpatch>=0.6.0` (now via Bun overrides)
 - [x] Updated vulnerable transitive dependencies
 
 ### CLI Enhancements (P3)
@@ -109,7 +109,7 @@
 
 **Status:** ✅ Fixed
 
-- Added pnpm overrides for vulnerable packages
+- Added dependency overrides for vulnerable packages
 
 ---
 
@@ -158,9 +158,9 @@
 ### Available Scripts (apps/mobile)
 
 ```bash
-pnpm run version:patch   # 0.0.3 → 0.0.4, buildNumber: 3 → 4
-pnpm run version:minor   # 0.0.3 → 0.1.0, buildNumber: 3 → 4
-pnpm run version:major   # 0.0.3 → 1.0.0, buildNumber: 3 → 4
+bun run version:patch   # 0.0.3 → 0.0.4, buildNumber: 3 → 4
+bun run version:minor   # 0.0.3 → 0.1.0, buildNumber: 3 → 4
+bun run version:major   # 0.0.3 → 1.0.0, buildNumber: 3 → 4
 ```
 
 **Completed:**

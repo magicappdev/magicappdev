@@ -6,8 +6,8 @@ Optimize the MagicAppDev monorepo for reliable, fast, and cache-friendly develop
 
 ## 🏗️ Setup Instructions for Jules
 
-- **Node/pnpm**: Use `pnpm@10.x` and `Node 18+`.
-- **Setup Command**: Run `pnpm install` at the root.
+- **Node/Bun**: Use `Bun (>=1.3.0)` and `Node 18+`.
+- **Setup Command**: Run `bun install` at the root.
 
 ## 🛠️ Tasks for Jules
 
@@ -15,16 +15,16 @@ Optimize the MagicAppDev monorepo for reliable, fast, and cache-friendly develop
 
 - **Nx Integration**: Ensure `apps/web` and `apps/mobile` are first-class citizens in Nx.
 - **Action**: Add missing targets to `apps/mobile/project.json` for all Expo/Android/iOS commands.
-- **Action**: Verify that `pnpm run check` correctly triggers all necessary builds and tests without cache-misses for unchanged code.
+- **Action**: Verify that `bun run check` correctly triggers all necessary builds and tests without cache-misses for unchanged code.
 
 ## 🚀 Verification Steps
 
-1. **Full Check**: `pnpm run check` (root)
-2. **Nx Verification**: `npx nx run-many --target=lint,typecheck,build,test --all`
+1. **Full Check**: `bun run check` (root)
+2. **Nx Verification**: `bunx nx run-many --target=lint,typecheck,build,test --all`
 
 ## 📝 Deliverables
 
-- Replacement of `postinstall` patch with `pnpm patch`.
+- Replacement of `postinstall` patch with dependency overrides (now Bun overrides).
 - Shortened Android build paths in `app.json`.
 - Comprehensive `project.json` for all apps.
 - Verified "Zero Manual Clean" development workflow.

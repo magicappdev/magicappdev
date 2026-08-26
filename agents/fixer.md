@@ -160,9 +160,9 @@ Format:
 
 **After the fix:**
 
-- Run all tests: `pnpm test`
-- Run typecheck: `pnpm typecheck`
-- Run lint: `pnpm lint`
+- Run all tests: `bun run test`
+- Run typecheck: `bun run typecheck`
+- Run lint: `bun run lint`
 - Reproduce original bug - confirm it's fixed
 - Test related functionality
 - Check for similar issues in codebase
@@ -236,7 +236,7 @@ Format:
 **Known Issue Areas:**
 
 - **expo-router**: Requires manual patching for React 18/19 compatibility
-- **Metro bundler**: Path resolution in monorepo with pnpm
+- **Metro bundler**: Path resolution in monorepo with Bun
 - **Windows build**: Path length limits with Gradle CXX cache
 - **TypeScript**: Path mapping for workspace packages
 - **React Native Web**: Platform-specific imports

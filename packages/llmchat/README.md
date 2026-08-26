@@ -24,6 +24,7 @@ This template demonstrates how to build an AI-powered chat interface using Cloud
 - 📱 Mobile-friendly design
 - 🔄 Maintains chat history on the client
 - 🔎 Built-in Observability logging
+
 <!-- dash-content-end -->
 
 ## Getting Started

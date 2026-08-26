@@ -5,7 +5,6 @@
     "apps/*": {},
     "packages/*": {}
   },
-  "pnpm": true,
   "typescript": true,
   "eslint": true,
   "prettier": true,

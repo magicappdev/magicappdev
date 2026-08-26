@@ -95,19 +95,10 @@ export interface TemplateVariable {
 }
 /** Deployment provider */
 export type DeploymentProvider =
-  | "cloudflare-pages"
-  | "cloudflare-workers"
-  | "vercel"
-  | "netlify"
-  | "expo-eas";
+  "cloudflare-pages" | "cloudflare-workers" | "vercel" | "netlify" | "expo-eas";
 /** Deployment status */
 export type DeploymentStatus =
-  | "pending"
-  | "building"
-  | "deploying"
-  | "success"
-  | "failed"
-  | "cancelled";
+  "pending" | "building" | "deploying" | "success" | "failed" | "cancelled";
 /** Deployment */
 export interface Deployment {
   id: Id;

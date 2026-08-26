@@ -9,7 +9,7 @@ You are an expert developer for the MagicAppDev platform. This skill provides gu
 
 ## Platform Architecture
 
-The project is a monorepo managed by `pnpm`, `Turbo`, and `Nx`.
+The project is a monorepo managed by `Bun`, `Turbo`, and `Nx`.
 
 ### Core Components
 
@@ -28,14 +28,14 @@ The project is a monorepo managed by `pnpm`, `Turbo`, and `Nx`.
 1.  Create the template file in `packages/templates/src/templates/`.
 2.  Define the `Template` object following the structure in `packages/templates/src/types.ts`.
 3.  Export the template from `packages/templates/src/templates/index.ts`.
-4.  Rebuild the templates package: `pnpm build` in `packages/templates`.
+4.  Rebuild the templates package: `bun run build` in `packages/templates`.
 
 ### Updating the Database Schema
 
 1.  Modify files in `packages/database/src/schema/`.
 2.  Ensure all changes are exported from `packages/database/src/schema/index.ts`.
-3.  Generate migrations: `pnpm run generate` in `packages/database`.
-4.  Apply migrations locally: `pnpm run migrate:local` in `packages/database`.
+3.  Generate migrations: `bun run generate` in `packages/database`.
+4.  Apply migrations locally: `bun run migrate:local` in `packages/database`.
 
 ### Extending the API
 
@@ -71,14 +71,14 @@ import { someUtil } from "./utils.js";
 
 ```bash
 # Full build
-pnpm build
+bun run build
 
 # Run linting
-pnpm lint
+bun run lint
 
 # Start development servers
-pnpm dev
+bun run dev
 
 # Generate Drizzle migrations
-pnpm --filter @magicappdev/database run generate
+cd packages/database && bun run generate
 ```

@@ -40,9 +40,7 @@ generateTemplate("blank-app", { name: "MyApp" });
 import { registry, generateComponent } from "@magicappdev/templates";
 
 // Register a custom template
-registry.addTemplate("custom-app", {
-  /* template config */
-});
+registry.addTemplate("custom-app", {/* template config */});
 
 // Generate a component
 generateComponent("button", { label: "Click Me" });

@@ -28,8 +28,10 @@ LABEL org.opencontainers.image.authors="MagicAppDev"
 
 # EXPOSE 3100 5173 8100 3030
 
-# Enable corepack for pnpm
-RUN corepack enable && corepack prepare pnpm@10.28.2 --activate
+# Install Bun
+RUN curl -fsSL https://bun.sh/install | bash
+ENV BUN_INSTALL="/root/.bun"
+ENV PATH="/root/.bun/bin:$PATH"
 
 # Install global tools
 # RUN npm install -g turbo typescript
@@ -37,13 +39,6 @@ RUN corepack enable && corepack prepare pnpm@10.28.2 --activate
 # Set working directory
 # WORKDIR /workspace/magicappdev
 WORKDIR /workspace
-# Set environment variables
-# ENV NODE_ENV=development
-# ENV PNPM_HOME="/home/node/.local/share/pnpm"
-# ENV PATH="$PNPM_HOME:$PATH"
-
-# Create pnpm directories for root user and set PATH
-RUN mkdir -p /root/.local/share/pnpm && echo 'export PNPM_HOME="/root/.local/share/pnpm"' >> /etc/bash.bashrc && echo 'export PATH="/root/.local/share/pnpm:$PATH"' >> /etc/bash.bashrc
 
 # HEALTHCHECK --interval=5m --timeout=3s \
 #     CMD [ "curl","-f","http://localhost:3100/", "||", "exit", "1" ] 
