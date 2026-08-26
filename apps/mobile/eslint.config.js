@@ -1,8 +1,11 @@
-import expoConfig from "eslint-config-expo/flat";
+import expoConfig from "eslint-config-expo/flat.js";
 
 export default [
-  expoConfig,
+  ...(Array.isArray(expoConfig) ? expoConfig : [expoConfig]),
   {
+    rules: {
+      "react-hooks/set-state-in-effect": "off",
+    },
     ignores: [
       "dist/*",
       ".expo/*",

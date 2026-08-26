@@ -24,9 +24,10 @@ export default function ProjectsScreen() {
       setError(null);
       const data = await api.getProjects();
       setProjects(data);
-    } catch (err: any) {
-      setError(err?.message || "Failed to load projects");
-      if (err?.message?.includes("expired") || err?.message?.includes("Unauthorized")) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to load projects";
+      setError(message);
+      if (message.includes("expired") || message.includes("Unauthorized")) {
         await secureStorage.removeItem("magicappdev_access_token");
         router.replace("/");
       }

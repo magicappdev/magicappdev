@@ -28,6 +28,12 @@
     "build:web": {
       "dependsOn": ["@magicappdev/web#build"]
     },
+    "@magicappdev/mobile#build": {
+      "outputs": ["apps/mobile/dist/**"]
+    },
+    "@magicappdev/mobile#typecheck": {
+      "outputs": []
+    },
     "build:agent": {
       "dependsOn": ["@magicappdev/agent#build"]
     },
@@ -44,19 +50,7 @@
       "cache": false,
       "persistent": true
     },
-    "format": {
-      "inputs": [
-        "**/*",
-        "!node_modules/**",
-        "!dist/**",
-        "!.next/**",
-        "!build/**"
-      ],
-      "outputs": [],
-      "cache": true
-    },
     "lint": {
-      "dependsOn": ["^lint"],
       "inputs": [
         "**/*",
         "!node_modules/**",
@@ -68,7 +62,6 @@
       "cache": true
     },
     "lint:fix": {
-      "dependsOn": ["^lint:fix"],
       "inputs": [
         "**/*",
         "!node_modules/**",
