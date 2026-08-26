@@ -29,7 +29,7 @@
       "dependsOn": ["@magicappdev/web#build"]
     },
     "@magicappdev/mobile#build": {
-      "outputs": ["apps/mobile/dist/**"]
+      "outputs": ["dist/**", "apps/mobile/dist/**"]
     },
     "@magicappdev/mobile#typecheck": {
       "outputs": []
