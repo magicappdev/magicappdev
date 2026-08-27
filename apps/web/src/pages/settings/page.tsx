@@ -4,6 +4,7 @@ import {
   Shield,
   Globe,
   Zap,
+  Key,
   LucideIcon,
   Loader2,
   Link2,
@@ -13,13 +14,15 @@ import {
 } from "lucide-react";
 import { Typography } from "@/components/ui/Typography";
 import { useAuth } from "../../contexts/AuthContext";
+import AiProviderSettingsPage from "./ai-provider";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 
-type SettingsTab = "profile" | "api" | "notifications" | "security" | "region";
+type SettingsTab =
+  "profile" | "api" | "ai-provider" | "notifications" | "security" | "region";
 
 interface LinkedAccount {
   id: string;
@@ -276,6 +279,12 @@ export default function SettingsPage() {
             label="API Keys"
             active={activeTab === "api"}
             onClick={() => setActiveTab("api")}
+          />
+          <SettingsNavItem
+            icon={Key}
+            label="AI Providers (BYOK)"
+            active={activeTab === "ai-provider"}
+            onClick={() => setActiveTab("ai-provider")}
           />
           <SettingsNavItem
             icon={Bell}
@@ -630,6 +639,8 @@ export default function SettingsPage() {
               )}
             </Card>
           )}
+
+          {activeTab === "ai-provider" && <AiProviderSettingsPage />}
 
           {activeTab === "notifications" && (
             <Card className="p-6 space-y-6">
