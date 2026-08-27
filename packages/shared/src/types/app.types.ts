@@ -126,3 +126,29 @@ export interface Deployment {
   startedAt: Timestamp;
   completedAt?: Timestamp;
 }
+
+/** AI Provider type */
+export type AIProviderType =
+  "openai" | "anthropic" | "deepseek" | "groq" | "custom";
+
+/** User AI Key */
+export interface UserAiKey {
+  id: Id;
+  userId: Id;
+  provider: AIProviderType;
+  apiKey: string;
+  baseUrl?: string;
+  modelName?: string;
+  isDefault?: boolean;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+/** New User AI Key input */
+export interface NewUserAiKey {
+  provider: AIProviderType;
+  apiKey: string;
+  baseUrl?: string;
+  modelName?: string;
+  isDefault?: boolean;
+}
