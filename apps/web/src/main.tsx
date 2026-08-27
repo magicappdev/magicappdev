@@ -1,4 +1,5 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import ProjectWorkspacePage from "./pages/projects/workspace";
 import ProjectSettingsPage from "./pages/projects/settings";
 import ProjectPreviewPage from "./pages/projects/preview";
 import ProjectDetailPage from "./pages/projects/detail";
@@ -39,6 +40,10 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             <Route
               path="/projects/:id/settings"
               element={<ProjectSettingsPage />}
+            />
+            <Route
+              path="/projects/:id/workspace"
+              element={<ProjectWorkspacePage />}
             />
             <Route
               path="/projects/:id/preview"

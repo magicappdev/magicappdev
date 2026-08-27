@@ -13,6 +13,7 @@ import {
   Monitor,
   Paperclip,
   PenTool,
+  Save,
   Send,
   Sparkles,
   Star,
@@ -40,8 +41,9 @@ import {
   Tooltip,
   TooltipProvider,
 } from "@cloudflare/kumo";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import Preview, { type PreviewFile } from "@/components/ui/Preview.js";
-import React, { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 interface Message {
@@ -748,8 +750,10 @@ export default function ChatPage() {
   const [isGeneratingStitch, setIsGeneratingStitch] = useState(false);
   const [showDeployModal, setShowDeployModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const pendingFilesRef = useRef<GeneratedFile[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const navigate = useNavigate();
 
   const wsRef = useRef<WebSocket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -1070,6 +1074,29 @@ export default function ChatPage() {
     textareaRef.current?.focus();
   };
 
+  const handleSaveToProject = useCallback(async () => {
+    if (!generatedProject || isSaving) return;
+    setIsSaving(true);
+    try {
+      const { api } = await import("@/lib/api.js");
+      const project = await api.createProject({
+        name: generatedProject.projectName,
+      });
+      await api.bulkSaveProjectFiles(
+        project.id,
+        generatedProject.files.map(f => ({
+          path: f.path,
+          content: f.content,
+        })),
+      );
+      navigate(`/projects/${project.id}/workspace`);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to save project");
+    } finally {
+      setIsSaving(false);
+    }
+  }, [generatedProject, isSaving, navigate]);
+
   return (
     <TooltipProvider>
       <div className="flex flex-col h-full bg-[#0a0a0a] text-white overflow-hidden">
@@ -1218,6 +1245,22 @@ export default function ChatPage() {
                     <Button
                       type="button"
                       size="sm"
+                      variant="primary"
+                      onClick={handleSaveToProject}
+                      disabled={isSaving}
+                      icon={
+                        isSaving ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Save className="w-3.5 h-3.5" />
+                        )
+                      }
+                    >
+                      {isSaving ? "Saving…" : "Save"}
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
                       variant="secondary"
                       onClick={() => setShowExportModal(true)}
                       icon={<Github className="w-3.5 h-3.5" />}
@@ -1227,7 +1270,7 @@ export default function ChatPage() {
                     <Button
                       type="button"
                       size="sm"
-                      variant="primary"
+                      variant="secondary"
                       onClick={() => setShowDeployModal(true)}
                       icon={<Cloud className="w-3.5 h-3.5" />}
                     >
@@ -1327,6 +1370,22 @@ export default function ChatPage() {
                           icon={<Monitor className="w-3.5 h-3.5" />}
                         >
                           Preview
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="primary"
+                          onClick={handleSaveToProject}
+                          disabled={isSaving}
+                          icon={
+                            isSaving ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <FolderOpen className="w-3.5 h-3.5" />
+                            )
+                          }
+                        >
+                          {isSaving ? "Saving…" : "Save to Project"}
                         </Button>
                         <Button
                           type="button"
