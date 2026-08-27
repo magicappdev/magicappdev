@@ -10,12 +10,13 @@ import {
   Platform,
 } from "react-native";
 import { api } from "../lib/api";
-import type { AiMessage } from "@magicappdev/shared";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
 
-interface MessageItem extends AiMessage {
+interface MessageItem {
   id: string;
+  role: "system" | "user" | "assistant";
+  content: string;
 }
 
 interface AIModel {
