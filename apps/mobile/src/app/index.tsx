@@ -26,32 +26,35 @@ export default function LoginScreen() {
       setLoading(true);
       setError(null);
       const redirectUri = Linking.createURL("auth/callback");
+      console.log("Generated redirectUri:", redirectUri);
       const loginUrl = api.getGitHubLoginUrl("mobile", redirectUri);
+      console.log("Opening loginUrl:", loginUrl);
+
+      // On mobile development client, WebBrowser.openAuthSessionAsync often returns type 'cancel' or 'dismiss'
+      // because the browser redirects externally to GitHub and back to the custom scheme.
+      // Therefore, we also poll secureStorage or listen via Linking events rather than relying solely on openAuthSessionAsync result.
       const result = await WebBrowser.openAuthSessionAsync(
         loginUrl,
         redirectUri
       );
+      console.log("openAuthSessionAsync result:", result);
 
-      if (result.type === "success" && result.url) {
-        let redirectUrl = result.url;
-        if (redirectUrl.includes("expo-development-client/?url=")) {
-          const match = redirectUrl.match(/[?&]url=([^&]+)/);
+      let redirectResultUrl = result.type === "success" && result.url ? result.url : null;
+
+      if (redirectResultUrl) {
+        if (redirectResultUrl.includes("expo-development-client/?url=")) {
+          const match = redirectResultUrl.match(/[?&]url=([^&]+)/);
           if (match && match[1]) {
-            redirectUrl = decodeURIComponent(match[1]);
+            redirectResultUrl = decodeURIComponent(match[1]);
           }
         }
 
-        const parsed = Linking.parse(redirectUrl);
+        const parsed = Linking.parse(redirectResultUrl);
         let token = parsed.queryParams?.token as string;
         let refreshToken = parsed.queryParams?.refreshToken as string;
 
-        if (!token && redirectUrl.includes("?")) {
-          const params = new URLSearchParams(redirectUrl.split("?")[1]);
-          token = params.get("token") || "";
-          refreshToken = params.get("refreshToken") || "";
-        }
-        if (!token && redirectUrl.includes("#")) {
-          const params = new URLSearchParams(redirectUrl.split("#")[1]);
+        if (!token && redirectResultUrl.includes("?")) {
+          const params = new URLSearchParams(redirectResultUrl.split("?")[1]);
           token = params.get("token") || "";
           refreshToken = params.get("refreshToken") || "";
         }
@@ -64,10 +67,19 @@ export default function LoginScreen() {
             await secureStorage.setItem("magicappdev_refresh_token", refreshToken);
           }
           router.replace("/projects");
-        } else {
-          setError(`Authentication completed but no token returned. (URL: ${redirectUrl})`);
+          return;
         }
       }
+
+      // Fallback check: see if token was saved by AuthCallback listener in the background
+      setTimeout(async () => {
+        const savedToken = await secureStorage.getItem("magicappdev_access_token");
+        if (savedToken) {
+          api.setToken(savedToken);
+          router.replace("/projects");
+        }
+      }, 1000);
+
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Authentication failed";
       setError(message);
