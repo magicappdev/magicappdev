@@ -1,10 +1,20 @@
-import expoConfig from "eslint-config-expo/flat.js";
+import js from "@eslint/js";
 
 export default [
-  ...(Array.isArray(expoConfig) ? expoConfig : [expoConfig]),
+  js.configs.recommended,
   {
+    languageOptions: {
+      globals: {
+        require: "readonly",
+        module: "readonly",
+        __dirname: "readonly",
+        process: "readonly",
+        console: "readonly",
+      },
+    },
     rules: {
-      "react-hooks/set-state-in-effect": "off",
+      "no-unused-vars": "warn",
+      "no-undef": "error",
     },
     ignores: [
       "dist/*",
@@ -12,7 +22,6 @@ export default [
       "src/components/**/*",
       "src/app/explore.tsx",
       "scripts/**/*",
-      "metro.config.js",
       "eslint.config.js",
     ],
   },

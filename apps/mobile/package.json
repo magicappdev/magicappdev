@@ -48,7 +48,7 @@
     "dev": "expo start",
     "export:android": "expo export --platform android",
     "ios": "expo run:ios",
-    "lint": "expo lint",
+    "lint": "eslint .",
     "prebuild:android": "expo prebuild --platform android",
     "typecheck": "tsc --noEmit",
     "web": "expo start --web"
