@@ -4,6 +4,7 @@
 
 import { buttonComponentTemplate } from "./button-component.js";
 import { cfWorkersApiTemplate } from "./cf-workers-api.js";
+import { ecommerceTemplate } from "./ecommerce-store.js";
 import { reactSpaTemplate } from "./react-spa.js";
 import { ionicAppTemplate } from "./ionic-app.js";
 import { blankAppTemplate } from "./blank-app.js";
@@ -20,6 +21,7 @@ export const builtInTemplates = [
   buttonComponentTemplate,
   screenTemplate,
   reactSpaTemplate,
+  ecommerceTemplate,
   nextAppTemplate,
   cfWorkersApiTemplate,
   expoAppTemplate,
@@ -33,6 +35,7 @@ export {
   buttonComponentTemplate,
   screenTemplate,
   reactSpaTemplate,
+  ecommerceTemplate,
   nextAppTemplate,
   cfWorkersApiTemplate,
   expoAppTemplate,

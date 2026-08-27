@@ -1,0 +1,40 @@
+name: "Mobile CI/CD - Android & EAS"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/mobile/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/mobile/**"
+
+jobs:
+  build-mobile:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Typecheck mobile
+        run: npx tsc --noEmit
+
+      - name: Export Android static assets / bundle
+        run: npx expo export --platform android --output-dir dist
