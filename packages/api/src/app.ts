@@ -10,6 +10,7 @@ import { authMiddleware } from "./middlewares/auth.js";
 import { verifyTurnstile } from "./utils/turnstile.js";
 import { projectsRoutes } from "./routes/projects.js";
 import { ticketsRoutes } from "./routes/tickets.js";
+import { aiKeysRoutes } from "./routes/ai-keys.js";
 import { githubRoutes } from "./routes/github.js";
 import { exportRoutes } from "./routes/export.js";
 import { adminRoutes } from "./routes/admin.js";
@@ -103,6 +104,9 @@ export function createApp() {
 
   app.use("/ai*", authMiddleware);
   app.route("/ai", aiRoutes);
+
+  app.use("/ai-keys*", authMiddleware);
+  app.route("/ai-keys", aiKeysRoutes);
 
   app.use("/tickets*", authMiddleware);
   app.route("/tickets", ticketsRoutes);
