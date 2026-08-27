@@ -39,6 +39,20 @@ export default function RootLayout() {
           }}
         />
         <Tabs.Screen
+          name="settings/profile"
+          options={{
+            href: null, // Hidden from bottom tabs
+            title: "Profile Settings",
+          }}
+        />
+        <Tabs.Screen
+          name="settings/ai-provider"
+          options={{
+            href: null, // Hidden from bottom tabs
+            title: "AI Provider Settings",
+          }}
+        />
+        <Tabs.Screen
           name="auth/callback"
           options={{
             href: null,
