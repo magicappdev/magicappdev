@@ -40,13 +40,14 @@ jobs:
       - name: Check Formatting
         run: bun run format
 
-      - name: Nx Affected (lint, test, typecheck, build)
-        run: bunx nx affected -t lint test typecheck build --base=origin/main --head=HEAD
-        env:
-          NX_NO_CLOUD: true
+      - name: Typecheck
+        run: bun run typecheck
 
-      - name: Run Full Checks (if on main or if affected skipped)
-        if: github.ref == 'refs/heads/main'
-        run: bunx nx run-many -t lint test typecheck build --all
-        env:
-          NX_NO_CLOUD: true
+      - name: Lint
+        run: bun run lint
+
+      - name: Build
+        run: bun run build
+
+      - name: Test
+        run: bun run test
