@@ -12,6 +12,7 @@ import {
 import { api } from "../lib/api";
 import type { AiMessage } from "@magicappdev/shared";
 import { Ionicons } from "@expo/vector-icons";
+import { useTheme } from "../context/ThemeContext";
 
 interface MessageItem extends AiMessage {
   id: string;
@@ -24,6 +25,7 @@ interface AIModel {
 }
 
 export default function ChatScreen() {
+  useTheme();
   const [messages, setMessages] = useState<MessageItem[]>([
     { id: "init-1", role: "assistant", content: "Hello! What would you like to build today?" },
   ]);

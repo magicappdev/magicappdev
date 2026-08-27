@@ -34,14 +34,19 @@ const API_BASE_URL =
 
 export const api = new ApiClient(API_BASE_URL);
 
-// Initialize stored tokens on boot
-secureStorage.getItem(TOKEN_KEY).then(token => {
-  if (token) api.setToken(token);
-});
+// Initialize stored tokens synchronously / on boot
+export async function ensureApiToken() {
+  const token = await secureStorage.getItem(TOKEN_KEY);
+  if (token) {
+    api.setToken(token);
+  }
+  const refreshToken = await secureStorage.getItem(REFRESH_TOKEN_KEY);
+  if (refreshToken) {
+    api.setRefreshToken(refreshToken);
+  }
+}
 
-secureStorage.getItem(REFRESH_TOKEN_KEY).then(refreshToken => {
-  if (refreshToken) api.setRefreshToken(refreshToken);
-});
+ensureApiToken();
 
 api.onTokenRefresh = async (token: string) => {
   if (token) await secureStorage.setItem(TOKEN_KEY, token);

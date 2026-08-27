@@ -3,31 +3,34 @@ import { StatusBar } from "expo-status-bar";
 import React from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
+import { ThemeProvider, useTheme } from "../context/ThemeContext";
 
-export default function RootLayout() {
+function TabNavigator() {
+  const { colors, theme } = useTheme();
+
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <StatusBar style="light" />
+    <>
+      <StatusBar style={theme === "light" ? "dark" : "light"} />
       <Tabs
         screenOptions={({ route }) => ({
           headerShown: true,
           headerStyle: {
-            backgroundColor: "#0B0F19",
+            backgroundColor: colors.cardBg,
           },
-          headerTintColor: "#F8FAFC",
+          headerTintColor: colors.text,
           headerTitleStyle: {
             fontWeight: "700",
           },
           tabBarStyle: {
-            backgroundColor: "#0B0F19",
-            borderTopColor: "#1E293B",
+            backgroundColor: colors.cardBg,
+            borderTopColor: colors.border,
             borderTopWidth: 1,
             height: 60,
             paddingBottom: 8,
             paddingTop: 8,
           },
-          tabBarActiveTintColor: "#3B82F6",
-          tabBarInactiveTintColor: "#64748B",
+          tabBarActiveTintColor: colors.primary,
+          tabBarInactiveTintColor: colors.subText,
           tabBarIcon: ({ focused, color, size }) => {
             let iconName: keyof typeof Ionicons.glyphMap = "albums-outline";
 
@@ -89,6 +92,16 @@ export default function RootLayout() {
           }}
         />
       </Tabs>
+    </>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider>
+        <TabNavigator />
+      </ThemeProvider>
     </GestureHandlerRootView>
   );
 }

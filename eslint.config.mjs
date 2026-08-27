@@ -1,32 +1,32 @@
-import { defineConfig, globalIgnores } from "eslint/config";
-import prettier from "eslint-config-prettier/flat";
 import tseslint from "typescript-eslint";
+import prettier from "eslint-config-prettier";
 
-export default defineConfig([
-  tseslint.configs.recommended,
+export default [
+  ...tseslint.configs.recommended,
   {
     rules: {
       "@typescript-eslint/no-explicit-any": "warn",
     },
   },
   prettier,
-  globalIgnores([
-    "**/node_modules/**",
-    "**/dist/**",
-    "**/.expo/**",
-    "**/.next/**",
-    "**/.turbo/**",
-    "**/.wrangler/**",
-    "**/coverage/**",
-    "**/metro.config.js",
-    // Agent/AI tool directories — not source code, should not be linted
-    ".agent/**",
-    ".agents/**",
-    ".kilo/**",
-    ".kilocode/**",
-    ".claude/**",
-    ".gemini/**",
-    "agents/**",
-    "docs/skills/**",
-  ]),
-]);
+  {
+    ignores: [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/.expo/**",
+      "**/.next/**",
+      "**/.turbo/**",
+      "**/.wrangler/**",
+      "**/coverage/**",
+      "**/metro.config.js",
+      ".agent/**",
+      ".agents/**",
+      ".kilo/**",
+      ".kilocode/**",
+      ".claude/**",
+      ".gemini/**",
+      "agents/**",
+      "docs/skills/**",
+    ],
+  },
+];

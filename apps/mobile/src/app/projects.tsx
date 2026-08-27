@@ -15,8 +15,10 @@ import { useRouter } from "expo-router";
 import { api, secureStorage } from "../lib/api";
 import type { Project } from "@magicappdev/shared";
 import { Ionicons } from "@expo/vector-icons";
+import { useTheme } from "../context/ThemeContext";
 
 export default function ProjectsScreen() {
+  useTheme();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -75,6 +77,10 @@ export default function ProjectsScreen() {
 
     setSubmitting(true);
     try {
+      // Ensure token is attached before request
+      const token = await secureStorage.getItem("magicappdev_access_token");
+      if (token) api.setToken(token);
+
       if (editingProject) {
         await api.request(`/projects/${editingProject.id}`, {
           method: "PUT",
@@ -90,29 +96,7 @@ export default function ProjectsScreen() {
       await fetchProjects();
     } catch (err: unknown) {
       const errObj = err as Error;
-      // Fallback local append for zero-cost seamless UX
-      const newProj: Project = {
-        id: editingProject ? editingProject.id : `proj-${Date.now()}`,
-        userId: "current-user",
-        name,
-        description,
-        slug: name.toLowerCase().replace(/\s+/g, "-"),
-        config: {
-          framework: "next",
-          typescript: true,
-          styling: "tailwind",
-        },
-        status: "active",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      if (editingProject) {
-        setProjects(prev => prev.map(p => (p.id === editingProject.id ? newProj : p)));
-      } else {
-        setProjects(prev => [newProj, ...prev]);
-      }
-      setModalVisible(false);
-      Alert.alert("Notice", errObj?.message ? `Saved locally: ${errObj.message}` : "Project saved successfully!");
+      throw new Error(errObj?.message || "Failed to save project");
     } finally {
       setSubmitting(false);
     }
@@ -165,7 +149,7 @@ export default function ProjectsScreen() {
         ListEmptyComponent={
           <View style={styles.center}>
             <Ionicons name="folder-open-outline" size={48} color="#64748B" style={{ marginBottom: 12 }} />
-            <Text style={styles.emptyText}>No projects found. Tap "New Project" to create one!</Text>
+            <Text style={styles.emptyText}>No projects found. Tap &ldquo;New Project&rdquo; to create one!</Text>
           </View>
         }
         renderItem={({ item }) => (
