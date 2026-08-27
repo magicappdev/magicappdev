@@ -95,7 +95,7 @@ body:
   required: true - label: My code follows the project's style guidelines
   required: true - label: I have tested my changes thoroughly
   required: true - label: All tests pass (unit tests, integration tests, etc.)
-  required: true - label: The command `pnpx nx run-many -t lint:fix test typecheck build --all` passes
+  required: true - label: The command `bun run check` passes (format + lint:fix + typecheck + build)
   required: true - label: I have updated documentation if necessary
   required: true - label: This PR is ready for review
   required: true - label: I have considered backward compatibility

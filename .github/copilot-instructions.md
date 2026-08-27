@@ -58,10 +58,10 @@ bun run lint:fix        # Auto-fix linting
 bun run format          # Prettier across repo
 bun run test            # All unit tests (Vitest)
 
-# Single project (prefer nx over direct tooling)
-nx run @magicappdev/api:build
-nx run @magicappdev/web:typecheck
-nx run @magicappdev/shared:test
+# Single project (use turbo with --filter)
+turbo build --filter=@magicappdev/api
+turbo typecheck --filter=@magicappdev/web
+turbo test --filter=@magicappdev/shared
 
 # Single test file (from a package dir)
 bun run vitest run src/path/to/file.test.ts
@@ -83,7 +83,7 @@ bun run deploy:api
 bun run deploy:web
 ```
 
-**Important**: Turborepo's `build` task depends on `typecheck`. Running `bun run build` will typecheck all packages first. Use `nx run-many --target=build` if you need to skip or isolate.
+**Important**: Turborepo's `build` task depends on `typecheck`. Running `bun run build` will typecheck all packages first. Use `turbo build --filter=@magicappdev/api` if you need to build a single package in isolation.
 
 ## Architecture
 

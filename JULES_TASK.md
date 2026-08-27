@@ -20,7 +20,7 @@ Optimize the MagicAppDev monorepo for reliable, fast, and cache-friendly develop
 ## 🚀 Verification Steps
 
 1. **Full Check**: `bun run check` (root)
-2. **Nx Verification**: `bunx nx run-many --target=lint,typecheck,build,test --all`
+2. **Turborepo Verification**: `bun run typecheck && bun run lint && bun run build`
 
 ## 📝 Deliverables
 

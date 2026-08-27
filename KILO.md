@@ -232,7 +232,7 @@ bun run test
 
 ### Task Execution
 
-- Use `nx run` for specific project tasks
+- Use `turbo run` for specific project tasks (e.g. `turbo build --filter=@magicappdev/api`)
 - Leverage Turborepo for build optimization
 - Follow the established task pipelines
 - Utilize caching for faster builds

@@ -9,10 +9,10 @@ This plan outlines the optimization of the root `package.json` and `turbo.json` 
 
 - **Workspaces**: `packages/*` and `apps/*`
 - **Existing Scripts**:
-  - `build`: Uses `nx run-many` for all workspaces
+  - `build`: Uses `turbo run build` for all workspaces
   - `format`: Prettier for formatting
   - `format:check`: Prettier for checking formatting
-  - `typecheck`: Uses `nx run-many` for type checking
+  - `typecheck`: Uses `turbo run typecheck` for type checking
   - `prepare`: Husky for Git hooks
 - **Turbo Configuration**:
   - Tasks: `build`, `dev`, `format`, `lint`, `lint:fix`, `typecheck`

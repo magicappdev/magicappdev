@@ -291,14 +291,6 @@ bun run deploy
    docker run -p 3000:3000 magicappdev
    ```
 
-### Nx Workspace Sync
-
-If you encounter "workspace out of sync" errors, run:
-
-```bash
-bunx nx sync
-```
-
 ## Troubleshooting & FAQ
 
 ### Common Pitfalls

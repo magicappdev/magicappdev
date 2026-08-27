@@ -12,10 +12,10 @@ cd D:\repos\magicappdev\apps\mobile
 bun run clean:all
 
 # Option B: Just clear Metro cache
-nx run mobile:start:reset
+cd apps/mobile && npx expo start --clear
 
 # Start the development server
-nx run mobile:start
+cd apps/mobile && npx expo start
 ```
 
 ### 2. Verify Dark Mode
@@ -31,10 +31,10 @@ nx run mobile:start
 
 ```bash
 # Clean build artifacts first
-nx run mobile:clean:android
+cd apps/mobile/android && ./gradlew clean
 
 # Build Android APK
-nx run mobile:build:apk
+cd apps/mobile && npx expo run:android
 ```
 
 **Expected Result**: No CMake path length warnings, build completes successfully
@@ -43,10 +43,10 @@ nx run mobile:build:apk
 
 ```bash
 # Lint mobile app
-nx run mobile:lint
+cd apps/mobile && npx expo lint
 
 # Typecheck mobile app
-nx run mobile:typecheck
+cd apps/mobile && npx tsc --noEmit
 ```
 
 **Expected Result**: No errors
@@ -133,8 +133,8 @@ cd packages/database
 npx drizzle-kit generate
 npx drizzle-kit push
 
-# Or via nx
-nx run database:migrate
+# Or via turbo
+turbo build --filter=@magicappdev/database
 ```
 
 ### 4. Verify CI/CD
@@ -159,9 +159,9 @@ Check the GitHub Actions workflows:
 
 ### CLI
 
-- [ ] CLI builds without errors (`nx run cli:build`)
+- [ ] CLI builds without errors (`turbo build --filter=@magicappdev/cli`)
 - [ ] `magicappdev completions bash --print` outputs valid bash completion
-- [ ] Linting passes (`nx run cli:lint`)
+- [ ] Linting passes (`turbo lint --filter=@magicappdev/cli`)
 
 ### Database
 
@@ -224,7 +224,7 @@ Check:
 
 The completions command is complete in source and passes lint/typecheck, but running the compiled CLI directly may fail with module resolution errors for the shared package (zod dependency not found).
 
-**Workaround**: Use `bunx magicappdev <command>` or `nx run cli -- <command>` instead of running node directly on dist/cli.js.
+**Workaround**: Use `bunx magicappdev <command>` or `turbo build --filter=@magicappdev/cli` instead of running node directly on dist/cli.js.
 
 **Root Cause**: Workspace layout + Node.js ES subpath exports requires dist/package.json with dependencies. Added build script to create this, but direct node execution still has issues.
 

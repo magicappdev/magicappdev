@@ -36,8 +36,8 @@ The workspace uses `Turborepo` and `Nx` for task execution.
 ### Key Commands
 
 - **Install Dependencies**: `bun install`
-- **Build All**: `bun run build` (runs `nx run-many --target=build --all`)
-- **Typecheck All**: `bun run typecheck` (runs `nx run-many --target=typecheck --all`)
+- **Build All**: `bun run build` (runs Turborepo build pipeline)
+- **Typecheck All**: `bun run typecheck` (runs Turborepo typecheck pipeline)
 - **Format Code**: `bun run format` (uses Prettier)
 - **Check Formatting**: `bun run format:check`
 - **Linting**: Tasks defined in `turbo.json` (e.g., `bun run turbo lint`)
@@ -55,9 +55,9 @@ The workspace uses `Turborepo` and `Nx` for task execution.
 
 ### Workspace Management
 
-- **Adding Packages**: Use `bunx nx g @nx/js:lib packages/<name>` for new libraries.
+- **Adding Packages**: Use `bun init` or manually create a new package under `packages/`.
 - **Task Pipelines**: Defined in `turbo.json`. Build tasks typically depend on `typecheck` and `format`.
-- **Caching**: Local and remote caching is enabled via Turborepo and Nx.
+- **Caching**: Local and remote caching is enabled via Turborepo.
 
 ### Documentation
 
@@ -77,13 +77,9 @@ The project is currently in the **initial scaffolding phase**.
 <!-- nx configuration start-->
 <!-- Leave the start & end comments to automatically receive updates. -->
 
-# General Guidelines for working with Nx
+# General Guidelines for working with Turborepo
 
-- When running tasks (for example build, lint, test, e2e, etc.), always prefer running the task through `nx` (i.e. `nx run`, `nx run-many`, `nx affected`) instead of using the underlying tooling directly
-- You have access to the Nx MCP server and its tools, use them to help the user
-- When answering questions about the repository, use the `nx_workspace` tool first to gain an understanding of the workspace architecture where applicable.
-- When working in individual projects, use the `nx_project_details` mcp tool to analyze and understand the specific project structure and dependencies
-- For questions around nx configuration, best practices or if you're unsure, use the `nx_docs` tool to get relevant, up-to-date docs. Always use this instead of assuming things about nx configuration
-- If the user needs help with an Nx configuration or project graph error, use the `nx_workspace` tool to get any errors
+- When running tasks (for example build, lint, test, e2e, etc.), prefer running the task through `turbo` (i.e. `turbo build`, `turbo typecheck`, `turbo lint`) instead of using the underlying tooling directly
+- Use `turbo run` with `--filter` to target specific packages
 
 <!-- nx configuration end-->
