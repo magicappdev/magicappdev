@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -11,9 +11,16 @@ import {
 } from "react-native";
 import { api } from "../lib/api";
 import type { AiMessage } from "@magicappdev/shared";
+import { Ionicons } from "@expo/vector-icons";
 
 interface MessageItem extends AiMessage {
   id: string;
+}
+
+interface AIModel {
+  id: string;
+  name: string;
+  provider: string;
 }
 
 export default function ChatScreen() {
@@ -22,6 +29,26 @@ export default function ChatScreen() {
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [models, setModels] = useState<AIModel[]>([
+    { id: "@cf/meta/llama-3.3-70b-instruct-fp8", name: "Llama 3.3 70B (Workers AI)", provider: "workers-ai" },
+    { id: "opencode-zen-default", name: "Opencode Zen", provider: "opencode" },
+    { id: "gpt-4o", name: "GPT-4o (BYOK)", provider: "openai" },
+    { id: "claude-3-5-sonnet-20241022", name: "Claude 3.5 Sonnet (BYOK)", provider: "anthropic" },
+  ]);
+  const [selectedModel, setSelectedModel] = useState("@cf/meta/llama-3.3-70b-instruct-fp8");
+  const [showModelPicker, setShowModelPicker] = useState(false);
+
+  useEffect(() => {
+    // Fetch dynamic models including Opencode Zen models
+    fetch("https://magicappdev-api.magicappdev.workers.dev/ai/models")
+      .then(res => res.json())
+      .then((data: any) => {
+        if (data?.success && data?.data?.models) {
+          setModels(data.data.models);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleSend = async () => {
     if (!input.trim() || loading) return;
@@ -48,13 +75,14 @@ export default function ChatScreen() {
         assistantMsg.content += chunk;
         setMessages([...updatedMessages, { ...assistantMsg }]);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorObj = err as Error;
       setMessages([
         ...updatedMessages,
         {
           id: `error-${Date.now()}`,
           role: "assistant",
-          content: `Error: ${err?.message || "Failed to get response"}`,
+          content: `Error: ${errorObj?.message || "Failed to get response"}`,
         },
       ]);
     } finally {
@@ -62,12 +90,50 @@ export default function ChatScreen() {
     }
   };
 
+  const currentModelObj = models.find(m => m.id === selectedModel);
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.container}
       keyboardVerticalOffset={90}
     >
+      {/* Model Selection Bar */}
+      <View style={styles.modelBar}>
+        <TouchableOpacity
+          style={styles.modelSelectorButton}
+          onPress={() => setShowModelPicker(!showModelPicker)}
+        >
+          <Ionicons name="sparkles" size={16} color="#3B82F6" style={{ marginRight: 6 }} />
+          <Text style={styles.modelSelectorText} numberOfLines={1}>
+            Model: {currentModelObj ? currentModelObj.name : selectedModel}
+          </Text>
+          <Ionicons name={showModelPicker ? "chevron-up" : "chevron-down"} size={16} color="#94A3B8" style={{ marginLeft: 6 }} />
+        </TouchableOpacity>
+      </View>
+
+      {showModelPicker && (
+        <View style={styles.modelDropdown}>
+          <ScrollView style={{ maxHeight: 180 }}>
+            {models.map(m => (
+              <TouchableOpacity
+                key={m.id}
+                style={[styles.modelOption, selectedModel === m.id && styles.modelOptionActive]}
+                onPress={() => {
+                  setSelectedModel(m.id);
+                  setShowModelPicker(false);
+                }}
+              >
+                <Text style={[styles.modelOptionText, selectedModel === m.id && styles.modelOptionTextActive]}>
+                  {m.name}
+                </Text>
+                <Text style={styles.modelProviderBadge}>{m.provider.toUpperCase()}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
+
       <ScrollView style={styles.chatArea} contentContainerStyle={styles.chatContent}>
         {messages.map(msg => (
           <View
@@ -109,7 +175,65 @@ export default function ChatScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "#0B0F19",
+  },
+  modelBar: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: "#1E293B",
+    borderBottomWidth: 1,
+    borderColor: "#334155",
+  },
+  modelSelectorButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#0F172A",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#334155",
+  },
+  modelSelectorText: {
+    color: "#F8FAFC",
+    fontSize: 13,
+    fontWeight: "600",
+    flex: 1,
+  },
+  modelDropdown: {
+    backgroundColor: "#1E293B",
+    borderBottomWidth: 1,
+    borderColor: "#334155",
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+  },
+  modelOption: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+  },
+  modelOptionActive: {
+    backgroundColor: "#2563EB",
+  },
+  modelOptionText: {
+    color: "#CBD5E1",
+    fontSize: 13,
+  },
+  modelOptionTextActive: {
+    color: "#FFFFFF",
+    fontWeight: "700",
+  },
+  modelProviderBadge: {
+    fontSize: 10,
+    color: "#94A3B8",
+    backgroundColor: "#0F172A",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    overflow: "hidden",
   },
   chatArea: {
     flex: 1,
@@ -125,12 +249,14 @@ const styles = StyleSheet.create({
     maxWidth: "80%",
   },
   userBubble: {
-    backgroundColor: "#2563EB",
+    backgroundColor: "#3B82F6",
     alignSelf: "flex-end",
   },
   assistantBubble: {
-    backgroundColor: "#E2E8F0",
+    backgroundColor: "#1E293B",
     alignSelf: "flex-start",
+    borderWidth: 1,
+    borderColor: "#334155",
   },
   bubbleText: {
     fontSize: 15,
@@ -139,29 +265,31 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   assistantText: {
-    color: "#0F172A",
+    color: "#F8FAFC",
   },
   inputArea: {
     flexDirection: "row",
     padding: 12,
-    backgroundColor: "#fff",
+    backgroundColor: "#1E293B",
     borderTopWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#334155",
     alignItems: "center",
   },
   input: {
     flex: 1,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#0F172A",
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 10,
     maxHeight: 100,
-    color: "#0F172A",
+    color: "#F8FAFC",
     fontSize: 15,
+    borderWidth: 1,
+    borderColor: "#334155",
   },
   sendButton: {
     marginLeft: 10,
-    backgroundColor: "#2563EB",
+    backgroundColor: "#3B82F6",
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
