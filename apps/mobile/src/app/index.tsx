@@ -19,25 +19,6 @@ export default function LoginScreen() {
         router.replace("/projects");
       }
     });
-
-    const handleDeepLink = async (event: { url: string }) => {
-      const data = Linking.parse(event.url);
-      const token = data.queryParams?.token as string;
-      const refreshToken = data.queryParams?.refreshToken as string;
-
-      if (token) {
-        api.setToken(token);
-        await secureStorage.setItem("magicappdev_access_token", token);
-        if (refreshToken) {
-          api.setRefreshToken(refreshToken);
-          await secureStorage.setItem("magicappdev_refresh_token", refreshToken);
-        }
-        router.replace("/projects");
-      }
-    };
-
-    const subscription = Linking.addEventListener("url", handleDeepLink);
-    return () => subscription.remove();
   }, [router]);
 
   const handleGitHubLogin = async () => {

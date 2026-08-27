@@ -38,6 +38,12 @@ export default function RootLayout() {
             title: "Settings",
           }}
         />
+        <Tabs.Screen
+          name="auth/callback"
+          options={{
+            href: null,
+          }}
+        />
       </Tabs>
     </GestureHandlerRootView>
   );
