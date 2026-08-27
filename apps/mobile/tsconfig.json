@@ -1,5 +1,5 @@
 {
-  "extends": "expo/tsconfig.base",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "strict": true,
     "jsx": "react-jsx",
@@ -9,6 +9,15 @@
       ],
       "@/assets/*": [
         "./assets/*"
+      ],
+      "@magicappdev/shared": [
+        "../../packages/shared/src/index.ts"
+      ],
+      "@magicappdev/shared/api": [
+        "../../packages/shared/src/api/index.ts"
+      ],
+      "@magicappdev/shared/*": [
+        "../../packages/shared/src/*"
       ]
     }
   },
@@ -16,6 +25,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".expo/types/**/*.ts",
-    "expo-env.d.ts"
+    "expo-env.d.ts",
+    "../../packages/shared/src/**/*.ts"
   ]
 }
