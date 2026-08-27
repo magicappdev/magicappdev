@@ -13,7 +13,6 @@ export default function AuthCallback() {
       console.log("AuthCallback received URL:", url);
       
       let finalUrl = url;
-      // If opened via development client wrapper, check if there is an inner URL param
       if (url.includes("expo-development-client/?url=")) {
         try {
           const match = url.match(/[?&]url=([^&]+)/);
@@ -27,8 +26,9 @@ export default function AuthCallback() {
       }
 
       const data = Linking.parse(finalUrl);
-      const token = data.queryParams?.token as string | undefined;
+      const token = (data.queryParams?.token || data.queryParams?.accessToken) as string | undefined;
       const refreshToken = data.queryParams?.refreshToken as string | undefined;
+      const sessionId = data.queryParams?.sessionId as string | undefined;
 
       let resolvedToken = token;
       let resolvedRefreshToken = refreshToken;
@@ -36,14 +36,28 @@ export default function AuthCallback() {
       if (!resolvedToken && finalUrl.includes("?")) {
         const queryPart = finalUrl.split("?")[1];
         const params = new URLSearchParams(queryPart);
-        resolvedToken = params.get("token") || undefined;
+        resolvedToken = params.get("token") || params.get("accessToken") || undefined;
         resolvedRefreshToken = params.get("refreshToken") || undefined;
       }
       if (!resolvedToken && finalUrl.includes("#")) {
         const hashPart = finalUrl.split("#")[1];
         const params = new URLSearchParams(hashPart);
-        resolvedToken = params.get("token") || undefined;
+        resolvedToken = params.get("token") || params.get("accessToken") || undefined;
         resolvedRefreshToken = params.get("refreshToken") || undefined;
+      }
+
+      // If we received a sessionId instead of direct tokens, fetch tokens from backend /check-session endpoint
+      if (!resolvedToken && sessionId) {
+        console.log("Received sessionId, fetching tokens from server...", sessionId);
+        try {
+          const res = await api.request<{ success: boolean; data?: { accessToken: string; refreshToken: string } }>(`/auth/check-session?sessionId=${sessionId}`);
+          if (res.success && res.data) {
+            resolvedToken = res.data.accessToken;
+            resolvedRefreshToken = res.data.refreshToken;
+          }
+        } catch (e) {
+          console.error("Failed to fetch session from server", e);
+        }
       }
 
       if (resolvedToken) {
@@ -55,8 +69,7 @@ export default function AuthCallback() {
         }
         router.replace("/projects");
       } else {
-        // If it's just the dev client root url without tokens, ignore or show loading instead of immediate error
-        if (finalUrl.includes("expo-development-client")) {
+        if (finalUrl.includes("expo-development-client") && !sessionId) {
           console.log("Waiting for auth callback parameters inside dev client...");
           return;
         }

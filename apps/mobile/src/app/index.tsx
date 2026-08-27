@@ -50,13 +50,26 @@ export default function LoginScreen() {
         }
 
         const parsed = Linking.parse(redirectResultUrl);
-        let token = parsed.queryParams?.token as string;
+        let token = (parsed.queryParams?.token || parsed.queryParams?.accessToken) as string;
         let refreshToken = parsed.queryParams?.refreshToken as string;
+        const sessionId = parsed.queryParams?.sessionId as string;
 
         if (!token && redirectResultUrl.includes("?")) {
           const params = new URLSearchParams(redirectResultUrl.split("?")[1]);
-          token = params.get("token") || "";
+          token = params.get("token") || params.get("accessToken") || "";
           refreshToken = params.get("refreshToken") || "";
+        }
+
+        if (!token && sessionId) {
+          try {
+            const res = await api.request<{ success: boolean; data?: { accessToken: string; refreshToken: string } }>(`/auth/check-session?sessionId=${sessionId}`);
+            if (res.success && res.data) {
+              token = res.data.accessToken;
+              refreshToken = res.data.refreshToken;
+            }
+          } catch (e) {
+            console.error("Failed to fetch session from server in login screen", e);
+          }
         }
 
         if (token) {
