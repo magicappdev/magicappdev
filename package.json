@@ -69,6 +69,7 @@
     "lint": "turbo lint",
     "lint:fix": "turbo lint:fix",
     "nx": "nx",
+    "postinstall": "powershell -ExecutionPolicy Bypass -File scripts/postinstall.ps1",
     "prepare": "husky",
     "sync": "nx sync",
     "sync:check": "nx sync:check",
