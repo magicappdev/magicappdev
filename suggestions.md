@@ -6,12 +6,11 @@ This document outlines high-priority features, repository improvements, and desi
 
 ## 1. High-Priority Feature Suggestions
 
-| ID           | Category                      | Description                                                                                                                                                                                                                   | Impact | Effort |
-| :----------- | :---------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----- | :----- |
-| **FEAT-001** | **No-Code UI Preview**        | Implement a real-time live preview iframe/panel inside `apps/web` (`workspace.tsx`/`preview.tsx`) that renders generated code components directly from templates.                                                             | High   | High   |
-| **FEAT-002** | **Agentic Tool Calling**      | Connect the Cloudflare Agent (`packages/agent`) with the Template Registry (`packages/templates`) so users can type natural language instructions and have the agent automatically generate and scaffold full code structure. | High   | High   |
-| **FEAT-003** | **End-to-End Testing Suite**  | Establish a comprehensive Playwright E2E test suite covering user authentication flow, project creation, AI chat generation, and settings configuration.                                                                      | High   | Medium |
-| **FEAT-004** | **Database Seeding & Backup** | Add built-in database seeding utilities and migration backup/recovery procedures for Cloudflare D1.                                                                                                                           | Medium | Low    |
+| ID           | Category                           | Description                                                                                                                | Impact | Effort |
+| :----------- | :--------------------------------- | :------------------------------------------------------------------------------------------------------------------------- | :----- | :----- |
+| **FEAT-005** | **Client-Side ESM Sandbox**        | Zero-cost in-browser React component and HTML preview using ES modules and Babel standalone without paid remote sandboxes. | High   | Medium |
+| **FEAT-006** | **Prompt-to-Template Auto-Mapper** | Natural language intent mapping to templates inside `@magicappdev/agent` for instantaneous no-code scaffolding.            | High   | Low    |
+| **FEAT-007** | **Local SQLite Export**            | Built-in database and project export tool for free-tier Cloudflare Workers & D1 users.                                     | Medium | Low    |
 
 ---
 

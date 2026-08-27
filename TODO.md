@@ -44,7 +44,12 @@
 
 ---
 
-## ✅ Recently Completed (This Session)
+## ✅ Recently Completed (Free-Tier & Vibe Coding Features)
+
+- [x] **Client-Side ESM/Iframe Sandbox**: Zero-cost in-browser React component and file preview without expensive remote server sandboxes.
+- [x] **Prompt-to-Template Auto-Mapper**: Automatic template selection based on natural language prompts in `@magicappdev/agent`.
+- [x] **Local SQLite / D1 Backup & Export Utility**: Added export support for zero-cost free tier data persistence.
+- [x] **Mobile CI/CD & E-Commerce Template**: Shipped e-commerce template and mobile APK workflow.
 
 ### CLI Chat Connection Fix (P1)
 
