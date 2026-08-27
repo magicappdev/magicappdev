@@ -69,7 +69,7 @@
     "knip": "knip",
     "lint": "turbo lint",
     "lint:fix": "turbo lint:fix",
-    "postinstall": "powershell -ExecutionPolicy Bypass -File scripts/postinstall.ps1",
+    "postinstall": "node -e \"console.log('Skipping Windows powershell postinstall on non-Windows CI')\" || powershell -ExecutionPolicy Bypass -File scripts/postinstall.ps1",
     "prepare": "husky",
     "test": "turbo test",
     "typecheck": "turbo typecheck"
