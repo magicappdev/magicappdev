@@ -10,14 +10,11 @@ import {
   FolderOpen,
   Github,
   Loader2,
-  Monitor,
   Paperclip,
   PenTool,
-  Save,
   Send,
   Sparkles,
   Star,
-  Trash2,
   Upload,
   User as UserIcon,
   X,
@@ -34,13 +31,7 @@ import {
   isStitchConfigured,
   type StitchStarterScreen,
 } from "@/lib/stitch.js";
-import {
-  Button,
-  Dialog,
-  Input,
-  Tooltip,
-  TooltipProvider,
-} from "@cloudflare/kumo";
+import { Button, Dialog, Input, TooltipProvider } from "@cloudflare/kumo";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Preview, { type PreviewFile } from "@/components/ui/Preview.js";
 import { useNavigate } from "react-router-dom";
@@ -84,6 +75,7 @@ function TemplateGallery({ onSelect }: { onSelect: (t: Template) => void }) {
         {TEMPLATE_CATEGORIES.map(cat => (
           <button
             key={cat.id}
+            type="button"
             onClick={() => setActiveTab(cat.id)}
             className={cn(
               "px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors",
@@ -100,6 +92,7 @@ function TemplateGallery({ onSelect }: { onSelect: (t: Template) => void }) {
         {filtered.map(template => (
           <button
             key={template.id}
+            type="button"
             onClick={() => onSelect(template)}
             className="group text-left rounded-2xl overflow-hidden border border-zinc-800 hover:border-zinc-600 transition-all duration-200 hover:scale-[1.02] active:scale-[0.99]"
           >
@@ -209,6 +202,7 @@ function InputArea({
             </div>
             <div className="p-1">
               <button
+                type="button"
                 onClick={() => fileInputRef.current?.click()}
                 className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-zinc-200 hover:bg-zinc-800 transition-colors"
               >
@@ -235,6 +229,7 @@ function InputArea({
             </div>
             <div className="p-1 pb-2">
               <button
+                type="button"
                 onClick={() => {
                   setAttachmentOpen(false);
                   const url = window.prompt(
@@ -282,6 +277,7 @@ function InputArea({
                   : "Generate a screen with Stitch"}
               </button>
               <button
+                type="button"
                 onClick={() => {
                   setAttachmentOpen(false);
                   const url = window.prompt("Enter GitHub repository URL:");
@@ -296,6 +292,7 @@ function InputArea({
                 Import an existing project
               </button>
               <button
+                type="button"
                 onClick={() => {
                   setAttachmentOpen(false);
                   window.alert(
@@ -751,6 +748,15 @@ export default function ChatPage() {
   const [showDeployModal, setShowDeployModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  // New AI Studio Canvas Layout mode state
+  const [canvasViewMode, setCanvasViewMode] = useState<
+    "split" | "chat" | "preview"
+  >("split");
+  const [selectedModel, setSelectedModel] = useState<string>(
+    "cloudflare-llama-3.3",
+  );
+
   const pendingFilesRef = useRef<GeneratedFile[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const navigate = useNavigate();
@@ -758,21 +764,20 @@ export default function ChatPage() {
   const wsRef = useRef<WebSocket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  }, []);
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [scrollToBottom]);
 
   useEffect(() => {
     let reconnectAttempts = 0;
     const maxReconnectAttempts = 3;
-    const reconnectDelay = 3000; // 3 seconds
+    const reconnectDelay = 3000;
 
     const connectWebSocket = () => {
-      // Use native WebSocket for compatibility with minimal agent
       const wsUrl = `${WS_PROTOCOL}//${AGENT_HOST}/agents/magic-agent/default`;
       console.log("Connecting to WebSocket:", wsUrl);
 
@@ -781,22 +786,19 @@ export default function ChatPage() {
       ws.onopen = () => {
         console.log("Connected to Agent");
         setIsConnected(true);
-        reconnectAttempts = 0; // Reset attempts on successful connection
+        reconnectAttempts = 0;
       };
 
       ws.onclose = () => {
         console.log("Disconnected from Agent");
         setIsConnected(false);
 
-        // Attempt reconnection if not manually disconnected
         if (reconnectAttempts < maxReconnectAttempts) {
           reconnectAttempts++;
           console.log(
             `Attempting to reconnect (${reconnectAttempts}/${maxReconnectAttempts})...`,
           );
           setTimeout(connectWebSocket, reconnectDelay);
-        } else {
-          console.log("Max reconnection attempts reached");
         }
       };
 
@@ -810,7 +812,6 @@ export default function ChatPage() {
           const data = JSON.parse(event.data as string);
 
           if (data.type === "history") {
-            // Load chat history from server
             const historyMessages: Message[] = data.messages.map(
               (m: {
                 id: string;
@@ -872,7 +873,6 @@ export default function ChatPage() {
           } else if (data.type === "error") {
             setIsLoading(false);
             setIsGenerating(false);
-            // Add user-friendly error message to chat
             setMessages(prev => [
               ...prev,
               {
@@ -900,14 +900,12 @@ export default function ChatPage() {
               dependencies: data.dependencies || {},
               devDependencies: data.devDependencies || {},
             });
-            // Expand first file by default
             if (files.length > 0) {
               setExpandedFiles(new Set([files[0].path]));
             }
             setIsGenerating(false);
           } else if (data.type === "generation_error") {
             setIsGenerating(false);
-            // Add user-friendly error message to chat
             setMessages(prev => [
               ...prev,
               {
@@ -920,7 +918,6 @@ export default function ChatPage() {
           }
         } catch (e) {
           console.error("Failed to parse message", e);
-          // Add parsing error to chat
           setMessages(prev => [
             ...prev,
             {
@@ -962,15 +959,15 @@ export default function ChatPage() {
 
     setMessages(prev => [...prev, userMsg]);
     setInput("");
-    setSuggestedPrompts([]); // Clear suggestions after selection
+    setSuggestedPrompts([]);
     setIsLoading(true);
     setSuggestedTemplate(null);
 
-    // Send to Agent via WebSocket
     wsRef.current?.send(
       JSON.stringify({
         type: "chat",
         content: userMsg.content,
+        model: selectedModel,
       }),
     );
   };
@@ -1009,7 +1006,6 @@ export default function ChatPage() {
       a.click();
       URL.revokeObjectURL(url);
     } catch {
-      // Fallback: bundle all files into a plain-text archive
       const projectContent = generatedProject.files
         .map(f => `=== ${f.path} ===\n${f.content}`)
         .join("\n\n");
@@ -1023,20 +1019,14 @@ export default function ChatPage() {
     }
   };
 
-  const clearHistory = () => {
-    wsRef.current?.send(JSON.stringify({ type: "clear_history" }));
-  };
-
   const handleGenerateWithStitch = async () => {
     const prompt = input.trim();
-
     if (!prompt) {
       window.alert(
         "Describe what you want to build before generating a Stitch starter screen.",
       );
       return;
     }
-
     if (!isStitchConfigured()) {
       window.alert("Stitch is not configured for this environment.");
       return;
@@ -1061,7 +1051,6 @@ export default function ChatPage() {
 
   const attachStitchPreviewToPrompt = () => {
     if (!stitchPreview) return;
-
     setInput(prev =>
       [
         prev.trim(),
@@ -1100,7 +1089,6 @@ export default function ChatPage() {
   return (
     <TooltipProvider>
       <div className="flex flex-col h-full bg-[#0a0a0a] text-white overflow-hidden">
-        {/* Deploy / Export Modals */}
         {showDeployModal && generatedProject && (
           <DeployModal
             project={generatedProject}
@@ -1117,13 +1105,11 @@ export default function ChatPage() {
         {messages.length === 0 ? (
           /* ── LANDING STATE ── */
           <div className="flex-1 overflow-y-auto">
-            {/* Background glow */}
             <div className="pointer-events-none fixed inset-0 overflow-hidden">
               <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[700px] h-[500px] rounded-full bg-orange-500/10 blur-[120px]" />
             </div>
 
             <div className="relative max-w-4xl mx-auto px-4 pt-16 pb-24">
-              {/* Connection pill */}
               <div className="flex justify-center mb-8">
                 <span
                   className={cn(
@@ -1145,7 +1131,6 @@ export default function ChatPage() {
                 </span>
               </div>
 
-              {/* Hero heading */}
               <h1 className="text-4xl sm:text-5xl font-bold text-center leading-tight mb-3">
                 <span className="bg-gradient-to-r from-orange-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
                   What do you want to create?
@@ -1156,7 +1141,6 @@ export default function ChatPage() {
                 code needed.
               </p>
 
-              {/* Main input */}
               <div className="mb-6">
                 <InputArea
                   input={input}
@@ -1189,11 +1173,11 @@ export default function ChatPage() {
                 </div>
               )}
 
-              {/* Suggestion chips */}
               <div className="flex flex-wrap gap-2 justify-center mb-16">
-                {QUICK_SUGGESTIONS.map((s, i) => (
+                {QUICK_SUGGESTIONS.map(s => (
                   <button
-                    key={i}
+                    key={s.prompt}
+                    type="button"
                     onClick={() => {
                       setInput(s.prompt);
                       textareaRef.current?.focus();
@@ -1205,7 +1189,6 @@ export default function ChatPage() {
                 ))}
               </div>
 
-              {/* Template gallery */}
               <div>
                 <h2 className="text-lg font-semibold text-zinc-200 mb-5">
                   Start from a template
@@ -1221,27 +1204,84 @@ export default function ChatPage() {
             </div>
           </div>
         ) : (
-          /* ── CHAT STATE ── */
+          /* ── AI STUDIO CANVAS SPLIT STATE ── */
           <>
-            {/* Header bar */}
+            {/* Header bar with AI Studio Mode Switcher */}
             <div className="flex items-center justify-between px-4 py-2.5 border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-sm shrink-0">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-orange-400" />
-                <span className="text-sm font-semibold text-white">
-                  MagicAgent
-                </span>
-                <span
-                  className={cn(
-                    "w-1.5 h-1.5 rounded-full",
-                    isConnected
-                      ? "bg-green-400"
-                      : "bg-yellow-400 animate-pulse",
-                  )}
-                />
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-orange-400" />
+                  <span className="text-sm font-semibold text-white">
+                    AI Studio Canvas
+                  </span>
+                  <span
+                    className={cn(
+                      "w-1.5 h-1.5 rounded-full",
+                      isConnected
+                        ? "bg-green-400"
+                        : "bg-yellow-400 animate-pulse",
+                    )}
+                  />
+                </div>
+                <div className="h-4 w-px bg-zinc-800" />
+                <select
+                  value={selectedModel}
+                  onChange={e => setSelectedModel(e.target.value)}
+                  className="bg-zinc-900 border border-zinc-700 text-xs text-zinc-300 rounded-lg px-2 py-1 outline-none"
+                >
+                  <option value="cloudflare-llama-3.3">
+                    Cloudflare Llama 3.3
+                  </option>
+                  <option value="deepseek-r1">DeepSeek R1</option>
+                  <option value="openai-gpt-4o">OpenAI GPT-4o</option>
+                  <option value="anthropic-claude-3.5">
+                    Anthropic Claude 3.5
+                  </option>
+                </select>
               </div>
-              <div className="flex items-center gap-1">
+
+              <div className="flex items-center gap-2">
+                <div className="flex bg-zinc-900 rounded-lg p-0.5 border border-zinc-800">
+                  <button
+                    type="button"
+                    onClick={() => setCanvasViewMode("split")}
+                    className={cn(
+                      "px-2.5 py-1 text-xs rounded-md font-medium transition-colors",
+                      canvasViewMode === "split"
+                        ? "bg-zinc-800 text-white"
+                        : "text-zinc-400 hover:text-white",
+                    )}
+                  >
+                    Split View
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCanvasViewMode("chat")}
+                    className={cn(
+                      "px-2.5 py-1 text-xs rounded-md font-medium transition-colors",
+                      canvasViewMode === "chat"
+                        ? "bg-zinc-800 text-white"
+                        : "text-zinc-400 hover:text-white",
+                    )}
+                  >
+                    Chat Only
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCanvasViewMode("preview")}
+                    className={cn(
+                      "px-2.5 py-1 text-xs rounded-md font-medium transition-colors",
+                      canvasViewMode === "preview"
+                        ? "bg-zinc-800 text-white"
+                        : "text-zinc-400 hover:text-white",
+                    )}
+                  >
+                    Canvas Preview
+                  </button>
+                </div>
+
                 {generatedProject && (
-                  <>
+                  <div className="flex items-center gap-1.5 ml-2">
                     <Button
                       type="button"
                       size="sm"
@@ -1252,7 +1292,7 @@ export default function ChatPage() {
                         isSaving ? (
                           <Loader2 className="w-3.5 h-3.5 animate-spin" />
                         ) : (
-                          <Save className="w-3.5 h-3.5" />
+                          <FolderOpen className="w-3.5 h-3.5" />
                         )
                       }
                     >
@@ -1262,287 +1302,249 @@ export default function ChatPage() {
                       type="button"
                       size="sm"
                       variant="secondary"
-                      onClick={() => setShowExportModal(true)}
-                      icon={<Github className="w-3.5 h-3.5" />}
+                      onClick={downloadProject}
+                      icon={<Download className="w-3.5 h-3.5" />}
                     >
-                      Export
+                      ZIP
                     </Button>
                     <Button
                       type="button"
                       size="sm"
                       variant="secondary"
+                      onClick={() => setShowExportModal(true)}
+                      icon={<Github className="w-3.5 h-3.5" />}
+                    >
+                      GitHub
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="primary"
                       onClick={() => setShowDeployModal(true)}
                       icon={<Cloud className="w-3.5 h-3.5" />}
                     >
                       Deploy
                     </Button>
-                  </>
+                  </div>
                 )}
-                <Tooltip content="Clear chat history" asChild>
-                  <Button
-                    type="button"
-                    size="sm"
-                    shape="square"
-                    variant="ghost"
-                    aria-label="Clear chat history"
-                    onClick={clearHistory}
-                    className="text-zinc-600 hover:!text-red-400"
-                    icon={<Trash2 className="w-4 h-4" />}
-                  />
-                </Tooltip>
               </div>
             </div>
 
-            {/* Messages area */}
-            <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
-              {messages.map(msg => (
-                <div
-                  key={msg.id}
-                  className={cn(
-                    "flex gap-3 max-w-3xl",
-                    msg.role === "user"
-                      ? "ml-auto flex-row-reverse"
-                      : "mr-auto",
-                  )}
-                >
-                  {/* Avatar */}
-                  <div
-                    className={cn(
-                      "w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-xs font-bold",
-                      msg.role === "user"
-                        ? "bg-zinc-700 text-zinc-200"
-                        : "bg-orange-500/20 text-orange-400",
-                    )}
-                  >
-                    {msg.role === "user" ? (
-                      <UserIcon className="w-3.5 h-3.5" />
-                    ) : (
-                      <Bot className="w-3.5 h-3.5" />
-                    )}
-                  </div>
-
-                  {/* Bubble */}
-                  <div
-                    className={cn(
-                      "px-4 py-3 rounded-2xl text-sm leading-relaxed max-w-xl",
-                      msg.role === "user"
-                        ? "bg-zinc-800 text-zinc-100 rounded-tr-none"
-                        : "bg-zinc-900 text-zinc-200 rounded-tl-none border border-zinc-800",
-                      msg.id === "streaming" && "border-orange-500/30",
-                    )}
-                  >
-                    {msg.content}
-                    {msg.id === "streaming" && (
-                      <span className="inline-block w-1 h-4 ml-0.5 bg-orange-400 animate-pulse rounded-sm" />
-                    )}
-                  </div>
-                </div>
-              ))}
-
-              {/* Generating indicator */}
-              {isGenerating && (
-                <div className="flex items-center gap-3 text-zinc-500">
-                  <Sparkles className="w-4 h-4 text-orange-400 animate-pulse" />
-                  <span className="text-sm">Generating project…</span>
-                </div>
-              )}
-
-              {/* Generated project card */}
-              {generatedProject && (
-                <div className="max-w-3xl mr-auto">
-                  <div className="bg-zinc-900 border border-zinc-700 rounded-2xl overflow-hidden">
-                    <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 bg-zinc-950/60">
-                      <div className="flex items-center gap-2">
-                        <FolderOpen className="w-4 h-4 text-orange-400" />
-                        <span className="text-sm font-semibold text-white">
-                          {generatedProject.projectName}
-                        </span>
-                        <span className="text-xs text-zinc-500">
-                          {generatedProject.files.length} files
-                        </span>
+            {/* Split Canvas Workspace */}
+            <div className="flex-1 flex overflow-hidden">
+              {/* Left Column: Chat & Prompt Flow */}
+              <div
+                className={cn(
+                  "flex flex-col border-r border-zinc-800 bg-[#0a0a0a] transition-all duration-300",
+                  canvasViewMode === "split" && "w-1/2",
+                  canvasViewMode === "chat" && "w-full",
+                  canvasViewMode === "preview" && "hidden",
+                )}
+              >
+                <div className="flex-1 overflow-y-auto p-4 space-y-6">
+                  {messages.map(msg => (
+                    <div
+                      key={msg.id}
+                      className={cn(
+                        "flex gap-3 max-w-2xl",
+                        msg.role === "user"
+                          ? "ml-auto flex-row-reverse"
+                          : "mr-auto",
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          "w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-xs font-bold",
+                          msg.role === "user"
+                            ? "bg-zinc-700 text-zinc-200"
+                            : "bg-orange-500/20 text-orange-400",
+                        )}
+                      >
+                        {msg.role === "user" ? (
+                          <UserIcon className="w-3.5 h-3.5" />
+                        ) : (
+                          <Bot className="w-3.5 h-3.5" />
+                        )}
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant={showPreview ? "primary" : "secondary"}
-                          onClick={() => setShowPreview(v => !v)}
-                          icon={<Monitor className="w-3.5 h-3.5" />}
-                        >
-                          Preview
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="primary"
-                          onClick={handleSaveToProject}
-                          disabled={isSaving}
-                          icon={
-                            isSaving ? (
-                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            ) : (
-                              <FolderOpen className="w-3.5 h-3.5" />
-                            )
-                          }
-                        >
-                          {isSaving ? "Saving…" : "Save to Project"}
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="secondary"
-                          onClick={downloadProject}
-                          icon={<Download className="w-3.5 h-3.5" />}
-                        >
-                          Download
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="secondary"
-                          onClick={() => setShowExportModal(true)}
-                          icon={<Github className="w-3.5 h-3.5" />}
-                        >
-                          GitHub
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="primary"
-                          onClick={() => setShowDeployModal(true)}
-                          icon={<Cloud className="w-3.5 h-3.5" />}
-                        >
-                          Deploy
-                        </Button>
+
+                      <div
+                        className={cn(
+                          "px-4 py-3 rounded-2xl text-sm leading-relaxed max-w-lg",
+                          msg.role === "user"
+                            ? "bg-zinc-800 text-zinc-100 rounded-tr-none"
+                            : "bg-zinc-900 text-zinc-200 rounded-tl-none border border-zinc-800",
+                          msg.id === "streaming" && "border-orange-500/30",
+                        )}
+                      >
+                        {msg.content}
+                        {msg.id === "streaming" && (
+                          <span className="inline-block w-1 h-4 ml-0.5 bg-orange-400 animate-pulse rounded-sm" />
+                        )}
                       </div>
                     </div>
+                  ))}
 
-                    {/* File list */}
-                    <div className="divide-y divide-zinc-800/60">
-                      {generatedProject.files.map(file => (
-                        <div key={file.path}>
-                          <button
-                            onClick={() => {
-                              toggleFileExpanded(file.path);
-                              setPreviewFile(file.path);
-                            }}
-                            className="flex items-center w-full gap-2 px-4 py-2.5 text-left hover:bg-zinc-800/40 transition-colors"
-                          >
-                            {expandedFiles.has(file.path) ? (
-                              <ChevronDown className="w-3.5 h-3.5 text-zinc-500" />
-                            ) : (
-                              <ChevronRight className="w-3.5 h-3.5 text-zinc-500" />
-                            )}
-                            <FileCode className="w-3.5 h-3.5 text-orange-400 shrink-0" />
-                            <span className="font-mono text-xs text-zinc-300">
-                              {file.path}
-                            </span>
-                          </button>
-                          {expandedFiles.has(file.path) && (
-                            <pre className="px-4 pb-3 overflow-x-auto text-xs bg-black/40 border-t border-zinc-800/40">
-                              <code className="text-green-400">
-                                {file.content}
-                              </code>
-                            </pre>
-                          )}
-                        </div>
+                  {isGenerating && (
+                    <div className="flex items-center gap-3 text-zinc-500">
+                      <Sparkles className="w-4 h-4 text-orange-400 animate-pulse" />
+                      <span className="text-sm">
+                        Building application architecture & writing files…
+                      </span>
+                    </div>
+                  )}
+
+                  <div ref={messagesEndRef} />
+                </div>
+
+                {suggestedPrompts.length > 0 && !isLoading && (
+                  <div className="px-4 pb-2 overflow-x-auto">
+                    <div className="flex gap-2">
+                      {suggestedPrompts.map(prompt => (
+                        <button
+                          key={prompt}
+                          type="button"
+                          onClick={() => handleSubmit(prompt)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-full border border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-600 hover:bg-zinc-800/60 whitespace-nowrap transition-colors"
+                        >
+                          <Sparkles className="w-3 h-3" />
+                          {prompt}
+                        </button>
                       ))}
                     </div>
-
-                    {/* Preview */}
-                    {showPreview && (
-                      <div className="border-t border-zinc-800">
-                        <Preview
-                          files={generatedProject.files.map(
-                            f =>
-                              ({
-                                path: f.path,
-                                content: f.content,
-                              }) as PreviewFile,
-                          )}
-                          activeFile={previewFile || undefined}
-                          onFileSelect={setPreviewFile}
-                          className="h-[60vh]"
-                        />
-                      </div>
-                    )}
-
-                    {/* Dependencies */}
-                    {Object.keys(generatedProject.dependencies).length > 0 && (
-                      <div className="px-4 py-3 border-t border-zinc-800 bg-zinc-950/40">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-600 mb-2">
-                          Dependencies
-                        </p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {Object.entries(generatedProject.dependencies).map(
-                            ([name, version]) => (
-                              <span
-                                key={name}
-                                className="px-2 py-0.5 font-mono text-[11px] rounded-md bg-zinc-800 text-zinc-400"
-                              >
-                                {name}@{version}
-                              </span>
-                            ),
-                          )}
-                        </div>
-                      </div>
-                    )}
                   </div>
-                </div>
-              )}
+                )}
 
-              {(stitchPreview || isGeneratingStitch || stitchError) && (
-                <div className="max-w-3xl mr-auto">
-                  <StitchPreviewCard
-                    preview={stitchPreview}
-                    isGenerating={isGeneratingStitch}
-                    error={stitchError}
-                    onUseInPrompt={attachStitchPreviewToPrompt}
-                    onClear={() => {
-                      setStitchPreview(null);
-                      setStitchError(null);
-                    }}
+                <div className="p-4 bg-zinc-950/80 border-t border-zinc-800 shrink-0">
+                  <InputArea
+                    input={input}
+                    setInput={setInput}
+                    isLoading={isLoading}
+                    isConnected={isConnected}
+                    isGeneratingStitch={isGeneratingStitch}
+                    stitchAvailable={isStitchConfigured()}
+                    uploadedFile={uploadedFile}
+                    onUploadFile={setUploadedFile}
+                    onGenerateWithStitch={handleGenerateWithStitch}
+                    textareaRef={textareaRef}
+                    onSubmit={handleSubmit}
                   />
                 </div>
-              )}
-
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Suggested prompts */}
-            {suggestedPrompts.length > 0 && !isLoading && (
-              <div className="px-4 pb-2 overflow-x-auto">
-                <div className="flex gap-2 max-w-3xl mx-auto">
-                  {suggestedPrompts.map((prompt, i) => (
-                    <button
-                      key={i}
-                      onClick={() => handleSubmit(prompt)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-full border border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-600 hover:bg-zinc-800/60 whitespace-nowrap transition-colors"
-                    >
-                      <Sparkles className="w-3 h-3" />
-                      {prompt}
-                    </button>
-                  ))}
-                </div>
               </div>
-            )}
 
-            {/* Chat input */}
-            <div className="px-4 pb-5 pt-2 shrink-0 bg-gradient-to-t from-[#0a0a0a] to-transparent">
-              <div className="max-w-3xl mx-auto">
-                <InputArea
-                  input={input}
-                  setInput={setInput}
-                  isLoading={isLoading}
-                  isConnected={isConnected}
-                  isGeneratingStitch={isGeneratingStitch}
-                  stitchAvailable={isStitchConfigured()}
-                  uploadedFile={uploadedFile}
-                  onUploadFile={setUploadedFile}
-                  onGenerateWithStitch={handleGenerateWithStitch}
-                  textareaRef={textareaRef}
-                  onSubmit={handleSubmit}
-                />
+              {/* Right Column: Live App Canvas Preview & File Explorer */}
+              <div
+                className={cn(
+                  "flex flex-col bg-zinc-950 overflow-hidden transition-all duration-300",
+                  canvasViewMode === "split" && "w-1/2",
+                  canvasViewMode === "chat" && "hidden",
+                  canvasViewMode === "preview" && "w-full",
+                )}
+              >
+                {generatedProject ? (
+                  <div className="flex-1 flex flex-col h-full overflow-hidden">
+                    <div className="flex items-center justify-between px-4 py-2 border-b border-zinc-800 bg-zinc-900/60 shrink-0">
+                      <div className="flex items-center gap-2">
+                        <FolderOpen className="w-4 h-4 text-orange-400" />
+                        <span className="text-xs font-semibold text-white">
+                          {generatedProject.projectName}
+                        </span>
+                        <span className="text-[10px] text-zinc-500">
+                          ({generatedProject.files.length} files)
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setShowPreview(true)}
+                          className={cn(
+                            "px-2.5 py-1 text-xs rounded-md font-medium transition-colors",
+                            showPreview
+                              ? "bg-zinc-800 text-white"
+                              : "text-zinc-400 hover:text-white",
+                          )}
+                        >
+                          Live Preview
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowPreview(false)}
+                          className={cn(
+                            "px-2.5 py-1 text-xs rounded-md font-medium transition-colors",
+                            !showPreview
+                              ? "bg-zinc-800 text-white"
+                              : "text-zinc-400 hover:text-white",
+                          )}
+                        >
+                          Files
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto">
+                      {showPreview ? (
+                        <div className="h-full">
+                          <Preview
+                            files={generatedProject.files.map(
+                              f =>
+                                ({
+                                  path: f.path,
+                                  content: f.content,
+                                }) as PreviewFile,
+                            )}
+                            activeFile={previewFile || undefined}
+                            onFileSelect={setPreviewFile}
+                            className="h-full"
+                          />
+                        </div>
+                      ) : (
+                        <div className="p-4 space-y-4">
+                          <div className="divide-y divide-zinc-800/60 border border-zinc-800 rounded-xl overflow-hidden bg-zinc-900/40">
+                            {generatedProject.files.map(file => (
+                              <div key={file.path}>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    toggleFileExpanded(file.path);
+                                    setPreviewFile(file.path);
+                                  }}
+                                  className="flex items-center w-full gap-2 px-4 py-2.5 text-left hover:bg-zinc-800/40 transition-colors"
+                                >
+                                  {expandedFiles.has(file.path) ? (
+                                    <ChevronDown className="w-3.5 h-3.5 text-zinc-500" />
+                                  ) : (
+                                    <ChevronRight className="w-3.5 h-3.5 text-zinc-500" />
+                                  )}
+                                  <FileCode className="w-3.5 h-3.5 text-orange-400 shrink-0" />
+                                  <span className="font-mono text-xs text-zinc-300">
+                                    {file.path}
+                                  </span>
+                                </button>
+                                {expandedFiles.has(file.path) && (
+                                  <pre className="px-4 pb-3 overflow-x-auto text-xs bg-black/60 border-t border-zinc-800/40">
+                                    <code className="text-green-400">
+                                      {file.content}
+                                    </code>
+                                  </pre>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-zinc-500">
+                    <Sparkles className="w-10 h-10 text-zinc-700 mb-3 animate-pulse" />
+                    <p className="text-sm font-medium text-zinc-300">
+                      No application generated yet
+                    </p>
+                    <p className="text-xs text-zinc-500 max-w-sm mt-1">
+                      Type your app idea in the chat or select a template to
+                      generate a live preview canvas.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </>
