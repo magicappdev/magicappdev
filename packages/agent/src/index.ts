@@ -766,13 +766,120 @@ export class MagicAgent extends Agent<Env, AgentState> {
         };
       }
 
-      case "deployToCloudflare":
-        // Wrangler deployment requires local CLI, not available in Workers
-        return {
-          url: null,
-          environment: parameters.environment || "production",
-          note: "Deployment must be run locally: wrangler deploy",
+      case "generateMultiFileProject": {
+        const templateSlug = (parameters.templateSlug as string) || "react-spa";
+        const projectName =
+          (parameters.projectName as string) || "generated-app";
+        const variables =
+          (parameters.variables as Record<string, unknown>) || {};
+
+        const template = registry.get(templateSlug) as Template | undefined;
+        if (!template) {
+          return { error: `Template "${templateSlug}" not found` };
+        }
+
+        const finalVariables: Record<string, unknown> = {
+          name: projectName,
+          appName: projectName,
+          ...variables,
         };
+
+        const result = this.generateFilesInMemory(template, finalVariables);
+        if (!result.success) {
+          return { error: result.error };
+        }
+
+        if (projectId) {
+          for (const file of result.files) {
+            const language = file.path.split(".").pop() || "text";
+            const size = file.content.length;
+            const existing = await db.query.projectFiles.findFirst({
+              where: and(
+                eq(projectFiles.projectId, projectId),
+                eq(projectFiles.path, file.path),
+              ),
+            });
+            if (existing) {
+              await db
+                .update(projectFiles)
+                .set({
+                  content: file.content,
+                  language,
+                  size,
+                  updatedAt: new Date().toISOString(),
+                })
+                .where(eq(projectFiles.id, existing.id));
+            } else {
+              await db.insert(projectFiles).values({
+                id: crypto.randomUUID(),
+                projectId,
+                path: file.path,
+                content: file.content,
+                language,
+                size,
+              });
+            }
+          }
+        }
+
+        return {
+          success: true,
+          projectName,
+          templateSlug,
+          fileCount: result.files.length,
+          files: result.files.map(f => f.path),
+          dependencies: result.dependencies,
+          devDependencies: result.devDependencies,
+        };
+      }
+
+      case "batchWriteFiles": {
+        if (!projectId) return { error: "No project selected" };
+        const fileList =
+          (parameters.files as Array<{ path: string; content: string }>) || [];
+        const writtenFiles: string[] = [];
+
+        for (const file of fileList) {
+          if (!file.path || typeof file.content !== "string") continue;
+          const language = file.path.split(".").pop() || "text";
+          const size = file.content.length;
+
+          const existing = await db.query.projectFiles.findFirst({
+            where: and(
+              eq(projectFiles.projectId, projectId),
+              eq(projectFiles.path, file.path),
+            ),
+          });
+
+          if (existing) {
+            await db
+              .update(projectFiles)
+              .set({
+                content: file.content,
+                language,
+                size,
+                updatedAt: new Date().toISOString(),
+              })
+              .where(eq(projectFiles.id, existing.id));
+          } else {
+            await db.insert(projectFiles).values({
+              id: crypto.randomUUID(),
+              projectId,
+              path: file.path,
+              content: file.content,
+              language,
+              size,
+            });
+          }
+          writtenFiles.push(file.path);
+        }
+
+        return {
+          success: true,
+          writtenFiles,
+          count: writtenFiles.length,
+        };
+      }
 
       case "deleteFile": {
         if (!projectId) return { error: "No project selected" };
