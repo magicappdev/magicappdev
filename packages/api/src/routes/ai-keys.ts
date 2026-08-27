@@ -2,6 +2,7 @@
  * AI Keys management routes
  */
 
+import { encryptApiKey } from "../utils/encryption.js";
 import { userAiKeys } from "@magicappdev/database";
 import type { AppContext } from "../types.js";
 import { eq, and } from "drizzle-orm";
@@ -98,6 +99,9 @@ aiKeysRoutes.post("/", async c => {
   try {
     const id = crypto.randomUUID();
     const now = new Date().toISOString();
+    const encryptionSecret =
+      c.env.AI_KEY_ENCRYPTION_SECRET || c.env.JWT_SECRET || "fallback-secret";
+    const encryptedApiKey = await encryptApiKey(apiKey, encryptionSecret);
 
     if (isDefault) {
       await db
@@ -110,7 +114,7 @@ aiKeysRoutes.post("/", async c => {
       id,
       userId,
       provider,
-      apiKey,
+      apiKey: encryptedApiKey,
       baseUrl: baseUrl || null,
       modelName: modelName || null,
       isDefault,

@@ -14,6 +14,8 @@ export interface Env {
   ENVIRONMENT: string;
   /** JWT secret for auth */
   JWT_SECRET: string;
+  /** AI key encryption secret */
+  AI_KEY_ENCRYPTION_SECRET?: string;
   /** OpenAI API key */
   OPENAI_API_KEY?: string;
   /** Anthropic API key */

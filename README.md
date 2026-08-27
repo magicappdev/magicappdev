@@ -38,8 +38,8 @@ A comprehensive monorepo-based fullstack app building platform inspired by Expo,
 - **CLI Tool**: Generate and manage app code, components, and packages with ease.
 - **Web Interface**: Interactive AI chat for app creation, hot reload preview, and prompt suggestions.
 - **Mobile App**: Ionic + Capacitor-based app with interactive AI chat (SSE streaming), deep link authentication, and cross-platform component sharing.
-- **API & Database**: High-performance backend on Cloudflare Workers/D1 with integrated AI model routing and provider support.
-- **AI Integration**: Real-time streaming AI chat using Cloudflare Workers AI (Llama 3.1).
+- **API & Database**: High-performance backend on Cloudflare Workers/D1 with integrated AI model routing, provider support, and secure Bring Your Own Key (BYOK) storage using application-layer AES-GCM encryption.
+- **AI Integration**: Real-time streaming AI chat using Cloudflare Workers AI and BYOK custom providers (OpenAI, Anthropic, DeepSeek, Groq, Custom).
 - **Extensibility**: Highly customizable with plugins and good debugging utilities.
 
 ## Installation & Setup
@@ -132,8 +132,8 @@ The web app only needs `VITE_*` variables. OAuth client secrets and
 ### Settings
 
 - **CLI Settings**: Configure the CLI tool by modifying the `packages/cli/src/config.ts` file.
-- **Web Interface Settings**: Configure the web interface by modifying the `apps/web/src/config.ts` file.
-- **Mobile App Settings**: Configure the mobile app by modifying the `apps/mobile/src/config.ts` file.
+- **Web Interface Settings**: Configure user profile and Bring Your Own Key (BYOK) AI providers via the web settings dashboard (`/settings`).
+- **Mobile App Settings**: Configure user profile and BYOK settings using the mobile settings submenu and AI provider screen (`/settings/ai-provider` and `/settings/profile`).
 
 ## Project Structure
 

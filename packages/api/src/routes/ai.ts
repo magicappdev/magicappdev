@@ -2,6 +2,7 @@
  * AI routes for chat and code generation
  */
 
+import { decryptApiKey } from "../utils/encryption.js";
 import { userAiKeys } from "@magicappdev/database";
 import type { AppContext } from "../types.js";
 import { eq, and } from "drizzle-orm";
@@ -65,7 +66,16 @@ aiRoutes.post("/chat", async c => {
     // If we have a user BYOK key for OpenAI / Anthropic / Custom, proxy to that provider
     if (userKeyRecord && userKeyRecord.provider !== "workers-ai") {
       const activeProvider = userKeyRecord.provider;
-      const apiKey = userKeyRecord.apiKey;
+      const encryptionSecret =
+        c.env.AI_KEY_ENCRYPTION_SECRET || c.env.JWT_SECRET || "fallback-secret";
+      let apiKey = userKeyRecord.apiKey;
+      try {
+        apiKey = await decryptApiKey(userKeyRecord.apiKey, encryptionSecret);
+      } catch {
+        // Fallback if key wasn't encrypted or failed decryption
+        apiKey = userKeyRecord.apiKey;
+      }
+
       const baseUrl =
         userKeyRecord.baseUrl ||
         (activeProvider === "openai"
