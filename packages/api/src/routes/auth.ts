@@ -738,6 +738,40 @@ authRoutes.get("/login/github", c => {
   const clientRedirectUri = c.req.query("redirect_uri");
   const clientState = c.req.query("state"); // Original state from CLI/mobile
 
+  // Server-side validation of clientRedirectUri for mobile or custom redirect
+  if (clientRedirectUri) {
+    if (
+      platform === "mobile" &&
+      !clientRedirectUri.startsWith("magicappdev://")
+    ) {
+      return c.json(
+        {
+          error:
+            "Invalid redirect_uri scheme for mobile platform. Must start with magicappdev://",
+        },
+        400,
+      );
+    }
+    // General scheme validation to prevent open redirects (allow https:// for web/CLI or magicappdev:// for mobile)
+    try {
+      const parsedUrl = new URL(clientRedirectUri);
+      if (
+        parsedUrl.protocol !== "https:" &&
+        parsedUrl.protocol !== "magicappdev:"
+      ) {
+        return c.json(
+          {
+            error:
+              "Invalid redirect_uri protocol. Allowed: https:, magicappdev:",
+          },
+          400,
+        );
+      }
+    } catch {
+      return c.json({ error: "Malformed redirect_uri" }, 400);
+    }
+  }
+
   const apiRedirectUri =
     c.env.GITHUB_REDIRECT_URI ||
     new URL(c.req.url).origin + "/auth/callback/github";

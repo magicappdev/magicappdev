@@ -5,6 +5,7 @@
     "module": "es2022",
     "moduleResolution": "bundler",
     "target": "es2022",
+    "types": ["node"],
     "paths": {}
   },
   "include": ["src/**/*.ts"],

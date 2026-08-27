@@ -44,10 +44,11 @@ export default function LoginScreen() {
     try {
       setLoading(true);
       setError(null);
-      const loginUrl = api.getGitHubLoginUrl("mobile");
+      const redirectUri = Linking.createURL("auth/callback");
+      const loginUrl = api.getGitHubLoginUrl("mobile", redirectUri);
       const result = await WebBrowser.openAuthSessionAsync(
         loginUrl,
-        "magicappdev://auth/callback"
+        redirectUri
       );
 
       if (result.type === "success" && result.url) {

@@ -167,12 +167,26 @@ export class ApiClient {
     return data as T;
   }
 
-  getGitHubLoginUrl(platform: "web" | "mobile" = "web"): string {
-    return `${this.baseUrl}/auth/login/github?platform=${platform}`;
+  getGitHubLoginUrl(
+    platform: "web" | "mobile" = "web",
+    redirectUri?: string,
+  ): string {
+    const params = new URLSearchParams({ platform });
+    if (redirectUri) {
+      params.set("redirect_uri", redirectUri);
+    }
+    return `${this.baseUrl}/auth/login/github?${params.toString()}`;
   }
 
-  getDiscordLoginUrl(platform: "web" | "mobile" = "web"): string {
-    return `${this.baseUrl}/auth/login/discord?platform=${platform}`;
+  getDiscordLoginUrl(
+    platform: "web" | "mobile" = "web",
+    redirectUri?: string,
+  ): string {
+    const params = new URLSearchParams({ platform });
+    if (redirectUri) {
+      params.set("redirect_uri", redirectUri);
+    }
+    return `${this.baseUrl}/auth/login/discord?${params.toString()}`;
   }
 
   async login(credentials: {
