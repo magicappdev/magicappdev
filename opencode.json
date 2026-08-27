@@ -1,0 +1,40 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": ["Agents.md"],
+  "permission": {
+    "*": "ask",
+    "read": "allow",
+    "webfetch": "allow",
+    "edit": "allow",
+    "bash": {
+      "*": "ask",
+      "bun run *": "allow",
+      "bun x turbo *": "allow",
+      "git status*": "allow",
+      "git diff*": "allow",
+      "git add *": "allow",
+      "git commit *": "allow",
+      "rm -rf *": "deny",
+      "git push --force*": "deny"
+    }
+  },
+  "agent": {
+    "planner": {
+      "mode": "primary",
+      "tools": { "write": false, "edit": false, "bash": false }
+    },
+    "implementer": {
+      "mode": "subagent"
+    },
+    "shipper": {
+      "mode": "subagent",
+      "permission": {
+        "bash": {
+          "bun run deploy:*": "allow",
+          "*": "deny"
+        }
+      }
+    }
+  },
+  "plugin": ["./.opencode/plugin/pipeline-gate.ts"]
+}

@@ -83,7 +83,7 @@ export interface AgentState {
 
 const MODELS = {
   chat: "@cf/meta/llama-3.1-8b-instruct-fp8",
-  complex: "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+  complex: "@cf/meta/llama-3.3-70b-instruct-fp8",
   fast: "@cf/meta/llama-3.2-3b-instruct",
   code: "@cf/qwen/qwen2.5-coder-32b-instruct",
 };
@@ -1172,5 +1172,21 @@ export default {
     }
 
     return new Response("MagicAppDev Agents Worker", { status: 200 });
+  },
+
+  async scheduled(
+    controller: ScheduledController,
+    env: Env,
+    ctx: ExecutionContext,
+  ): Promise<void> {
+    // Scheduled handler to satisfy Cloudflare Workers cron bindings and prevent KV/cron invocation errors
+    ctx.waitUntil(
+      Promise.resolve().then(() => {
+        console.log(
+          "Scheduled agent cron executed at",
+          new Date(controller.scheduledTime).toISOString(),
+        );
+      }),
+    );
   },
 };

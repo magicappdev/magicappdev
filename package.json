@@ -52,6 +52,8 @@
     "build:templates": "turbo build --filter=@magicappdev/templates",
     "build:web": "turbo build --filter=@magicappdev/web",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s -r 0",
+    "verify:mark": "bun -e \"import { mkdirSync, writeFileSync } from 'fs'; mkdirSync('.pipeline', { recursive: true }); writeFileSync('.pipeline/last-verify.json', JSON.stringify({ passed: true, at: new Date().toISOString() }));\"",
+    "verify": "bun run check && bun run verify:mark",
     "check": "turbo build lint typecheck test",
     "clean": "turbo run clean && bun -e \"fs.rmSync('node_modules', { recursive: true, force: true })\"",
     "deploy:agent": "turbo run deploy --filter=@magicappdev/agent",
