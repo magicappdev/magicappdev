@@ -8,7 +8,6 @@
     "@expo/ui": "~57.0.14",
     "@expo/vector-icons": "^15.0.2",
     "@magicappdev/shared": "workspace:*",
-    "@unimodules/react-native-adapter": "^6.3.9",
     "expo": "~57.0.17",
     "expo-cli": "^6.3.10",
     "expo-constants": "~57.0.15",
