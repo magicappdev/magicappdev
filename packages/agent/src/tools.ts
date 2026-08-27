@@ -167,14 +167,40 @@ export const AGENT_TOOLS: Record<string, ToolDefinition> = {
     requiresApproval: true,
   },
 
-  deployToCloudflare: {
-    name: "deployToCloudflare",
-    description: "Deploy the project to Cloudflare Workers",
+  generateMultiFileProject: {
+    name: "generateMultiFileProject",
+    description:
+      "Generate a complete multi-file project from a template and natural language prompt",
     parameters: {
-      environment: {
+      templateSlug: {
         type: "string",
-        description: "Deployment environment (e.g., 'production', 'staging')",
+        description:
+          "Template slug (e.g., 'react-spa', 'next-app', 'ionic-app', 'cf-workers-api')",
+        required: true,
+      },
+      projectName: {
+        type: "string",
+        description: "Name of the project",
+        required: true,
+      },
+      variables: {
+        type: "object",
+        description: "Template variables and configuration options",
         required: false,
+      },
+    },
+    requiresApproval: true,
+  },
+
+  batchWriteFiles: {
+    name: "batchWriteFiles",
+    description:
+      "Write multiple files simultaneously into the project workspace",
+    parameters: {
+      files: {
+        type: "object",
+        description: "Array of files with path and content",
+        required: true,
       },
     },
     requiresApproval: true,
@@ -223,12 +249,13 @@ ${params}`;
 export function parseToolCalls(text: string): ToolCall[] {
   const toolCallRegex = /TOOL_CALL:(\w+)(\{[^}]+\})/g;
   const calls: ToolCall[] = [];
-  let match;
+  let match = toolCallRegex.exec(text);
 
-  while ((match = toolCallRegex.exec(text)) !== null) {
-    const [, toolName, paramsJson] = match;
+  while (match !== null) {
+    const toolName = match[1];
+    const paramsJson = match[2];
     try {
-      const parameters = JSON.parse(paramsJson);
+      const parameters = JSON.parse(paramsJson) as Record<string, unknown>;
       calls.push({
         id: crypto.randomUUID(),
         tool: toolName,
@@ -237,9 +264,9 @@ export function parseToolCalls(text: string): ToolCall[] {
         timestamp: Date.now(),
       });
     } catch {
-      // Invalid JSON, skip this tool call
       console.warn(`Invalid tool call JSON: ${paramsJson}`);
     }
+    match = toolCallRegex.exec(text);
   }
 
   return calls;
