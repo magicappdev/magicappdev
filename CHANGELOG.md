@@ -1,3 +1,22 @@
+# Changelog
+
+## Unreleased
+
+### Features
+
+- **web:** add workspace route (`/projects/:id/workspace`) for editing generated code in-browser ([e282999](https://github.com/magicappdev/magicappdev/commit/e282999))
+- **web:** add "Save to Project" button in chat UI to persist AI-generated files to D1 and navigate to workspace ([e282999](https://github.com/magicappdev/magicappdev/commit/e282999))
+- **agent:** wire tool execution to real D1 project storage (`project_files` table) ([5b13230](https://github.com/magicappdev/magicappdev/commit/5b13230))
+
+### Bug Fixes
+
+- **mobile:** add auth/callback route for OAuth deep link handling ([eed56cd](https://github.com/magicappdev/magicappdev/commit/eed56cd))
+
+### Chores
+
+- **build:** remove NX in favor of Turborepo-only build system; fixes bun.lock v3 incompatibility ([49cb245](https://github.com/magicappdev/magicappdev/commit/49cb245))
+- **mobile:** add postinstall script for Gradle 9 compatibility patches ([b069407](https://github.com/magicappdev/magicappdev/commit/b069407))
+
 # 0.0.0 (2026-01-30)
 
 ### Bug Fixes
