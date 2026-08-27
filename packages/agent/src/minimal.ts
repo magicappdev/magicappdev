@@ -84,7 +84,7 @@ interface SessionData {
   title: string;
 }
 
-const DEFAULT_MODEL = "@cf/meta/llama-3.1-8b-instruct";
+const DEFAULT_MODEL = "@cf/meta/llama-3.1-8b-instruct-fp8";
 const MAX_HISTORY_MESSAGES = 20;
 const MAX_CONTEXT_FILES = 20;
 

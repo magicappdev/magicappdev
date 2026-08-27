@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+} from "react";
 import type { User } from "@magicappdev/shared";
 import { api } from "../lib/api";
 
@@ -110,7 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   };
 
-  const refreshUser = async (): Promise<User | null> => {
+  const refreshUser = useCallback(async (): Promise<User | null> => {
     const accessToken = localStorage.getItem("access_token");
     if (accessToken) {
       try {
@@ -121,7 +127,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
     return null;
-  };
+  }, []);
 
   return (
     <AuthContext.Provider

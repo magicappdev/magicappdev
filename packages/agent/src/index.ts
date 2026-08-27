@@ -82,10 +82,10 @@ export interface AgentState {
 }
 
 const MODELS = {
-  chat: "@cf/meta/llama-3.1-8b-instruct",
-  complex: "@cf/meta/llama-3.1-70b-instruct",
-  fast: "@cf/mistral/mistral-7b-instruct-v0.2",
-  code: "@cf/deepseek-ai/deepseek-coder-33b-instruct",
+  chat: "@cf/meta/llama-3.1-8b-instruct-fp8",
+  complex: "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+  fast: "@cf/meta/llama-3.2-3b-instruct",
+  code: "@cf/qwen/qwen2.5-coder-32b-instruct",
 };
 
 class ModelRouter {
@@ -1118,7 +1118,7 @@ Output JSON format: { "suggestions": ["Idea 1", "Idea 2"] }`;
 
     try {
       const response = (await this.env.AI.run(
-        "@cf/meta/llama-3.1-8b-instruct",
+        "@cf/meta/llama-3.1-8b-instruct-fp8",
         {
           messages: [{ role: "system", content: systemPrompt }],
           response_format: { type: "json_object" },

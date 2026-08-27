@@ -33,9 +33,28 @@ export default function LoginScreen() {
       );
 
       if (result.type === "success" && result.url) {
-        const parsed = Linking.parse(result.url);
-        const token = parsed.queryParams?.token as string;
-        const refreshToken = parsed.queryParams?.refreshToken as string;
+        let redirectUrl = result.url;
+        if (redirectUrl.includes("expo-development-client/?url=")) {
+          const match = redirectUrl.match(/[?&]url=([^&]+)/);
+          if (match && match[1]) {
+            redirectUrl = decodeURIComponent(match[1]);
+          }
+        }
+
+        const parsed = Linking.parse(redirectUrl);
+        let token = parsed.queryParams?.token as string;
+        let refreshToken = parsed.queryParams?.refreshToken as string;
+
+        if (!token && redirectUrl.includes("?")) {
+          const params = new URLSearchParams(redirectUrl.split("?")[1]);
+          token = params.get("token") || "";
+          refreshToken = params.get("refreshToken") || "";
+        }
+        if (!token && redirectUrl.includes("#")) {
+          const params = new URLSearchParams(redirectUrl.split("#")[1]);
+          token = params.get("token") || "";
+          refreshToken = params.get("refreshToken") || "";
+        }
 
         if (token) {
           api.setToken(token);
@@ -45,6 +64,8 @@ export default function LoginScreen() {
             await secureStorage.setItem("magicappdev_refresh_token", refreshToken);
           }
           router.replace("/projects");
+        } else {
+          setError(`Authentication completed but no token returned. (URL: ${redirectUrl})`);
         }
       }
     } catch (err: unknown) {

@@ -38,7 +38,7 @@ aiRoutes.post("/chat", async c => {
     // Use Workers AI by default
     if (provider === "workers-ai") {
       const response = await c.env.AI.run(
-        "@cf/meta/llama-3.1-8b-instruct",
+        "@cf/meta/llama-3.1-8b-instruct-fp8",
         {
           messages: messages.map(m => ({
             role: m.role,
@@ -116,22 +116,28 @@ aiRoutes.get("/models", async c => {
     data: {
       models: [
         {
-          id: "@cf/meta/llama-3.1-8b-instruct",
-          name: "Llama 3.1 8B Instruct",
+          id: "@cf/meta/llama-3.1-8b-instruct-fp8",
+          name: "Llama 3.1 8B Instruct (FP8)",
           provider: "workers-ai",
-          description: "Meta's Llama 3.1 8B model for text generation",
+          description: "Meta's Llama 3.1 8B model for general chat",
         },
         {
-          id: "@cf/meta/llama-3.1-70b-instruct",
-          name: "Llama 3.1 70B Instruct",
+          id: "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+          name: "Llama 3.3 70B Instruct (FP8 Fast)",
           provider: "workers-ai",
-          description: "Meta's Llama 3.1 70B model for complex tasks",
+          description: "Meta's Llama 3.3 70B model for complex tasks",
         },
         {
-          id: "@cf/mistral/mistral-7b-instruct-v0.2",
-          name: "Mistral 7B Instruct",
+          id: "@cf/meta/llama-3.2-3b-instruct",
+          name: "Llama 3.2 3B Instruct",
           provider: "workers-ai",
-          description: "Mistral's 7B model for fast inference",
+          description: "Meta's Llama 3.2 3B model for fast inference",
+        },
+        {
+          id: "@cf/qwen/qwen2.5-coder-32b-instruct",
+          name: "Qwen 2.5 Coder 32B Instruct",
+          provider: "workers-ai",
+          description: "Qwen's code-specialized 32B model",
         },
       ],
     },
