@@ -13,7 +13,9 @@ import {
   compileTemplate,
   compileFilePath,
   evaluateCondition,
+  generateFromTemplate,
 } from "@magicappdev/templates";
+import { createDatabase, projectFiles, eq, and } from "@magicappdev/database";
 import type { Template, TemplateMetadata } from "@magicappdev/templates";
 import { registry } from "@magicappdev/templates/registry";
 import type { Connection, WSMessage } from "agents";
@@ -584,63 +586,209 @@ export class MagicAgent extends Agent<Env, AgentState> {
   }
 
   /**
-   * Execute specific tool actions
-   * This is a placeholder - real implementation would integrate with file system, etc.
+   * Execute specific tool actions using D1 project storage
    */
   private async executeToolAction(
     toolName: string,
     parameters: Record<string, unknown>,
   ): Promise<unknown> {
+    const projectId = this.state.projectId;
+    const db = createDatabase(this.env.DB);
+
     switch (toolName) {
-      case "readFile":
-        // TODO: Integrate with actual file reading via project storage
+      case "readFile": {
+        if (!projectId) return { error: "No project selected" };
+        const filePath = parameters.path as string;
+        const file = await db.query.projectFiles.findFirst({
+          where: and(
+            eq(projectFiles.projectId, projectId),
+            eq(projectFiles.path, filePath),
+          ),
+        });
+        if (!file) return { error: `File not found: ${filePath}` };
         return {
-          content: `[File content for ${parameters.path}]`,
-          path: parameters.path,
+          content: file.content,
+          path: file.path,
+          language: file.language,
         };
+      }
 
-      case "writeFile":
-        // TODO: Integrate with actual file writing
+      case "writeFile": {
+        if (!projectId) return { error: "No project selected" };
+        const filePath = parameters.path as string;
+        const content = parameters.content as string;
+        const language = filePath.split(".").pop() || "text";
+        const size = content.length;
+
+        const existing = await db.query.projectFiles.findFirst({
+          where: and(
+            eq(projectFiles.projectId, projectId),
+            eq(projectFiles.path, filePath),
+          ),
+        });
+
+        if (existing) {
+          await db
+            .update(projectFiles)
+            .set({
+              content,
+              language,
+              size,
+              updatedAt: new Date().toISOString(),
+            })
+            .where(eq(projectFiles.id, existing.id));
+          return { success: true, path: filePath, message: "File updated" };
+        }
+
+        await db.insert(projectFiles).values({
+          id: crypto.randomUUID(),
+          projectId,
+          path: filePath,
+          content,
+          language,
+          size,
+        });
+        return { success: true, path: filePath, message: "File created" };
+      }
+
+      case "listFiles": {
+        if (!projectId) return { error: "No project selected" };
+        const dirPath = (parameters.path as string) || "";
+        const pattern = parameters.pattern as string | undefined;
+
+        let files = await db.query.projectFiles.findMany({
+          where: eq(projectFiles.projectId, projectId),
+        });
+
+        // Filter by directory
+        if (dirPath) {
+          files = files.filter(f => f.path.startsWith(dirPath));
+        }
+
+        // Filter by glob pattern (simple implementation)
+        if (pattern) {
+          const regex = new RegExp(
+            pattern
+              .replace(/\./g, "\\.")
+              .replace(/\*/g, ".*")
+              .replace(/\?/g, "."),
+          );
+          files = files.filter(f => regex.test(f.path));
+        }
+
         return {
-          success: true,
-          path: parameters.path,
-          message: "File written successfully",
+          files: files.map(f => f.path),
+          path: dirPath || ".",
+          count: files.length,
         };
+      }
 
-      case "listFiles":
-        // TODO: Integrate with actual directory listing
-        return {
-          files: ["src/index.ts", "package.json"],
-          path: parameters.path || ".",
-        };
+      case "searchCode": {
+        if (!projectId) return { error: "No project selected" };
+        const query = parameters.query as string;
+        const filePattern = parameters.filePattern as string | undefined;
 
-      case "searchCode":
-        // TODO: Integrate with actual code search
-        return { matches: [], query: parameters.query };
+        let files = await db.query.projectFiles.findMany({
+          where: eq(projectFiles.projectId, projectId),
+        });
+
+        // Filter by file pattern
+        if (filePattern) {
+          const regex = new RegExp(
+            filePattern
+              .replace(/\./g, "\\.")
+              .replace(/\*/g, ".*")
+              .replace(/\?/g, "."),
+          );
+          files = files.filter(f => regex.test(f.path));
+        }
+
+        const matches: Array<{ path: string; line: number; content: string }> =
+          [];
+        const searchRegex = new RegExp(query, "gi");
+
+        for (const file of files) {
+          const lines = file.content.split("\n");
+          for (let i = 0; i < lines.length; i++) {
+            if (searchRegex.test(lines[i])) {
+              matches.push({
+                path: file.path,
+                line: i + 1,
+                content: lines[i].trim(),
+              });
+            }
+            searchRegex.lastIndex = 0;
+          }
+        }
+
+        return { matches, query, totalMatches: matches.length };
+      }
 
       case "runCommand":
-        // TODO: Integrate with command execution (with strict sandboxing)
+        // Command execution is not supported in Cloudflare Workers sandbox
+        // Return a helpful message instead of executing
         return {
-          output: `[Command output for: ${parameters.command}]`,
-          exitCode: 0,
+          output: `Command execution is not available in the cloud sandbox. To run "${parameters.command}", clone the project locally.`,
+          exitCode: 1,
+          note: "Commands must be run locally for security",
         };
 
-      case "generateComponent":
-        // TODO: Integrate with template generation
+      case "generateComponent": {
+        const name = parameters.name as string;
+        const directory = (parameters.directory as string) || "src";
+        const componentType = (parameters.type as string) || "react";
+
+        // Find a matching template
+        const templates = registry.filter({
+          category: "component",
+          search: componentType,
+        });
+
+        if (templates.length === 0) {
+          return {
+            error: `No component template found for type "${componentType}"`,
+            suggestion: "Available types: react, expo, ionic",
+          };
+        }
+
+        const template = templates[0];
+        const result = await generateFromTemplate(template, {
+          outputDir: directory,
+          variables: { name, componentName: name },
+          dryRun: false,
+          overwrite: true,
+        });
+
         return {
-          created: [`${parameters.directory || "src"}/${parameters.name}.tsx`],
+          created: result.files,
+          template: template.name,
+          directory,
         };
+      }
 
       case "deployToCloudflare":
-        // TODO: Integrate with Wrangler deployment
+        // Wrangler deployment requires local CLI, not available in Workers
         return {
-          url: "https://example.workers.dev",
+          url: null,
           environment: parameters.environment || "production",
+          note: "Deployment must be run locally: wrangler deploy",
         };
 
-      case "deleteFile":
-        // TODO: Integrate with file deletion
-        return { deleted: parameters.path };
+      case "deleteFile": {
+        if (!projectId) return { error: "No project selected" };
+        const filePath = parameters.path as string;
+        const existing = await db.query.projectFiles.findFirst({
+          where: and(
+            eq(projectFiles.projectId, projectId),
+            eq(projectFiles.path, filePath),
+          ),
+        });
+
+        if (!existing) return { error: `File not found: ${filePath}` };
+
+        await db.delete(projectFiles).where(eq(projectFiles.id, existing.id));
+        return { deleted: filePath, success: true };
+      }
 
       default:
         throw new Error(`Tool not implemented: ${toolName}`);

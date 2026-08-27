@@ -123,6 +123,7 @@
       "name": "@magicappdev/agent",
       "version": "0.0.1",
       "dependencies": {
+        "@magicappdev/database": "workspace:*",
         "@magicappdev/shared": "workspace:*",
         "@magicappdev/templates": "workspace:*",
         "agents": "0.3.7",

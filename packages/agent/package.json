@@ -13,6 +13,7 @@
     "typecheck": "tsc -b"
   },
   "dependencies": {
+    "@magicappdev/database": "workspace:*",
     "@magicappdev/shared": "workspace:*",
     "@magicappdev/templates": "workspace:*",
     "agents": "0.3.7",
