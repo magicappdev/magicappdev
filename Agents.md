@@ -50,7 +50,7 @@ Database utilities with Drizzle ORM for Cloudflare D1, providing the foundation 
 - **ORM**: Drizzle ORM
 - **Database**: Cloudflare D1
 - **Schema Management**: Drizzle Kit
-- **Tables**: `users`, `accounts` (OAuth), `sessions`, `profiles`, `projects`, `admin-api-keys`
+- **Tables**: `users`, `accounts` (OAuth), `sessions`, `profiles`, `projects`, `admin-api-keys`, `user_ai_keys` (for BYOK secure storage)
 
 #### Current Status (January 24, 2026)
 
@@ -115,7 +115,7 @@ Backend API built with Hono and deployed on Cloudflare Workers, providing the co
 
 - **Framework**: Hono for lightweight HTTP handling
 - **Authentication**: GitHub OAuth2 flow with JWT session management.
-- **AI Gateway**: Routing through Cloudflare AI Gateway for optimized model access and usage tracking.
+- **AI Gateway & BYOK**: Routing through Cloudflare AI Gateway, plus support for user-configured custom AI providers (OpenAI, Anthropic, DeepSeek, Groq, Custom) using application-layer AES-GCM encryption for stored API keys.
 - **Security**: Robust CORS configuration and `authMiddleware` for protecting sensitive endpoints.
 - **Streaming**: Real-time streaming capabilities for AI responses.
 
@@ -313,6 +313,7 @@ Next.js-based web application providing the primary user interface for MagicAppD
 - ✅ GitHub OAuth integration
 - ✅ Responsive design with Tailwind CSS
 - ✅ Admin interface for management
+- ✅ Comprehensive settings page including User Profile management and BYOK AI Provider configuration
 
 #### Usage Guidelines
 
@@ -351,6 +352,7 @@ Ionicframeworkd based mobile application mirroring the web interface features, p
 - ✅ App icons converted to PNG with transparency
 - ✅ Metro bundler fixes for Windows
 - ✅ Android build path length issues resolved
+- ✅ Settings submenu with User Profile management and BYOK AI Provider configuration
 
 #### Usage Guidelines
 
