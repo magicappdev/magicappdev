@@ -296,14 +296,14 @@ function InputArea({
                 type="button"
                 onClick={() => {
                   setAttachmentOpen(false);
-                  window.alert(
-                    "Skills coming soon! You'll be able to select from pre-built templates and workflows.",
-                  );
+                  document
+                    .getElementById("template-gallery")
+                    ?.scrollIntoView({ behavior: "smooth" });
                 }}
                 className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-zinc-200 hover:bg-zinc-800 transition-colors"
               >
                 <BookOpen className="w-4 h-4 text-zinc-400 shrink-0" />
-                Use a skill
+                Browse templates
               </button>
             </div>
           </div>
@@ -1247,7 +1247,7 @@ export default function ChatPage() {
                 ))}
               </div>
 
-              <div>
+              <div id="template-gallery">
                 <h2 className="text-lg font-semibold text-zinc-200 mb-5">
                   Start from a template
                 </h2>

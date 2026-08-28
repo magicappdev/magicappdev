@@ -43,6 +43,7 @@ export type { PendingApproval, ToolCall, ToolDefinition };
 export interface Env {
   AI: WorkerAi;
   DB: D1Database;
+  AI_CACHE: KVNamespace;
   MagicAgent: DurableObjectNamespace;
   IssueReviewer: DurableObjectNamespace;
   FeatureSuggester: DurableObjectNamespace;
@@ -1006,6 +1007,37 @@ Respond with a JSON object: { "summary": "one-line cause", "patch": "exact code 
     }
   }
 
+  private async hashString(input: string): Promise<string> {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(input);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+  }
+
+  private async getCachedAIResponse(cacheKey: string): Promise<string | null> {
+    if (!this.env.AI_CACHE) return null;
+    try {
+      return await this.env.AI_CACHE.get(`ai:${cacheKey}`);
+    } catch {
+      return null;
+    }
+  }
+
+  private async setCachedAIResponse(
+    cacheKey: string,
+    response: string,
+  ): Promise<void> {
+    if (!this.env.AI_CACHE) return;
+    try {
+      await this.env.AI_CACHE.put(`ai:${cacheKey}`, response, {
+        expirationTtl: 3600, // 1 hour
+      });
+    } catch {
+      // Cache write is best-effort
+    }
+  }
+
   private async fetchAnalysis(prompt: string): Promise<unknown> {
     const response = await this.env.AI.run(
       "@cf/meta/llama-3.3-70b-instruct-fp8",
@@ -1223,72 +1255,98 @@ User Request: ${userPrompt}`;
         }),
       );
 
-      const aiResult = await this.env.AI.run(model, {
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...updatedMessages
-            .slice(-20)
-            .map(m => ({ role: m.role, content: m.content })),
-        ],
-        stream: true,
+      // Check AI response cache
+      const cacheInput = JSON.stringify({
+        model,
+        system: systemPrompt,
+        messages: updatedMessages.slice(-10).map(m => ({
+          role: m.role,
+          content: m.content,
+        })),
       });
+      const cacheKey = await this.hashString(cacheInput);
+      const cachedResponse = await this.getCachedAIResponse(cacheKey);
 
       let assistantContent = "";
 
-      // Check if result is a ReadableStream
-      if (
-        aiResult &&
-        typeof aiResult === "object" &&
-        "getReader" in aiResult &&
-        typeof (aiResult as ReadableStream).getReader === "function"
-      ) {
-        const stream = aiResult as ReadableStream;
-        const reader = stream.getReader();
-        const decoder = new TextDecoder();
+      if (cachedResponse) {
+        // Cache hit — send cached response directly
+        assistantContent = cachedResponse;
+        connection.send(
+          JSON.stringify({ type: "chat_chunk", content: assistantContent }),
+        );
+      } else {
+        // Cache miss — call AI and stream
+        const aiResult = await this.env.AI.run(model, {
+          messages: [
+            { role: "system", content: systemPrompt },
+            ...updatedMessages
+              .slice(-20)
+              .map(m => ({ role: m.role, content: m.content })),
+          ],
+          stream: true,
+        });
 
-        try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
+        // Check if result is a ReadableStream
+        if (
+          aiResult &&
+          typeof aiResult === "object" &&
+          "getReader" in aiResult &&
+          typeof (aiResult as ReadableStream).getReader === "function"
+        ) {
+          const stream = aiResult as ReadableStream;
+          const reader = stream.getReader();
+          const decoder = new TextDecoder();
 
-            const text = decoder.decode(value, { stream: true });
-            const lines = text.split("\n");
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
 
-            for (const line of lines) {
-              if (line.startsWith("data: ")) {
-                const data = line.slice(6).trim();
-                if (data === "[DONE]") continue;
-                try {
-                  const parsed = JSON.parse(data) as AiResponse;
-                  if (parsed.response) {
-                    assistantContent += parsed.response;
-                    connection.send(
-                      JSON.stringify({
-                        type: "chat_chunk",
-                        content: parsed.response,
-                      }),
-                    );
+              const text = decoder.decode(value, { stream: true });
+              const lines = text.split("\n");
+
+              for (const line of lines) {
+                if (line.startsWith("data: ")) {
+                  const data = line.slice(6).trim();
+                  if (data === "[DONE]") continue;
+                  try {
+                    const parsed = JSON.parse(data) as AiResponse;
+                    if (parsed.response) {
+                      assistantContent += parsed.response;
+                      connection.send(
+                        JSON.stringify({
+                          type: "chat_chunk",
+                          content: parsed.response,
+                        }),
+                      );
+                    }
+                  } catch {
+                    // Ignore parse errors for incomplete JSON
                   }
-                } catch {
-                  // Ignore parse errors for incomplete JSON
                 }
               }
             }
+          } finally {
+            reader.releaseLock();
           }
-        } finally {
-          reader.releaseLock();
+        } else {
+          // Non-streaming response fallback
+          const response = aiResult as AiResponse;
+          if (response && response.response) {
+            assistantContent = response.response;
+            connection.send(
+              JSON.stringify({
+                type: "chat_chunk",
+                content: assistantContent,
+              }),
+            );
+          }
         }
-      } else {
-        // Non-streaming response fallback
-        const response = aiResult as AiResponse;
-        if (response && response.response) {
-          assistantContent = response.response;
-          connection.send(
-            JSON.stringify({
-              type: "chat_chunk",
-              content: assistantContent,
-            }),
-          );
+
+        // Cache the response for future requests
+        if (assistantContent) {
+          await this.setCachedAIResponse(cacheKey, assistantContent);
         }
       }
 

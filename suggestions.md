@@ -18,13 +18,13 @@
 | **FEAT-004** | Authentication          | **Discord OAuth Integration**: JWT-signed state, KV session polling, linked-accounts endpoint. GitHub OAuth also hardened.                                 | Medium | ✅ Done    |
 | **FEAT-005** | Production Readiness    | **Automated Playwright E2E Suite**: 12/12 tests passing (auth, chat, projects, AI Studio canvas + preview-error-relay + mock WS server).                   | High   | ✅ Done    |
 | **FEAT-006** | Developer Tools         | **Visual Template Customizer**: Admin UI to preview and tweak Handlebars templates with live variable injection.                                           | Medium | 📋 Backlog |
-| **FEAT-007** | Performance / Caching   | **AI Response Caching with Cloudflare KV**: Cache prompt→template mappings to reduce AI Gateway token spend.                                               | Medium | 📋 Backlog |
+| **FEAT-007** | Performance / Caching   | **AI Response Caching with Cloudflare KV**: Cache prompt→template mappings to reduce AI Gateway token spend.                                               | Medium | ✅ Done    |
 | **QW-001**   | Bug Fix / Security      | **Admin Delete User Bug**: "Delete User" button calls `api.deleteAccount()` — deletes the admin, not the selected user. Live data-loss risk.               | High   | ✅ Done    |
 | **QW-002**   | UX / Data Persistence   | **Chat Conversation History**: Messages lost on refresh. Backend (`chat_sessions`, `chat_messages` tables + API routes) already built — just unwired.      | High   | ✅ Done    |
 | **QW-003**   | UX / AI                 | **Model Selector Functional**: Chat model dropdown sends `model` field but agent ignores it — purely cosmetic. Wire to `handleChat`.                       | High   | ✅ Done    |
 | **QW-004**   | Performance             | **Agent Context Window Cap**: No message truncation — conversations will silently fail at model context limits. Simple char/token cap needed.              | Medium | ✅ Done    |
 | **QW-005**   | UX / DX                 | **Workspace Syntax Highlighting**: Code editor is a raw `<textarea>` — no syntax highlighting. Add lightweight highlighter overlay.                        | Medium | ✅ Done    |
-| **QW-006**   | UX / Polish             | **Remove Dead Skills Button**: "Use a skill" attachment menu item opens `window.alert("Skills coming soon!")`. Remove or replace with Templates shortcut.  | Low    | 🚀 Planned |
+| **QW-006**   | UX / Polish             | **Remove Dead Skills Button**: "Use a skill" attachment menu item opens `window.alert("Skills coming soon!")`. Remove or replace with Templates shortcut.  | Low    | ✅ Done    |
 | **QW-007**   | Security / Code Quality | **Strip Debug Logs in Settings**: 6+ `console.log` statements leak auth tokens and user data to browser console in production.                             | Medium | ✅ Done    |
 
 ---
