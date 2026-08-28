@@ -3,8 +3,10 @@
  */
 
 import { buttonComponentTemplate } from "./button-component.js";
+import { reactNativeTemplate } from "./react-native-app.js";
 import { cfWorkersApiTemplate } from "./cf-workers-api.js";
 import { ecommerceTemplate } from "./ecommerce-store.js";
+import { honoApiTemplate } from "./hono-drizzle-api.js";
 import { reactSpaTemplate } from "./react-spa.js";
 import { ionicAppTemplate } from "./ionic-app.js";
 import { blankAppTemplate } from "./blank-app.js";
@@ -24,6 +26,8 @@ export const builtInTemplates = [
   reactSpaTemplate,
   ecommerceTemplate,
   saasTemplate,
+  reactNativeTemplate,
+  honoApiTemplate,
   nextAppTemplate,
   cfWorkersApiTemplate,
   expoAppTemplate,
@@ -39,6 +43,8 @@ export {
   reactSpaTemplate,
   ecommerceTemplate,
   saasTemplate,
+  reactNativeTemplate,
+  honoApiTemplate,
   nextAppTemplate,
   cfWorkersApiTemplate,
   expoAppTemplate,

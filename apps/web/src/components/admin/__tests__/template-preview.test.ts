@@ -44,20 +44,18 @@ const mockTemplate: Template = {
   ],
   files: [
     {
-      path: "src/{{pascalCase name}}.tsx",
-      content:
-        "export const {{pascalCase name}} = () => <div>{{appName}}</div>;",
+      path: "src/{{name}}.tsx",
+      content: "export const App = () => <div>{{appName}}</div>;",
       condition: "typescript === true",
     },
     {
-      path: "src/{{pascalCase name}}.jsx",
-      content:
-        "export const {{pascalCase name}} = () => <div>{{appName}}</div>;",
+      path: "src/{{name}}.jsx",
+      content: "export const App = () => <div>{{appName}}</div>;",
       condition: "typescript !== true",
     },
     {
       path: "package.json",
-      content: '{"name":"{{kebabCase name}}"}',
+      content: '{"name":"{{name}}"}',
     },
   ],
   dependencies: {},
@@ -116,8 +114,8 @@ describe("renderTemplateFiles", () => {
     });
 
     const paths = files.map(f => f.path);
-    expect(paths).toContain("src/MyApp.tsx");
-    expect(paths).not.toContain("src/MyApp.jsx"); // condition false
+    expect(paths).toContain("src/my-app.tsx");
+    expect(paths).not.toContain("src/my-app.jsx");
     expect(paths).toContain("package.json");
     expect(files.length).toBe(2);
   });
@@ -132,8 +130,8 @@ describe("renderTemplateFiles", () => {
     });
 
     const paths = files.map(f => f.path);
-    expect(paths).toContain("src/MyApp.jsx");
-    expect(paths).not.toContain("src/MyApp.tsx");
+    expect(paths).toContain("src/my-app.jsx");
+    expect(paths).not.toContain("src/my-app.tsx");
   });
 
   it("should compile Handlebars expressions in content", () => {
@@ -145,9 +143,9 @@ describe("renderTemplateFiles", () => {
       style: "tailwind",
     });
 
-    const tsxFile = files.find(f => f.path === "src/HelloWorld.tsx");
-    expect(tsxFile?.content).toContain("HelloWorld");
+    const tsxFile = files.find(f => f.path === "src/hello-world.tsx");
     expect(tsxFile?.content).toContain("Hello World");
+    expect(tsxFile?.content).toContain("App = () =>");
   });
 
   it("should compile Handlebars expressions in file paths", () => {
@@ -159,7 +157,7 @@ describe("renderTemplateFiles", () => {
       style: "tailwind",
     });
 
-    expect(files.some(f => f.path === "src/TestApp.tsx")).toBe(true);
+    expect(files.some(f => f.path === "src/test-app.tsx")).toBe(true);
   });
 });
 

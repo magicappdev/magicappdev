@@ -44,6 +44,8 @@ export {
   reactSpaTemplate,
   ecommerceTemplate,
   saasTemplate,
+  reactNativeTemplate,
+  honoApiTemplate,
   nextAppTemplate,
   cfWorkersApiTemplate,
   expoAppTemplate,
