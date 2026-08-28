@@ -1,8 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import type { userAiKeys } from "@magicappdev/database";
 import { encryptApiKey } from "../utils/encryption.js";
 import { aiKeysRoutes } from "../routes/ai-keys.js";
+import type { AppContext } from "../types.js";
 import { aiRoutes } from "../routes/ai.js";
 import { Hono } from "hono";
+
+type StoredAiKey = typeof userAiKeys.$inferInsert;
 
 // Mock database
 vi.mock("@magicappdev/database", () => ({
@@ -20,20 +24,19 @@ vi.mock("@magicappdev/database", () => ({
 }));
 
 describe("AI Keys & BYOK Proxy Unit/Integration Tests", () => {
-  let mockDb: any;
-  let app: Hono<any>;
-  let storedKeys: any[] = [];
+  let app: Hono<AppContext>;
+  let storedKeys: StoredAiKey[] = [];
 
   beforeEach(() => {
     storedKeys = [];
-    mockDb = {
+    const mockDb = {
       select: () => ({
         from: () => ({
           where: async () => storedKeys,
         }),
       }),
       insert: () => ({
-        values: async (val: any) => {
+        values: async (val: StoredAiKey) => {
           storedKeys.push(val);
           return true;
         },
@@ -48,14 +51,17 @@ describe("AI Keys & BYOK Proxy Unit/Integration Tests", () => {
       }),
     };
 
-    app = new Hono();
+    app = new Hono<AppContext>();
     app.use("*", async (c, next) => {
-      c.set("db", mockDb);
+      c.set("db", mockDb as unknown as AppContext["Variables"]["db"]);
       c.set("userId", "test-user-id");
       c.env = {
-        AI_KEY_ENCRYPTION_SECRET: "test-secret",
+        DB: {} as AppContext["Bindings"]["DB"],
+        AI: {} as AppContext["Bindings"]["AI"],
+        ENVIRONMENT: "test",
         JWT_SECRET: "test-jwt",
-      };
+        AI_KEY_ENCRYPTION_SECRET: "test-secret",
+      } as AppContext["Bindings"];
       await next();
     });
     app.route("/ai-keys", aiKeysRoutes);

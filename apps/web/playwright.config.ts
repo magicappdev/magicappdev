@@ -11,12 +11,20 @@ export default defineConfig({
     baseURL: "http://localhost:3100",
     trace: "on-first-retry",
   },
-  webServer: {
-    command: "bun run dev",
-    url: "http://localhost:3100",
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
-  },
+  webServer: [
+    {
+      command: "bun run dev",
+      url: "http://localhost:3100",
+      reuseExistingServer: !process.env.CI,
+      timeout: 120 * 1000,
+    },
+    {
+      command: "node e2e/mock-agent-server.mjs",
+      url: "http://localhost:8788/health",
+      reuseExistingServer: !process.env.CI,
+      timeout: 10 * 1000,
+    },
+  ],
   projects: [
     {
       name: "chromium",

@@ -1,7 +1,8 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 
-test.skip("AI Studio Canvas flow on chat page", async ({ page }) => {
+async function submitPrompt(page: Page) {
   await page.goto("/chat");
+
   await expect(
     page.getByRole("heading", { name: "What do you want to create?" }),
   ).toBeVisible();
@@ -10,23 +11,27 @@ test.skip("AI Studio Canvas flow on chat page", async ({ page }) => {
     .locator("textarea")
     .fill("Build a modern task management dashboard with kanban board");
 
-  // Use /Create|Send/ to match either label (isLanding may vary); force: true
-  // bypasses disabled state in test environments where WebSocket is unavailable.
-  await page
-    .getByRole("button", { name: /Create|Send/ })
-    .click({ force: true });
+  const createButton = page.getByRole("button", { name: /Create|Send/ });
+  await expect(createButton).toBeVisible({ timeout: 10_000 });
+  await createButton.click();
+}
+
+test("AI Studio Canvas flow on chat page", async ({ page }: { page: Page }) => {
+  await submitPrompt(page);
 
   await expect(page.getByText("AI Studio Canvas")).toBeVisible({
-    timeout: 10000,
+    timeout: 15_000,
   });
 });
 
-test.skip("AI Studio model selector and view mode switcher", async ({
+test("AI Studio model selector and view mode switcher", async ({
   page,
+}: {
+  page: Page;
 }) => {
-  await page.goto("/chat");
+  await submitPrompt(page);
 
-  await expect(page.locator("select")).toBeVisible({ timeout: 10000 });
+  await expect(page.locator("select")).toBeVisible({ timeout: 10_000 });
 
   await expect(page.getByRole("button", { name: "Split View" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Chat Only" })).toBeVisible();

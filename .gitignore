@@ -93,3 +93,6 @@ apps/mobile/.vscode/
 .devcontainer/.env
 package.json
 packages/templates/templates
+
+apps/web/playwright-report/
+apps/web/test-results/
