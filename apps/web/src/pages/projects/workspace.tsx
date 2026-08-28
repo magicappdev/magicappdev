@@ -18,9 +18,15 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
+import {
+  PreviewModeToggle,
+  type PreviewMode,
+} from "@/components/workspace/PreviewModeToggle";
+import { WebContainerPreview } from "@/components/workspace/WebContainerPreview";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { LivePreview } from "@/components/workspace/LivePreview";
-import { useEffect, useState, useCallback, useRef } from "react";
 import { useAgentConnection } from "@/lib/agent-websocket.js";
+import { isWebContainerSupported } from "@/lib/webcontainer";
 import { useParams, useNavigate } from "react-router-dom";
 import { Typography } from "@/components/ui/Typography";
 import { Button } from "@/components/ui/Button";
@@ -61,6 +67,17 @@ export default function ProjectWorkspacePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [highlightedCode, setHighlightedCode] = useState("");
   const codeRef = useRef<HTMLPreElement>(null);
+  const [previewMode, setPreviewMode] = useState<PreviewMode>("cloud");
+  const webContainerSupported = useMemo(() => isWebContainerSupported(), []);
+
+  const previewFiles = useMemo(
+    () =>
+      projectFiles.map(f => ({
+        path: f.path,
+        content: f.content,
+      })),
+    [projectFiles],
+  );
 
   // Load project files
   useEffect(() => {
@@ -433,12 +450,23 @@ export default function ProjectWorkspacePage() {
             >
               Preview
             </Typography>
-            <Button variant="text" size="sm" className="h-6 w-6 p-0">
-              <RefreshCw size={14} />
-            </Button>
+            <div className="flex items-center gap-2">
+              <PreviewModeToggle
+                mode={previewMode}
+                onChange={setPreviewMode}
+                liveSupported={webContainerSupported}
+              />
+              <Button variant="text" size="sm" className="h-6 w-6 p-0">
+                <RefreshCw size={14} />
+              </Button>
+            </div>
           </div>
 
-          <LivePreview projectId={id || ""} files={projectFiles} />
+          {previewMode === "cloud" ? (
+            <LivePreview projectId={id || ""} files={projectFiles} />
+          ) : (
+            <WebContainerPreview files={previewFiles} />
+          )}
         </div>
       </div>
     </div>
