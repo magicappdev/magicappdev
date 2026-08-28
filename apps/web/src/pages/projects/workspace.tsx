@@ -19,9 +19,9 @@ import {
   Trash2,
 } from "lucide-react";
 import { LivePreview } from "@/components/workspace/LivePreview";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useAgentConnection } from "@/lib/agent-websocket.js";
 import { useParams, useNavigate } from "react-router-dom";
-import { useEffect, useState, useCallback } from "react";
 import { Typography } from "@/components/ui/Typography";
 import { Button } from "@/components/ui/Button";
 import { api } from "@/lib/api";
@@ -58,6 +58,9 @@ export default function ProjectWorkspacePage() {
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(
     new Set(["src", "app", "components"]),
   );
+  const [isEditing, setIsEditing] = useState(false);
+  const [highlightedCode, setHighlightedCode] = useState("");
+  const codeRef = useRef<HTMLPreElement>(null);
 
   // Load project files
   useEffect(() => {
@@ -110,6 +113,28 @@ export default function ProjectWorkspacePage() {
     return () =>
       window.removeEventListener("MAGICAPPDEV_IFRAME_ERROR", handleIframeError);
   }, [handleIframeError]);
+
+  // Syntax highlighting via highlight.js (dynamic import)
+  useEffect(() => {
+    if (!fileContent || !selectedFile || isEditing) return;
+    let cancelled = false;
+    import("highlight.js").then(({ default: hljs }) => {
+      if (cancelled) return;
+      const lang =
+        selectedFile.language === "tsx"
+          ? "typescript"
+          : selectedFile.language === "jsx"
+            ? "javascript"
+            : selectedFile.language;
+      const result = hljs.highlight(fileContent, {
+        language: lang || "plaintext",
+      });
+      setHighlightedCode(result.value);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [fileContent, selectedFile, isEditing]);
 
   // Build file tree
   const fileTree: FileNode[] = buildFileTree(projectFiles);
@@ -354,18 +379,39 @@ export default function ProjectWorkspacePage() {
 
               {/* Code Editor */}
               <div className="flex-1 overflow-hidden">
-                <textarea
-                  value={fileContent}
-                  onChange={e => setFileContent(e.target.value)}
-                  className="w-full h-full p-4 font-mono text-sm bg-background resize-none focus:outline-none"
-                  spellCheck={false}
-                  onKeyDown={e => {
-                    if (e.key === "s" && (e.ctrlKey || e.metaKey)) {
-                      e.preventDefault();
-                      handleSave();
-                    }
-                  }}
-                />
+                {isEditing ? (
+                  <textarea
+                    value={fileContent}
+                    onChange={e => setFileContent(e.target.value)}
+                    className="w-full h-full p-4 font-mono text-sm bg-background resize-none focus:outline-none"
+                    spellCheck={false}
+                    autoFocus
+                    onBlur={() => setIsEditing(false)}
+                    onKeyDown={e => {
+                      if (e.key === "s" && (e.ctrlKey || e.metaKey)) {
+                        e.preventDefault();
+                        handleSave();
+                        setIsEditing(false);
+                      }
+                      if (e.key === "Escape") {
+                        setIsEditing(false);
+                      }
+                    }}
+                  />
+                ) : (
+                  <pre
+                    ref={codeRef}
+                    className="w-full h-full p-4 font-mono text-sm bg-background overflow-auto cursor-pointer"
+                    onClick={() => setIsEditing(true)}
+                    title="Click to edit"
+                  >
+                    <code
+                      dangerouslySetInnerHTML={{
+                        __html: highlightedCode || fileContent,
+                      }}
+                    />
+                  </pre>
+                )}
               </div>
             </>
           ) : (

@@ -1226,7 +1226,9 @@ User Request: ${userPrompt}`;
       const aiResult = await this.env.AI.run(model, {
         messages: [
           { role: "system", content: systemPrompt },
-          ...updatedMessages.map(m => ({ role: m.role, content: m.content })),
+          ...updatedMessages
+            .slice(-20)
+            .map(m => ({ role: m.role, content: m.content })),
         ],
         stream: true,
       });

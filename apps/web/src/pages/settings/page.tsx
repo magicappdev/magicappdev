@@ -87,21 +87,13 @@ export default function SettingsPage() {
       setIsLoadingAccounts(true);
       setIsLoadingApiKeys(true);
       try {
-        console.log("Loading linked accounts and API keys...");
-        console.log("Current user:", user);
-        // Check if token is set in API client
-        const token = localStorage.getItem("access_token");
-        console.log("Token from localStorage:", token ? "Set" : "Not set");
         const [accounts, keys] = await Promise.all([
           api.getLinkedAccounts(),
           api.getUserApiKeys(),
         ]);
-        console.log("Linked accounts loaded:", accounts);
-        console.log("API keys loaded:", keys);
         setLinkedAccounts(accounts);
         setApiKeys(keys);
       } catch (error) {
-        console.error("Failed to load initial data:", error);
         setLinkError(
           error instanceof Error ? error.message : "Failed to load accounts",
         );
