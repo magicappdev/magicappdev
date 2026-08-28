@@ -205,6 +205,37 @@ export const AGENT_TOOLS: Record<string, ToolDefinition> = {
     },
     requiresApproval: true,
   },
+
+  patchError: {
+    name: "patchError",
+    description:
+      "Analyze a runtime or build error reported from the live preview iframe and suggest or apply a fix. Use this when the preview reports a runtime JavaScript error, module load failure, or component crash.",
+    parameters: {
+      errorMessage: {
+        type: "string",
+        description:
+          "The error message string (e.g. 'ReferenceError: foo is not defined')",
+        required: true,
+      },
+      filePath: {
+        type: "string",
+        description: "File path where the error occurred (e.g. 'src/App.tsx')",
+        required: false,
+      },
+      errorType: {
+        type: "string",
+        description:
+          "Category of the error: 'runtime', 'build', 'syntax', or 'network'",
+        required: false,
+      },
+      stackTrace: {
+        type: "string",
+        description: "The full stack trace, if available",
+        required: false,
+      },
+    },
+    requiresApproval: true,
+  },
 };
 
 /**

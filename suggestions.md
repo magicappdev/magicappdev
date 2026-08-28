@@ -10,15 +10,15 @@
 
 ## Summary Matrix
 
-| ID           | Category              | Description                                                                                                                                                | Impact | Status                                                  |
-| :----------- | :-------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------- | :----- | :------------------------------------------------------ |
-| **FEAT-001** | Developer Experience  | **One-Click GitHub Repository Export**: Push generated apps to a user's GitHub repo via OAuth. Already wired into chat page + `/github/create-repo` route. | High   | ✅ Done                                                 |
-| **FEAT-002** | AI / Agentic Workflow | **Self-Healing Agent Loops**: Catch runtime/build errors and feed them back to MagicAgent Durable Object for auto-patching.                                | High   | 🔄 In Progress (agent Worker live, tool-use scaffolded) |
-| **FEAT-003** | UI / Preview          | **Live WebContainers / StackBlitz Integration**: Run full React/Vite apps in-browser via WebContainer API.                                                 | High   | 📋 Backlog                                              |
-| **FEAT-004** | Authentication        | **Discord OAuth Integration**: JWT-signed state, KV session polling, linked-accounts endpoint. GitHub OAuth also hardened.                                 | Medium | ✅ Done                                                 |
-| **FEAT-005** | Production Readiness  | **Automated Playwright E2E Suite**: 10/10 tests passing (auth, chat, projects, AI Studio canvas + mock WS server).                                         | High   | ✅ Done                                                 |
-| **FEAT-006** | Developer Tools       | **Visual Template Customizer**: Admin UI to preview and tweak Handlebars templates with live variable injection.                                           | Medium | 📋 Backlog                                              |
-| **FEAT-007** | Performance / Caching | **AI Response Caching with Cloudflare KV**: Cache prompt→template mappings to reduce AI Gateway token spend.                                               | Medium | 📋 Backlog                                              |
+| ID           | Category              | Description                                                                                                                                                | Impact | Status     |
+| :----------- | :-------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------- | :----- | :--------- |
+| **FEAT-001** | Developer Experience  | **One-Click GitHub Repository Export**: Push generated apps to a user's GitHub repo via OAuth. Already wired into chat page + `/github/create-repo` route. | High   | ✅ Done    |
+| **FEAT-002** | AI / Agentic Workflow | **Self-Healing Agent Loops**: Catch runtime/build errors and feed them back to MagicAgent Durable Object for auto-patching.                                | High   | ✅ Done    |
+| **FEAT-003** | UI / Preview          | **Live WebContainers / StackBlitz Integration**: Run full React/Vite apps in-browser via WebContainer API.                                                 | High   | 📋 Backlog |
+| **FEAT-004** | Authentication        | **Discord OAuth Integration**: JWT-signed state, KV session polling, linked-accounts endpoint. GitHub OAuth also hardened.                                 | Medium | ✅ Done    |
+| **FEAT-005** | Production Readiness  | **Automated Playwright E2E Suite**: 10/10 tests passing (auth, chat, projects, AI Studio canvas + mock WS server).                                         | High   | ✅ Done    |
+| **FEAT-006** | Developer Tools       | **Visual Template Customizer**: Admin UI to preview and tweak Handlebars templates with live variable injection.                                           | Medium | 📋 Backlog |
+| **FEAT-007** | Performance / Caching | **AI Response Caching with Cloudflare KV**: Cache prompt→template mappings to reduce AI Gateway token spend.                                               | Medium | 📋 Backlog |
 
 ---
 
@@ -46,14 +46,21 @@
 - `apps/web/e2e/mock-agent-server.mjs`: lightweight WebSocket mock speaking Agents SDK protocol (`chat` → `chat_chunk` / `chat_done`) with HTTP `/health` for Playwright `webServer` health checks
 - Pre-existing flaky tests fixed: strict `h1` locator → `getByRole("heading")`, disabled Create button → `toBeVisible` + click, projects nav → auth redirect assertion
 
+### FEAT-002 – Self-Healing Agent Loops
+
+- `patchError` tool in `packages/agent/src/tools.ts` (auto-executed, no approval needed)
+- Agent `executeToolAction` case in `packages/agent/src/index.ts` — fetches AI analysis via JSON response format, returns summary + patch diff
+- Agent `onMessage` handles `preview_error` WebSocket event → queues or auto-executes `patchError`
+- `packages/agent/src/index.ts` — new `fetchAnalysis` helper for non-streaming JSON AI calls
+- Agent system prompt updated with step 5: auto-use `patchError` on preview errors
+- `apps/web/src/components/workspace/LivePreview.tsx` — injects `window.onerror` + `unhandledrejection` capture into both React and default iframe templates; posts `MAGICAPPDEV_PREVIEW_ERROR` to parent
+- `apps/web/src/lib/agent-websocket.ts` — shared singleton WebSocket hook (`useAgentConnection`, `useAgentMessages`, `usePreviewErrorListener`, `dispatchPreviewError`) with dedup fingerprints and reconnect logic
+- `apps/web/src/pages/chat/page.tsx` — refactored to use shared hook; handles `tool_pending_approval`, `tool_result`, `tool_error` message types
+- `apps/web/src/pages/projects/workspace.tsx` — listens for `MAGICAPPDEV_IFRAME_ERROR` custom events and dispatches `preview_error` to agent over WebSocket
+
 ---
 
 ## Pending Work (Detailed)
-
-### FEAT-002 – Self-Healing Agent Loops
-
-**Blocker:** Client-side sandbox/iframe error boundary not yet instrumented.  
-**Next step:** Add `window.onerror` / postMessage error relay in LivePreview iframe → MagicAgent Durable Object over WebSocket → LLM patch prompt.
 
 ### FEAT-003 – Live WebContainers
 

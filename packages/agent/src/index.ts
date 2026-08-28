@@ -236,6 +236,9 @@ export class MagicAgent extends Agent<Env, AgentState> {
         case "list_templates":
           this.handleListTemplates(connection);
           break;
+        case "preview_error":
+          await this.handlePreviewError(connection, data);
+          break;
         default:
           connection.send(
             JSON.stringify({ type: "error", message: "Unknown message type" }),
@@ -897,8 +900,168 @@ export class MagicAgent extends Agent<Env, AgentState> {
         return { deleted: filePath, success: true };
       }
 
+      case "patchError": {
+        const errorMessage = (parameters.errorMessage as string) || "";
+        const filePath = (parameters.filePath as string) || "unknown";
+        const errorType = (parameters.errorType as string) || "runtime";
+        const stackTrace = (parameters.stackTrace as string) || "";
+
+        const fixPrompt = `You are debugging a ${errorType} error in MagicAppDev.
+
+Error in file: ${filePath}
+Error message: ${errorMessage}
+${stackTrace ? "Stack trace:\n" + stackTrace.slice(0, 500) : ""}
+
+Analyze the error, identify the root cause, and provide a concrete patch.
+Respond with a JSON object: { "summary": "one-line cause", "patch": "exact code replacement or diff", "filePath": "${filePath}" }`;
+
+        try {
+          const analysisResult = await this.fetchAnalysis(fixPrompt);
+          if (
+            analysisResult &&
+            typeof analysisResult === "object" &&
+            "patch" in analysisResult
+          ) {
+            return {
+              success: true,
+              errorType,
+              filePath,
+              summary:
+                (analysisResult as Record<string, unknown>).summary ??
+                "Patch generated",
+              patch: (analysisResult as Record<string, unknown>).patch ?? "",
+            };
+          }
+          return {
+            success: true,
+            errorType,
+            filePath,
+            summary: "Analysis complete; see full message for details",
+          };
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          return { error: `Patch analysis failed: ${message}` };
+        }
+      }
+
       default:
         throw new Error(`Tool not implemented: ${toolName}`);
+    }
+  }
+
+  private async fetchAnalysis(prompt: string): Promise<unknown> {
+    const response = await this.env.AI.run(
+      "@cf/meta/llama-3.3-70b-instruct-fp8",
+      {
+        messages: [
+          {
+            role: "system",
+            content: "You are a debugger. Always respond with valid JSON only.",
+          },
+          { role: "user", content: prompt },
+        ],
+        response_format: { type: "json_object" },
+      },
+    );
+    const str = (response as AiResponse).response;
+    if (!str) return null;
+    try {
+      return JSON.parse(str);
+    } catch {
+      return null;
+    }
+  }
+
+  private async handlePreviewError(
+    connection: Connection,
+    data: Record<string, unknown>,
+  ) {
+    const params = (data.params || {}) as Record<string, unknown>;
+    const errorMessage =
+      (params.errorMessage as string) || "Unknown iframe error";
+    const filePath = (params.filePath as string) || "unknown";
+    const errorType = (params.errorType as string) || "runtime";
+    const stackTrace = (params.stackTrace as string) || "";
+
+    if (!this.state.toolsEnabled) {
+      connection.send(
+        JSON.stringify({
+          type: "error",
+          message: `Preview error in ${filePath}: ${errorMessage}. Enable tools for auto-patching.`,
+        }),
+      );
+      return;
+    }
+
+    const toolCall: ToolCall = {
+      id: crypto.randomUUID(),
+      tool: "patchError",
+      parameters: { errorMessage, filePath, errorType, stackTrace },
+      status: "pending",
+      timestamp: Date.now(),
+    };
+
+    if (requiresApproval("patchError")) {
+      const approval = createPendingApproval(
+        this.ctx.id.toString(),
+        connection.id || "unknown",
+        toolCall,
+      );
+      const updated = [...this.state.pendingApprovals, approval];
+      const updatedToolCalls = [...this.state.toolCalls, toolCall];
+      this.setState({
+        ...this.state,
+        pendingApprovals: updated,
+        toolCalls: updatedToolCalls,
+      });
+
+      connection.send(
+        JSON.stringify({
+          type: "tool_pending_approval",
+          approval,
+        }),
+      );
+    } else {
+      const updatedToolCalls = [...this.state.toolCalls, toolCall];
+      this.setState({
+        ...this.state,
+        toolCalls: updatedToolCalls,
+      });
+
+      try {
+        const result = await this.executeToolAction(
+          toolCall.tool,
+          toolCall.parameters,
+        );
+        connection.send(
+          JSON.stringify({
+            type: "tool_result",
+            tool: toolCall.tool,
+            result,
+            success: true,
+            autoExecuted: true,
+          }),
+        );
+        const idx = updatedToolCalls.findIndex(tc => tc.id === toolCall.id);
+        if (idx !== -1) {
+          updatedToolCalls[idx] = {
+            ...updatedToolCalls[idx],
+            status: "executed",
+            result,
+          };
+          this.setState({ ...this.state, toolCalls: updatedToolCalls });
+        }
+      } catch (err) {
+        const error = err instanceof Error ? err.message : String(err);
+        connection.send(
+          JSON.stringify({
+            type: "tool_error",
+            tool: toolCall.tool,
+            error,
+            autoExecuted: true,
+          }),
+        );
+      }
     }
   }
 
@@ -952,8 +1115,9 @@ GOAL: Help the user build their app.
    Default to react-spa for general web apps.
 3. If a template fits, also suggest it using "SUGGEST_TEMPLATE: [slug]".
 4. Use tools when appropriate to read files, write code, or execute commands.
-5. Be concise but helpful.
-6. At the end of your response, suggest 3 relevant follow-up prompts: SUGGEST_PROMPTS: ["prompt1", "prompt2", "prompt3"]`;
+5. When a preview_error event arrives, use the patchError tool to analyze the error and suggest or apply a fix.
+6. Be concise but helpful.
+7. At the end of your response, suggest 3 relevant follow-up prompts: SUGGEST_PROMPTS: ["prompt1", "prompt2", "prompt3"]`;
     let userPrompt = content;
 
     // Detect context for dynamic prompt selection

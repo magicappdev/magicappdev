@@ -31,6 +31,11 @@ import {
   isStitchConfigured,
   type StitchStarterScreen,
 } from "@/lib/stitch.js";
+import {
+  useAgentConnection,
+  useAgentMessages,
+  usePreviewErrorListener,
+} from "@/lib/agent-websocket.js";
 import { Button, Dialog, Input, TooltipProvider } from "@cloudflare/kumo";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Preview, { type PreviewFile } from "@/components/ui/Preview.js";
@@ -56,10 +61,6 @@ interface GeneratedProject {
   dependencies: Record<string, string>;
   devDependencies: Record<string, string>;
 }
-
-const AGENT_URL = import.meta.env.VITE_AGENT_URL || "http://localhost:8788";
-const AGENT_HOST = AGENT_URL.replace(/^https?:\/\//, "");
-const WS_PROTOCOL = AGENT_URL.includes("workers.dev") ? "wss:" : "ws:";
 
 // ─── TemplateGallery ─────────────────────────────────────────────────────────
 function TemplateGallery({ onSelect }: { onSelect: (t: Template) => void }) {
@@ -761,7 +762,6 @@ export default function ChatPage() {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const navigate = useNavigate();
 
-  const wsRef = useRef<WebSocket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = useCallback(() => {
@@ -772,179 +772,171 @@ export default function ChatPage() {
     scrollToBottom();
   }, [scrollToBottom]);
 
-  useEffect(() => {
-    let reconnectAttempts = 0;
-    const maxReconnectAttempts = 3;
-    const reconnectDelay = 3000;
-
-    const connectWebSocket = () => {
-      const wsUrl = `${WS_PROTOCOL}//${AGENT_HOST}/agents/magic-agent/default`;
-      console.log("Connecting to WebSocket:", wsUrl);
-
-      const ws = new WebSocket(wsUrl);
-
-      ws.onopen = () => {
-        console.log("Connected to Agent");
-        setIsConnected(true);
-        reconnectAttempts = 0;
-      };
-
-      ws.onclose = () => {
-        console.log("Disconnected from Agent");
-        setIsConnected(false);
-
-        if (reconnectAttempts < maxReconnectAttempts) {
-          reconnectAttempts++;
-          console.log(
-            `Attempting to reconnect (${reconnectAttempts}/${maxReconnectAttempts})...`,
-          );
-          setTimeout(connectWebSocket, reconnectDelay);
-        }
-      };
-
-      ws.onerror = error => {
-        console.error("WebSocket error:", error);
-        setIsConnected(false);
-      };
-
-      ws.onmessage = event => {
-        try {
-          const data = JSON.parse(event.data as string);
-
-          if (data.type === "history") {
-            const historyMessages: Message[] = data.messages.map(
-              (m: {
-                id: string;
-                role: string;
-                content: string;
-                timestamp: number;
-              }) => ({
-                id: m.id,
-                role: m.role as "user" | "assistant" | "system",
-                content: m.content,
-                timestamp: m.timestamp,
-              }),
-            );
-            setMessages(historyMessages);
-          } else if (data.type === "history_cleared") {
-            setMessages([]);
-          } else if (data.type === "chat_chunk") {
-            setMessages(prev => {
-              const last = prev[prev.length - 1];
-              if (
-                last &&
-                last.role === "assistant" &&
-                last.id === "streaming"
-              ) {
-                return [
-                  ...prev.slice(0, -1),
-                  { ...last, content: last.content + data.content },
-                ];
-              } else {
-                return [
-                  ...prev,
-                  {
-                    id: "streaming",
-                    role: "assistant",
-                    content: data.content,
-                    timestamp: Date.now(),
-                  },
-                ];
-              }
-            });
-          } else if (data.type === "chat_done") {
-            setMessages(prev => {
-              const last = prev[prev.length - 1];
-              if (last && last.id === "streaming") {
-                return [
-                  ...prev.slice(0, -1),
-                  { ...last, id: crypto.randomUUID() },
-                ];
-              }
-              return prev;
-            });
-            setIsLoading(false);
-            if (data.suggestedTemplate) {
-              setSuggestedTemplate(data.suggestedTemplate);
-            }
-            if (data.suggestedPrompts && Array.isArray(data.suggestedPrompts)) {
-              setSuggestedPrompts(data.suggestedPrompts);
-            }
-          } else if (data.type === "error") {
-            setIsLoading(false);
-            setIsGenerating(false);
-            setMessages(prev => [
-              ...prev,
-              {
-                id: crypto.randomUUID(),
-                role: "system",
-                content: `Error: ${data.message || "Something went wrong. Please try again."}`,
-                timestamp: Date.now(),
-              },
-            ]);
-          } else if (data.type === "generation_start") {
-            setIsGenerating(true);
-            pendingFilesRef.current = [];
-            setGeneratedProject(null);
-          } else if (data.type === "generation_file") {
-            pendingFilesRef.current = [
-              ...pendingFilesRef.current,
-              { path: data.path, content: data.content },
+  const handleAgentMessage = useCallback(
+    (type: string, data: Record<string, unknown>) => {
+      if (type === "history") {
+        const historyMessages: Message[] = (
+          (data.messages as Array<{
+            id: string;
+            role: string;
+            content: string;
+            timestamp: number;
+          }>) || []
+        ).map(m => ({
+          id: m.id,
+          role: m.role as "user" | "assistant" | "system",
+          content: m.content,
+          timestamp: m.timestamp,
+        }));
+        setMessages(historyMessages);
+      } else if (type === "history_cleared") {
+        setMessages([]);
+      } else if (type === "chat_chunk") {
+        const chunk = (data.content as string) || "";
+        setMessages(prev => {
+          const last = prev[prev.length - 1];
+          if (last && last.role === "assistant" && last.id === "streaming") {
+            return [
+              ...prev.slice(0, -1),
+              { ...last, content: last.content + chunk },
             ];
-          } else if (data.type === "generation_complete") {
-            const files = pendingFilesRef.current;
-            setGeneratedProject({
-              projectName: data.projectName,
-              templateSlug: data.templateSlug,
-              files,
-              dependencies: data.dependencies || {},
-              devDependencies: data.devDependencies || {},
-            });
-            if (files.length > 0) {
-              setExpandedFiles(new Set([files[0].path]));
-            }
-            setIsGenerating(false);
-          } else if (data.type === "generation_error") {
-            setIsGenerating(false);
-            setMessages(prev => [
-              ...prev,
-              {
-                id: crypto.randomUUID(),
-                role: "system",
-                content: `Generation failed: ${data.error || "An error occurred during project generation."}`,
-                timestamp: Date.now(),
-              },
-            ]);
           }
-        } catch (e) {
-          console.error("Failed to parse message", e);
+          return [
+            ...prev,
+            {
+              id: "streaming",
+              role: "assistant",
+              content: chunk,
+              timestamp: Date.now(),
+            },
+          ];
+        });
+      } else if (type === "chat_done") {
+        setMessages(prev => {
+          const last = prev[prev.length - 1];
+          if (last && last.id === "streaming") {
+            return [...prev.slice(0, -1), { ...last, id: crypto.randomUUID() }];
+          }
+          return prev;
+        });
+        setIsLoading(false);
+        if (data.suggestedTemplate) {
+          setSuggestedTemplate(data.suggestedTemplate as string);
+        }
+        if (Array.isArray(data.suggestedPrompts)) {
+          setSuggestedPrompts(data.suggestedPrompts as string[]);
+        }
+      } else if (type === "error") {
+        setIsLoading(false);
+        setIsGenerating(false);
+        setMessages(prev => [
+          ...prev,
+          {
+            id: crypto.randomUUID(),
+            role: "system",
+            content: `Error: ${data.message || "Something went wrong. Please try again."}`,
+            timestamp: Date.now(),
+          },
+        ]);
+      } else if (type === "generation_start") {
+        setIsGenerating(true);
+        pendingFilesRef.current = [];
+        setGeneratedProject(null);
+      } else if (type === "generation_file") {
+        pendingFilesRef.current = [
+          ...pendingFilesRef.current,
+          { path: data.path as string, content: data.content as string },
+        ];
+      } else if (type === "generation_complete") {
+        const files = pendingFilesRef.current;
+        setGeneratedProject({
+          projectName: data.projectName as string,
+          templateSlug: data.templateSlug as string,
+          files,
+          dependencies: (data.dependencies as Record<string, string>) || {},
+          devDependencies:
+            (data.devDependencies as Record<string, string>) || {},
+        });
+        if (files.length > 0) {
+          setExpandedFiles(new Set([files[0].path]));
+        }
+        setIsGenerating(false);
+      } else if (type === "generation_error") {
+        setIsGenerating(false);
+        setMessages(prev => [
+          ...prev,
+          {
+            id: crypto.randomUUID(),
+            role: "system",
+            content: `Generation failed: ${data.error || "An error occurred during project generation."}`,
+            timestamp: Date.now(),
+          },
+        ]);
+      } else if (type === "tool_pending_approval") {
+        const approval = data.approval as
+          | {
+              id: string;
+              tool: string;
+              description?: string;
+            }
+          | undefined;
+        if (approval) {
           setMessages(prev => [
             ...prev,
             {
               id: crypto.randomUUID(),
               role: "system",
-              content: "Error: Failed to process response from the server.",
+              content: `Tool "${approval.tool}" needs approval: ${approval.description || "auto-triggered"}. Open the workspace to approve.`,
               timestamp: Date.now(),
             },
           ]);
         }
-      };
-
-      wsRef.current = ws;
-
-      return () => {
-        ws.close();
-      };
-    };
-
-    connectWebSocket();
-
-    return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
+      } else if (type === "tool_result") {
+        const tool = data.tool as string;
+        const resultStr =
+          typeof data.result === "string"
+            ? data.result
+            : JSON.stringify(data.result);
+        setMessages(prev => [
+          ...prev,
+          {
+            id: crypto.randomUUID(),
+            role: "system",
+            content: `Tool "${tool}" executed:\n${resultStr?.slice(0, 800)}`,
+            timestamp: Date.now(),
+          },
+        ]);
+      } else if (type === "tool_error") {
+        setMessages(prev => [
+          ...prev,
+          {
+            id: crypto.randomUUID(),
+            role: "system",
+            content: `Tool error: ${(data.error as string) || "unknown"}`,
+            timestamp: Date.now(),
+          },
+        ]);
       }
-    };
-  }, []);
+    },
+    [],
+  );
+
+  const { connected, send } = useAgentConnection();
+  useEffect(() => {
+    setIsConnected(connected);
+  }, [connected]);
+  useAgentMessages(handleAgentMessage);
+  usePreviewErrorListener(payload => {
+    setMessages(prev => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        role: "system",
+        content: `Preview error reported from ${payload.filePath}: ${payload.errorMessage}. Agent is analyzing a patch…`,
+        timestamp: Date.now(),
+      },
+    ]);
+  });
 
   const handleSubmit = async (promptText?: string) => {
     const textToSend = promptText || input;
@@ -963,13 +955,11 @@ export default function ChatPage() {
     setIsLoading(true);
     setSuggestedTemplate(null);
 
-    wsRef.current?.send(
-      JSON.stringify({
-        type: "chat",
-        content: userMsg.content,
-        model: selectedModel,
-      }),
-    );
+    send({
+      type: "chat",
+      content: userMsg.content,
+      model: selectedModel,
+    });
   };
 
   const toggleFileExpanded = (path: string) => {

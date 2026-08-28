@@ -19,10 +19,11 @@ import {
   Trash2,
 } from "lucide-react";
 import { LivePreview } from "@/components/workspace/LivePreview";
+import { useAgentConnection } from "@/lib/agent-websocket.js";
 import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useState, useCallback } from "react";
 import { Typography } from "@/components/ui/Typography";
 import { Button } from "@/components/ui/Button";
-import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 
 interface ProjectFile {
@@ -81,6 +82,34 @@ export default function ProjectWorkspacePage() {
     }
     loadFiles();
   }, [id]);
+
+  // Relay iframe errors to MagicAgent for auto-patching
+  const { send } = useAgentConnection();
+  const handleIframeError = useCallback(
+    (event: Event) => {
+      const detail = (event as CustomEvent).detail as {
+        errorMessage: string;
+        filePath: string;
+        errorType: string;
+        stackTrace?: string;
+      };
+      send({
+        type: "preview_error",
+        params: {
+          errorMessage: detail.errorMessage,
+          filePath: detail.filePath,
+          errorType: detail.errorType,
+          stackTrace: detail.stackTrace,
+        },
+      });
+    },
+    [send],
+  );
+  useEffect(() => {
+    window.addEventListener("MAGICAPPDEV_IFRAME_ERROR", handleIframeError);
+    return () =>
+      window.removeEventListener("MAGICAPPDEV_IFRAME_ERROR", handleIframeError);
+  }, [handleIframeError]);
 
   // Build file tree
   const fileTree: FileNode[] = buildFileTree(projectFiles);

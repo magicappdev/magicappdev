@@ -34,6 +34,7 @@ The `@magicappdev/agent` package provides AI agent integration using the Cloudfl
 - [x] Deployed as Cloudflare Worker (`magicappdev-agent`).
       URL: https://magicappdev-agent.magicappdev.workers.dev
       Durable Objects: MagicAgent, IssueReviewer, FeatureSuggester
+- [x] Self-Healing Agent Loops (`patchError` tool, `preview_error` WS handler)
 - [ ] Implement advanced tool use for `registry.generate()`.
 - [ ] Agent-led project setup wizard.
 
@@ -48,3 +49,4 @@ The `@magicappdev/agent` package provides AI agent integration using the Cloudfl
 - Refine agent prompts for better code generation accuracy.
 - Integrate with `@magicappdev/templates` for direct scaffolding.
 - Implement automated issue reviewer capabilities.
+- Wire `patchError` auto-fix output back into `writeFile` tool for live code patching.

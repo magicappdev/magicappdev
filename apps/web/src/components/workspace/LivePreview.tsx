@@ -83,7 +83,7 @@ export function LivePreview({ files }: LivePreviewProps) {
     }
   };
 
-  // Listen for console messages from iframe
+  // Listen for console messages and error relays from iframe
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data.type === "MAGICAPPDEV_CONSOLE") {
@@ -95,6 +95,17 @@ export function LivePreview({ files }: LivePreviewProps) {
             timestamp: Date.now(),
           },
         ]);
+      } else if (event.data.type === "MAGICAPPDEV_PREVIEW_ERROR") {
+        window.dispatchEvent(
+          new CustomEvent("MAGICAPPDEV_IFRAME_ERROR", {
+            detail: {
+              errorMessage: event.data.errorMessage || "Unknown error",
+              filePath: event.data.filePath || "unknown",
+              errorType: event.data.errorType || "runtime",
+              stackTrace: event.data.stackTrace || "",
+            },
+          }),
+        );
       }
     };
 
@@ -138,6 +149,27 @@ export function LivePreview({ files }: LivePreviewProps) {
   </style>
 </head>
 <body>
+  <script>
+    window.onerror = function(message, source, lineno, colno, error) {
+      window.parent.postMessage({
+        type: 'MAGICAPPDEV_PREVIEW_ERROR',
+        errorMessage: String(message),
+        filePath: source || 'unknown',
+        errorType: 'runtime',
+        stackTrace: error ? error.stack || '' : ''
+      }, '*');
+    };
+    window.addEventListener('unhandledrejection', function(event) {
+      var reason = event.reason;
+      window.parent.postMessage({
+        type: 'MAGICAPPDEV_PREVIEW_ERROR',
+        errorMessage: reason instanceof Error ? reason.message : String(reason),
+        filePath: 'promise',
+        errorType: 'runtime',
+        stackTrace: reason instanceof Error ? reason.stack || '' : ''
+      }, '*');
+    });
+  </script>
   <div id="root"></div>
   <script type="text/babel">
     ${reactFiles.map(f => `// ${f.path}\n${f.content}`).join("\n\n")}
@@ -181,6 +213,27 @@ export function LivePreview({ files }: LivePreviewProps) {
   </style>
 </head>
 <body>
+  <script>
+    window.onerror = function(message, source, lineno, colno, error) {
+      window.parent.postMessage({
+        type: 'MAGICAPPDEV_PREVIEW_ERROR',
+        errorMessage: String(message),
+        filePath: source || 'unknown',
+        errorType: 'runtime',
+        stackTrace: error ? error.stack || '' : ''
+      }, '*');
+    };
+    window.addEventListener('unhandledrejection', function(event) {
+      var reason = event.reason;
+      window.parent.postMessage({
+        type: 'MAGICAPPDEV_PREVIEW_ERROR',
+        errorMessage: reason instanceof Error ? reason.message : String(reason),
+        filePath: 'promise',
+        errorType: 'runtime',
+        stackTrace: reason instanceof Error ? reason.stack || '' : ''
+      }, '*');
+    });
+  </script>
   <div class="container">
     <h1>🚀 MagicAppDev</h1>
     <p>Your app is ready to build!</p>
