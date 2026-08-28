@@ -36,6 +36,7 @@ A comprehensive monorepo-based fullstack app building platform inspired by Expo,
 
 - **Monorepo Structure**: Utilizes Turborepo with Bun for package management, including local/remote caching, TypeScript, and Node.js/JS as preferred languages.
 - **CLI Tool**: Generate and manage app code, components, and packages with ease.
+- **Template Gallery**: Built-in templates for React Native + Expo Router and Hono + Drizzle API, with client-side preview and ZIP download in the admin console.
 - **Web Interface**: Interactive AI chat for app creation, hot reload preview, and prompt suggestions.
 - **Mobile App**: Ionic + Capacitor-based app with interactive AI chat (SSE streaming), deep link authentication, and cross-platform component sharing.
 - **API & Database**: High-performance backend on Cloudflare Workers/D1 with integrated AI model routing, provider support, and secure Bring Your Own Key (BYOK) storage using application-layer AES-GCM encryption.

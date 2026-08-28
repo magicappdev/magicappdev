@@ -205,6 +205,8 @@ App templates and generators for MagicAppDev, providing the foundation for no-co
 - ✅ Handlebars-based templating system
 - ✅ Template registry for management
 - ✅ Integration with shared utilities
+- ✅ React Native + Expo Router template with postInstall hints
+- ✅ Hono + Drizzle API template with drizzle.config.ts, sample schema, and parameterized compatibility_date
 
 #### Usage Guidelines
 

@@ -49,6 +49,10 @@ export const reactNativeTemplate: Template = {
     "@types/react": "18.3.12",
     typescript: "~5.3.0",
   },
+  postInstall: [
+    "npx expo install --fix",
+    "npx expo run:android || npx expo run:ios",
+  ],
   files: [
     {
       path: "package.json",

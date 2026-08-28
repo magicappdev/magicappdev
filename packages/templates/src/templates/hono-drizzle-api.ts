@@ -67,11 +67,13 @@ export const honoApiTemplate: Template = {
     "deploy": "wrangler deploy",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "wrangler d1 migrations apply {{kebabCase name}}-db --local",
+    "db:studio": "drizzle-kit studio",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "hono": "^4.3.0",
-    "drizzle": "~0.36.0"
+    "drizzle": "~0.36.0",
+    "drizzle-orm": "~0.36.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250101.0",
@@ -99,6 +101,37 @@ port = 8787
 `,
     },
     {
+      path: "drizzle.config.ts",
+      content: `import { defineConfig } from "drizzle-kit";
+
+export default defineConfig({
+  schema: "./src/db/schema.ts",
+  out: "./drizzle/migrations",
+  dialect: "sqlite",
+  driver: "d1",
+  dbCredentials: {
+    accountId: process.env.CLOUDFLARE_ACCOUNT_ID,
+    databaseId: process.env.CLOUDFLARE_D1_DATABASE_ID,
+    token: process.env.CLOUDFLARE_API_TOKEN,
+  },
+});
+`,
+    },
+    {
+      path: "src/db/schema.ts",
+      content: `import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+
+export const users = sqliteTable("users", {
+  id: text("id").primaryKey(),
+  email: text("email").notNull().unique(),
+  createdAt: text("created_at").notNull().default("CURRENT_TIMESTAMP"),
+});
+
+export type User = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
+`,
+    },
+    {
       path: "tsconfig.json",
       content: `{
   "compilerOptions": {
@@ -121,6 +154,8 @@ port = 8787
       content: `import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { HTTPException } from 'hono/http-exception';
+import { drizzle } from 'drizzle-orm/d1';
+import { users } from './db/schema';
 
 type Bindings = {
   DB: D1Database;
@@ -136,6 +171,24 @@ app.get('/', (c) => {
 
 app.get('/health', (c) => {
   return c.json({ status: 'healthy', timestamp: new Date().toISOString() });
+});
+
+app.get('/users', async (c) => {
+  const db = drizzle(c.env.DB);
+  const allUsers = await db.select().from(users);
+  return c.json(allUsers);
+});
+
+app.post('/users', async (c) => {
+  const db = drizzle(c.env.DB);
+  const body = await c.req.json<{ email: string }>();
+
+  if (!body.email) {
+    return c.json({ error: 'Email is required' }, 400);
+  }
+
+  const result = await db.insert(users).values({ email: body.email });
+  return c.json({ id: result.meta.last_row_id, email: body.email }, 201);
 });
 
 app.onError((err, c) => {
