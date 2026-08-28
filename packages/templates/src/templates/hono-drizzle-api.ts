@@ -9,7 +9,7 @@ export const honoApiTemplate: Template = {
   name: "Hono + Drizzle API",
   slug: "hono-drizzle-api",
   description:
-    "Production-ready REST API with Hono, Drizzle ORM, and Cloudflare D1. Includes auth, validation, and structured errors.",
+    "Minimal REST API starter with Hono and Drizzle ORM on Cloudflare Workers D1. Includes CORS and basic error handling.",
   category: "api",
   frameworks: ["cloudflare-workers"],
   version: "1.0.0",
@@ -36,6 +36,12 @@ export const honoApiTemplate: Template = {
       description: "API description",
       type: "string",
       default: "A Hono + Drizzle API on Cloudflare Workers",
+    },
+    {
+      name: "compatibility_date",
+      description: "Cloudflare Workers compatibility date",
+      type: "string",
+      default: "2025-03-01",
     },
   ],
   dependencies: {
@@ -81,7 +87,7 @@ export const honoApiTemplate: Template = {
       path: "wrangler.toml",
       content: `name = "{{kebabCase name}}"
 main = "src/index.ts"
-compatibility_date = "2024-01-01"
+compatibility_date = "{{compatibility_date}}"
 
 [[d1_databases]]
 binding = "DB"

@@ -50,7 +50,7 @@ export function TemplateFilePreview({ files }: TemplateFilePreviewProps) {
     return () => {
       cancelled = true;
     };
-  }, [selected]);
+  }, [selectedIdx]);
 
   if (!files.length) {
     return (

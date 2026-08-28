@@ -168,6 +168,8 @@ describe("getFileLanguage", () => {
     expect(getFileLanguage("styles.css")).toBe("css");
     expect(getFileLanguage("readme.md")).toBe("markdown");
     expect(getFileLanguage("config.json")).toBe("json");
+    expect(getFileLanguage("wrangler.toml")).toBe("toml");
+    expect(getFileLanguage("config.yaml")).toBe("yaml");
   });
 
   it("should fallback to plaintext for unknown extensions", () => {

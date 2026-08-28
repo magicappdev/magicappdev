@@ -137,7 +137,7 @@ describe("TemplateCustomizer", () => {
     render(
       <TemplateCustomizer templateId="saas-starter" onClose={mockOnClose} />,
     );
-    const backButton = screen.getByRole("button", { name: "" });
+    const backButton = screen.getByRole("button", { name: /back/i });
     await userEvent.click(backButton);
     expect(mockOnClose).toHaveBeenCalledTimes(1);
   });

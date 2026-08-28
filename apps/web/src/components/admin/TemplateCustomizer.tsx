@@ -22,6 +22,10 @@ export function TemplateCustomizer({
     Record<string, string | boolean | number>
   >(() => (template ? buildDefaultVariables(template.variables) : {}));
   const [downloading, setDownloading] = useState(false);
+  const renderedFiles = useMemo(
+    () => (template ? renderTemplateFiles(template, variables) : []),
+    [template, variables],
+  );
 
   if (!template) {
     return (
@@ -30,8 +34,6 @@ export function TemplateCustomizer({
       </div>
     );
   }
-
-  const renderedFiles = renderTemplateFiles(template, variables);
 
   const handleDownload = async () => {
     setDownloading(true);
@@ -64,6 +66,7 @@ export function TemplateCustomizer({
           <button
             type="button"
             onClick={onClose}
+            aria-label="Back"
             className="text-zinc-500 hover:text-zinc-300 transition-colors"
           >
             <svg
