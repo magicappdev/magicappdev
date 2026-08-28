@@ -209,7 +209,7 @@ export const AGENT_TOOLS: Record<string, ToolDefinition> = {
   patchError: {
     name: "patchError",
     description:
-      "Analyze a runtime or build error reported from the live preview iframe and suggest or apply a fix. Use this when the preview reports a runtime JavaScript error, module load failure, or component crash.",
+      "Analyze a preview/runtime error and auto-apply the fix to the project file in D1",
     parameters: {
       errorMessage: {
         type: "string",

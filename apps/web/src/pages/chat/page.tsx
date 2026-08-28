@@ -893,16 +893,30 @@ export default function ChatPage() {
         }
       } else if (type === "tool_result") {
         const tool = data.tool as string;
-        const resultStr =
-          typeof data.result === "string"
-            ? data.result
-            : JSON.stringify(data.result);
+        const result = data.result as Record<string, unknown> | undefined;
+
+        let content: string;
+        if (tool === "patchError" && result) {
+          const applied = result.applied
+            ? "and applied"
+            : " (manual apply needed)";
+          const summary = (result.summary as string) || "Patch generated";
+          const path = (result.filePath as string) || "";
+          content = `Auto-fix ${applied}: ${summary}${path ? `\nFile: ${path}` : ""}`;
+        } else {
+          const resultStr =
+            typeof data.result === "string"
+              ? data.result
+              : JSON.stringify(data.result);
+          content = `Tool "${tool}" executed:\n${resultStr?.slice(0, 800)}`;
+        }
+
         setMessages(prev => [
           ...prev,
           {
             id: crypto.randomUUID(),
             role: "system",
-            content: `Tool "${tool}" executed:\n${resultStr?.slice(0, 800)}`,
+            content,
             timestamp: Date.now(),
           },
         ]);

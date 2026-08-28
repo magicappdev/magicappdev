@@ -16,7 +16,7 @@
 | **FEAT-002** | AI / Agentic Workflow | **Self-Healing Agent Loops**: Catch runtime/build errors and feed them back to MagicAgent Durable Object for auto-patching.                                | High   | ✅ Done    |
 | **FEAT-003** | UI / Preview          | **Live WebContainers / StackBlitz Integration**: Run full React/Vite apps in-browser via WebContainer API.                                                 | High   | 📋 Backlog |
 | **FEAT-004** | Authentication        | **Discord OAuth Integration**: JWT-signed state, KV session polling, linked-accounts endpoint. GitHub OAuth also hardened.                                 | Medium | ✅ Done    |
-| **FEAT-005** | Production Readiness  | **Automated Playwright E2E Suite**: 10/10 tests passing (auth, chat, projects, AI Studio canvas + mock WS server).                                         | High   | ✅ Done    |
+| **FEAT-005** | Production Readiness  | **Automated Playwright E2E Suite**: 12/12 tests passing (auth, chat, projects, AI Studio canvas + preview-error-relay + mock WS server).                   | High   | ✅ Done    |
 | **FEAT-006** | Developer Tools       | **Visual Template Customizer**: Admin UI to preview and tweak Handlebars templates with live variable injection.                                           | Medium | 📋 Backlog |
 | **FEAT-007** | Performance / Caching | **AI Response Caching with Cloudflare KV**: Cache prompt→template mappings to reduce AI Gateway token spend.                                               | Medium | 📋 Backlog |
 
@@ -42,21 +42,23 @@
 
 ### FEAT-005 – Playwright E2E Suite + Mock WS Server
 
-- 10/10 E2E tests passing (8 auth/navigation + 2 AI Studio canvas)
-- `apps/web/e2e/mock-agent-server.mjs`: lightweight WebSocket mock speaking Agents SDK protocol (`chat` → `chat_chunk` / `chat_done`) with HTTP `/health` for Playwright `webServer` health checks
+- 12/12 E2E tests passing (8 auth/navigation + 2 AI Studio canvas + 2 preview-error-relay)
+- `apps/web/e2e/mock-agent-server.mjs`: lightweight WebSocket mock speaking Agents SDK protocol (`chat` → `chat_chunk` / `chat_done`, `preview_error` → `tool_result` broadcast) with HTTP `/health` for Playwright `webServer` health checks
 - Pre-existing flaky tests fixed: strict `h1` locator → `getByRole("heading")`, disabled Create button → `toBeVisible` + click, projects nav → auth redirect assertion
 
 ### FEAT-002 – Self-Healing Agent Loops
 
 - `patchError` tool in `packages/agent/src/tools.ts` (auto-executed, no approval needed)
 - Agent `executeToolAction` case in `packages/agent/src/index.ts` — fetches AI analysis via JSON response format, returns summary + patch diff
+- **Auto-fix write-back**: `patchError` writes the patched file directly to D1 (same logic as `writeFile` tool) — no manual approval needed for live patching
 - Agent `onMessage` handles `preview_error` WebSocket event → queues or auto-executes `patchError`
 - `packages/agent/src/index.ts` — new `fetchAnalysis` helper for non-streaming JSON AI calls
 - Agent system prompt updated with step 5: auto-use `patchError` on preview errors
 - `apps/web/src/components/workspace/LivePreview.tsx` — injects `window.onerror` + `unhandledrejection` capture into both React and default iframe templates; posts `MAGICAPPDEV_PREVIEW_ERROR` to parent
-- `apps/web/src/lib/agent-websocket.ts` — shared singleton WebSocket hook (`useAgentConnection`, `useAgentMessages`, `usePreviewErrorListener`, `dispatchPreviewError`) with dedup fingerprints and reconnect logic
-- `apps/web/src/pages/chat/page.tsx` — refactored to use shared hook; handles `tool_pending_approval`, `tool_result`, `tool_error` message types
+- `apps/web/src/lib/agent-websocket.ts` — shared singleton WebSocket hook (`useAgentConnection`, `useAgentMessages`, `usePreviewErrorListener`, `dispatchPreviewError`) with dedup fingerprints, cached `useSyncExternalStore` snapshot, and reconnect logic
+- `apps/web/src/pages/chat/page.tsx` — refactored to use shared hook; handles `tool_pending_approval`, `tool_result`, `tool_error` message types; renders `patchError` results with applied/summary/filePath
 - `apps/web/src/pages/projects/workspace.tsx` — listens for `MAGICAPPDEV_IFRAME_ERROR` custom events and dispatches `preview_error` to agent over WebSocket
+- **E2E tests**: `apps/web/e2e/preview-error-relay.spec.ts` — 2 Playwright tests verifying WS handshake: `preview_error` → mock agent → `tool_result` with `applied: true`
 
 ---
 

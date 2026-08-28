@@ -922,14 +922,66 @@ Respond with a JSON object: { "summary": "one-line cause", "patch": "exact code 
             typeof analysisResult === "object" &&
             "patch" in analysisResult
           ) {
+            const patchText =
+              (analysisResult as Record<string, unknown>).patch ?? "";
+            const summary =
+              (analysisResult as Record<string, unknown>).summary ??
+              "Patch generated";
+            const patchedPath =
+              ((analysisResult as Record<string, unknown>)
+                .filePath as string) || filePath;
+
+            // Write the patched file to D1
+            if (
+              projectId &&
+              patchText &&
+              patchedPath &&
+              patchedPath !== "unknown"
+            ) {
+              const language = patchedPath.split(".").pop() || "text";
+              const size = (patchText as string).length;
+
+              const existingFile = await db.query.projectFiles.findFirst({
+                where: and(
+                  eq(projectFiles.projectId, projectId),
+                  eq(projectFiles.path, patchedPath),
+                ),
+              });
+
+              if (existingFile) {
+                await db
+                  .update(projectFiles)
+                  .set({
+                    content: patchText as string,
+                    language,
+                    size,
+                    updatedAt: new Date().toISOString(),
+                  })
+                  .where(eq(projectFiles.id, existingFile.id));
+              } else {
+                await db.insert(projectFiles).values({
+                  id: crypto.randomUUID(),
+                  projectId,
+                  path: patchedPath,
+                  content: patchText as string,
+                  language,
+                  size,
+                });
+              }
+            }
+
             return {
               success: true,
               errorType,
-              filePath,
-              summary:
-                (analysisResult as Record<string, unknown>).summary ??
-                "Patch generated",
-              patch: (analysisResult as Record<string, unknown>).patch ?? "",
+              filePath: patchedPath,
+              summary,
+              patch: patchText,
+              applied: !!(
+                projectId &&
+                patchText &&
+                patchedPath &&
+                patchedPath !== "unknown"
+              ),
             };
           }
           return {

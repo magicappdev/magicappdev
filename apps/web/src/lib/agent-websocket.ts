@@ -1,4 +1,4 @@
-import { useEffect, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useSyncExternalStore } from "react";
 const AGENT_URL = import.meta.env.VITE_AGENT_URL || "http://localhost:8788";
 const AGENT_HOST = AGENT_URL.replace(/^https?:\/\//, "");
 const WS_PROTOCOL = AGENT_URL.includes("workers.dev") ? "wss:" : "ws:";
@@ -106,8 +106,14 @@ function connect(): void {
   emitState();
 }
 
+let cachedSnapshot: { connected: boolean } = { connected: false };
+
 function getSnapshot(): { connected: boolean } {
-  return { connected: socket?.readyState === WebSocket.OPEN };
+  const connected = socket?.readyState === WebSocket.OPEN;
+  if (cachedSnapshot.connected !== connected) {
+    cachedSnapshot = { connected };
+  }
+  return cachedSnapshot;
 }
 
 function getServerSnapshot(): { connected: boolean } {
@@ -131,13 +137,13 @@ export function useAgentConnection(): {
     getSnapshot,
     getServerSnapshot,
   );
-  const send = (payload: unknown): boolean => {
+  const send = useCallback((payload: unknown): boolean => {
     if (socket?.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify(payload));
       return true;
     }
     return false;
-  };
+  }, []);
   return { connected: state.connected, send };
 }
 
