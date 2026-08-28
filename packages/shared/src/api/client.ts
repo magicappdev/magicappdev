@@ -545,6 +545,16 @@ export class ApiClient {
     }
   }
 
+  async deleteUser(userId: string): Promise<void> {
+    const response = await this.request<ApiResponse<void>>(
+      `/admin/users/${userId}`,
+      { method: "DELETE" },
+    );
+    if (!response.success) {
+      throw new Error(response.error.message);
+    }
+  }
+
   async getLinkedAccounts(): Promise<
     Array<{
       id: string;

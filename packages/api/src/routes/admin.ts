@@ -121,6 +121,26 @@ adminRoutes.patch("/users/:id/role", async c => {
   return c.json({ success: true });
 });
 
+// Delete a user
+adminRoutes.delete("/users/:id", async c => {
+  const adminRole = c.get("userRole");
+  const adminUserId = c.get("userId") as string;
+  const db = c.get("db");
+  const targetUserId = c.req.param("id");
+
+  if (adminRole !== "admin") {
+    return c.json({ error: "Forbidden" }, 403);
+  }
+
+  if (targetUserId === adminUserId) {
+    return c.json({ error: "Cannot delete your own account" }, 400);
+  }
+
+  await db.delete(users).where(eq(users.id, targetUserId)).run();
+
+  return c.json({ success: true });
+});
+
 // ==================== Admin API Keys ====================
 
 // Generate a random API key

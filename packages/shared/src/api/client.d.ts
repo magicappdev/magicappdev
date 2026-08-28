@@ -146,6 +146,7 @@ export declare class ApiClient {
     region?: string;
   }): Promise<void>;
   deleteAccount(): Promise<void>;
+  deleteUser(userId: string): Promise<void>;
   getLinkedAccounts(): Promise<
     Array<{
       id: string;

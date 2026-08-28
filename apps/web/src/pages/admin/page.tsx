@@ -389,10 +389,16 @@ export default function AdminDashboard() {
                           size="sm"
                           className="h-8 w-8 p-0 text-error"
                           title="Delete User"
-                          onClick={() =>
-                            confirm(`Delete user ${u.name}?`) &&
-                            api.deleteAccount()
-                          } // Placeholder
+                          onClick={async () => {
+                            if (!confirm(`Delete user ${u.name}?`)) return;
+                            try {
+                              await api.deleteUser(u.id);
+                              fetchData();
+                            } catch (err) {
+                              console.error("Failed to delete user", err);
+                              alert("Failed to delete user");
+                            }
+                          }}
                         >
                           <Trash2 size={14} />
                         </Button>

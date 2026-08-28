@@ -195,7 +195,12 @@ export class MagicAgent extends Agent<Env, AgentState> {
       const data = JSON.parse(message);
       switch (data.type) {
         case "chat":
-          await this.handleChat(connection, data.content, data.userId);
+          await this.handleChat(
+            connection,
+            data.content,
+            data.userId,
+            data.model,
+          );
           break;
         case "approve_tool":
           await this.handleApproval(
@@ -1121,6 +1126,7 @@ Respond with a JSON object: { "summary": "one-line cause", "patch": "exact code 
     connection: Connection,
     content: string,
     userId?: string,
+    userSelectedModel?: string,
   ) {
     const userMessage: Message = {
       role: "user",
@@ -1130,8 +1136,16 @@ Respond with a JSON object: { "summary": "one-line cause", "patch": "exact code 
     const updatedMessages = [...this.state.messages, userMessage];
     this.setState({ ...this.state, messages: updatedMessages });
 
-    // Determine Model
-    const modelKey = ModelRouter.route(content);
+    // Determine Model — use user-selected model when provided, else auto-route
+    const MODEL_KEY_MAP: Record<string, keyof typeof MODELS> = {
+      "cloudflare-llama-3.3": "complex",
+      "deepseek-r1": "complex",
+      "openai-gpt-4o": "complex",
+      "anthropic-claude-3.5": "complex",
+    };
+    const modelKey = userSelectedModel
+      ? (MODEL_KEY_MAP[userSelectedModel] ?? ModelRouter.route(content))
+      : ModelRouter.route(content);
     const model = MODELS[modelKey];
 
     const templates = registry.getMetadata();

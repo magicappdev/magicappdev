@@ -761,6 +761,7 @@ export default function ChatPage() {
   const pendingFilesRef = useRef<GeneratedFile[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const navigate = useNavigate();
+  const sessionIdRef = useRef<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -771,6 +772,35 @@ export default function ChatPage() {
   useEffect(() => {
     scrollToBottom();
   }, [scrollToBottom]);
+
+  // Initialize chat session for persistence
+  useEffect(() => {
+    const initSession = async () => {
+      try {
+        const { api } = await import("@/lib/api.js");
+        const session = await api.createChatSession({ title: "New Chat" });
+        sessionIdRef.current = session.id;
+
+        // Load existing messages from session
+        const { messages: savedMessages } = await api.getChatSession(
+          session.id,
+        );
+        if (savedMessages.length > 0) {
+          setMessages(
+            savedMessages.map(m => ({
+              id: m.id,
+              role: m.role as "user" | "assistant" | "system",
+              content: m.content,
+              timestamp: new Date(m.timestamp).getTime(),
+            })),
+          );
+        }
+      } catch {
+        // Session creation is best-effort — chat still works without persistence
+      }
+    };
+    initSession();
+  }, []);
 
   const handleAgentMessage = useCallback(
     (type: string, data: Record<string, unknown>) => {
@@ -812,13 +842,26 @@ export default function ChatPage() {
           ];
         });
       } else if (type === "chat_done") {
+        let completedContent = "";
         setMessages(prev => {
           const last = prev[prev.length - 1];
           if (last && last.id === "streaming") {
+            completedContent = last.content;
             return [...prev.slice(0, -1), { ...last, id: crypto.randomUUID() }];
           }
           return prev;
         });
+        // Persist completed assistant message to session (best-effort)
+        if (sessionIdRef.current && completedContent) {
+          import("@/lib/api.js").then(({ api }) => {
+            api
+              .addChatMessage(sessionIdRef.current!, {
+                role: "assistant",
+                content: completedContent,
+              })
+              .catch(() => {});
+          });
+        }
         setIsLoading(false);
         if (data.suggestedTemplate) {
           setSuggestedTemplate(data.suggestedTemplate as string);
@@ -974,6 +1017,17 @@ export default function ChatPage() {
       content: userMsg.content,
       model: selectedModel,
     });
+
+    // Persist user message to session (best-effort)
+    if (sessionIdRef.current) {
+      const { api } = await import("@/lib/api.js");
+      api
+        .addChatMessage(sessionIdRef.current, {
+          role: "user",
+          content: userMsg.content,
+        })
+        .catch(() => {});
+    }
   };
 
   const toggleFileExpanded = (path: string) => {
