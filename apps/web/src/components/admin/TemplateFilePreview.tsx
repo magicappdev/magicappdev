@@ -37,6 +37,9 @@ export function TemplateFilePreview({ files }: TemplateFilePreviewProps) {
       import("highlight.js/lib/languages/markdown").then(m => {
         if (!cancelled) hljs.default.registerLanguage("markdown", m.default);
       });
+      import("highlight.js/lib/languages/ini").then(m => {
+        if (!cancelled) hljs.default.registerLanguage("toml", m.default);
+      });
 
       if (codeRef.current) {
         codeRef.current.removeAttribute("data-highlighted");
