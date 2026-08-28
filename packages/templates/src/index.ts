@@ -42,6 +42,8 @@ export {
   screenTemplate,
   ionicAppTemplate,
   reactSpaTemplate,
+  ecommerceTemplate,
+  saasTemplate,
   nextAppTemplate,
   cfWorkersApiTemplate,
   expoAppTemplate,

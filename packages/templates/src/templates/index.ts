@@ -8,6 +8,7 @@ import { ecommerceTemplate } from "./ecommerce-store.js";
 import { reactSpaTemplate } from "./react-spa.js";
 import { ionicAppTemplate } from "./ionic-app.js";
 import { blankAppTemplate } from "./blank-app.js";
+import { saasTemplate } from "./saas-starter.js";
 import { tabsAppTemplate } from "./tabs-app.js";
 import { nextAppTemplate } from "./next-app.js";
 import { expoAppTemplate } from "./expo-app.js";
@@ -22,6 +23,7 @@ export const builtInTemplates = [
   screenTemplate,
   reactSpaTemplate,
   ecommerceTemplate,
+  saasTemplate,
   nextAppTemplate,
   cfWorkersApiTemplate,
   expoAppTemplate,
@@ -36,6 +38,7 @@ export {
   screenTemplate,
   reactSpaTemplate,
   ecommerceTemplate,
+  saasTemplate,
   nextAppTemplate,
   cfWorkersApiTemplate,
   expoAppTemplate,
