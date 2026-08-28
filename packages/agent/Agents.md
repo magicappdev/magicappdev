@@ -31,6 +31,9 @@ The `@magicappdev/agent` package provides AI agent integration using the Cloudfl
 - [x] Stateful MagicAgent implementation with Agents SDK.
 - [x] Model Routing configuration.
 - [x] Minimal and test deployment configurations.
+- [x] Deployed as Cloudflare Worker (`magicappdev-agent`).
+      URL: https://magicappdev-agent.magicappdev.workers.dev
+      Durable Objects: MagicAgent, IssueReviewer, FeatureSuggester
 - [ ] Implement advanced tool use for `registry.generate()`.
 - [ ] Agent-led project setup wizard.
 

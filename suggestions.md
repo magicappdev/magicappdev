@@ -1,91 +1,87 @@
 # MagicAppDev Feature Suggestions Report
 
-This document outlines high-impact feature suggestions, optimizations, and improvements for the MagicAppDev platform, tailored to the vibe-coding paradigm, Cloudflare Workers infrastructure, and full-stack architecture.
+> **Last updated:** 2026-08-28  
+> **Live Workers:**
+>
+> - API (`@magicappdev/api`): https://magicappdev-api.magicappdev.workers.dev
+> - Agent (`@magicappdev/agent`): https://magicappdev-agent.magicappdev.workers.dev
+
+---
 
 ## Summary Matrix
 
-| ID           | Category              | Description                                                                                                                                                | Impact | Effort |
-| :----------- | :-------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------- | :----- | :----- |
-| **FEAT-001** | Developer Experience  | **One-Click GitHub Repository Export**: Export generated apps directly to a user's GitHub repository via OAuth token.                                      | High   | Medium |
-| **FEAT-002** | AI / Agentic Workflow | **Self-Healing Agent Loops**: Automatically capture runtime/build errors from generated client code and feed them back to the agent for self-correction.   | High   | High   |
-| **FEAT-003** | UI / Preview          | **Live WebContainers / StackBlitz Integration**: Spin up a browser-based Node container to allow instant live previews of generated Next.js/Expo projects. | High   | High   |
-| **FEAT-004** | Authentication        | **Discord OAuth Integration**: Complete the planned Discord OAuth login and linked roles verification pipeline.                                            | Medium | Medium |
-| **FEAT-005** | Production Readiness  | **Automated Playwright E2E Suite**: Add comprehensive E2E tests for the auth, chat, and template generation flows in CI.                                   | High   | Medium |
-| **FEAT-006** | Developer Tools       | **Visual Template Customizer**: A visual wizard in the web dashboard for editing handlebars templates and previewing results.                              | Medium | High   |
-| **FEAT-007** | Performance / Caching | **AI Response Caching with Cloudflare KV**: Cache common prompt-to-template mappings and agent completions to reduce latency and AI gateway costs.         | Medium | Low    |
+| ID           | Category              | Description                                                                                                                                                | Impact | Status                                                  |
+| :----------- | :-------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------- | :----- | :------------------------------------------------------ |
+| **FEAT-001** | Developer Experience  | **One-Click GitHub Repository Export**: Push generated apps to a user's GitHub repo via OAuth. Already wired into chat page + `/github/create-repo` route. | High   | ✅ Done                                                 |
+| **FEAT-002** | AI / Agentic Workflow | **Self-Healing Agent Loops**: Catch runtime/build errors and feed them back to MagicAgent Durable Object for auto-patching.                                | High   | 🔄 In Progress (agent Worker live, tool-use scaffolded) |
+| **FEAT-003** | UI / Preview          | **Live WebContainers / StackBlitz Integration**: Run full React/Vite apps in-browser via WebContainer API.                                                 | High   | 📋 Backlog                                              |
+| **FEAT-004** | Authentication        | **Discord OAuth Integration**: JWT-signed state, KV session polling, linked-accounts endpoint. GitHub OAuth also hardened.                                 | Medium | ✅ Done                                                 |
+| **FEAT-005** | Production Readiness  | **Automated Playwright E2E Suite**: 10/10 tests passing (auth, chat, projects, AI Studio canvas + mock WS server).                                         | High   | ✅ Done                                                 |
+| **FEAT-006** | Developer Tools       | **Visual Template Customizer**: Admin UI to preview and tweak Handlebars templates with live variable injection.                                           | Medium | 📋 Backlog                                              |
+| **FEAT-007** | Performance / Caching | **AI Response Caching with Cloudflare KV**: Cache prompt→template mappings to reduce AI Gateway token spend.                                               | Medium | 📋 Backlog                                              |
 
 ---
 
-## Detailed Suggestions
+## Completed Work (Detailed)
 
-### FEAT-001: One-Click GitHub Repository Export
+### FEAT-001 – GitHub Export
 
-- **Category**: Developer Experience / Platform Extension
-- **Description**: Allow non-technical vibe-coders or export-focused developers to push their generated project directly to a new repository in their GitHub account with a single click.
-- **Implementation Path**:
-  1. Leverage existing GitHub OAuth scopes (`repo` scope).
-  2. Implement an API route in `@magicappdev/api` using the GitHub REST API to create a repository and commit files generated by the template engine.
-  3. Add an "Export to GitHub" button in the web chat code-preview panel.
-- **Impact**: High — Bridges the gap between in-browser vibe-coding and real code ownership.
+- Route: `POST /github/create-repo` (`packages/api/src/routes/github.ts`)
+- Frontend: "Create on GitHub" button in chat workspace panel
+- Path traversal guards + parallel `Promise.allSettled` uploads
+- OAuth scope: `repo` via existing GitHub login flow
 
-### FEAT-002: Self-Healing Agent Loops
+### FEAT-004 – Discord OAuth + Security Hardening
 
-- **Category**: AI / Agentic Workflow
-- **Description**: When the client-side sandbox or preview encounters a compilation or runtime error, automatically catch the error stack trace, pass it back to the `MagicAgent` Durable Object, and have the agent patch the generated file.
-- **Implementation Path**:
-  1. Add error boundary listeners to the client-side iframe sandbox.
-  2. Transmit error telemetry back to the agent session over WebSocket.
-  3. Prompt the model router with the error and specific file context to emit corrected file blocks.
-- **Impact**: High — Drastically improves the reliability of zero-shot prompt generation for non-technical users.
+- Routes: `/auth/login/discord`, `/auth/callback/discord`, `/auth/login/github`, `/auth/callback/github`
+- State signing: both flows sign OAuth `state` with `hono/jwt` (HS256); callbacks verify before proceeding
+- Token safety: web callbacks store tokens in KV (`RATE_LIMIT_KV`), redirect with `?sessionId=X` — no secrets in URL query strings
+- Frontend polling: `apps/web/src/pages/auth/callback.tsx` polls `/auth/check-session?sessionId=X`; backwards-compat fallback for legacy deep links
+- CORS fix: non-allowlisted origins now return `"null"` instead of reflected origin
+- Error format: all auth routes standardized to `{ success: false, error: { code, message } }`
 
-### FEAT-003: Live WebContainers / StackBlitz Integration
+### FEAT-005 – Playwright E2E Suite + Mock WS Server
 
-- **Category**: UI / Preview
-- **Description**: Upgrade the static code file viewer into an interactive Node environment using WebContainers API, enabling users to run full React/Vite apps directly inside the browser tab.
-- **Implementation Path**:
-  1. Integrate `@webcontainer/api` into the web application package (`apps/web`).
-  2. Stream generated template files into the WebContainer virtual file system.
-  3. Boot up the dev server and render the preview in an embedded iframe.
-- **Impact**: High — Transforms static file viewing into a true full-stack working environment.
-
-### FEAT-004: Discord OAuth Integration
-
-- **Category**: Authentication & Community
-- **Description**: Complete the planned Discord OAuth login flow and linked roles verification to support community server gating and alternative logins.
-- **Implementation Path**:
-  1. Add `DISCORD_CLIENT_ID` and `DISCORD_CLIENT_SECRET` secrets to wrangler configuration.
-  2. Implement `/auth/discord` and `/auth/discord/callback` endpoints in `@magicappdev/api`.
-  3. Update database schema for secondary account linking and add Discord login buttons to web and mobile apps.
-- **Impact**: Medium — Enhances community onboarding and aligns with Discord bot configuration requirements.
-
-### FEAT-005: Automated Playwright E2E Suite
-
-- **Category**: Production Readiness & Quality Assurance
-- **Description**: Establish an end-to-end testing suite using Playwright covering core user journeys (authentication, AI prompt submission, code generation, and project management).
-- **Implementation Path**:
-  1. Initialize Playwright configuration inside `apps/web`.
-  2. Write specs simulating user login, prompt entry, and file generation validation.
-  3. Integrate the test suite into `.github/workflows/ci.yml`.
-- **Impact**: High — Prevents regressions across monorepo package updates and ensures platform stability.
-
-### FEAT-006: Visual Template Customizer
-
-- **Category**: Developer Tools
-- **Description**: Provide an admin/developer interface to preview and tweak Handlebars templates (`packages/templates`) with live variable injection.
-- **Implementation Path**:
-  1. Create an admin dashboard route for template management.
-  2. Build a side-by-side template editor and real-time output renderer.
-- **Impact**: Medium — Streamlines the creation of new app templates for platform contributors.
-
-### FEAT-007: AI Response Caching with Cloudflare KV
-
-- **Category**: Performance & Cost Optimization
-- **Description**: Cache frequent template classification and intent-matching completions using Cloudflare KV bindings to reduce latency and AI Gateway token consumption.
-- **Implementation Path**:
-  1. Add a KV binding in `packages/api` wrangler configuration.
-  2. Implement a caching layer in the agent router for deterministic prompt classifications.
-- **Impact**: Medium — Improves responsiveness and reduces operational costs on Cloudflare free/paid tiers.
+- 10/10 E2E tests passing (8 auth/navigation + 2 AI Studio canvas)
+- `apps/web/e2e/mock-agent-server.mjs`: lightweight WebSocket mock speaking Agents SDK protocol (`chat` → `chat_chunk` / `chat_done`) with HTTP `/health` for Playwright `webServer` health checks
+- Pre-existing flaky tests fixed: strict `h1` locator → `getByRole("heading")`, disabled Create button → `toBeVisible` + click, projects nav → auth redirect assertion
 
 ---
 
-_Generated by Feature Suggestions Agent based on comprehensive repository inspection._
+## Pending Work (Detailed)
+
+### FEAT-002 – Self-Healing Agent Loops
+
+**Blocker:** Client-side sandbox/iframe error boundary not yet instrumented.  
+**Next step:** Add `window.onerror` / postMessage error relay in LivePreview iframe → MagicAgent Durable Object over WebSocket → LLM patch prompt.
+
+### FEAT-003 – Live WebContainers
+
+**Blocker:** `@webcontainer/api` not yet installed.  
+**Next step:** Evaluate bundle-size impact (currently 775 KiB main chunk); add as async `import()` in `components/workspace/LivePreview.tsx`.
+
+### FEAT-006 – Visual Template Customizer
+
+**Next step:** Scaffold admin route under `apps/web/src/pages/admin/` consuming `registry.getMetadata()` from `@magicappdev/templates`.
+
+### FEAT-007 – KV Caching for AI Responses
+
+**Next step:** Wrap `env.AI.run()` in `packages/agent/src/index.ts` with `env.KV_CACHE.get(promptHash) || run()` memoization layer; add KV binding to `wrangler.toml`.
+
+---
+
+## Deploy Instructions (Local Wrangler CLI)
+
+```bash
+# API (Hono on Workers)
+cd packages/api && wrangler deploy
+
+# Agent (Cloudflare Agents SDK + Durable Objects)
+cd packages/agent && wrangler deploy
+```
+
+> Note: GitHub Actions deploy was disabled after earlier pipeline issues. All deploys must use local `wrangler` CLI (already authenticated).
+
+---
+
+_Generated by Feature Suggestions Agent. Updated post security-hardening + E2E + deploy sprint (2026-08-28)._
