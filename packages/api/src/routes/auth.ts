@@ -6,7 +6,7 @@ import { accounts, profiles, sessions, users } from "@magicappdev/database";
 import { verifyTurnstile } from "../utils/turnstile.js";
 import { eq, and, desc } from "@magicappdev/database";
 import type { AppContext } from "../types.js";
-import { sign } from "hono/jwt";
+import { sign, verify } from "hono/jwt";
 import bcrypt from "bcryptjs";
 import { Hono } from "hono";
 
@@ -96,14 +96,29 @@ authRoutes.get("/check-session", async c => {
 authRoutes.post("/register", async c => {
   const { email, password, name, turnstileToken } = await c.req.json();
   if (!email || !password || !name) {
-    return c.json({ error: "Missing required fields" }, 400);
+    return c.json(
+      {
+        success: false,
+        error: { code: "MISSING_FIELDS", message: "Missing required fields" },
+      },
+      400,
+    );
   }
 
   if (
     c.env.TURNSTILE_SECRET_KEY &&
     !(await verifyTurnstile(turnstileToken, c.env.TURNSTILE_SECRET_KEY))
   ) {
-    return c.json({ error: "CAPTCHA verification failed" }, 400);
+    return c.json(
+      {
+        success: false,
+        error: {
+          code: "CAPTCHA_FAILED",
+          message: "CAPTCHA verification failed",
+        },
+      },
+      400,
+    );
   }
 
   const db = c.var.db;
@@ -114,7 +129,13 @@ authRoutes.post("/register", async c => {
   });
 
   if (existingUser) {
-    return c.json({ error: "User already exists" }, 400);
+    return c.json(
+      {
+        success: false,
+        error: { code: "USER_EXISTS", message: "User already exists" },
+      },
+      400,
+    );
   }
 
   const userId = crypto.randomUUID();
@@ -141,14 +162,32 @@ authRoutes.post("/register", async c => {
 authRoutes.post("/login", async c => {
   const { email, password, turnstileToken } = await c.req.json();
   if (!email || !password) {
-    return c.json({ error: "Email and password required" }, 400);
+    return c.json(
+      {
+        success: false,
+        error: {
+          code: "MISSING_FIELDS",
+          message: "Email and password required",
+        },
+      },
+      400,
+    );
   }
 
   if (
     c.env.TURNSTILE_SECRET_KEY &&
     !(await verifyTurnstile(turnstileToken, c.env.TURNSTILE_SECRET_KEY))
   ) {
-    return c.json({ error: "CAPTCHA verification failed" }, 400);
+    return c.json(
+      {
+        success: false,
+        error: {
+          code: "CAPTCHA_FAILED",
+          message: "CAPTCHA verification failed",
+        },
+      },
+      400,
+    );
   }
 
   const db = c.var.db;
@@ -158,20 +197,37 @@ authRoutes.post("/login", async c => {
   });
 
   if (!user || !user.passwordHash) {
-    return c.json({ error: "Invalid credentials" }, 401);
+    return c.json(
+      {
+        success: false,
+        error: { code: "INVALID_CREDENTIALS", message: "Invalid credentials" },
+      },
+      401,
+    );
   }
 
   const isValid = await bcrypt.compare(password, user.passwordHash);
   if (!isValid) {
-    return c.json({ error: "Invalid credentials" }, 401);
+    return c.json(
+      {
+        success: false,
+        error: { code: "INVALID_CREDENTIALS", message: "Invalid credentials" },
+      },
+      401,
+    );
   }
 
   // Create Session
   const jwtSecret = c.env.JWT_SECRET;
   if (!jwtSecret) {
-    console.error("JWT_SECRET is not configured; cannot create access token.");
     return c.json(
-      { error: "Server configuration error: missing JWT secret" },
+      {
+        success: false,
+        error: {
+          code: "SERVER_ERROR",
+          message: "Server configuration error: missing JWT secret",
+        },
+      },
       500,
     );
   }
@@ -240,10 +296,30 @@ interface DiscordUser {
 }
 
 // Login - Redirect to Discord
-authRoutes.get("/login/discord", c => {
+authRoutes.get("/login/discord", async c => {
   const clientId = c.env.DISCORD_CLIENT_ID;
   const platform = c.req.query("platform") || "web";
   const clientRedirectUri = c.req.query("redirect_uri");
+
+  if (clientRedirectUri) {
+    try {
+      const parsedUrl = new URL(clientRedirectUri);
+      if (
+        parsedUrl.protocol !== "https:" &&
+        parsedUrl.protocol !== "magicappdev:"
+      ) {
+        return c.json(
+          {
+            error:
+              "Invalid redirect_uri protocol. Allowed: https:, magicappdev:",
+          },
+          400,
+        );
+      }
+    } catch {
+      return c.json({ error: "Malformed redirect_uri" }, 400);
+    }
+  }
 
   const apiRedirectUri =
     c.env.DISCORD_REDIRECT_URI ||
@@ -262,11 +338,17 @@ authRoutes.get("/login/discord", c => {
     );
   }
 
-  // Encode platform and client redirect URI into state
-  const state = JSON.stringify({
+  const jwtSecret = c.env.JWT_SECRET;
+  if (!jwtSecret) {
+    return c.json({ error: "OAuth not configured" }, 500);
+  }
+
+  const statePayload = {
     platform,
     redirect_uri: clientRedirectUri,
-  });
+    nonce: crypto.randomUUID(),
+  };
+  const state = await sign(statePayload, jwtSecret);
 
   const params = new URLSearchParams({
     client_id: clientId,
@@ -283,37 +365,52 @@ authRoutes.get("/login/discord", c => {
 
 // Callback - Handle Discord response
 authRoutes.get("/callback/discord", async c => {
-  console.log("Discord callback received");
   const code = c.req.query("code");
   const error = c.req.query("error");
   const stateStr = c.req.query("state");
 
-  let platform = "web";
-  let clientRedirectUri: string | undefined;
-  let linkUserId: string | undefined;
-  let webRedirectOrigin: string | undefined;
-
-  try {
-    if (stateStr) {
-      const state = JSON.parse(stateStr);
-      if (typeof state === "object") {
-        platform = state.platform || "web";
-        clientRedirectUri = state.redirect_uri;
-        webRedirectOrigin = state.webRedirectOrigin;
-        if (state.action === "link" && state.userId) {
-          linkUserId = state.userId;
-        }
-      } else {
-        platform = stateStr;
-      }
-    }
-  } catch {
-    platform = stateStr || "web";
+  const jwtSecret = c.env.JWT_SECRET;
+  if (!jwtSecret) {
+    return c.json({ error: "Server configuration error" }, 500);
   }
 
+  type DiscordStatePayload = {
+    platform: string;
+    redirect_uri?: string;
+    nonce: string;
+    action?: string;
+    userId?: string;
+    webRedirectOrigin?: string;
+  };
+
+  let statePayload: DiscordStatePayload;
+  try {
+    statePayload = (
+      stateStr
+        ? await verify(stateStr, jwtSecret, "HS256")
+        : { platform: "web", nonce: crypto.randomUUID() }
+    ) as DiscordStatePayload;
+  } catch {
+    return c.json({ error: "Invalid state parameter" }, 400);
+  }
+
+  const platform = statePayload.platform || "web";
+  const clientRedirectUri = statePayload.redirect_uri;
+  const webRedirectOrigin = statePayload.webRedirectOrigin;
+  const linkUserId =
+    statePayload.action === "link" ? statePayload.userId : undefined;
+
   if (error || !code) {
-    console.error("Discord Auth Error:", error || "No code");
-    return c.json({ error: error || "No code provided" }, 400);
+    return c.json(
+      {
+        success: false,
+        error: {
+          code: "DISCORD_AUTH_ERROR",
+          message: error || "No code provided",
+        },
+      },
+      400,
+    );
   }
 
   const clientId = c.env.DISCORD_CLIENT_ID;
@@ -324,13 +421,20 @@ authRoutes.get("/callback/discord", async c => {
     new URL(c.req.url).origin + "/auth/callback/discord";
 
   if (!clientId || !clientSecret) {
-    console.error("Missing Discord credentials");
-    return c.json({ error: "Missing Discord credentials" }, 500);
+    return c.json(
+      {
+        success: false,
+        error: {
+          code: "NOT_CONFIGURED",
+          message: "Missing Discord credentials",
+        },
+      },
+      500,
+    );
   }
 
   try {
     // 1. Exchange code for access token
-    console.log("Exchanging Discord code for token...");
     const tokenResponse = await fetch("https://discord.com/api/oauth2/token", {
       method: "POST",
       headers: {
@@ -346,9 +450,16 @@ authRoutes.get("/callback/discord", async c => {
     });
 
     if (!tokenResponse.ok) {
-      const errText = await tokenResponse.text();
-      console.error("Discord Token Error:", errText);
-      return c.json({ error: "Failed to exchange code for token" }, 400);
+      return c.json(
+        {
+          success: false,
+          error: {
+            code: "TOKEN_EXCHANGE_FAILED",
+            message: "Failed to exchange code for token",
+          },
+        },
+        400,
+      );
     }
 
     const tokenData = (await tokenResponse.json()) as {
@@ -358,14 +469,17 @@ authRoutes.get("/callback/discord", async c => {
     };
 
     if (tokenData.error || !tokenData.access_token) {
-      console.error("Token Exchange Error:", tokenData.error);
       return c.json(
-        { error: tokenData.error || "Failed to get access token" },
+        {
+          success: false,
+          error: {
+            code: "TOKEN_EXCHANGE_FAILED",
+            message: tokenData.error || "Failed to get access token",
+          },
+        },
         400,
       );
     }
-
-    console.log("Discord token received, fetching user info...");
 
     // 2. Fetch User Info
     const userResponse = await fetch("https://discord.com/api/users/@me", {
@@ -375,13 +489,19 @@ authRoutes.get("/callback/discord", async c => {
     });
 
     if (!userResponse.ok) {
-      const errText = await userResponse.text();
-      console.error("Discord User Error:", errText);
-      return c.json({ error: "Failed to fetch user info from Discord" }, 400);
+      return c.json(
+        {
+          success: false,
+          error: {
+            code: "DISCORD_USER_FETCH_FAILED",
+            message: "Failed to fetch user info from Discord",
+          },
+        },
+        400,
+      );
     }
 
     const discordUser = (await userResponse.json()) as DiscordUser;
-    console.log("Discord User received:", discordUser.username);
 
     const db = c.var.db;
 
@@ -389,13 +509,21 @@ authRoutes.get("/callback/discord", async c => {
 
     // Handle Account Linking
     if (linkUserId) {
-      console.log("Linking Discord account to user:", linkUserId);
       const targetUser = await db.query.users.findFirst({
         where: eq(users.id, linkUserId),
       });
 
       if (!targetUser) {
-        return c.json({ error: "Target user for linking not found" }, 404);
+        return c.json(
+          {
+            success: false,
+            error: {
+              code: "USER_NOT_FOUND",
+              message: "Target user for linking not found",
+            },
+          },
+          404,
+        );
       }
 
       const existingAccount = await db.query.accounts.findFirst({
@@ -430,17 +558,19 @@ authRoutes.get("/callback/discord", async c => {
       // Normal Login Flow
       const email = discordUser.email;
       if (!email || !discordUser.verified) {
-        console.error("No verified email found for Discord user");
         return c.json(
-          { error: "Discord account must have a verified email" },
+          {
+            success: false,
+            error: {
+              code: "NO_EMAIL",
+              message: "Discord account must have a verified email",
+            },
+          },
           400,
         );
       }
 
-      console.log("User email:", email);
-
       // 3. Find or Create User
-      console.log("Checking for existing Discord account...");
       const existingAccount = await db.query.accounts.findFirst({
         where: and(
           eq(accounts.provider, "discord"),
@@ -449,21 +579,13 @@ authRoutes.get("/callback/discord", async c => {
       });
 
       if (existingAccount) {
-        console.log(
-          "Existing Discord account found for user:",
-          existingAccount.userId,
-        );
         userId = existingAccount.userId;
       } else {
-        console.log("No existing account, checking for user with email...");
         const existingUser = await db.query.users.findFirst({
           where: eq(users.email, email),
         });
 
         if (existingUser) {
-          console.log(
-            "Existing user found with email, linking Discord account...",
-          );
           userId = existingUser.id;
 
           // Build Discord avatar URL
@@ -482,7 +604,6 @@ authRoutes.get("/callback/discord", async c => {
             })
             .where(eq(users.id, userId));
         } else {
-          console.log("Creating new user from Discord...");
           userId = crypto.randomUUID();
 
           const avatarUrl = discordUser.avatar
@@ -498,14 +619,12 @@ authRoutes.get("/callback/discord", async c => {
             role: "user",
           });
 
-          console.log("Creating user profile...");
           await db.insert(profiles).values({
             id: crypto.randomUUID(),
             userId,
           });
         }
 
-        console.log("Linking Discord account...");
         await db.insert(accounts).values({
           id: crypto.randomUUID(),
           userId,
@@ -518,8 +637,6 @@ authRoutes.get("/callback/discord", async c => {
     }
 
     // 4. Create Session
-    console.log("Creating session...");
-
     const user = await db.query.users.findFirst({
       where: eq(users.id, userId),
     });
@@ -551,8 +668,6 @@ authRoutes.get("/callback/discord", async c => {
       userAgent: c.req.header("User-Agent"),
       ipAddress: c.req.header("CF-Connecting-IP"),
     });
-
-    console.log("Discord authentication successful, redirecting...");
 
     // 5. Redirect back to app
     if (platform === "mobile") {
@@ -722,37 +837,38 @@ authRoutes.get("/callback/discord", async c => {
         ? webRedirectOrigin
         : frontendUrl;
 
-    return c.redirect(
-      `${redirectBase}/auth/callback?accessToken=${accessToken}&refreshToken=${refreshToken}`,
+    const webSessionId = crypto.randomUUID();
+    await setOAuthSession(
+      c.env.RATE_LIMIT_KV,
+      webSessionId,
+      accessToken,
+      refreshToken,
     );
-  } catch (err) {
-    console.error("Fatal Error in Discord Callback:", err);
-    throw err;
+    return c.redirect(
+      `${redirectBase}/auth/callback?sessionId=${webSessionId}`,
+    );
+  } catch {
+    return c.json(
+      {
+        success: false,
+        error: {
+          code: "DISCORD_ERROR",
+          message: "Discord authentication failed",
+        },
+      },
+      500,
+    );
   }
 });
 
 // Login - Redirect to GitHub
-authRoutes.get("/login/github", c => {
+authRoutes.get("/login/github", async c => {
   const clientId = c.env.GITHUB_CLIENT_ID;
   const platform = c.req.query("platform") || "web";
   const clientRedirectUri = c.req.query("redirect_uri");
   const clientState = c.req.query("state"); // Original state from CLI/mobile
 
-  // Server-side validation of clientRedirectUri for mobile or custom redirect
   if (clientRedirectUri) {
-    if (
-      platform === "mobile" &&
-      !clientRedirectUri.startsWith("magicappdev://")
-    ) {
-      return c.json(
-        {
-          error:
-            "Invalid redirect_uri scheme for mobile platform. Must start with magicappdev://",
-        },
-        400,
-      );
-    }
-    // General scheme validation to prevent open redirects (allow https:// for web/CLI or magicappdev:// for mobile)
     try {
       const parsedUrl = new URL(clientRedirectUri);
       if (
@@ -761,14 +877,27 @@ authRoutes.get("/login/github", c => {
       ) {
         return c.json(
           {
-            error:
-              "Invalid redirect_uri protocol. Allowed: https:, magicappdev:",
+            success: false,
+            error: {
+              code: "INVALID_REDIRECT",
+              message:
+                "Invalid redirect_uri protocol. Allowed: https:, magicappdev:",
+            },
           },
           400,
         );
       }
     } catch {
-      return c.json({ error: "Malformed redirect_uri" }, 400);
+      return c.json(
+        {
+          success: false,
+          error: {
+            code: "INVALID_REDIRECT",
+            message: "Malformed redirect_uri",
+          },
+        },
+        400,
+      );
     }
   }
 
@@ -777,15 +906,37 @@ authRoutes.get("/login/github", c => {
     new URL(c.req.url).origin + "/auth/callback/github";
 
   if (!clientId) {
-    return c.json({ error: "Missing GITHUB_CLIENT_ID" }, 500);
+    return c.json(
+      {
+        success: false,
+        error: {
+          code: "NOT_CONFIGURED",
+          message: "GitHub OAuth not configured",
+        },
+      },
+      500,
+    );
   }
 
-  // Encode platform, client redirect URI, AND original state into state
-  const state = JSON.stringify({
+  const jwtSecret = c.env.JWT_SECRET;
+  if (!jwtSecret) {
+    return c.json(
+      {
+        success: false,
+        error: { code: "NOT_CONFIGURED", message: "OAuth not configured" },
+      },
+      500,
+    );
+  }
+
+  // Sign state with JWT to prevent CSRF
+  const statePayload = {
     platform,
     redirect_uri: clientRedirectUri,
-    clientState, // Preserve original state for CLI validation
-  });
+    clientState,
+    nonce: crypto.randomUUID(),
+  };
+  const state = await sign(statePayload, jwtSecret);
 
   const params = new URLSearchParams({
     client_id: clientId,
@@ -801,64 +952,90 @@ authRoutes.get("/login/github", c => {
 
 // Callback - Handle GitHub response
 authRoutes.get("/callback/github", async c => {
-  console.log("GitHub callback received");
   const code = c.req.query("code");
   const error = c.req.query("error");
   const stateStr = c.req.query("state");
 
-  let platform = "web";
-  let clientRedirectUri: string | undefined;
-  let linkUserId: string | undefined;
-  let clientState: string | undefined; // Original CLI state
-  let webRedirectOrigin: string | undefined;
-
-  try {
-    if (stateStr) {
-      // Try to parse state as JSON
-      const state = JSON.parse(stateStr);
-      if (typeof state === "object") {
-        platform = state.platform || "web";
-        clientRedirectUri = state.redirect_uri;
-        clientState = state.clientState; // Extract original CLI state
-        webRedirectOrigin = state.webRedirectOrigin;
-        if (state.action === "link" && state.userId) {
-          linkUserId = state.userId;
-        }
-      } else {
-        platform = stateStr;
-      }
-    }
-  } catch {
-    // Fallback to simple string state
-    platform = stateStr || "web";
+  const jwtSecret = c.env.JWT_SECRET;
+  if (!jwtSecret) {
+    return c.json(
+      {
+        success: false,
+        error: { code: "SERVER_ERROR", message: "Server configuration error" },
+      },
+      500,
+    );
   }
 
+  type GitHubStatePayload = {
+    platform: string;
+    redirect_uri?: string;
+    clientState?: string;
+    nonce: string;
+    action?: string;
+    userId?: string;
+    webRedirectOrigin?: string;
+  };
+
+  let statePayload: GitHubStatePayload;
+  try {
+    statePayload = (
+      stateStr
+        ? await verify(stateStr, jwtSecret, "HS256")
+        : { platform: "web", nonce: crypto.randomUUID() }
+    ) as GitHubStatePayload;
+  } catch {
+    return c.json(
+      {
+        success: false,
+        error: { code: "INVALID_STATE", message: "Invalid state parameter" },
+      },
+      400,
+    );
+  }
+
+  const platform = statePayload.platform || "web";
+  const clientRedirectUri = statePayload.redirect_uri;
+  const clientState = statePayload.clientState;
+  const webRedirectOrigin = statePayload.webRedirectOrigin;
+  const linkUserId =
+    statePayload.action === "link" ? statePayload.userId : undefined;
+
   if (error || !code) {
-    console.error("GitHub Auth Error:", error || "No code");
-    return c.json({ error: error || "No code provided" }, 400);
+    return c.json(
+      {
+        success: false,
+        error: {
+          code: "GITHUB_AUTH_ERROR",
+          message: error || "No code provided",
+        },
+      },
+      400,
+    );
   }
 
   const clientId = c.env.GITHUB_CLIENT_ID;
   const clientSecret = c.env.GITHUB_CLIENT_SECRET;
 
-  console.log("Using Client ID:", clientId ? "Set" : "Missing");
-  console.log("Using Client Secret:", clientSecret ? "Set" : "Missing");
-
-  // Use configured redirect URI or fallback to dynamic origin
   const redirectUri =
     c.env.GITHUB_REDIRECT_URI ||
     new URL(c.req.url).origin + "/auth/callback/github";
 
-  console.log("Redirect URI:", redirectUri);
-
   if (!clientId || !clientSecret) {
-    console.error("Missing GitHub credentials");
-    return c.json({ error: "Missing GitHub credentials" }, 500);
+    return c.json(
+      {
+        success: false,
+        error: {
+          code: "NOT_CONFIGURED",
+          message: "Missing GitHub credentials",
+        },
+      },
+      500,
+    );
   }
 
   try {
     // 1. Exchange code for access token
-    console.log("Exchanging code for token...");
     const tokenResponse = await fetch(
       "https://github.com/login/oauth/access_token",
       {
@@ -877,9 +1054,16 @@ authRoutes.get("/callback/github", async c => {
     );
 
     if (!tokenResponse.ok) {
-      const errText = await tokenResponse.text();
-      console.error("GitHub Token Error:", errText);
-      return c.json({ error: "Failed to exchange code for token" }, 400);
+      return c.json(
+        {
+          success: false,
+          error: {
+            code: "TOKEN_EXCHANGE_FAILED",
+            message: "Failed to exchange code for token",
+          },
+        },
+        400,
+      );
     }
 
     const tokenData = (await tokenResponse.json()) as {
@@ -888,14 +1072,17 @@ authRoutes.get("/callback/github", async c => {
     };
 
     if (tokenData.error || !tokenData.access_token) {
-      console.error("Token Exchange Error:", tokenData.error);
       return c.json(
-        { error: tokenData.error || "Failed to get access token" },
+        {
+          success: false,
+          error: {
+            code: "TOKEN_EXCHANGE_FAILED",
+            message: tokenData.error || "Failed to get access token",
+          },
+        },
         400,
       );
     }
-
-    console.log("Token received, fetching user info...");
 
     // 2. Fetch User Info
     const userResponse = await fetch("https://api.github.com/user", {
@@ -906,13 +1093,19 @@ authRoutes.get("/callback/github", async c => {
     });
 
     if (!userResponse.ok) {
-      const errText = await userResponse.text();
-      console.error("GitHub User Error:", errText);
-      return c.json({ error: "Failed to fetch user info from GitHub" }, 400);
+      return c.json(
+        {
+          success: false,
+          error: {
+            code: "GITHUB_USER_FETCH_FAILED",
+            message: "Failed to fetch user info from GitHub",
+          },
+        },
+        400,
+      );
     }
 
     const githubUser = (await userResponse.json()) as GitHubUser;
-    console.log("GitHub User received:", githubUser.login);
 
     const db = c.var.db;
 
@@ -920,13 +1113,21 @@ authRoutes.get("/callback/github", async c => {
 
     // Handle Account Linking
     if (linkUserId) {
-      console.log("Linking GitHub account to user:", linkUserId);
       const targetUser = await db.query.users.findFirst({
         where: eq(users.id, linkUserId),
       });
 
       if (!targetUser) {
-        return c.json({ error: "Target user for linking not found" }, 404);
+        return c.json(
+          {
+            success: false,
+            error: {
+              code: "USER_NOT_FOUND",
+              message: "Target user for linking not found",
+            },
+          },
+          404,
+        );
       }
 
       const existingAccount = await db.query.accounts.findFirst({
@@ -939,14 +1140,18 @@ authRoutes.get("/callback/github", async c => {
       if (existingAccount) {
         if (existingAccount.userId !== linkUserId) {
           return c.json(
-            { error: "GitHub account already linked to another user" },
+            {
+              success: false,
+              error: {
+                code: "ACCOUNT_LINKED",
+                message: "GitHub account already linked to another user",
+              },
+            },
             400,
           );
         }
-        // Already linked to this user, proceed
         userId = linkUserId;
       } else {
-        // Link it
         await db.insert(accounts).values({
           id: crypto.randomUUID(),
           userId: linkUserId,
@@ -962,7 +1167,6 @@ authRoutes.get("/callback/github", async c => {
       // 3. Fetch Email if missing
       let email = githubUser.email;
       if (!email) {
-        console.log("Email missing from user profile, fetching emails...");
         const emailsResponse = await fetch(
           "https://api.github.com/user/emails",
           {
@@ -983,14 +1187,16 @@ authRoutes.get("/callback/github", async c => {
       }
 
       if (!email) {
-        console.error("No verified email found for user");
-        return c.json({ error: "No verified email found" }, 400);
+        return c.json(
+          {
+            success: false,
+            error: { code: "NO_EMAIL", message: "No verified email found" },
+          },
+          400,
+        );
       }
 
-      console.log("User email:", email);
-
       // 4. Find or Create User
-      console.log("Checking for existing account...");
       const existingAccount = await db.query.accounts.findFirst({
         where: and(
           eq(accounts.provider, "github"),
@@ -999,20 +1205,14 @@ authRoutes.get("/callback/github", async c => {
       });
 
       if (existingAccount) {
-        console.log("Existing account found for user:", existingAccount.userId);
         userId = existingAccount.userId;
       } else {
-        console.log("No existing account, checking for user with email...");
-        // Check if user with email exists (link account)
         const existingUser = await db.query.users.findFirst({
           where: eq(users.email, email),
         });
 
         if (existingUser) {
-          console.log("Existing user found with email, linking account...");
           userId = existingUser.id;
-
-          // Update user name/avatar if not set or if we want to sync
           await db
             .update(users)
             .set({
@@ -1021,8 +1221,6 @@ authRoutes.get("/callback/github", async c => {
             })
             .where(eq(users.id, userId));
         } else {
-          console.log("Creating new user...");
-          // Create new user
           userId = crypto.randomUUID();
           await db.insert(users).values({
             id: userId,
@@ -1033,8 +1231,6 @@ authRoutes.get("/callback/github", async c => {
             role: "user",
           });
 
-          console.log("Creating user profile...");
-          // Create profile
           await db.insert(profiles).values({
             id: crypto.randomUUID(),
             userId,
@@ -1045,8 +1241,6 @@ authRoutes.get("/callback/github", async c => {
           });
         }
 
-        console.log("Linking account...");
-        // Link Account
         await db.insert(accounts).values({
           id: crypto.randomUUID(),
           userId,
@@ -1059,17 +1253,10 @@ authRoutes.get("/callback/github", async c => {
     }
 
     // 5. Create Session
-    console.log("Creating session...");
-
-    // Fetch latest user data to get role
     const user = await db.query.users.findFirst({
       where: eq(users.id, userId),
     });
 
-    const jwtSecret = c.env.JWT_SECRET;
-    if (!jwtSecret) {
-      throw new Error("JWT_SECRET is not configured");
-    }
     const accessToken = await sign(
       {
         sub: userId,
@@ -1094,14 +1281,10 @@ authRoutes.get("/callback/github", async c => {
       ipAddress: c.req.header("CF-Connecting-IP"),
     });
 
-    console.log("Authentication successful, redirecting...");
-
     // 6. Redirect back to app
-    // Use clientState for CLI validation (preserve original state parameter)
     const stateForRedirect = clientState || "";
 
     if (platform === "mobile") {
-      // Generate a session ID for secure token retrieval via polling
       const sessionId = crypto.randomUUID();
       await setOAuthSession(
         c.env.RATE_LIMIT_KV,
@@ -1218,31 +1401,21 @@ authRoutes.get("/callback/github", async c => {
             <iframe id="deeplink-iframe"></iframe>
             <script>
               (function() {
-                const deeplinkUrl = "${deeplinkUrl}";
-                const intentUrl = "${intentUrl}";
-                // Chrome 83+ silently blocks custom-scheme (magicappdev://) auto-navigation
-                // without a user gesture. Use intent:// on Android (works in Chrome Custom
-                // Tabs without a gesture) and fall back to the custom scheme on iOS/other.
-                const isAndroid = /Android/.test(navigator.userAgent);
-                const redirectUrl = isAndroid ? intentUrl : deeplinkUrl;
-                console.log('Attempting redirect to:', redirectUrl);
+                var deeplinkUrl = "${deeplinkUrl}";
+                var intentUrl = "${intentUrl}";
+                var isAndroid = /Android/.test(navigator.userAgent);
+                var redirectUrl = isAndroid ? intentUrl : deeplinkUrl;
 
                 setTimeout(function() {
                   try {
                     window.location.replace(redirectUrl);
                   } catch(e) {
-                    console.log('Redirect failed, trying fallback:', e);
                     try { window.location.replace(deeplinkUrl); } catch(e2) {}
                   }
                 }, 100);
 
-                // Close the browser window after a delay as a last resort
                 setTimeout(function() {
-                  try {
-                    window.close();
-                  } catch(e) {
-                    console.log('Window close failed:', e);
-                  }
+                  try { window.close(); } catch(e) {}
                 }, 3000);
               })();
             </script>
@@ -1257,8 +1430,6 @@ authRoutes.get("/callback/github", async c => {
         ? "http://localhost:3100"
         : "https://app.magicappdev.workers.dev");
 
-    // If the OAuth originated from the mobile app running in a browser, redirect
-    // back to that origin so AuthContext's URL-param fallback can pick up tokens.
     const isTrustedOrigin = (origin: string) =>
       origin.startsWith("http://localhost") ||
       origin.startsWith("http://127.0.0.1") ||
@@ -1270,19 +1441,47 @@ authRoutes.get("/callback/github", async c => {
         ? webRedirectOrigin
         : frontendUrl;
 
-    return c.redirect(
-      `${redirectBase}/auth/callback?accessToken=${accessToken}&refreshToken=${refreshToken}&state=${encodeURIComponent(stateForRedirect)}`,
+    const webSessionId = crypto.randomUUID();
+    await setOAuthSession(
+      c.env.RATE_LIMIT_KV,
+      webSessionId,
+      accessToken,
+      refreshToken,
     );
-  } catch (err) {
-    console.error("Fatal Error in GitHub Callback:", err);
-    throw err; // Re-throw to be caught by app.onError
+
+    // Preserve CLI state via session polling URL if present
+    const sessionParam = stateForRedirect
+      ? `&state=${encodeURIComponent(stateForRedirect)}`
+      : "";
+    return c.redirect(
+      `${redirectBase}/auth/callback?sessionId=${webSessionId}${sessionParam}`,
+    );
+  } catch {
+    return c.json(
+      {
+        success: false,
+        error: {
+          code: "GITHUB_ERROR",
+          message: "GitHub authentication failed",
+        },
+      },
+      500,
+    );
   }
 });
 
 // Refresh Token
 authRoutes.post("/refresh", async c => {
   const { refreshToken } = await c.req.json<{ refreshToken: string }>();
-  if (!refreshToken) return c.json({ error: "Missing refresh token" }, 400);
+  if (!refreshToken) {
+    return c.json(
+      {
+        success: false,
+        error: { code: "MISSING_TOKEN", message: "Missing refresh token" },
+      },
+      400,
+    );
+  }
 
   const db = c.var.db;
 
@@ -1291,7 +1490,16 @@ authRoutes.post("/refresh", async c => {
   });
 
   if (!session || new Date(session.expiresAt) < new Date()) {
-    return c.json({ error: "Invalid or expired session" }, 401);
+    return c.json(
+      {
+        success: false,
+        error: {
+          code: "INVALID_SESSION",
+          message: "Invalid or expired session",
+        },
+      },
+      401,
+    );
   }
 
   const user = await db.query.users.findFirst({
@@ -1300,8 +1508,13 @@ authRoutes.post("/refresh", async c => {
 
   const jwtSecret = c.env.JWT_SECRET;
   if (!jwtSecret) {
-    console.error("JWT_SECRET is not configured; cannot create access token.");
-    return c.json({ error: "Internal server error" }, 500);
+    return c.json(
+      {
+        success: false,
+        error: { code: "SERVER_ERROR", message: "Server configuration error" },
+      },
+      500,
+    );
   }
   const accessToken = await sign(
     {
@@ -1332,7 +1545,13 @@ authRoutes.post("/logout", async c => {
 authRoutes.get("/me", async c => {
   const userId = c.var.userId;
   if (!userId) {
-    return c.json({ error: "Unauthorized" }, 401);
+    return c.json(
+      {
+        success: false,
+        error: { code: "UNAUTHORIZED", message: "Unauthorized" },
+      },
+      401,
+    );
   }
 
   const db = c.var.db;
@@ -1346,7 +1565,13 @@ authRoutes.get("/me", async c => {
       .get();
 
     if (!user) {
-      return c.json({ error: "User not found" }, 404);
+      return c.json(
+        {
+          success: false,
+          error: { code: "USER_NOT_FOUND", message: "User not found" },
+        },
+        404,
+      );
     }
 
     // Fetch profile separately
@@ -1364,15 +1589,11 @@ authRoutes.get("/me", async c => {
         profile: userProfile,
       },
     });
-  } catch (err) {
-    console.error("Error in /me:", err);
+  } catch {
     return c.json(
       {
         success: false,
-        error: {
-          code: "DB_ERROR",
-          message: err instanceof Error ? err.message : "Database query failed",
-        },
+        error: { code: "DB_ERROR", message: "Failed to fetch user" },
       },
       500,
     );
@@ -1383,7 +1604,13 @@ authRoutes.get("/me", async c => {
 authRoutes.post("/change-password", async c => {
   const userId = c.var.userId;
   if (!userId) {
-    return c.json({ error: "Unauthorized" }, 401);
+    return c.json(
+      {
+        success: false,
+        error: { code: "UNAUTHORIZED", message: "Unauthorized" },
+      },
+      401,
+    );
   }
 
   const { currentPassword, newPassword } = await c.req.json<{
@@ -1392,11 +1619,26 @@ authRoutes.post("/change-password", async c => {
   }>();
 
   if (!newPassword) {
-    return c.json({ error: "New password is required" }, 400);
+    return c.json(
+      {
+        success: false,
+        error: { code: "MISSING_FIELDS", message: "New password is required" },
+      },
+      400,
+    );
   }
 
   if (newPassword.length < 6) {
-    return c.json({ error: "New password must be at least 6 characters" }, 400);
+    return c.json(
+      {
+        success: false,
+        error: {
+          code: "WEAK_PASSWORD",
+          message: "New password must be at least 6 characters",
+        },
+      },
+      400,
+    );
   }
 
   const db = c.var.db;
@@ -1406,17 +1648,41 @@ authRoutes.post("/change-password", async c => {
   });
 
   if (!user) {
-    return c.json({ error: "User not found" }, 404);
+    return c.json(
+      {
+        success: false,
+        error: { code: "USER_NOT_FOUND", message: "User not found" },
+      },
+      404,
+    );
   }
 
   // If user already has a password, verify current one
   if (user.passwordHash) {
     if (!currentPassword) {
-      return c.json({ error: "Current password is required" }, 400);
+      return c.json(
+        {
+          success: false,
+          error: {
+            code: "MISSING_FIELDS",
+            message: "Current password is required",
+          },
+        },
+        400,
+      );
     }
     const isValid = await bcrypt.compare(currentPassword, user.passwordHash);
     if (!isValid) {
-      return c.json({ error: "Current password is incorrect" }, 401);
+      return c.json(
+        {
+          success: false,
+          error: {
+            code: "INVALID_CREDENTIALS",
+            message: "Current password is incorrect",
+          },
+        },
+        401,
+      );
     }
   }
 
@@ -1511,7 +1777,13 @@ const generateUserApiKey = async () => {
 authRoutes.get("/api-keys", async c => {
   const userId = c.var.userId;
   if (!userId) {
-    return c.json({ error: "Unauthorized" }, 401);
+    return c.json(
+      {
+        success: false,
+        error: { code: "UNAUTHORIZED", message: "Unauthorized" },
+      },
+      401,
+    );
   }
   const db = c.var.db;
 
@@ -1531,22 +1803,33 @@ authRoutes.get("/api-keys", async c => {
       .all();
 
     return c.json({ success: true, data: keys });
-  } catch (err) {
-    console.error("Failed to fetch API keys:", err);
-    return c.json({ error: "Failed to fetch API keys" }, 500);
+  } catch {
+    return c.json(
+      {
+        success: false,
+        error: { code: "FETCH_FAILED", message: "Failed to fetch API keys" },
+      },
+      500,
+    );
   }
 });
 
 // Create a new API key
 authRoutes.post("/api-keys", async c => {
   const userId = c.var.userId;
-  console.log("[POST /auth/api-keys] Creating key for userId:", userId);
   const db = c.var.db;
 
   try {
     const { name } = await c.req.json<{ name: string }>();
-    console.log("[POST /auth/api-keys] Key name:", name);
-    if (!name) return c.json({ error: "Name is required" }, 400);
+    if (!name) {
+      return c.json(
+        {
+          success: false,
+          error: { code: "MISSING_FIELDS", message: "Name is required" },
+        },
+        400,
+      );
+    }
 
     const apiKey = await generateUserApiKey();
     const keyPrefix = apiKey.substring(0, 8);
@@ -1573,9 +1856,14 @@ authRoutes.post("/api-keys", async c => {
         key: apiKey, // Return full key ONLY ONCE during creation
       },
     });
-  } catch (err) {
-    console.error("[POST /auth/api-keys] Failed to create API key:", err);
-    return c.json({ error: "Failed to create API key" }, 500);
+  } catch {
+    return c.json(
+      {
+        success: false,
+        error: { code: "CREATE_FAILED", message: "Failed to create API key" },
+      },
+      500,
+    );
   }
 });
 
@@ -1583,7 +1871,13 @@ authRoutes.post("/api-keys", async c => {
 authRoutes.delete("/api-keys/:id", async c => {
   const userId = c.var.userId;
   if (!userId) {
-    return c.json({ error: "Unauthorized" }, 401);
+    return c.json(
+      {
+        success: false,
+        error: { code: "UNAUTHORIZED", message: "Unauthorized" },
+      },
+      401,
+    );
   }
   const db = c.var.db;
   const keyId = c.req.param("id");
@@ -1598,14 +1892,27 @@ authRoutes.delete("/api-keys/:id", async c => {
       )
       .get();
 
-    if (!key) return c.json({ error: "API key not found" }, 404);
+    if (!key) {
+      return c.json(
+        {
+          success: false,
+          error: { code: "NOT_FOUND", message: "API key not found" },
+        },
+        404,
+      );
+    }
 
     await db.delete(adminApiKeys).where(eq(adminApiKeys.id, keyId));
 
     return c.json({ success: true });
-  } catch (err) {
-    console.error("Failed to delete API key:", err);
-    return c.json({ error: "Failed to delete API key" }, 500);
+  } catch {
+    return c.json(
+      {
+        success: false,
+        error: { code: "DELETE_FAILED", message: "Failed to delete API key" },
+      },
+      500,
+    );
   }
 });
 
@@ -1654,10 +1961,8 @@ authRoutes.delete("/account", async c => {
 // Get Linked Accounts
 authRoutes.get("/accounts", async c => {
   const userId = c.var.userId;
-  console.log("[GET /auth/accounts] Fetching for userId:", userId);
 
   if (!userId) {
-    console.log("[GET /auth/accounts] No userId found");
     return c.json(
       {
         success: false,
@@ -1680,8 +1985,6 @@ authRoutes.get("/accounts", async c => {
       .from(accounts)
       .where(eq(accounts.userId, userId));
 
-    console.log("[GET /auth/accounts] Found accounts:", linkedAccounts);
-
     // Format dates as ISO strings for frontend
     const formattedAccounts = linkedAccounts.map(account => ({
       ...account,
@@ -1690,7 +1993,6 @@ authRoutes.get("/accounts", async c => {
         : new Date().toISOString(),
     }));
 
-    console.log("[GET /auth/accounts] Formatted accounts:", formattedAccounts);
     return c.json({ success: true, data: formattedAccounts });
   } catch (err) {
     console.error("Error fetching linked accounts:", err);

@@ -3,6 +3,9 @@ import { Typography } from "@/components/ui/Typography";
 import { useAuth } from "../../contexts/AuthContext";
 import React, { useEffect } from "react";
 
+const API_URL =
+  (import.meta.env.VITE_API_URL as string) || "http://localhost:8787";
+
 export default function AuthCallbackPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -15,20 +18,55 @@ export default function AuthCallbackPage() {
 
     const accessToken = searchParams.get("accessToken");
     const refreshToken = searchParams.get("refreshToken");
+    const sessionId = searchParams.get("sessionId");
 
+    // Backwards compat: tokens directly in the URL (legacy mobile deep links)
     if (accessToken && refreshToken) {
       login(accessToken, refreshToken)
-        .then(() => {
-          navigate("/");
-        })
-        .catch(err => {
-          console.error("Login failed:", err);
-          navigate("/login");
-        });
-    } else {
-      console.error("Auth failed: Missing tokens");
-      navigate("/login");
+        .then(() => navigate("/"))
+        .catch(() => navigate("/login"));
+      return;
     }
+
+    // New flow: poll /auth/check-session with sessionId
+    if (sessionId) {
+      let attempts = 0;
+      const maxAttempts = 30; // 30 * 500ms = 15s max wait
+
+      const poll = async () => {
+        try {
+          const resp = await fetch(
+            `${API_URL}/auth/check-session?sessionId=${sessionId}`,
+          );
+          const data = (await resp.json()) as {
+            success: boolean;
+            pending?: boolean;
+            data?: { accessToken: string; refreshToken: string };
+          };
+
+          if (data.success && data.data) {
+            await login(data.data.accessToken, data.data.refreshToken);
+            navigate("/");
+            return;
+          }
+
+          attempts++;
+          if (attempts < maxAttempts) {
+            setTimeout(poll, 500);
+          } else {
+            navigate("/login");
+          }
+        } catch {
+          navigate("/login");
+        }
+      };
+
+      poll();
+      return;
+    }
+
+    // No tokens and no sessionId
+    navigate("/login");
   }, [searchParams, navigate, login]);
 
   return (

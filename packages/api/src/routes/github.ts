@@ -116,25 +116,49 @@ githubRoutes.post("/create-repo", async c => {
     clone_url: string;
   };
 
-  // Push each file via the Contents API
-  const failures: string[] = [];
-  for (const file of files) {
-    const encoded = btoa(unescape(encodeURIComponent(file.content)));
-    const putResp = await fetch(
-      `https://api.github.com/repos/${owner}/${name}/contents/${file.path}`,
-      {
-        method: "PUT",
-        headers,
-        body: JSON.stringify({
-          message: `Add ${file.path}`,
-          content: encoded,
-        }),
-      },
-    );
-    if (!putResp.ok) {
-      failures.push(file.path);
-    }
-  }
+  // Push each file via the Contents API (parallelized)
+  const results = await Promise.allSettled(
+    files.map(async file => {
+      // Path traversal protection: reject paths with ".." or absolute paths
+      const normalized = file.path.replace(/\\/g, "/");
+      if (normalized.startsWith("/") || normalized.includes("..")) {
+        return {
+          ok: false,
+          path: file.path,
+          reason: "path_traversal",
+        } as { ok: false; path: string; reason: string };
+      }
+
+      const encoded = btoa(unescape(encodeURIComponent(file.content)));
+      const putResp = await fetch(
+        `https://api.github.com/repos/${owner}/${name}/contents/${file.path}`,
+        {
+          method: "PUT",
+          headers,
+          body: JSON.stringify({
+            message: `Add ${file.path}`,
+            content: encoded,
+          }),
+        },
+      );
+      return { ok: putResp.ok, path: file.path } as {
+        ok: boolean;
+        path: string;
+      };
+    }),
+  );
+
+  const failures = results
+    .filter(
+      (
+        r,
+      ): r is PromiseFulfilledResult<{
+        ok: false;
+        path: string;
+        reason: string;
+      }> => r.status === "fulfilled" && !r.value.ok,
+    )
+    .map(r => r.value.path);
 
   return c.json({
     success: true,

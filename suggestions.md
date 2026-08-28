@@ -1,43 +1,91 @@
-# Feature Suggestions & Improvement Report
+# MagicAppDev Feature Suggestions Report
 
-This document outlines high-priority features, repository improvements, and design enhancements for the `MagicAppDev` platform.
+This document outlines high-impact feature suggestions, optimizations, and improvements for the MagicAppDev platform, tailored to the vibe-coding paradigm, Cloudflare Workers infrastructure, and full-stack architecture.
 
----
+## Summary Matrix
 
-## 1. High-Priority Feature Suggestions
-
-| ID           | Category                           | Description                                                                                                                | Impact | Effort |
-| :----------- | :--------------------------------- | :------------------------------------------------------------------------------------------------------------------------- | :----- | :----- |
-| **FEAT-005** | **Client-Side ESM Sandbox**        | Zero-cost in-browser React component and HTML preview using ES modules and Babel standalone without paid remote sandboxes. | High   | Medium |
-| **FEAT-006** | **Prompt-to-Template Auto-Mapper** | Natural language intent mapping to templates inside `@magicappdev/agent` for instantaneous no-code scaffolding.            | High   | Low    |
-| **FEAT-007** | **Local SQLite Export**            | Built-in database and project export tool for free-tier Cloudflare Workers & D1 users.                                     | Medium | Low    |
-
----
-
-## 2. Repository & Architecture Improvements
-
-| ID           | Category                       | Description                                                                                                                                                                                    | Impact | Effort |
-| :----------- | :----------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----- | :----- |
-| **REPO-001** | **Build System Consolidation** | Harmonize the hybrid Nx + Turborepo setup by ensuring all packages have consistent `project.json` definitions, fully registering `apps/mobile`, and aligning package scripts.                  | High   | Medium |
-| **REPO-002** | **Mobile CI/CD Workflows**     | Create dedicated GitHub Actions workflows under `apps/mobile/.github/workflows/` for automated testing, Android APK builds (leveraging the existing docker scripts), and iOS app distribution. | High   | Medium |
-| **REPO-003** | **Docker-Compose Quickstart**  | Provide a root `docker-compose.yml` file to spin up local development dependencies, local mock databases, and services for developers looking for quick local setup.                           | Medium | Low    |
-| **REPO-004** | **Unified Error Handling**     | Standardize error response handling across all Hono API endpoints and frontend API client interactions to strictly follow the shared discriminated union `ApiResponse<T>`.                     | Medium | Low    |
+| ID           | Category              | Description                                                                                                                                                | Impact | Effort |
+| :----------- | :-------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------- | :----- | :----- |
+| **FEAT-001** | Developer Experience  | **One-Click GitHub Repository Export**: Export generated apps directly to a user's GitHub repository via OAuth token.                                      | High   | Medium |
+| **FEAT-002** | AI / Agentic Workflow | **Self-Healing Agent Loops**: Automatically capture runtime/build errors from generated client code and feed them back to the agent for self-correction.   | High   | High   |
+| **FEAT-003** | UI / Preview          | **Live WebContainers / StackBlitz Integration**: Spin up a browser-based Node container to allow instant live previews of generated Next.js/Expo projects. | High   | High   |
+| **FEAT-004** | Authentication        | **Discord OAuth Integration**: Complete the planned Discord OAuth login and linked roles verification pipeline.                                            | Medium | Medium |
+| **FEAT-005** | Production Readiness  | **Automated Playwright E2E Suite**: Add comprehensive E2E tests for the auth, chat, and template generation flows in CI.                                   | High   | Medium |
+| **FEAT-006** | Developer Tools       | **Visual Template Customizer**: A visual wizard in the web dashboard for editing handlebars templates and previewing results.                              | Medium | High   |
+| **FEAT-007** | Performance / Caching | **AI Response Caching with Cloudflare KV**: Cache common prompt-to-template mappings and agent completions to reduce latency and AI gateway costs.         | Medium | Low    |
 
 ---
 
-## 3. Design & UI/UX Improvements (`apps/*`)
+## Detailed Suggestions
 
-| ID         | Category                              | Description                                                                                                                                                                                        | Impact | Effort |
-| :--------- | :------------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----- | :----- |
-| **UI-001** | **Mobile Responsive Polish**          | Audit and refine `apps/web` pages (specifically chat, workspace, and settings submenus) to ensure seamless fluid resizing, touch-friendly tap targets, and consistent spacing on mobile viewports. | High   | Medium |
-| **UI-002** | **Dark Mode Refinement**              | Ensure all components across `apps/web` and `apps/mobile` fully respect the light/dark/auto theme settings without jarring contrast shifts, using Tailwind's robust dark mode utilities.           | Medium | Low    |
-| **UI-003** | **Interactive Onboarding Wizard**     | Add an interactive project setup wizard for first-time users explaining how to prompt the AI agent and scaffold their first application ("vibe-coding" guidance).                                  | High   | Medium |
-| **UI-004** | **Accessibility (a11y) Improvements** | Add proper ARIA labels, focus rings, keyboard navigation support, and screen reader announcements for complex modals and interactive chat streams.                                                 | Medium | Medium |
+### FEAT-001: One-Click GitHub Repository Export
+
+- **Category**: Developer Experience / Platform Extension
+- **Description**: Allow non-technical vibe-coders or export-focused developers to push their generated project directly to a new repository in their GitHub account with a single click.
+- **Implementation Path**:
+  1. Leverage existing GitHub OAuth scopes (`repo` scope).
+  2. Implement an API route in `@magicappdev/api` using the GitHub REST API to create a repository and commit files generated by the template engine.
+  3. Add an "Export to GitHub" button in the web chat code-preview panel.
+- **Impact**: High — Bridges the gap between in-browser vibe-coding and real code ownership.
+
+### FEAT-002: Self-Healing Agent Loops
+
+- **Category**: AI / Agentic Workflow
+- **Description**: When the client-side sandbox or preview encounters a compilation or runtime error, automatically catch the error stack trace, pass it back to the `MagicAgent` Durable Object, and have the agent patch the generated file.
+- **Implementation Path**:
+  1. Add error boundary listeners to the client-side iframe sandbox.
+  2. Transmit error telemetry back to the agent session over WebSocket.
+  3. Prompt the model router with the error and specific file context to emit corrected file blocks.
+- **Impact**: High — Drastically improves the reliability of zero-shot prompt generation for non-technical users.
+
+### FEAT-003: Live WebContainers / StackBlitz Integration
+
+- **Category**: UI / Preview
+- **Description**: Upgrade the static code file viewer into an interactive Node environment using WebContainers API, enabling users to run full React/Vite apps directly inside the browser tab.
+- **Implementation Path**:
+  1. Integrate `@webcontainer/api` into the web application package (`apps/web`).
+  2. Stream generated template files into the WebContainer virtual file system.
+  3. Boot up the dev server and render the preview in an embedded iframe.
+- **Impact**: High — Transforms static file viewing into a true full-stack working environment.
+
+### FEAT-004: Discord OAuth Integration
+
+- **Category**: Authentication & Community
+- **Description**: Complete the planned Discord OAuth login flow and linked roles verification to support community server gating and alternative logins.
+- **Implementation Path**:
+  1. Add `DISCORD_CLIENT_ID` and `DISCORD_CLIENT_SECRET` secrets to wrangler configuration.
+  2. Implement `/auth/discord` and `/auth/discord/callback` endpoints in `@magicappdev/api`.
+  3. Update database schema for secondary account linking and add Discord login buttons to web and mobile apps.
+- **Impact**: Medium — Enhances community onboarding and aligns with Discord bot configuration requirements.
+
+### FEAT-005: Automated Playwright E2E Suite
+
+- **Category**: Production Readiness & Quality Assurance
+- **Description**: Establish an end-to-end testing suite using Playwright covering core user journeys (authentication, AI prompt submission, code generation, and project management).
+- **Implementation Path**:
+  1. Initialize Playwright configuration inside `apps/web`.
+  2. Write specs simulating user login, prompt entry, and file generation validation.
+  3. Integrate the test suite into `.github/workflows/ci.yml`.
+- **Impact**: High — Prevents regressions across monorepo package updates and ensures platform stability.
+
+### FEAT-006: Visual Template Customizer
+
+- **Category**: Developer Tools
+- **Description**: Provide an admin/developer interface to preview and tweak Handlebars templates (`packages/templates`) with live variable injection.
+- **Implementation Path**:
+  1. Create an admin dashboard route for template management.
+  2. Build a side-by-side template editor and real-time output renderer.
+- **Impact**: Medium — Streamlines the creation of new app templates for platform contributors.
+
+### FEAT-007: AI Response Caching with Cloudflare KV
+
+- **Category**: Performance & Cost Optimization
+- **Description**: Cache frequent template classification and intent-matching completions using Cloudflare KV bindings to reduce latency and AI Gateway token consumption.
+- **Implementation Path**:
+  1. Add a KV binding in `packages/api` wrangler configuration.
+  2. Implement a caching layer in the agent router for deterministic prompt classifications.
+- **Impact**: Medium — Improves responsiveness and reduces operational costs on Cloudflare free/paid tiers.
 
 ---
 
-Suggested next steps:
-
-- Review the prioritized suggestions with the core team to schedule upcoming sprints.
-- Implement **REPO-001** (Build System Consolidation) to clean up monorepo build inconsistencies.
-- Start drafting the implementation plan for **FEAT-001** (Real-time Live UI Preview).
+_Generated by Feature Suggestions Agent based on comprehensive repository inspection._

@@ -32,7 +32,7 @@ export function createApp() {
         const allowedOrigins = [
           "http://localhost:3000",
           "http://localhost:3100",
-          "http://localhost:8100", // Standard Ionic Dev
+          "http://localhost:8100",
           "https://app.magicappdev.workers.dev",
           "capacitor://localhost",
           "http://localhost",
@@ -47,8 +47,7 @@ export function createApp() {
           return origin;
         }
 
-        // For development, allow all origins if origin is provided
-        return origin;
+        return "null";
       },
       allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
       allowHeaders: ["Content-Type", "Authorization", "X-API-Key"],
