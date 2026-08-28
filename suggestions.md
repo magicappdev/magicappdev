@@ -1,6 +1,6 @@
 # MagicAppDev Feature Suggestions Report
 
-> **Last updated:** 2026-08-28  
+> **Last updated:** 2026-08-28 (quick wins added)  
 > **Live Workers:**
 >
 > - API (`@magicappdev/api`): https://magicappdev-api.magicappdev.workers.dev
@@ -10,15 +10,22 @@
 
 ## Summary Matrix
 
-| ID           | Category              | Description                                                                                                                                                | Impact | Status     |
-| :----------- | :-------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------- | :----- | :--------- |
-| **FEAT-001** | Developer Experience  | **One-Click GitHub Repository Export**: Push generated apps to a user's GitHub repo via OAuth. Already wired into chat page + `/github/create-repo` route. | High   | ✅ Done    |
-| **FEAT-002** | AI / Agentic Workflow | **Self-Healing Agent Loops**: Catch runtime/build errors and feed them back to MagicAgent Durable Object for auto-patching.                                | High   | ✅ Done    |
-| **FEAT-003** | UI / Preview          | **Live WebContainers / StackBlitz Integration**: Run full React/Vite apps in-browser via WebContainer API.                                                 | High   | 📋 Backlog |
-| **FEAT-004** | Authentication        | **Discord OAuth Integration**: JWT-signed state, KV session polling, linked-accounts endpoint. GitHub OAuth also hardened.                                 | Medium | ✅ Done    |
-| **FEAT-005** | Production Readiness  | **Automated Playwright E2E Suite**: 12/12 tests passing (auth, chat, projects, AI Studio canvas + preview-error-relay + mock WS server).                   | High   | ✅ Done    |
-| **FEAT-006** | Developer Tools       | **Visual Template Customizer**: Admin UI to preview and tweak Handlebars templates with live variable injection.                                           | Medium | 📋 Backlog |
-| **FEAT-007** | Performance / Caching | **AI Response Caching with Cloudflare KV**: Cache prompt→template mappings to reduce AI Gateway token spend.                                               | Medium | 📋 Backlog |
+| ID           | Category                | Description                                                                                                                                                | Impact | Status     |
+| :----------- | :---------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------- | :----- | :--------- |
+| **FEAT-001** | Developer Experience    | **One-Click GitHub Repository Export**: Push generated apps to a user's GitHub repo via OAuth. Already wired into chat page + `/github/create-repo` route. | High   | ✅ Done    |
+| **FEAT-002** | AI / Agentic Workflow   | **Self-Healing Agent Loops**: Catch runtime/build errors and feed them back to MagicAgent Durable Object for auto-patching.                                | High   | ✅ Done    |
+| **FEAT-003** | UI / Preview            | **Live WebContainers / StackBlitz Integration**: Run full React/Vite apps in-browser via WebContainer API.                                                 | High   | 📋 Backlog |
+| **FEAT-004** | Authentication          | **Discord OAuth Integration**: JWT-signed state, KV session polling, linked-accounts endpoint. GitHub OAuth also hardened.                                 | Medium | ✅ Done    |
+| **FEAT-005** | Production Readiness    | **Automated Playwright E2E Suite**: 12/12 tests passing (auth, chat, projects, AI Studio canvas + preview-error-relay + mock WS server).                   | High   | ✅ Done    |
+| **FEAT-006** | Developer Tools         | **Visual Template Customizer**: Admin UI to preview and tweak Handlebars templates with live variable injection.                                           | Medium | 📋 Backlog |
+| **FEAT-007** | Performance / Caching   | **AI Response Caching with Cloudflare KV**: Cache prompt→template mappings to reduce AI Gateway token spend.                                               | Medium | 📋 Backlog |
+| **QW-001**   | Bug Fix / Security      | **Admin Delete User Bug**: "Delete User" button calls `api.deleteAccount()` — deletes the admin, not the selected user. Live data-loss risk.               | High   | 🚀 Planned |
+| **QW-002**   | UX / Data Persistence   | **Chat Conversation History**: Messages lost on refresh. Backend (`chat_sessions`, `chat_messages` tables + API routes) already built — just unwired.      | High   | 🚀 Planned |
+| **QW-003**   | UX / AI                 | **Model Selector Functional**: Chat model dropdown sends `model` field but agent ignores it — purely cosmetic. Wire to `handleChat`.                       | High   | 🚀 Planned |
+| **QW-004**   | Performance             | **Agent Context Window Cap**: No message truncation — conversations will silently fail at model context limits. Simple char/token cap needed.              | Medium | 🚀 Planned |
+| **QW-005**   | UX / DX                 | **Workspace Syntax Highlighting**: Code editor is a raw `<textarea>` — no syntax highlighting. Add lightweight highlighter overlay.                        | Medium | 🚀 Planned |
+| **QW-006**   | UX / Polish             | **Remove Dead Skills Button**: "Use a skill" attachment menu item opens `window.alert("Skills coming soon!")`. Remove or replace with Templates shortcut.  | Low    | 🚀 Planned |
+| **QW-007**   | Security / Code Quality | **Strip Debug Logs in Settings**: 6+ `console.log` statements leak auth tokens and user data to browser console in production.                             | Medium | 🚀 Planned |
 
 ---
 
@@ -62,6 +69,54 @@
 
 ---
 
+## Quick Wins (Planned) — High Priority, Low Effort
+
+> Total estimated effort: **~5 hours** for all 7. Top 3 are highest priority (active bugs or silent failures).
+
+### QW-001 – Admin Delete User Bug
+
+- **Bug**: Admin "Delete User" button in `apps/web/src/pages/admin/page.tsx` calls `api.deleteAccount()` — deletes the **admin's own account**, not the selected user.
+- **Fix**: Add `deleteUser(userId)` method to `packages/shared/src/api/client.ts`, add `DELETE /admin/users/:id` route in `packages/api/src/routes/admin.ts`, wire the button onClick.
+- **Files**: `apps/web/src/pages/admin/page.tsx`, `packages/shared/src/api/client.ts`, `packages/api/src/routes/admin.ts`
+
+### QW-002 – Chat Conversation History Persistence
+
+- **Problem**: Chat messages stored in `useState` — lost on refresh. Backend already has `chat_sessions`/`chat_messages` tables + API routes (`getChatSessions`, `getChatMessages`, `appendChatMessage`).
+- **Fix**: Load messages on chat page mount, save user/assistant messages on send/complete.
+- **Files**: `apps/web/src/pages/chat/page.tsx`, `packages/shared/src/api/client.ts`
+
+### QW-003 – Model Selector Functional
+
+- **Problem**: Chat model dropdown sends `model` field via WS but agent's `handleChat` ignores it — uses `ModelRouter.route()` heuristic instead.
+- **Fix**: Accept `data.model` in `handleChat` and use it when provided, falling back to `ModelRouter.route()` only when no model is specified.
+- **Files**: `packages/agent/src/index.ts` (line ~1134 in `handleChat`)
+
+### QW-004 – Agent Context Window Cap
+
+- **Problem**: Entire `updatedMessages` array sent to AI without truncation — will silently fail at context limits.
+- **Fix**: Cap messages to last N entries or ~6k characters before sending to AI.
+- **Files**: `packages/agent/src/index.ts` (lines ~1213-1218 in `handleChat`)
+
+### QW-005 – Workspace Syntax Highlighting
+
+- **Problem**: Code editor in workspace is a raw `<textarea>` — no syntax highlighting.
+- **Fix**: Add `highlight.js` via dynamic import or a lightweight `<pre><code>` overlay.
+- **Files**: `apps/web/src/pages/projects/workspace.tsx` (lines ~357-368)
+
+### QW-006 – Remove Dead Skills Button
+
+- **Problem**: "Use a skill" attachment menu item opens `window.alert("Skills coming soon!")`.
+- **Fix**: Remove the placeholder button or replace with a functional "Templates" shortcut.
+- **Files**: `apps/web/src/pages/chat/page.tsx` (lines ~295-307)
+
+### QW-007 – Strip Debug Logs in Settings
+
+- **Problem**: 6+ `console.log` statements in settings page leak auth tokens and user data to browser console in production.
+- **Fix**: Remove or replace with a logger that respects production mode.
+- **Files**: `apps/web/src/pages/settings/page.tsx` (lines ~90-100)
+
+---
+
 ## Pending Work (Detailed)
 
 ### FEAT-003 – Live WebContainers
@@ -93,4 +148,4 @@ cd packages/agent && wrangler deploy
 
 ---
 
-_Generated by Feature Suggestions Agent. Updated post security-hardening + E2E + deploy sprint (2026-08-28)._
+_Generated by Feature Suggestions Agent. Updated post security-hardening + E2E + deploy sprint (2026-08-28). Quick wins added._
