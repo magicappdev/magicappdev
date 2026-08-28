@@ -26,7 +26,9 @@
           "image": "./assets/images/icon.png",
           "imageWidth": 120
         }
-      ]
+      ],
+      "expo-font",
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true
