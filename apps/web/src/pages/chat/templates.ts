@@ -26,38 +26,9 @@ export const TEMPLATE_CATEGORIES: Array<{
   { id: "dashboard", label: "Dashboards" },
 ];
 
-export const QUICK_SUGGESTIONS = [
-  {
-    label: "Contact Form",
-    prompt:
-      "Create a beautiful contact form with name, email, message fields, validation, and a success state",
-  },
-  {
-    label: "Image Editor",
-    prompt:
-      "Build an in-browser image editor with crop, brightness, contrast, saturation, and blur controls",
-  },
-  {
-    label: "Mini Game",
-    prompt:
-      "Create a fun Snake game with smooth movement, score tracking, increasing difficulty, and a game over screen",
-  },
-  {
-    label: "Finance Calculator",
-    prompt:
-      "Build a compound interest calculator with loan payment, savings goal, and investment projection tools",
-  },
-  {
-    label: "Weather App",
-    prompt:
-      "Create a weather dashboard with current conditions, 5-day forecast cards, and animated weather icons",
-  },
-  {
-    label: "Todo List",
-    prompt:
-      "Build a todo app with priorities, due dates, tags, filtering, and local storage persistence",
-  },
-];
+import { getPromptPresetsAsStrings } from "@magicappdev/shared/utils";
+
+export const QUICK_SUGGESTIONS = getPromptPresetsAsStrings({ count: 6 });
 
 export const TEMPLATES: Template[] = [
   // Apps & Games

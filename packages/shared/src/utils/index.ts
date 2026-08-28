@@ -55,3 +55,10 @@ export {
   unwrap,
   unwrapOr,
 } from "./result";
+
+// Chat prompt presets
+export {
+  getPromptPresets,
+  getPromptPresetsAsStrings,
+  type PromptPreset,
+} from "./chat-prompts";

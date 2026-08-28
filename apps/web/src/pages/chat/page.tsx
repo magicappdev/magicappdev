@@ -20,13 +20,6 @@ import {
   X,
 } from "lucide-react";
 import {
-  TEMPLATE_CATEGORIES,
-  TEMPLATES,
-  QUICK_SUGGESTIONS,
-  type Template,
-  type TemplateCategory,
-} from "./templates.js";
-import {
   generateStitchStarterScreen,
   isStitchConfigured,
   type StitchStarterScreen,
@@ -36,6 +29,13 @@ import {
   useAgentMessages,
   usePreviewErrorListener,
 } from "@/lib/agent-websocket.js";
+import {
+  TEMPLATE_CATEGORIES,
+  TEMPLATES,
+  type Template,
+  type TemplateCategory,
+} from "./templates.js";
+import { getPromptPresets, type PromptPreset } from "@magicappdev/shared/utils";
 import { Button, Dialog, Input, TooltipProvider } from "@cloudflare/kumo";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Preview, { type PreviewFile } from "@/components/ui/Preview.js";
@@ -735,6 +735,8 @@ export default function ChatPage() {
   const [isConnected, setIsConnected] = useState(false);
   const [, setSuggestedTemplate] = useState<string | null>(null);
   const [suggestedPrompts, setSuggestedPrompts] = useState<string[]>([]);
+  const [promptPresets, setPromptPresets] = useState<PromptPreset[]>([]);
+  const [presetSeed, setPresetSeed] = useState(() => Date.now());
   const [generatedProject, setGeneratedProject] =
     useState<GeneratedProject | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -800,6 +802,20 @@ export default function ChatPage() {
       }
     };
     initSession();
+  }, []);
+
+  useEffect(() => {
+    setPromptPresets(
+      getPromptPresets({
+        messageCount: messages.length,
+        seed: presetSeed,
+        count: 4,
+      }),
+    );
+  }, [messages.length, presetSeed]);
+
+  const handleRerollPrompts = useCallback(() => {
+    setPresetSeed(prev => prev + 1);
   }, []);
 
   const handleAgentMessage = useCallback(
@@ -1009,6 +1025,7 @@ export default function ChatPage() {
     setMessages(prev => [...prev, userMsg]);
     setInput("");
     setSuggestedPrompts([]);
+    setPromptPresets([]);
     setIsLoading(true);
     setSuggestedTemplate(null);
 
@@ -1232,19 +1249,28 @@ export default function ChatPage() {
               )}
 
               <div className="flex flex-wrap gap-2 justify-center mb-16">
-                {QUICK_SUGGESTIONS.map(s => (
+                {promptPresets.map(preset => (
                   <button
-                    key={s.prompt}
+                    key={`${preset.label}-${preset.prompt}`}
                     type="button"
                     onClick={() => {
-                      setInput(s.prompt);
+                      setInput(preset.prompt);
                       textareaRef.current?.focus();
                     }}
                     className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-zinc-700 text-sm text-zinc-300 hover:text-white hover:border-zinc-500 hover:bg-zinc-800/60 transition-colors"
                   >
-                    {s.label}
+                    {preset.label}
                   </button>
                 ))}
+                <button
+                  type="button"
+                  onClick={handleRerollPrompts}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-full border border-zinc-800 text-xs text-zinc-500 hover:text-zinc-300 hover:border-zinc-700 transition-colors"
+                  aria-label="Refresh suggestions"
+                >
+                  <Sparkles className="w-3 h-3" />
+                  Reroll
+                </button>
               </div>
 
               <div id="template-gallery">
@@ -1454,23 +1480,38 @@ export default function ChatPage() {
                   <div ref={messagesEndRef} />
                 </div>
 
-                {suggestedPrompts.length > 0 && !isLoading && (
-                  <div className="px-4 pb-2 overflow-x-auto">
-                    <div className="flex gap-2">
-                      {suggestedPrompts.map(prompt => (
-                        <button
-                          key={prompt}
-                          type="button"
-                          onClick={() => handleSubmit(prompt)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-full border border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-600 hover:bg-zinc-800/60 whitespace-nowrap transition-colors"
-                        >
-                          <Sparkles className="w-3 h-3" />
-                          {prompt}
-                        </button>
-                      ))}
+                {(suggestedPrompts.length > 0 || promptPresets.length > 0) &&
+                  !isLoading && (
+                    <div className="px-4 pb-2 overflow-x-auto">
+                      <div className="flex gap-2">
+                        {(suggestedPrompts.length > 0
+                          ? suggestedPrompts
+                          : promptPresets.map(p => p.prompt)
+                        ).map(prompt => (
+                          <button
+                            key={prompt}
+                            type="button"
+                            onClick={() => handleSubmit(prompt)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-full border border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-600 hover:bg-zinc-800/60 whitespace-nowrap transition-colors"
+                          >
+                            <Sparkles className="w-3 h-3" />
+                            {prompt}
+                          </button>
+                        ))}
+                        {suggestedPrompts.length === 0 && (
+                          <button
+                            type="button"
+                            onClick={handleRerollPrompts}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-full border border-zinc-800 text-zinc-500 hover:text-zinc-300 hover:border-zinc-700 whitespace-nowrap transition-colors"
+                            aria-label="Refresh suggestions"
+                          >
+                            <Sparkles className="w-3 h-3" />
+                            Reroll
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 <div className="p-4 bg-zinc-950/80 border-t border-zinc-800 shrink-0">
                   <InputArea

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   StyleSheet,
   Text,
@@ -12,6 +12,7 @@ import {
 import { api } from "../lib/api";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
+import { getPromptPresets, type PromptPreset } from "@magicappdev/shared/utils";
 
 interface MessageItem {
   id: string;
@@ -40,6 +41,8 @@ export default function ChatScreen() {
   ]);
   const [selectedModel, setSelectedModel] = useState("@cf/meta/llama-3.3-70b-instruct-fp8");
   const [showModelPicker, setShowModelPicker] = useState(false);
+  const [promptPresets, setPromptPresets] = useState<PromptPreset[]>([]);
+  const [presetSeed, setPresetSeed] = useState(() => Date.now());
 
   useEffect(() => {
     // Fetch dynamic models including Opencode Zen models
@@ -53,6 +56,20 @@ export default function ChatScreen() {
       .catch(() => {});
   }, []);
 
+  useEffect(() => {
+    setPromptPresets(
+      getPromptPresets({
+        messageCount: messages.length,
+        seed: presetSeed,
+        count: 4,
+      }),
+    );
+  }, [messages.length, presetSeed]);
+
+  const handleRerollPrompts = useCallback(() => {
+    setPresetSeed(prev => prev + 1);
+  }, []);
+
   const handleSend = async () => {
     if (!input.trim() || loading) return;
 
@@ -64,6 +81,7 @@ export default function ChatScreen() {
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
     setInput("");
+    setPromptPresets([]);
     setLoading(true);
 
     try {
@@ -156,6 +174,32 @@ export default function ChatScreen() {
             </Text>
           </View>
         ))}
+        {promptPresets.length > 0 && !loading && messages.length <= 1 && (
+          <View style={styles.suggestionsContainer}>
+            <View style={styles.suggestionsHeader}>
+              <Text style={styles.suggestionsTitle}>Suggestions</Text>
+              <TouchableOpacity onPress={handleRerollPrompts} style={styles.rerollButton}>
+                <Ionicons name="refresh" size={14} color="#94A3B8" />
+                <Text style={styles.rerollText}>Reroll</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View style={styles.suggestionsList}>
+                {promptPresets.map(preset => (
+                  <TouchableOpacity
+                    key={`${preset.label}-${preset.prompt}`}
+                    style={styles.suggestionChip}
+                    onPress={() => {
+                      setInput(preset.prompt);
+                    }}
+                  >
+                    <Text style={styles.suggestionText}>{preset.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
+          </View>
+        )}
       </ScrollView>
 
       <View style={styles.inputArea}>
@@ -301,5 +345,54 @@ const styles = StyleSheet.create({
   sendButtonText: {
     color: "#fff",
     fontWeight: "600",
+  },
+  suggestionsContainer: {
+    marginTop: 12,
+  },
+  suggestionsHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  suggestionsTitle: {
+    color: "#94A3B8",
+    fontSize: 12,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  rerollButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    backgroundColor: "#1E293B",
+    borderWidth: 1,
+    borderColor: "#334155",
+  },
+  rerollText: {
+    color: "#94A3B8",
+    fontSize: 11,
+    fontWeight: "500",
+  },
+  suggestionsList: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  suggestionChip: {
+    backgroundColor: "#1E293B",
+    borderWidth: 1,
+    borderColor: "#334155",
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  suggestionText: {
+    color: "#F8FAFC",
+    fontSize: 13,
+    fontWeight: "500",
   },
 });
