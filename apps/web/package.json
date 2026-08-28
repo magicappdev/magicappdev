@@ -23,6 +23,7 @@
     "@google/stitch-sdk": "^0.0.3",
     "@magicappdev/database": "workspace:*",
     "@magicappdev/shared": "workspace:*",
+    "@magicappdev/templates": "workspace:*",
     "@marsidev/react-turnstile": "^1.1.0",
     "@phosphor-icons/react": "^2.1.10",
     "@radix-ui/themes": "^3.2.1",

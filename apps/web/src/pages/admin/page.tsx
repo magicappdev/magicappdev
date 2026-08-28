@@ -11,6 +11,7 @@ import {
   X,
   FileText,
   Settings as SettingsIcon,
+  LayoutGrid,
   type LucideIcon,
 } from "lucide-react";
 import type {
@@ -18,9 +19,11 @@ import type {
   SystemLog,
   GlobalConfig,
 } from "@magicappdev/shared/api";
+import { TemplateCustomizer } from "../../components/admin/TemplateCustomizer";
 import { Typography } from "@/components/ui/Typography";
 import { useAuth } from "../../contexts/AuthContext";
 import React, { useState, useEffect } from "react";
+import { registry } from "@magicappdev/templates";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { api } from "../../lib/api";
@@ -41,7 +44,12 @@ export default function AdminDashboard() {
   const [permissionsError, setPermissionsError] = useState<string | null>(null);
 
   // View states
-  const [view, setView] = useState<"users" | "logs" | "config">("users");
+  const [view, setView] = useState<"users" | "logs" | "config" | "templates">(
+    "users",
+  );
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(
+    null,
+  );
   const [logs, setLogs] = useState<SystemLog[]>([]);
   const [config, setConfig] = useState<GlobalConfig | null>(null);
   const [isActionLoading, setIsActionLoading] = useState(false);
@@ -257,6 +265,17 @@ export default function AdminDashboard() {
               <Shield size={16} className="mr-2" />
             )}
             Global Config
+          </Button>
+          <Button
+            variant={view === "templates" ? "tonal" : "outlined"}
+            size="sm"
+            onClick={() => {
+              setSelectedTemplateId(null);
+              setView("templates");
+            }}
+          >
+            <LayoutGrid size={16} className="mr-2" />
+            Templates
           </Button>
           {view !== "users" && (
             <Button variant="text" size="sm" onClick={() => setView("users")}>
@@ -575,6 +594,76 @@ export default function AdminDashboard() {
               </Button>
             </div>
           </form>
+        </Card>
+      )}
+
+      {view === "templates" && !selectedTemplateId && (
+        <Card className="p-0 overflow-hidden border-outline/10 shadow-lg animate-in slide-in-from-bottom-4 duration-300">
+          <div className="p-6 border-b border-outline/10 bg-surface-variant/10">
+            <div className="flex items-center gap-2">
+              <LayoutGrid className="text-primary" size={20} />
+              <Typography variant="title" className="text-base">
+                Template Gallery
+              </Typography>
+              <span className="text-xs text-foreground/40 ml-2">
+                {registry.getAll().length} templates
+              </span>
+            </div>
+          </div>
+          <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {registry.getAll().map(template => (
+              <button
+                key={template.id}
+                type="button"
+                onClick={() => setSelectedTemplateId(template.id)}
+                className="text-left p-4 rounded-xl border border-outline/10 hover:border-primary/30 hover:bg-surface-variant/10 transition-all group"
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <Typography
+                    variant="title"
+                    className="text-sm group-hover:text-primary transition-colors"
+                  >
+                    {template.name}
+                  </Typography>
+                  <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-primary/10 text-primary">
+                    {template.category}
+                  </span>
+                </div>
+                <Typography
+                  variant="body"
+                  className="text-xs opacity-60 line-clamp-2 mb-3"
+                >
+                  {template.description}
+                </Typography>
+                <div className="flex flex-wrap gap-1">
+                  {template.frameworks.map(fw => (
+                    <span
+                      key={fw}
+                      className="px-1.5 py-0.5 rounded text-[9px] bg-surface-variant/30 text-foreground/50"
+                    >
+                      {fw}
+                    </span>
+                  ))}
+                </div>
+                <div className="mt-2 text-[10px] text-foreground/30">
+                  {template.files.length} files &middot;{" "}
+                  {template.variables.length} variables
+                </div>
+              </button>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {view === "templates" && selectedTemplateId && (
+        <Card
+          className="overflow-hidden border-outline/10 shadow-lg animate-in slide-in-from-bottom-4 duration-300"
+          style={{ height: "calc(100vh - 280px)", minHeight: "500px" }}
+        >
+          <TemplateCustomizer
+            templateId={selectedTemplateId}
+            onClose={() => setSelectedTemplateId(null)}
+          />
         </Card>
       )}
     </div>

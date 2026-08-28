@@ -17,7 +17,7 @@
 | **FEAT-003** | UI / Preview            | **Live WebContainers / StackBlitz Integration**: Run full React/Vite apps in-browser via WebContainer API.                                                 | High   | 📋 Backlog |
 | **FEAT-004** | Authentication          | **Discord OAuth Integration**: JWT-signed state, KV session polling, linked-accounts endpoint. GitHub OAuth also hardened.                                 | Medium | ✅ Done    |
 | **FEAT-005** | Production Readiness    | **Automated Playwright E2E Suite**: 12/12 tests passing (auth, chat, projects, AI Studio canvas + preview-error-relay + mock WS server).                   | High   | ✅ Done    |
-| **FEAT-006** | Developer Tools         | **Visual Template Customizer**: Admin UI to preview and tweak Handlebars templates with live variable injection.                                           | Medium | 📋 Backlog |
+| **FEAT-006** | Developer Tools         | **Visual Template Customizer**: Admin UI to preview and tweak Handlebars templates with live variable injection.                                           | Medium | ✅ Done    |
 | **FEAT-007** | Performance / Caching   | **AI Response Caching with Cloudflare KV**: Cache prompt→template mappings to reduce AI Gateway token spend.                                               | Medium | ✅ Done    |
 | **QW-001**   | Bug Fix / Security      | **Admin Delete User Bug**: "Delete User" button calls `api.deleteAccount()` — deletes the admin, not the selected user. Live data-loss risk.               | High   | ✅ Done    |
 | **QW-002**   | UX / Data Persistence   | **Chat Conversation History**: Messages lost on refresh. Backend (`chat_sessions`, `chat_messages` tables + API routes) already built — just unwired.      | High   | ✅ Done    |
