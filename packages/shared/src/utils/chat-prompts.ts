@@ -188,6 +188,8 @@ export function getPromptPresets(
 
   let filtered = pool;
 
+  // Bias starter suggestions toward buildable app/landing ideas in the morning
+  // and keep the same bias in the evening/night to reduce decision fatigue.
   if (timeOfDay === "morning") {
     filtered = filterByCategory(pool, preferredCategory ?? "app");
   } else if (timeOfDay === "evening" || timeOfDay === "night") {

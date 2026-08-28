@@ -112,6 +112,7 @@ export default function ChatScreen() {
   };
 
   const currentModelObj = models.find(m => m.id === selectedModel);
+  const isInitialChat = messages.length <= 1;
 
   return (
     <KeyboardAvoidingView
@@ -174,11 +175,11 @@ export default function ChatScreen() {
             </Text>
           </View>
         ))}
-        {promptPresets.length > 0 && !loading && messages.length <= 1 && (
+        {promptPresets.length > 0 && !loading && isInitialChat && (
           <View style={styles.suggestionsContainer}>
             <View style={styles.suggestionsHeader}>
               <Text style={styles.suggestionsTitle}>Suggestions</Text>
-              <TouchableOpacity onPress={handleRerollPrompts} style={styles.rerollButton}>
+              <TouchableOpacity onPress={handleRerollPrompts} style={styles.rerollButton} accessibilityLabel="Reroll suggestions">
                 <Ionicons name="refresh" size={14} color="#94A3B8" />
                 <Text style={styles.rerollText}>Reroll</Text>
               </TouchableOpacity>
