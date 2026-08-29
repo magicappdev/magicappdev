@@ -3,21 +3,24 @@
  */
 
 import {
+  generateApp,
   generateComponent,
   buttonComponentTemplate,
   generateScreen,
   screenTemplate,
+  registry,
 } from "@magicappdev/templates";
 import {
   header,
   success,
   error,
+  warn,
   info,
   keyValue,
   newline,
 } from "../../lib/ui.js";
+import { promptText, promptSelect, promptConfirm } from "../../lib/prompts.js";
 import { withSpinner } from "../../lib/spinner.js";
-import { promptText } from "../../lib/prompts.js";
 import { Command } from "commander";
 
 interface GenerateOptions {
@@ -162,6 +165,138 @@ Examples:
           error(
             err instanceof Error ? err.message : "Failed to generate screen",
           );
+          process.exit(1);
+        }
+      }),
+  )
+  .addCommand(
+    new Command("app")
+      .alias("a")
+      .description("Generate a new app from a template")
+      .argument("[name]", "App name")
+      .option("-p, --path <path>", "Output path", ".")
+      .action(async (name: string | undefined, options: GenerateOptions) => {
+        header("Generate App");
+
+        try {
+          const appTemplates = registry
+            .getAll()
+            .filter(t => t.category === "app");
+
+          if (appTemplates.length === 0) {
+            error("No app templates available");
+            process.exit(1);
+          }
+
+          let appName = name;
+          if (!appName) {
+            appName = await promptText("What is your app name?", {
+              validate: value => {
+                if (!value || value.length < 2) {
+                  return "App name must be at least 2 characters";
+                }
+                if (!/^[a-zA-Z][a-zA-Z0-9-_ ]*$/.test(value)) {
+                  return "App name must start with a letter and contain only letters, numbers, hyphens, underscores, and spaces";
+                }
+                return true;
+              },
+            });
+          }
+
+          if (!appName) {
+            error("App name is required");
+            process.exit(1);
+          }
+
+          const templateChoices = appTemplates.map(t => ({
+            title: `${t.name} - ${t.description}`,
+            value: t.id,
+            description: t.frameworks.join(", "),
+          }));
+
+          const selectedTemplateId = await promptSelect<string>(
+            "Select a template:",
+            templateChoices,
+          );
+
+          if (!selectedTemplateId) {
+            error("Template selection is required");
+            process.exit(1);
+          }
+
+          const template = registry.get(selectedTemplateId);
+          if (!template) {
+            error("Selected template not found");
+            process.exit(1);
+          }
+
+          const variables: Record<string, string | boolean | number> = {
+            name: appName,
+            appName: appName,
+          };
+
+          for (const variable of template.variables) {
+            if (variable.name === "name" || variable.name === "appName") {
+              continue;
+            }
+
+            let value: string | boolean | number | undefined;
+
+            if (variable.type === "boolean") {
+              value = await promptConfirm(
+                `${variable.description || variable.name}?`,
+                { initial: variable.default === true },
+              );
+            } else if (variable.type === "select" && variable.options) {
+              const choices = variable.options.map(opt => ({
+                title: opt,
+                value: opt,
+              }));
+              value = await promptSelect<string>(
+                `${variable.description || variable.name}:`,
+                choices,
+              );
+            } else {
+              value = await promptText(
+                `${variable.description || variable.name}:`,
+                { initial: variable.default as string | undefined },
+              );
+            }
+
+            if (value === undefined) {
+              error("Input cancelled");
+              process.exit(1);
+            }
+
+            variables[variable.name] = value;
+          }
+
+          const outputDir = options.path || ".";
+
+          newline();
+          info("Generating app:");
+          keyValue("Name", appName);
+          keyValue("Template", template.name);
+          keyValue("Path", outputDir);
+          newline();
+
+          const result = await withSpinner(
+            `Creating ${appName}...`,
+            async () => {
+              return generateApp(appName, template, outputDir, variables);
+            },
+            { successText: `Created ${appName}` },
+          );
+
+          newline();
+          success(`App "${appName}" created successfully!`);
+          info(`Files created: ${result.files.length}`);
+          if (result.skipped.length > 0) {
+            warn(`Files skipped: ${result.skipped.length}`);
+          }
+          newline();
+        } catch (err) {
+          error(err instanceof Error ? err.message : "Failed to generate app");
           process.exit(1);
         }
       }),

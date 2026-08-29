@@ -21,10 +21,17 @@ const DEFAULT_LIMITS: Record<string, RateLimitConfig> = {
 };
 
 function getEndpointKey(url: string): string {
-  if (url.startsWith("/auth")) return "auth";
-  if (url.startsWith("/ai")) return "ai";
-  if (url.startsWith("/projects")) return "projects";
-  if (url.startsWith("/admin")) return "admin";
+  let path = url;
+  try {
+    path = new URL(url).pathname;
+  } catch {
+    // ignore parse errors
+  }
+
+  if (path.startsWith("/auth")) return "auth";
+  if (path.startsWith("/ai")) return "ai";
+  if (path.startsWith("/projects")) return "projects";
+  if (path.startsWith("/admin")) return "admin";
   return "default";
 }
 

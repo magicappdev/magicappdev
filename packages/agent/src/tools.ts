@@ -236,6 +236,49 @@ export const AGENT_TOOLS: Record<string, ToolDefinition> = {
     },
     requiresApproval: true,
   },
+
+  mcpConnect: {
+    name: "mcpConnect",
+    description:
+      "Connect to an external MCP (Model Context Protocol) server by URL. Use this before calling external tools.",
+    parameters: {
+      url: {
+        type: "string",
+        description: "MCP server URL (e.g. 'https://mcp.example.com')",
+        required: true,
+      },
+      name: {
+        type: "string",
+        description: "Friendly name for this connection",
+        required: true,
+      },
+    },
+    requiresApproval: true,
+  },
+
+  mcpCallTool: {
+    name: "mcpCallTool",
+    description:
+      "Call a tool exposed by a connected MCP server. Requires mcpConnect first.",
+    parameters: {
+      connectionName: {
+        type: "string",
+        description: "Friendly name of the MCP connection to use",
+        required: true,
+      },
+      toolName: {
+        type: "string",
+        description: "Name of the tool to call on the MCP server",
+        required: true,
+      },
+      arguments: {
+        type: "object",
+        description: "Arguments to pass to the MCP tool",
+        required: false,
+      },
+    },
+    requiresApproval: true,
+  },
 };
 
 /**

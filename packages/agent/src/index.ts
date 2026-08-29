@@ -80,6 +80,7 @@ export interface AgentState {
   toolCalls: ToolCall[];
   pendingApprovals: PendingApproval[];
   toolsEnabled: boolean;
+  mcpConnections: Array<{ name: string; url: string }>;
 }
 
 const MODELS = {
@@ -188,6 +189,7 @@ export class MagicAgent extends Agent<Env, AgentState> {
     toolCalls: [],
     pendingApprovals: [],
     toolsEnabled: true,
+    mcpConnections: [],
   };
 
   override async onMessage(connection: Connection, message: WSMessage) {
@@ -999,6 +1001,79 @@ Respond with a JSON object: { "summary": "one-line cause", "patch": "exact code 
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err);
           return { error: `Patch analysis failed: ${message}` };
+        }
+      }
+
+      case "mcpConnect": {
+        const url = (parameters.url as string) || "";
+        const name = (parameters.name as string) || "";
+
+        if (!url || !name) {
+          return { error: "mcpConnect requires 'url' and 'name'" };
+        }
+
+        const connections = this.state.mcpConnections ?? [];
+        const exists = connections.find(c => c.name === name);
+        if (exists) {
+          return {
+            success: true,
+            message: `MCP connection "${name}" already exists`,
+            url,
+          };
+        }
+
+        this.setState({
+          ...this.state,
+          mcpConnections: [...connections, { name, url }],
+        });
+
+        return {
+          success: true,
+          message: `Connected to MCP server "${name}"`,
+          url,
+        };
+      }
+
+      case "mcpCallTool": {
+        const connectionName = (parameters.connectionName as string) || "";
+        const toolName = (parameters.toolName as string) || "";
+        const toolArgs =
+          (parameters.arguments as Record<string, unknown>) || {};
+
+        const connection = this.state.mcpConnections?.find(
+          c => c.name === connectionName,
+        );
+        if (!connection) {
+          return {
+            error: `MCP connection "${connectionName}" not found. Use mcpConnect first.`,
+          };
+        }
+
+        try {
+          const response = await fetch(connection.url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              jsonrpc: "2.0",
+              id: crypto.randomUUID(),
+              method: "tools/call",
+              params: { name: toolName, arguments: toolArgs },
+            }),
+          });
+
+          if (!response.ok) {
+            return { error: `MCP server responded with ${response.status}` };
+          }
+
+          const data = (await response.json()) as Record<string, unknown>;
+          return {
+            success: true,
+            tool: toolName,
+            result: data.result ?? data,
+          };
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          return { error: `MCP call failed: ${message}` };
         }
       }
 

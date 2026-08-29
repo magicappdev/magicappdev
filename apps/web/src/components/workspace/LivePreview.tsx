@@ -1,12 +1,13 @@
 /**
  * LivePreview Component
  *
- * Provides real-time preview of project with iframe and hot reload
+ * Provides real-time preview of project with iframe and hot reload.
+ * Uses srcdoc + postMessage relay as lightweight fallback.
  */
 
 import { Loader2, RefreshCw, AlertCircle, Code2 } from "lucide-react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Typography } from "@/components/ui/Typography";
-import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/Button";
 
 interface ProjectFile {
@@ -39,32 +40,75 @@ export function LivePreview({ files }: LivePreviewProps) {
   >([]);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const reloadTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const lastFilesHashRef = useRef<string>("");
 
-  // Auto-reload on file changes
+  const previewHtml = useMemo(() => {
+    return buildPreviewHtml(files);
+  }, [files]);
+
+  // Auto-reload on file changes via postMessage
   useEffect(() => {
-    if (previewStatus === "ready") {
-      // Debounce reload
+    if (previewStatus !== "ready") return;
+
+    const newHash = hashFiles(files);
+    if (newHash === lastFilesHashRef.current) return;
+
+    lastFilesHashRef.current = newHash;
+
+    if (reloadTimeoutRef.current) {
+      clearTimeout(reloadTimeoutRef.current);
+    }
+
+    reloadTimeoutRef.current = setTimeout(() => {
+      const iframe = iframeRef.current;
+      if (!iframe?.contentWindow) return;
+
+      try {
+        iframe.contentWindow.postMessage(
+          { type: "MAGICAPPDEV_UPDATE_HTML", html: previewHtml },
+          "*",
+        );
+      } catch {
+        handleReload();
+      }
+    }, 800);
+
+    return () => {
       if (reloadTimeoutRef.current) {
         clearTimeout(reloadTimeoutRef.current);
       }
+    };
+  }, [files, previewStatus, previewHtml]);
 
-      reloadTimeoutRef.current = setTimeout(() => {
-        handleReload();
-      }, 1000);
+  // Polling fallback for hot-reload
+  useEffect(() => {
+    if (previewStatus !== "ready") return;
 
-      return () => {
-        if (reloadTimeoutRef.current) {
-          clearTimeout(reloadTimeoutRef.current);
-        }
-      };
-    }
-  }, [files, previewStatus]);
+    pollIntervalRef.current = setInterval(() => {
+      const iframe = iframeRef.current;
+      if (!iframe?.contentWindow) return;
+
+      try {
+        iframe.contentWindow.postMessage({ type: "MAGICAPPDEV_PING" }, "*");
+      } catch {
+        // ignore cross-origin errors
+      }
+    }, 5000);
+
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+      }
+    };
+  }, [previewStatus]);
 
   const handleReload = () => {
-    if (iframeRef.current) {
-      setPreviewStatus("loading");
-      iframeRef.current.src = iframeRef.current.src;
-    }
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+    setPreviewStatus("loading");
+    lastFilesHashRef.current = "";
+    iframe.srcdoc = previewHtml;
   };
 
   // Inject console interceptor into iframe
@@ -78,7 +122,6 @@ export function LivePreview({ files }: LivePreviewProps) {
         "*",
       );
     } catch (err) {
-      // Cross-origin restrictions may apply
       console.debug("Could not inject console interceptor:", err);
     }
   };
@@ -106,6 +149,8 @@ export function LivePreview({ files }: LivePreviewProps) {
             },
           }),
         );
+      } else if (event.data.type === "MAGICAPPDEV_PONG") {
+        // Polling response received
       }
     };
 
@@ -113,152 +158,18 @@ export function LivePreview({ files }: LivePreviewProps) {
     return () => window.removeEventListener("message", handleMessage);
   }, []);
 
-  // Build a simple HTML preview from project files
-  const buildPreviewHtml = () => {
-    // Find index.html or create a default one
-    const indexFile = files.find(
-      f => f.path.endsWith("index.html") || f.path === "index.html",
-    );
-
-    if (indexFile) {
-      return indexFile.content;
-    }
-
-    // Create a simple preview from React/JSX files
-    const reactFiles = files.filter(
-      f =>
-        f.path.endsWith(".tsx") ||
-        f.path.endsWith(".jsx") ||
-        f.path.endsWith(".ts") ||
-        f.path.endsWith(".js"),
-    );
-
-    if (reactFiles.length > 0) {
-      return `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Preview</title>
-  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <style>
-    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-    #root { min-height: 100vh; }
-  </style>
-</head>
-<body>
-  <script>
-    window.onerror = function(message, source, lineno, colno, error) {
-      window.parent.postMessage({
-        type: 'MAGICAPPDEV_PREVIEW_ERROR',
-        errorMessage: String(message),
-        filePath: source || 'unknown',
-        errorType: 'runtime',
-        stackTrace: error ? error.stack || '' : ''
-      }, '*');
-    };
-    window.addEventListener('unhandledrejection', function(event) {
-      var reason = event.reason;
-      window.parent.postMessage({
-        type: 'MAGICAPPDEV_PREVIEW_ERROR',
-        errorMessage: reason instanceof Error ? reason.message : String(reason),
-        filePath: 'promise',
-        errorType: 'runtime',
-        stackTrace: reason instanceof Error ? reason.stack || '' : ''
-      }, '*');
-    });
-  </script>
-  <div id="root"></div>
-  <script type="text/babel">
-    ${reactFiles.map(f => `// ${f.path}\n${f.content}`).join("\n\n")}
-  </script>
-</body>
-</html>`;
-    }
-
-    // Default preview
-    return `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Preview</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-    }
-    .container {
-      text-align: center;
-      padding: 2rem;
-    }
-    h1 { margin: 0 0 1rem; font-size: 2rem; }
-    p { margin: 0; opacity: 0.9; }
-    .badge {
-      display: inline-block;
-      margin-top: 1rem;
-      padding: 0.25rem 0.75rem;
-      background: rgba(255,255,255,0.2);
-      border-radius: 9999px;
-      font-size: 0.875rem;
-    }
-  </style>
-</head>
-<body>
-  <script>
-    window.onerror = function(message, source, lineno, colno, error) {
-      window.parent.postMessage({
-        type: 'MAGICAPPDEV_PREVIEW_ERROR',
-        errorMessage: String(message),
-        filePath: source || 'unknown',
-        errorType: 'runtime',
-        stackTrace: error ? error.stack || '' : ''
-      }, '*');
-    };
-    window.addEventListener('unhandledrejection', function(event) {
-      var reason = event.reason;
-      window.parent.postMessage({
-        type: 'MAGICAPPDEV_PREVIEW_ERROR',
-        errorMessage: reason instanceof Error ? reason.message : String(reason),
-        filePath: 'promise',
-        errorType: 'runtime',
-        stackTrace: reason instanceof Error ? reason.stack || '' : ''
-      }, '*');
-    });
-  </script>
-  <div class="container">
-    <h1>🚀 MagicAppDev</h1>
-    <p>Your app is ready to build!</p>
-    <div class="badge">${files.length} files in workspace</div>
-  </div>
-</body>
-</html>`;
-  };
-
-  const previewHtml = buildPreviewHtml();
-
-  // Create blob URL for preview
-  const blobUrl = `data:text/html;base64,${btoa(previewHtml)}`;
-
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Preview Content */}
       <div className="flex-1 relative bg-background">
         <iframe
           ref={iframeRef}
-          src={blobUrl}
+          srcDoc={previewHtml}
           className="w-full h-full border-0"
           sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
           onLoad={() => {
             setPreviewStatus("ready");
+            lastFilesHashRef.current = hashFiles(files);
             injectConsoleInterceptor();
           }}
           onError={() => setPreviewStatus("error")}
@@ -380,4 +291,152 @@ export function LivePreview({ files }: LivePreviewProps) {
       </div>
     </div>
   );
+}
+
+function buildPreviewHtml(files: ProjectFile[]): string {
+  const indexFile = files.find(
+    f => f.path.endsWith("index.html") || f.path === "index.html",
+  );
+
+  if (indexFile) {
+    return indexFile.content;
+  }
+
+  const reactFiles = files.filter(
+    f =>
+      f.path.endsWith(".tsx") ||
+      f.path.endsWith(".jsx") ||
+      f.path.endsWith(".ts") ||
+      f.path.endsWith(".js"),
+  );
+
+  if (reactFiles.length > 0) {
+    return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Preview</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    #root { min-height: 100vh; }
+  </style>
+</head>
+<body>
+  <script>
+    window.onerror = function(message, source, lineno, colno, error) {
+      window.parent.postMessage({
+        type: 'MAGICAPPDEV_PREVIEW_ERROR',
+        errorMessage: String(message),
+        filePath: source || 'unknown',
+        errorType: 'runtime',
+        stackTrace: error ? error.stack || '' : ''
+      }, '*');
+    };
+    window.addEventListener('unhandledrejection', function(event) {
+      var reason = event.reason;
+      window.parent.postMessage({
+        type: 'MAGICAPPDEV_PREVIEW_ERROR',
+        errorMessage: reason instanceof Error ? reason.message : String(reason),
+        filePath: 'promise',
+        errorType: 'runtime',
+        stackTrace: reason instanceof Error ? reason.stack || '' : ''
+      }, '*');
+    });
+    window.addEventListener('message', function(event) {
+      if (event.data && event.data.type === 'MAGICAPPDEV_CONSOLE_INIT') {
+        var original = { log: console.log, error: console.error, warn: console.warn };
+        console.log = function() { window.parent.postMessage({ type: 'MAGICAPPDEV_CONSOLE', level: 'log', message: Array.from(arguments).join(' ') }, '*'); original.log.apply(console, arguments); };
+        console.error = function() { window.parent.postMessage({ type: 'MAGICAPPDEV_CONSOLE', level: 'error', message: Array.from(arguments).join(' ') }, '*'); original.error.apply(console, arguments); };
+        console.warn = function() { window.parent.postMessage({ type: 'MAGICAPPDEV_CONSOLE', level: 'warn', message: Array.from(arguments).join(' ') }, '*'); original.warn.apply(console, arguments); };
+      }
+      if (event.data && event.data.type === 'MAGICAPPDEV_UPDATE_HTML') {
+        document.open();
+        document.write(event.data.html);
+        document.close();
+      }
+      if (event.data && event.data.type === 'MAGICAPPDEV_PING') {
+        window.parent.postMessage({ type: 'MAGICAPPDEV_PONG' }, '*');
+      }
+    });
+  </script>
+  <div id="root"></div>
+  <script type="text/babel">
+    ${reactFiles.map(f => `// ${f.path}\n${f.content}`).join("\n\n")}
+  </script>
+</body>
+</html>`;
+  }
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Preview</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .container {
+      text-align: center;
+      padding: 2rem;
+    }
+    h1 { margin: 0 0 1rem; font-size: 2rem; }
+    p { margin: 0; opacity: 0.9; }
+    .badge {
+      display: inline-block;
+      margin-top: 1rem;
+      padding: 0.25rem 0.75rem;
+      background: rgba(255,255,255,0.2);
+      border-radius: 9999px;
+      font-size: 0.875rem;
+    }
+  </style>
+</head>
+<body>
+  <script>
+    window.onerror = function(message, source, lineno, colno, error) {
+      window.parent.postMessage({
+        type: 'MAGICAPPDEV_PREVIEW_ERROR',
+        errorMessage: String(message),
+        filePath: source || 'unknown',
+        errorType: 'runtime',
+        stackTrace: error ? error.stack || '' : ''
+      }, '*');
+    };
+    window.addEventListener('unhandledrejection', function(event) {
+      var reason = event.reason;
+      window.parent.postMessage({
+        type: 'MAGICAPPDEV_PREVIEW_ERROR',
+        errorMessage: reason instanceof Error ? reason.message : String(reason),
+        filePath: 'promise',
+        errorType: 'runtime',
+        stackTrace: reason instanceof Error ? reason.stack || '' : ''
+      }, '*');
+    });
+  </script>
+  <div class="container">
+    <h1>🚀 MagicAppDev</h1>
+    <p>Your app is ready to build!</p>
+    <div class="badge">${files.length} files in workspace</div>
+  </div>
+</body>
+</html>`;
+}
+
+function hashFiles(files: ProjectFile[]): string {
+  return files
+    .map(f => `${f.path}:${f.content.length}:${f.updatedAt}`)
+    .join("|");
 }

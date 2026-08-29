@@ -2,6 +2,7 @@
  * Hono app configuration
  */
 
+import { requestLoggerMiddleware } from "./middlewares/request-logger.js";
 import { rateLimitMiddleware } from "./middlewares/rate-limit.js";
 import { projectFilesRoutes } from "./routes/project-files.js";
 import { chatContextRoutes } from "./routes/chat-context.js";
@@ -58,6 +59,9 @@ export function createApp() {
 
   // Rate limiting middleware (applies to all routes)
   app.use("*", rateLimitMiddleware);
+
+  // Structured request logging middleware
+  app.use("*", requestLoggerMiddleware);
 
   // Database middleware - initialize database client
   app.use("*", async (c, next) => {

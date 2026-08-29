@@ -13,39 +13,6 @@
       "outputs": [".next/**", "!.next/cache/**", "dist/**", "build/**"],
       "cache": true
     },
-    "build:api": {
-      "dependsOn": ["@magicappdev/api#build"]
-    },
-    "build:cli": {
-      "dependsOn": ["@magicappdev/cli#build"]
-    },
-    "build:db": {
-      "dependsOn": ["@magicappdev/database#build"]
-    },
-    "build:shared": {
-      "dependsOn": ["@magicappdev/shared#build"]
-    },
-    "build:web": {
-      "dependsOn": ["@magicappdev/web#build"]
-    },
-    "@magicappdev/mobile#build": {
-      "outputs": ["dist/**", "apps/mobile/dist/**"]
-    },
-    "@magicappdev/mobile#typecheck": {
-      "outputs": []
-    },
-    "build:agent": {
-      "dependsOn": ["@magicappdev/agent#build"]
-    },
-    "build:llmchat": {
-      "dependsOn": ["@magicappdev/llmchat#build"]
-    },
-    "build:templates": {
-      "dependsOn": ["@magicappdev/templates#build"]
-    },
-    "build:axiom": {
-      "dependsOn": ["@magicappdev/axiom-cloudflare-workers#build"]
-    },
     "dev": {
       "cache": false,
       "persistent": true

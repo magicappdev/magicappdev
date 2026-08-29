@@ -10,22 +10,29 @@
 
 ## Summary Matrix
 
-| ID           | Category                | Description                                                                                                                                                | Impact | Status  |
-| :----------- | :---------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------- | :----- | :------ |
-| **FEAT-001** | Developer Experience    | **One-Click GitHub Repository Export**: Push generated apps to a user's GitHub repo via OAuth. Already wired into chat page + `/github/create-repo` route. | High   | ✅ Done |
-| **FEAT-002** | AI / Agentic Workflow   | **Self-Healing Agent Loops**: Catch runtime/build errors and feed them back to MagicAgent Durable Object for auto-patching.                                | High   | ✅ Done |
-| **FEAT-003** | UI / Preview            | **Live WebContainers / StackBlitz Integration**: Run full React/Vite apps in-browser via WebContainer API.                                                 | High   | ✅ Done |
-| **FEAT-004** | Authentication          | **Discord OAuth Integration**: JWT-signed state, KV session polling, linked-accounts endpoint. GitHub OAuth also hardened.                                 | Medium | ✅ Done |
-| **FEAT-005** | Production Readiness    | **Automated Playwright E2E Suite**: 12/12 tests passing (auth, chat, projects, AI Studio canvas + preview-error-relay + mock WS server).                   | High   | ✅ Done |
-| **FEAT-006** | Developer Tools         | **Visual Template Customizer**: Admin UI to preview and tweak Handlebars templates with live variable injection.                                           | Medium | ✅ Done |
-| **FEAT-007** | Performance / Caching   | **AI Response Caching with Cloudflare KV**: Cache prompt→template mappings to reduce AI Gateway token spend.                                               | Medium | ✅ Done |
-| **QW-001**   | Bug Fix / Security      | **Admin Delete User Bug**: "Delete User" button calls `api.deleteAccount()` — deletes the admin, not the selected user. Live data-loss risk.               | High   | ✅ Done |
-| **QW-002**   | UX / Data Persistence   | **Chat Conversation History**: Messages lost on refresh. Backend (`chat_sessions`, `chat_messages` tables + API routes) already built — just unwired.      | High   | ✅ Done |
-| **QW-003**   | UX / AI                 | **Model Selector Functional**: Chat model dropdown sends `model` field but agent ignores it — purely cosmetic. Wire to `handleChat`.                       | High   | ✅ Done |
-| **QW-004**   | Performance             | **Agent Context Window Cap**: No message truncation — conversations will silently fail at model context limits. Simple char/token cap needed.              | Medium | ✅ Done |
-| **QW-005**   | UX / DX                 | **Workspace Syntax Highlighting**: Code editor is a raw `<textarea>` — no syntax highlighting. Add lightweight highlighter overlay.                        | Medium | ✅ Done |
-| **QW-006**   | UX / Polish             | **Remove Dead Skills Button**: "Use a skill" attachment menu item opens `window.alert("Skills coming soon!")`. Remove or replace with Templates shortcut.  | Low    | ✅ Done |
-| **QW-007**   | Security / Code Quality | **Strip Debug Logs in Settings**: 6+ `console.log` statements leak auth tokens and user data to browser console in production.                             | Medium | ✅ Done |
+| ID           | Category                | Description                                                                                                                                                        | Impact | Status  |
+| :----------- | :---------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----- | :------ |
+| **FEAT-001** | Developer Experience    | **One-Click GitHub Repository Export**: Push generated apps to a user's GitHub repo via OAuth. Already wired into chat page + `/github/create-repo` route.         | High   | ✅ Done |
+| **FEAT-002** | AI / Agentic Workflow   | **Self-Healing Agent Loops**: Catch runtime/build errors and feed them back to MagicAgent Durable Object for auto-patching.                                        | High   | ✅ Done |
+| **FEAT-003** | UI / Preview            | **Live WebContainers / StackBlitz Integration**: Run full React/Vite apps in-browser via WebContainer API.                                                         | High   | ✅ Done |
+| **FEAT-004** | Authentication          | **Discord OAuth Integration**: JWT-signed state, KV session polling, linked-accounts endpoint. GitHub OAuth also hardened.                                         | Medium | ✅ Done |
+| **FEAT-005** | Production Readiness    | **Automated Playwright E2E Suite**: 12/12 tests passing (auth, chat, projects, AI Studio canvas + preview-error-relay + mock WS server).                           | High   | ✅ Done |
+| **FEAT-006** | Developer Tools         | **Visual Template Customizer**: Admin UI to preview and tweak Handlebars templates with live variable injection.                                                   | Medium | ✅ Done |
+| **FEAT-007** | Performance / Caching   | **AI Response Caching with Cloudflare KV**: Cache prompt→template mappings to reduce AI Gateway token spend.                                                       | Medium | ✅ Done |
+| **QW-001**   | Bug Fix / Security      | **Admin Delete User Bug**: "Delete User" button calls `api.deleteAccount()` — deletes the admin, not the selected user. Live data-loss risk.                       | High   | ✅ Done |
+| **QW-002**   | UX / Data Persistence   | **Chat Conversation History**: Messages lost on refresh. Backend (`chat_sessions`, `chat_messages` tables + API routes) already built — just unwired.              | High   | ✅ Done |
+| **QW-003**   | UX / AI                 | **Model Selector Functional**: Chat model dropdown sends `model` field but agent ignores it — purely cosmetic. Wire to `handleChat`.                               | High   | ✅ Done |
+| **QW-004**   | Performance             | **Agent Context Window Cap**: No message truncation — conversations will silently fail at model context limits. Simple char/token cap needed.                      | Medium | ✅ Done |
+| **QW-005**   | UX / DX                 | **Workspace Syntax Highlighting**: Code editor is a raw `<textarea>` — no syntax highlighting. Add lightweight highlighter overlay.                                | Medium | ✅ Done |
+| **QW-006**   | UX / Polish             | **Remove Dead Skills Button**: "Use a skill" attachment menu item opens `window.alert("Skills coming soon!")`. Remove or replace with Templates shortcut.          | Low    | ✅ Done |
+| **QW-007**   | Security / Code Quality | **Strip Debug Logs in Settings**: 6+ `console.log` statements leak auth tokens and user data to browser console in production.                                     | Medium | ✅ Done |
+| **FEAT-016** | Observability           | **Rate Limiting + Request Logging**: `rateLimitMiddleware` + structured request/response logs in API.                                                              | Medium | Planned |
+| **FEAT-020** | Platform                | **Build System Consolidation**: Pick Turborepo as the single source of truth; remove Nx `project.json` drift.                                                      | High   | Planned |
+| **FEAT-009** | AI / Agentic            | **MCP Tool Integration**: Allow MagicAgent to discover and execute MCP server tools (filesystem, GitHub, DB, etc.), embedded in `@magicappdev/agent`.              | High   | Planned |
+| **FEAT-010** | Developer Tools         | **CLI Template Rendering**: Wire `@magicappdev/templates` Handlebars registry into `create-magicappdev-app` so users get real generated code, not empty scaffolds. | High   | Planned |
+| **FEAT-012** | Developer Experience    | **Docker Compose Quickstart**: One-command local stack (API + Agent + D1 + KV) for new contributors.                                                               | Medium | Planned |
+| **FEAT-013** | UI / Preview            | **Lightweight Live Preview**: iframe-based rendered preview using `srcdoc` + `postMessage` relay as fallback while WebContainers bundle is optimized.              | High   | Planned |
+| **FEAT-019** | Database                | **Seeding Utilities**: `packages/database/seed.ts` with demo user/project/chat data for local dev.                                                                 | Low    | Planned |
 
 ---
 
@@ -117,6 +124,54 @@
 
 ---
 
+## Roadmap Features (Phases A → B → C)
+
+> Full execution plan: [`docs/roadmap.md`](docs/roadmap.md)
+
+### FEAT-016 – Rate Limiting + Request Logging
+
+- **Problem**: API has no rate limiting middleware and no structured request logging.
+- **Fix**: Add `rateLimitMiddleware` using Cloudflare KV + structured JSON logging middleware.
+- **Files**: `packages/api/src/middleware/rate-limit.ts`, `packages/api/src/app.ts`
+
+### FEAT-020 – Build System Consolidation
+
+- **Problem**: Hybrid Nx + Turborepo setup causing inconsistencies and drift.
+- **Fix**: Audit and remove Nx targets for packages already owned by Turborepo; keep Turborepo as single source of truth.
+- **Files**: `turbo.json`, `nx.json`, root `package.json`
+
+### FEAT-012 – Docker Compose Quickstart
+
+- **Problem**: New contributors must manually wire API + Agent + D1 + KV.
+- **Fix**: Add `docker-compose.yml` with all services and a `docs/QUICKSTART.md`.
+- **Files**: `docker-compose.yml`, `docs/QUICKSTART.md`
+
+### FEAT-010 – CLI Template Rendering
+
+- **Problem**: `create-magicappdev-app` scaffolds empty directories — no real template rendering.
+- **Fix**: Add `generate` command consuming `@magicappdev/templates` Handlebars registry.
+- **Files**: `packages/cli/src/commands/generate.ts`, `packages/cli/src/index.ts`
+
+### FEAT-019 – Database Seeding Utilities
+
+- **Problem**: No seed data for local development; difficult to test with realistic data.
+- **Fix**: Add `packages/database/src/seed.ts` with demo data and `bun run seed` script.
+- **Files**: `packages/database/src/seed.ts`, `packages/database/package.json`
+
+### FEAT-009 – MCP Tool Integration (embedded in agent)
+
+- **Problem**: MagicAgent cannot call external MCP server tools (filesystem, GitHub, DB, etc.).
+- **Fix**: Add `mcpConnect` and `mcpCallTool` agent tools inside `packages/agent/src/tools.ts`; reuse existing `executeToolAction` flow.
+- **Files**: `packages/agent/src/tools.ts`, `packages/agent/src/index.ts`
+
+### FEAT-013 – Lightweight Live Preview
+
+- **Problem**: WebContainers bundle too large (775 KiB); no lighter preview fallback.
+- **Fix**: Add `srcdoc` iframe + `postMessage` relay with polling hot-reload.
+- **Files**: `apps/web/src/components/workspace/LivePreview.tsx`, `apps/web/src/pages/projects/workspace.tsx`
+
+---
+
 ## Pending Work (Detailed)
 
 ### FEAT-003 – Live WebContainers
@@ -130,7 +185,20 @@
 
 ### FEAT-007 – KV Caching for AI Responses
 
-**Next step:** Wrap `env.AI.run()` in `packages/agent/src/index.ts` with `env.KV_CACHE.get(promptHash) || run()` memoization layer; add KV binding to `wrangler.toml`.
+- **Next step:** Wrap `env.AI.run()` in `packages/agent/src/index.ts` with `env.KV_CACHE.get(promptHash) || run()` memoization layer; add KV binding to `wrangler.toml`.
+
+---
+
+## Active Roadmap
+
+Detailed execution plan for the next phases is maintained in [`docs/roadmap.md`](docs/roadmap.md).
+
+- **Phase A** — Platform Reliability (rate limiting + logging, build system consolidation)
+- **Phase B** — Developer Experience (Docker quickstart, CLI template rendering, DB seeding)
+- **Phase C** — AI Agent Expansion (MCP tool integration in agent, lightweight live preview)
+
+> **Deployment:** Local build & local deploy only (`wrangler dev` / `wrangler deploy`). No CI/CD changes in current roadmap.  
+> **GitHub Releases:** Consider `gh release create` when pushing signed tags for versioned packages.
 
 ---
 
