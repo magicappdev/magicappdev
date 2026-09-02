@@ -8,7 +8,6 @@
   "typescript": true,
   "eslint": true,
   "prettier": true,
-  "nx": true,
   "ignore": [
     "knip.json",
     "**/*.d.ts",
