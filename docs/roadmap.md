@@ -72,12 +72,14 @@
 **Estimated effort:** ~2–3 weeks  
 **Deploy target:** Local Wrangler only.
 
-### C1 – MCP Tool Integration (embedded in `@magicappdev/agent`)
+### C1 – MCP Tool Integration (embedded in `@magicappdev/agent`) ✅
 
-- Add MCP client capability to `packages/agent/src/`.
-- Create `mcpConnect` and `mcpCallTool` agent tools in `packages/agent/src/tools.ts`.
-- Expose MCP server config via agent system prompt and tool parameters.
-- Reuse existing `executeToolAction` flow — no new Worker routes required.
+- [x] Add MCP client capability to `packages/agent/src/`.
+- [x] Create `mcpConnect`, `mcpCallTool`, `mcpListTools`, `mcpReadResource`, `mcpGetPrompt`, `mcpRemoveServer` agent tools in `packages/agent/src/tools.ts`.
+- [x] Wire `executeToolAction` to use SDK-native `addMcpServer`, `removeMcpServer`, `getMcpServers`, `mcp.callTool`, `mcp.readResource`, `mcp.getPrompt`.
+- [x] Remove `mcpConnections` from `AgentState`; add `onStart` lifecycle hook for MCP connection restoration.
+- [x] Expose MCP server config in agent system prompt (connected servers and tool counts).
+- [x] Reuse existing `executeToolAction` flow — no new Worker routes required.
 
 **Files:** `packages/agent/src/tools.ts`, `packages/agent/src/index.ts`
 

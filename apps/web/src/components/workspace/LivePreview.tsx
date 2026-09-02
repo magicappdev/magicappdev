@@ -302,6 +302,10 @@ function buildPreviewHtml(files: ProjectFile[]): string {
     return indexFile.content;
   }
 
+  const cssFiles = files.filter(f => f.path.endsWith(".css"));
+  const scssFiles = files.filter(
+    f => f.path.endsWith(".scss") || f.path.endsWith(".sass"),
+  );
   const reactFiles = files.filter(
     f =>
       f.path.endsWith(".tsx") ||
@@ -309,6 +313,14 @@ function buildPreviewHtml(files: ProjectFile[]): string {
       f.path.endsWith(".ts") ||
       f.path.endsWith(".js"),
   );
+
+  const cssContent = cssFiles
+    .map(f => `/* ${f.path} */\n${f.content}`)
+    .join("\n\n");
+
+  const scssContent = scssFiles
+    .map(f => `/* ${f.path} */\n${f.content}`)
+    .join("\n\n");
 
   if (reactFiles.length > 0) {
     return `<!DOCTYPE html>
@@ -320,6 +332,31 @@ function buildPreviewHtml(files: ProjectFile[]): string {
   <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/sass.js@1.0.2/dist/sass.sync.js"></script>
+  ${cssContent ? `<style>${cssContent}</style>` : ""}
+  ${
+    scssContent
+      ? `<script>
+      // Compile SCSS to CSS client-side
+      (function() {
+        try {
+          var compiled = Sass.compileString(\`${scssContent.replace(/`/g, "\\`")}\`);
+          var styleEl = document.createElement('style');
+          styleEl.textContent = compiled.css.toString();
+          document.head.appendChild(styleEl);
+        } catch (e) {
+          window.parent.postMessage({
+            type: 'MAGICAPPDEV_PREVIEW_ERROR',
+            errorMessage: 'SCSS compile error: ' + e.message,
+            filePath: 'styles',
+            errorType: 'build',
+            stackTrace: ''
+          }, '*');
+        }
+      })();
+    </script>`
+      : ""
+  }
   <style>
     body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
     #root { min-height: 100vh; }
@@ -364,7 +401,7 @@ function buildPreviewHtml(files: ProjectFile[]): string {
     });
   </script>
   <div id="root"></div>
-  <script type="text/babel">
+  <script type="text/babel" data-plugins="proposal-decorators" data-presets="react">
     ${reactFiles.map(f => `// ${f.path}\n${f.content}`).join("\n\n")}
   </script>
 </body>
@@ -377,6 +414,29 @@ function buildPreviewHtml(files: ProjectFile[]): string {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Preview</title>
+  ${cssContent ? `<style>${cssContent}</style>` : ""}
+  ${
+    scssContent
+      ? `<script>
+      (function() {
+        try {
+          var compiled = Sass.compileString(\`${scssContent.replace(/`/g, "\\`")}\`);
+          var styleEl = document.createElement('style');
+          styleEl.textContent = compiled.css.toString();
+          document.head.appendChild(styleEl);
+        } catch (e) {
+          window.parent.postMessage({
+            type: 'MAGICAPPDEV_PREVIEW_ERROR',
+            errorMessage: 'SCSS compile error: ' + e.message,
+            filePath: 'styles',
+            errorType: 'build',
+            stackTrace: ''
+          }, '*');
+        }
+      })();
+    </script>`
+      : ""
+  }
   <style>
     body {
       margin: 0;
@@ -424,6 +484,22 @@ function buildPreviewHtml(files: ProjectFile[]): string {
         errorType: 'runtime',
         stackTrace: reason instanceof Error ? reason.stack || '' : ''
       }, '*');
+    });
+    window.addEventListener('message', function(event) {
+      if (event.data && event.data.type === 'MAGICAPPDEV_CONSOLE_INIT') {
+        var original = { log: console.log, error: console.error, warn: console.warn };
+        console.log = function() { window.parent.postMessage({ type: 'MAGICAPPDEV_CONSOLE', level: 'log', message: Array.from(arguments).join(' ') }, '*'); original.log.apply(console, arguments); };
+        console.error = function() { window.parent.postMessage({ type: 'MAGICAPPDEV_CONSOLE', level: 'error', message: Array.from(arguments).join(' ') }, '*'); original.error.apply(console, arguments); };
+        console.warn = function() { window.parent.postMessage({ type: 'MAGICAPPDEV_CONSOLE', level: 'warn', message: Array.from(arguments).join(' ') }, '*'); original.warn.apply(console, arguments); };
+      }
+      if (event.data && event.data.type === 'MAGICAPPDEV_UPDATE_HTML') {
+        document.open();
+        document.write(event.data.html);
+        document.close();
+      }
+      if (event.data && event.data.type === 'MAGICAPPDEV_PING') {
+        window.parent.postMessage({ type: 'MAGICAPPDEV_PONG' }, '*');
+      }
     });
   </script>
   <div class="container">

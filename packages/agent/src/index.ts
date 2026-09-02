@@ -80,7 +80,6 @@ export interface AgentState {
   toolCalls: ToolCall[];
   pendingApprovals: PendingApproval[];
   toolsEnabled: boolean;
-  mcpConnections: Array<{ name: string; url: string }>;
 }
 
 const MODELS = {
@@ -189,8 +188,22 @@ export class MagicAgent extends Agent<Env, AgentState> {
     toolCalls: [],
     pendingApprovals: [],
     toolsEnabled: true,
-    mcpConnections: [],
   };
+
+  // Rate limiting for MCP WebSocket handlers (max 5 ops per 10s per connection)
+  private mcpRateLimits = new Map<string, number[]>();
+  private readonly MCP_RATE_LIMIT = { max: 5, windowMs: 10_000 };
+
+  override async onStart() {
+    const servers = this.getMcpServers();
+    const readyCount = Object.values(servers.servers).filter(
+      s => s.state === "ready",
+    ).length;
+    if (readyCount > 0) {
+      console.log(`MCP: ${readyCount} server(s) restored from storage`);
+    }
+    this.cleanupMcpRateLimits();
+  }
 
   override async onMessage(connection: Connection, message: WSMessage) {
     if (typeof message !== "string") return;
@@ -244,6 +257,34 @@ export class MagicAgent extends Agent<Env, AgentState> {
         case "list_templates":
           this.handleListTemplates(connection);
           break;
+        case "mcp_list_servers":
+          if (!this.mcpRateLimitCheck(connection)) {
+            this.sendRateLimited(connection);
+            break;
+          }
+          this.handleMcpListServers(connection);
+          break;
+        case "mcp_connect":
+          if (!this.mcpRateLimitCheck(connection)) {
+            this.sendRateLimited(connection);
+            break;
+          }
+          await this.handleMcpConnect(connection, data);
+          break;
+        case "mcp_remove_server":
+          if (!this.mcpRateLimitCheck(connection)) {
+            this.sendRateLimited(connection);
+            break;
+          }
+          await this.handleMcpRemoveServer(connection, data);
+          break;
+        case "mcp_list_tools":
+          if (!this.mcpRateLimitCheck(connection)) {
+            this.sendRateLimited(connection);
+            break;
+          }
+          this.handleMcpListTools(connection, data);
+          break;
         case "preview_error":
           await this.handlePreviewError(connection, data);
           break;
@@ -289,6 +330,224 @@ export class MagicAgent extends Agent<Env, AgentState> {
           category: t.category,
           frameworks: t.frameworks,
         })),
+      }),
+    );
+  }
+
+  /**
+   * Rate limit check for MCP operations — max N calls per window per connection.
+   */
+  private mcpRateLimitCheck(connection: Connection): boolean {
+    const now = Date.now();
+    const windowStart = now - this.MCP_RATE_LIMIT.windowMs;
+    const key = connection.id || "unknown";
+    const calls = this.mcpRateLimits.get(key) || [];
+
+    // Prune old entries
+    const recent = calls.filter(t => t > windowStart);
+    recent.push(now);
+    this.mcpRateLimits.set(key, recent);
+
+    return recent.length <= this.MCP_RATE_LIMIT.max;
+  }
+
+  /**
+   * Send a rate-limit error response to the client
+   */
+  private sendRateLimited(connection: Connection) {
+    connection.send(
+      JSON.stringify({
+        type: "mcp_error",
+        message: "Rate limit exceeded. Please wait before trying again.",
+      }),
+    );
+  }
+
+  /**
+   * Prune stale rate-limit entries to prevent unbounded map growth
+   */
+  private cleanupMcpRateLimits() {
+    if (this.mcpRateLimits.size < 100) return;
+    const cutoff = Date.now() - this.MCP_RATE_LIMIT.windowMs;
+    for (const [key, timestamps] of this.mcpRateLimits) {
+      const recent = timestamps.filter(t => t > cutoff);
+      if (recent.length === 0) {
+        this.mcpRateLimits.delete(key);
+      } else {
+        this.mcpRateLimits.set(key, recent);
+      }
+    }
+  }
+
+  /**
+   * List all connected MCP servers and their tool counts
+   */
+  private handleMcpListServers(connection: Connection) {
+    const servers = this.getMcpServers();
+    const serverList = Object.entries(servers.servers).map(([id, server]) => {
+      const toolCount = servers.tools.filter(t => t.serverId === id).length;
+      return {
+        id,
+        name: server.name,
+        url: server.server_url,
+        state: server.state,
+        toolCount,
+      };
+    });
+
+    connection.send(
+      JSON.stringify({
+        type: "mcp_servers_list",
+        servers: serverList,
+        count: serverList.length,
+      }),
+    );
+  }
+
+  /**
+   * Handle client-initiated MCP server connection
+   */
+  private async handleMcpConnect(
+    connection: Connection,
+    data: Record<string, unknown>,
+  ) {
+    const url = (data.url as string) || "";
+    const name = (data.name as string) || "";
+
+    if (!url || !name) {
+      connection.send(
+        JSON.stringify({
+          type: "mcp_error",
+          message: "mcp_connect requires 'url' and 'name'",
+        }),
+      );
+      return;
+    }
+
+    try {
+      const result = await Promise.race([
+        this.addMcpServer(name, url),
+        new Promise<never>((_, reject) =>
+          setTimeout(
+            () => reject(new Error("MCP connection timed out (30s)")),
+            30_000,
+          ),
+        ),
+      ]);
+
+      connection.send(
+        JSON.stringify({
+          type: "mcp_connection_result",
+          name,
+          url,
+          state: result.state,
+          authUrl: result.authUrl,
+          serverId: result.id,
+        }),
+      );
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      connection.send(
+        JSON.stringify({
+          type: "mcp_error",
+          message: `MCP connection failed: ${msg}`,
+        }),
+      );
+    }
+  }
+
+  /**
+   * Handle client-initiated MCP server removal
+   */
+  private async handleMcpRemoveServer(
+    connection: Connection,
+    data: Record<string, unknown>,
+  ) {
+    const name = (data.name as string) || "";
+
+    if (!name) {
+      connection.send(
+        JSON.stringify({
+          type: "mcp_error",
+          message: "mcp_remove_server requires 'name'",
+        }),
+      );
+      return;
+    }
+
+    const serverId = this.findMcpServerId(name);
+    if (!serverId) {
+      connection.send(
+        JSON.stringify({
+          type: "mcp_remove_result",
+          name,
+          success: true,
+          message: `No MCP connection named "${name}" was found.`,
+        }),
+      );
+      return;
+    }
+
+    try {
+      await this.removeMcpServer(serverId);
+      connection.send(
+        JSON.stringify({
+          type: "mcp_remove_result",
+          name,
+          success: true,
+          message: `Disconnected from MCP server "${name}".`,
+        }),
+      );
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      connection.send(
+        JSON.stringify({
+          type: "mcp_error",
+          message: `MCP server removal failed: ${msg}`,
+        }),
+      );
+    }
+  }
+
+  /**
+   * List tools from all (or a specific) MCP server(s)
+   */
+  private handleMcpListTools(
+    connection: Connection,
+    data: Record<string, unknown>,
+  ) {
+    const name = (data.name as string) || undefined;
+    const servers = this.getMcpServers();
+
+    let tools = servers.tools;
+    if (name) {
+      const serverId = this.findMcpServerId(name);
+      if (!serverId) {
+        connection.send(
+          JSON.stringify({
+            type: "mcp_tools_list",
+            name,
+            tools: [],
+            count: 0,
+            message: `No MCP connection named "${name}" found.`,
+          }),
+        );
+        return;
+      }
+      tools = tools.filter(t => t.serverId === serverId);
+    }
+
+    connection.send(
+      JSON.stringify({
+        type: "mcp_tools_list",
+        name,
+        tools: tools.map(t => ({
+          name: t.name,
+          description: t.description,
+          serverId: t.serverId,
+          serverName: servers.servers[t.serverId]?.name,
+        })),
+        count: tools.length,
       }),
     );
   }
@@ -342,6 +601,21 @@ export class MagicAgent extends Agent<Env, AgentState> {
       }
     }
     return "my-app";
+  }
+
+  /**
+   * Find the MCP server ID by friendly connection name.
+   * Uses the Agents SDK's getMcpServers() to look up
+   * the server ID from the server's `name` field.
+   */
+  private findMcpServerId(connectionName: string): string | undefined {
+    const servers = this.getMcpServers();
+    for (const [id, server] of Object.entries(servers.servers)) {
+      if (server.name === connectionName) {
+        return id;
+      }
+    }
+    return undefined;
   }
 
   /**
@@ -1012,26 +1286,28 @@ Respond with a JSON object: { "summary": "one-line cause", "patch": "exact code 
           return { error: "mcpConnect requires 'url' and 'name'" };
         }
 
-        const connections = this.state.mcpConnections ?? [];
-        const exists = connections.find(c => c.name === name);
-        if (exists) {
+        try {
+          const result = await this.addMcpServer(name, url);
+
+          if (result.state === "authenticating") {
+            return {
+              success: true,
+              state: "authenticating",
+              authUrl: result.authUrl,
+              message: `MCP server "${name}" requires OAuth authorization. Redirect the user to: ${result.authUrl}`,
+            };
+          }
+
           return {
             success: true,
-            message: `MCP connection "${name}" already exists`,
-            url,
+            state: "ready",
+            serverId: result.id,
+            message: `Connected to MCP server "${name}" (id: ${result.id})`,
           };
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          return { error: `MCP connection failed: ${message}` };
         }
-
-        this.setState({
-          ...this.state,
-          mcpConnections: [...connections, { name, url }],
-        });
-
-        return {
-          success: true,
-          message: `Connected to MCP server "${name}"`,
-          url,
-        };
       }
 
       case "mcpCallTool": {
@@ -1040,40 +1316,162 @@ Respond with a JSON object: { "summary": "one-line cause", "patch": "exact code 
         const toolArgs =
           (parameters.arguments as Record<string, unknown>) || {};
 
-        const connection = this.state.mcpConnections?.find(
-          c => c.name === connectionName,
-        );
-        if (!connection) {
+        const serverId = this.findMcpServerId(connectionName);
+        if (!serverId) {
           return {
-            error: `MCP connection "${connectionName}" not found. Use mcpConnect first.`,
+            error: `MCP connection "${connectionName}" not found or not ready. Use mcpConnect first and wait for it to be ready.`,
           };
         }
 
         try {
-          const response = await fetch(connection.url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              jsonrpc: "2.0",
-              id: crypto.randomUUID(),
-              method: "tools/call",
-              params: { name: toolName, arguments: toolArgs },
-            }),
+          const result = await this.mcp.callTool({
+            name: toolName,
+            arguments: toolArgs,
+            serverId,
           });
 
-          if (!response.ok) {
-            return { error: `MCP server responded with ${response.status}` };
-          }
-
-          const data = (await response.json()) as Record<string, unknown>;
           return {
             success: true,
             tool: toolName,
-            result: data.result ?? data,
+            result,
           };
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err);
-          return { error: `MCP call failed: ${message}` };
+          return { error: `MCP tool call failed: ${message}` };
+        }
+      }
+
+      case "mcpListTools": {
+        const connectionName = parameters.connectionName as string | undefined;
+        const servers = this.getMcpServers();
+        const allTools = servers.tools;
+
+        let tools = allTools;
+        if (connectionName) {
+          tools = allTools.filter(t => {
+            const server = servers.servers[t.serverId];
+            return server && server.name === connectionName;
+          });
+        }
+
+        if (tools.length === 0) {
+          return {
+            tools: [],
+            serverNames: Object.values(servers.servers).map(s => s.name),
+            message: connectionName
+              ? `No tools found on MCP server "${connectionName}".`
+              : "No MCP servers connected or no tools discovered yet.",
+          };
+        }
+
+        return {
+          success: true,
+          tools: tools.map(t => ({
+            name: t.name,
+            description: t.description,
+            serverId: t.serverId,
+            serverName: servers.servers[t.serverId]?.name,
+            inputSchema: t.inputSchema,
+          })),
+          count: tools.length,
+        };
+      }
+
+      case "mcpReadResource": {
+        const connectionName = (parameters.connectionName as string) || "";
+        const uri = (parameters.uri as string) || "";
+
+        if (!uri) {
+          return { error: "mcpReadResource requires 'uri'" };
+        }
+
+        const serverId = this.findMcpServerId(connectionName);
+        if (!serverId) {
+          return {
+            error: `MCP connection "${connectionName}" not found or not ready.`,
+          };
+        }
+
+        try {
+          const result = await this.mcp.readResource(
+            { uri, serverId },
+            { timeout: 30_000 },
+          );
+
+          return {
+            success: true,
+            uri,
+            contents: result.contents,
+          };
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          return { error: `MCP resource read failed: ${message}` };
+        }
+      }
+
+      case "mcpGetPrompt": {
+        const connectionName = (parameters.connectionName as string) || "";
+        const promptName = (parameters.promptName as string) || "";
+        const promptArgs =
+          (parameters.arguments as Record<string, unknown>) || {};
+
+        if (!promptName) {
+          return { error: "mcpGetPrompt requires 'promptName'" };
+        }
+
+        const serverId = this.findMcpServerId(connectionName);
+        if (!serverId) {
+          return {
+            error: `MCP connection "${connectionName}" not found or not ready.`,
+          };
+        }
+
+        try {
+          const result = await this.mcp.getPrompt(
+            {
+              name: promptName,
+              arguments: promptArgs as Record<string, string>,
+              serverId,
+            },
+            { timeout: 30_000 },
+          );
+
+          return {
+            success: true,
+            promptName,
+            description: result.description,
+            messages: result.messages,
+          };
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          return { error: `MCP prompt fetch failed: ${message}` };
+        }
+      }
+
+      case "mcpRemoveServer": {
+        const connectionName = (parameters.connectionName as string) || "";
+
+        if (!connectionName) {
+          return { error: "mcpRemoveServer requires 'connectionName'" };
+        }
+
+        const serverId = this.findMcpServerId(connectionName);
+        if (!serverId) {
+          return {
+            success: true,
+            message: `No MCP connection named "${connectionName}" found.`,
+          };
+        }
+
+        try {
+          await this.removeMcpServer(serverId);
+          return {
+            success: true,
+            message: `Disconnected from MCP server "${connectionName}".`,
+          };
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          return { error: `MCP server removal failed: ${message}` };
         }
       }
 
@@ -1261,8 +1659,14 @@ Respond with a JSON object: { "summary": "one-line cause", "patch": "exact code 
       .join("\n");
 
     // Build tools context if enabled
-    const toolsContext = this.state.toolsEnabled
-      ? `
+    const mcpServers = this.getMcpServers();
+    const connectedMcpServers = Object.entries(mcpServers.servers).filter(
+      ([, server]) => server.state === "ready",
+    );
+
+    let toolsContext = "";
+    if (this.state.toolsEnabled) {
+      toolsContext = `
 
 ## Available Tools
 You can use the following tools to help the user. To use a tool, output:
@@ -1270,9 +1674,22 @@ TOOL_CALL:toolName{"param1":"value1","param2":"value2"}
 
 ${getToolsPrompt()}
 
-Note: Tools marked [REQUIRES APPROVAL] will need user approval before execution.
-`
-      : "";
+Note: Tools marked [REQUIRES APPROVAL] will need user approval before execution.`;
+
+      if (connectedMcpServers.length > 0) {
+        toolsContext += `
+
+## Connected MCP Servers
+You are also connected to ${connectedMcpServers.length} MCP server(s) that expose additional tools:
+${connectedMcpServers
+  .map(
+    ([id, server]) =>
+      `- ${server.name} (id: ${id}, tools: ${(mcpServers.tools as Array<{ serverId: string }>).filter(t => t.serverId === id).length})`,
+  )
+  .join("\n")}
+You can call these MCP server tools using the mcpCallTool action with the server's name as connectionName.`;
+      }
+    }
 
     // Determine context and select appropriate prompt template
     let systemPromptFinal = `You are the MagicAppDev assistant, an expert AI App Builder.
@@ -1287,7 +1704,7 @@ GOAL: Help the user build their app.
    Available slugs: react-spa (React + Vite + Tailwind), next-app (Next.js 14), cf-workers-api (Hono REST API + D1), expo-app (Expo mobile), ionic (Ionic mobile)
    Default to react-spa for general web apps.
 3. If a template fits, also suggest it using "SUGGEST_TEMPLATE: [slug]".
-4. Use tools when appropriate to read files, write code, or execute commands.
+    4. Use tools when appropriate to read files, write code, or execute commands. For external operations (GitHub, databases, APIs), first use mcpConnect to link an MCP server, then use mcpCallTool to invoke its tools.
 5. When a preview_error event arrives, use the patchError tool to analyze the error and suggest or apply a fix.
 6. Be concise but helpful.
 7. At the end of your response, suggest 3 relevant follow-up prompts: SUGGEST_PROMPTS: ["prompt1", "prompt2", "prompt3"]`;

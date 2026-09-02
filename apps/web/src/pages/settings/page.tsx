@@ -11,18 +11,29 @@ import {
   Unlink,
   Plus,
   Trash2,
+  Plug,
+  CheckCircle,
+  XCircle,
+  Clock,
 } from "lucide-react";
+import { useAgentConnection, useAgentMessages } from "@/lib/agent-websocket";
 import { Typography } from "@/components/ui/Typography";
 import { useAuth } from "../../contexts/AuthContext";
+import { useState, useEffect, useRef } from "react";
 import AiProviderSettingsPage from "./ai-provider";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
-import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 
 type SettingsTab =
-  "profile" | "api" | "ai-provider" | "notifications" | "security" | "region";
+  | "profile"
+  | "api"
+  | "ai-provider"
+  | "notifications"
+  | "security"
+  | "region"
+  | "mcp";
 
 interface LinkedAccount {
   id: string;
@@ -38,6 +49,14 @@ interface UserApiKey {
   isActive: number;
   createdAt: string;
   lastUsedAt: string | null;
+}
+
+interface McpServerInfo {
+  id: string;
+  name: string;
+  url: string;
+  state: "ready" | "authenticating" | "error" | "disconnected";
+  toolCount: number;
 }
 
 export default function SettingsPage() {
@@ -67,6 +86,64 @@ export default function SettingsPage() {
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordSuccess, setPasswordSuccess] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  // MCP server state
+  const { send: sendAgentMessage } = useAgentConnection();
+  const [mcpServers, setMcpServers] = useState<McpServerInfo[]>(() => {
+    const saved = localStorage.getItem("mcpServers");
+    if (saved) {
+      try {
+        return JSON.parse(saved) as McpServerInfo[];
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  });
+  const [mcpLoading, setMcpLoading] = useState(false);
+  const [newMcpName, setNewMcpName] = useState("");
+  const [newMcpUrl, setNewMcpUrl] = useState("");
+
+  // Persist MCP servers to local storage with debounce to avoid excessive writes
+  const mcpLocalStorageRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (mcpLocalStorageRef.current) {
+      clearTimeout(mcpLocalStorageRef.current);
+    }
+    mcpLocalStorageRef.current = window.setTimeout(() => {
+      localStorage.setItem("mcpServers", JSON.stringify(mcpServers));
+      mcpLocalStorageRef.current = null;
+    }, 300);
+    return () => {
+      if (mcpLocalStorageRef.current) {
+        clearTimeout(mcpLocalStorageRef.current);
+      }
+    };
+  }, [mcpServers]);
+
+  // Load MCP servers on tab activation
+  const refreshMcpServers = () => {
+    if (sendAgentMessage({ type: "mcp_list_servers" })) {
+      setMcpLoading(true);
+    }
+  };
+
+  // Listen for MCP-related WebSocket messages from the agent
+  useAgentMessages((type, data) => {
+    if (type === "mcp_servers_list") {
+      setMcpServers((data as { servers: McpServerInfo[] }).servers || []);
+      setMcpLoading(false);
+    } else if (type === "mcp_connection_result") {
+      setMcpLoading(false);
+      // Trigger a refresh to get updated server list
+      refreshMcpServers();
+    } else if (type === "mcp_remove_result") {
+      refreshMcpServers();
+    } else if (type === "mcp_error") {
+      setMcpLoading(false);
+      console.error("MCP error:", (data as { message: string }).message);
+    }
+  });
 
   // Account deletion state
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -295,6 +372,15 @@ export default function SettingsPage() {
             label="Region"
             active={activeTab === "region"}
             onClick={() => setActiveTab("region")}
+          />
+          <SettingsNavItem
+            icon={Plug}
+            label="MCP Servers"
+            active={activeTab === "mcp"}
+            onClick={() => {
+              setActiveTab("mcp");
+              refreshMcpServers();
+            }}
           />
         </div>
 
@@ -808,6 +894,189 @@ export default function SettingsPage() {
                 </div>
               </div>
             </Card>
+          )}
+
+          {activeTab === "mcp" && (
+            <div className="space-y-6">
+              <Card className="p-6">
+                <Typography variant="title">MCP Servers</Typography>
+                <Typography
+                  variant="body"
+                  className="text-sm text-foreground/60"
+                >
+                  Connect MCP (Model Context Protocol) servers to give the AI
+                  agent access to external tools like GitHub, databases, or
+                  custom APIs.
+                </Typography>
+
+                <div className="mt-4 space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <Input
+                      placeholder="Friendly name (e.g. GitHub)"
+                      value={newMcpName}
+                      onChange={e => setNewMcpName(e.target.value)}
+                      disabled={mcpLoading}
+                    />
+                    <Input
+                      placeholder="https://mcp.example.com/mcp"
+                      value={newMcpUrl}
+                      onChange={e => setNewMcpUrl(e.target.value)}
+                      disabled={mcpLoading}
+                    />
+                  </div>
+                  <Button
+                    variant="outlined"
+                    className="w-full justify-start"
+                    disabled={
+                      mcpLoading || !newMcpName.trim() || !newMcpUrl.trim()
+                    }
+                    onClick={() => {
+                      if (
+                        sendAgentMessage({
+                          type: "mcp_connect",
+                          name: newMcpName.trim(),
+                          url: newMcpUrl.trim(),
+                        })
+                      ) {
+                        setMcpLoading(true);
+                        setNewMcpName("");
+                        setNewMcpUrl("");
+                      }
+                    }}
+                  >
+                    {mcpLoading ? (
+                      <Loader2 size={16} className="mr-2 animate-spin" />
+                    ) : (
+                      <Plus size={16} className="mr-2" />
+                    )}
+                    Add MCP Server
+                  </Button>
+                </div>
+              </Card>
+
+              <Card className="p-6">
+                <Typography variant="title">Connected Servers</Typography>
+                <Typography
+                  variant="body"
+                  className="text-sm text-foreground/60 mb-4"
+                >
+                  Servers are persisted across sessions via the agent's Durable
+                  Object storage.
+                </Typography>
+
+                {mcpLoading && mcpServers.length === 0 ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 size={32} className="animate-spin text-primary" />
+                  </div>
+                ) : mcpServers.length === 0 ? (
+                  <div className="p-8 border border-dashed border-outline/20 rounded-xl text-center">
+                    <Plug
+                      className="mx-auto mb-2 text-foreground/30"
+                      size={32}
+                    />
+                    <Typography variant="body" className="opacity-50">
+                      No MCP servers connected yet.
+                    </Typography>
+                    <Typography
+                      variant="body"
+                      className="text-sm opacity-40 mt-1"
+                    >
+                      Add a server using the form above. Common URLs:
+                      <code className="block mt-1 text-xs bg-surface p-1 rounded">
+                        https://mcp.example.com/mcp
+                      </code>
+                    </Typography>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {mcpServers.map(server => {
+                      const StateIcon =
+                        server.state === "ready"
+                          ? CheckCircle
+                          : server.state === "authenticating"
+                            ? Clock
+                            : XCircle;
+
+                      return (
+                        <div
+                          key={server.id}
+                          className="flex items-center justify-between p-4 bg-surface-variant/30 rounded-xl border border-outline/5"
+                        >
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <StateIcon
+                                size={16}
+                                className={
+                                  server.state === "ready"
+                                    ? "text-green-500"
+                                    : server.state === "authenticating"
+                                      ? "text-yellow-500"
+                                      : "text-red-500"
+                                }
+                              />
+                              <span className="font-medium text-sm">
+                                {server.name}
+                              </span>
+                            </div>
+                            <div className="text-xs text-foreground/50 font-mono">
+                              {server.url}
+                            </div>
+                            {server.toolCount > 0 && (
+                              <div className="text-xs text-foreground/40">
+                                {server.toolCount} tool
+                                {server.toolCount !== 1 ? "s" : ""} available
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex gap-2">
+                            {server.state === "authenticating" && (
+                              <Button
+                                variant="text"
+                                size="sm"
+                                className="h-8"
+                                onClick={() =>
+                                  window.open(
+                                    `https://api.splat.ai/auth/mcp/${server.id}`,
+                                    "_blank",
+                                  )
+                                }
+                              >
+                                Authorize
+                              </Button>
+                            )}
+                            <Button
+                              variant="text"
+                              size="sm"
+                              className="text-error h-8 w-8 p-0"
+                              onClick={() => {
+                                sendAgentMessage({
+                                  type: "mcp_remove_server",
+                                  name: server.name,
+                                });
+                                setMcpLoading(true);
+                              }}
+                            >
+                              <Trash2 size={14} />
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                <div className="mt-4 flex justify-between items-center">
+                  <Button
+                    variant="text"
+                    size="sm"
+                    onClick={refreshMcpServers}
+                    disabled={mcpLoading}
+                  >
+                    Refresh
+                  </Button>
+                </div>
+              </Card>
+            </div>
           )}
         </div>
       </div>

@@ -240,11 +240,11 @@ export const AGENT_TOOLS: Record<string, ToolDefinition> = {
   mcpConnect: {
     name: "mcpConnect",
     description:
-      "Connect to an external MCP (Model Context Protocol) server by URL. Use this before calling external tools.",
+      "Connect to an external MCP (Model Context Protocol) server by URL. Use this before calling external tools. If the server requires OAuth, the user will be redirected to authorize.",
     parameters: {
       url: {
         type: "string",
-        description: "MCP server URL (e.g. 'https://mcp.example.com')",
+        description: "MCP server URL (e.g. 'https://mcp.example.com/mcp')",
         required: true,
       },
       name: {
@@ -263,7 +263,8 @@ export const AGENT_TOOLS: Record<string, ToolDefinition> = {
     parameters: {
       connectionName: {
         type: "string",
-        description: "Friendly name of the MCP connection to use",
+        description:
+          "Friendly name of the MCP connection to use (as registered in mcpConnect)",
         required: true,
       },
       toolName: {
@@ -275,6 +276,78 @@ export const AGENT_TOOLS: Record<string, ToolDefinition> = {
         type: "object",
         description: "Arguments to pass to the MCP tool",
         required: false,
+      },
+    },
+    requiresApproval: true,
+  },
+
+  mcpListTools: {
+    name: "mcpListTools",
+    description:
+      "List all tools available from all connected MCP servers. Returns tool names, descriptions, and their source server.",
+    parameters: {
+      connectionName: {
+        type: "string",
+        description:
+          "Optional: filter to a specific MCP connection name. If omitted, lists from all connections.",
+        required: false,
+      },
+    },
+    requiresApproval: false,
+  },
+
+  mcpReadResource: {
+    name: "mcpReadResource",
+    description:
+      "Read a resource exposed by a connected MCP server (e.g. a file, database record, or API data).",
+    parameters: {
+      connectionName: {
+        type: "string",
+        description: "Name of the MCP connection to use",
+        required: true,
+      },
+      uri: {
+        type: "string",
+        description:
+          "URI of the resource to read (e.g. 'file:///path/to/file')",
+        required: true,
+      },
+    },
+    requiresApproval: true,
+  },
+
+  mcpGetPrompt: {
+    name: "mcpGetPrompt",
+    description: "Retrieve a prompt template from a connected MCP server.",
+    parameters: {
+      connectionName: {
+        type: "string",
+        description: "Name of the MCP connection to use",
+        required: true,
+      },
+      promptName: {
+        type: "string",
+        description: "Name of the prompt to retrieve",
+        required: true,
+      },
+      arguments: {
+        type: "object",
+        description: "Arguments to fill in the prompt template",
+        required: false,
+      },
+    },
+    requiresApproval: true,
+  },
+
+  mcpRemoveServer: {
+    name: "mcpRemoveServer",
+    description:
+      "Disconnect from and remove an MCP server connection. The server's tools will no longer be available.",
+    parameters: {
+      connectionName: {
+        type: "string",
+        description: "Name of the MCP connection to remove",
+        required: true,
       },
     },
     requiresApproval: true,
