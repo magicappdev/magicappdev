@@ -8,6 +8,7 @@ import { cloneCommand } from "./commands/clone.js";
 import { initCommand } from "./commands/init.js";
 import { chatCommand } from "./commands/chat.js";
 import { authCommand } from "./commands/auth.js";
+import { mcpCommand } from "./commands/mcp.js";
 import { createRequire } from "module";
 import { Command } from "commander";
 const require = createRequire(import.meta.url);
@@ -85,6 +86,7 @@ Examples:
   program.addCommand(generateCommand);
   program.addCommand(doctorCommand);
   program.addCommand(completionsCommand);
+  program.addCommand(mcpCommand);
   return program;
 }
 /** Run the CLI */
