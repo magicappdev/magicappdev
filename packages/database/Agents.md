@@ -33,13 +33,15 @@ The `@magicappdev/database` package provides the data persistence layer for Magi
 - [x] Migration system setup via Drizzle Kit.
 - [x] Local and remote Cloudflare D1 linking.
 - [ ] Implement advanced relational queries in Drizzle.
-- [ ] Add database seeding scripts for development.
+- [x] Add database seeding scripts for development.
 
 ## Usage Guidelines
 
 - Run `bun run generate` to create migrations from schema changes.
 - Use `bun run migrate:local` or `bun run migrate:prod` for applying changes.
 - Handle relations carefully within Cloudflare Worker memory constraints.
+- Run `bun run seed` to populate demo data for local development.
+- Run `bun run seed --reset` to wipe all data and reseed.
 
 ## Next Steps
 
