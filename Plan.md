@@ -53,14 +53,15 @@ Develop a comprehensive monorepo-based fullstack app building platform inspired 
 - GitHub: <https://github.com/magicappdev>
 - NPM: <https://www.npmjs.com/org/magicappdev>
 
-## Project Status (January 2026)
+## Project Status (September 2026)
 
-- **Monorepo**: Fully established with Bun, Turbo, and Nx. Clean linting and typechecking across all 8 projects.
-- **API**: Functional Hono-based API on Cloudflare Workers with D1/Drizzle integration for Auth, Projects, and AI.
-- **Auth System**: Comprehensive GitHub OAuth system implemented for Web, Mobile, and CLI. Support for JWT and session management.
-- **Web**: Modern Next.js application with real-time AI Chat streaming and full Project management.
-- **Mobile**: Expo-based app with GitHub Auth, Projects listing, streaming AI Chat, and **Dark Mode support**.
-- **CI/CD**: GitHub Actions active for automated testing and deployments.
+- **Monorepo**: Fully established with Bun + Turborepo. NX fully removed — `.nxignore`, `Dockerfile.android`, `docker-compose.android.yml`, `nx.json`, `migrations.json`, and `nx-mcp` MCP references all cleaned up. `knip.json` updated to drop `nx` plugin.
+- **API**: Functional Hono-based API on Cloudflare Workers with D1/Drizzle integration for Auth, Projects, and AI. Rate limiting middleware implemented with KV-backed sliding window.
+- **Auth System**: Comprehensive GitHub OAuth + Discord OAuth system implemented for Web, Mobile, and CLI. JWT and session management with signed OAuth state.
+- **Web**: Modern Next.js application with real-time AI Chat streaming, full Project management, and live iframe-based preview with CSS/SCSS bundling.
+- **Mobile**: Expo-based app with GitHub/Discord Auth, Projects listing, streaming AI Chat, Dark Mode, and native (non-Docker) Android builds.
+- **CI/CD**: GitHub Actions active for automated testing, linting, and deployments.
+- **Agent**: MagicAgent deployed to Cloudflare Workers with MCP server integration (connect, call tools, remove), rate limiting on MCP WebSocket handlers, and 30s connection timeout. Self-healing `patchError` tool auto-patches preview/runtime errors. CLI `mcp test` and `mcp list` commands added for server health checks.
 
 ### Prompt → Fully-Featured App Pipeline ✅ (Completed)
 
@@ -117,12 +118,11 @@ Previously, typing "Build a compound interest calculator" returned raw markdown 
 
 ### Known Issues & Optimizations Needed
 
-#### Nx Integration Gaps 🔧
+#### Build System ✅ Consolidated
 
-- Missing `project.json` files for apps/mobile and apps/web
-- Inconsistent build system usage (Nx + Turborepo hybrid)
-- Mobile project not properly registered in Nx workspace
-- Missing Nx targets for mobile-specific operations
+- NX fully removed; Turborepo is the single source of truth.
+- `.nxignore`, `nx.json`, `project.json` files, and `migrations.json` deleted.
+- `nx-mcp` removed from all MCP configs.
 
 #### Mobile CI/CD Gaps 📱
 
@@ -133,22 +133,20 @@ Previously, typing "Build a compound interest calculator" returned raw markdown 
 
 #### Recommended Next Steps 🎯
 
-1. Create proper `project.json` for apps/mobile with Nx targets
-2. Add mobile build/test/deploy to GitHub Actions
-3. Consider consolidating to primary build system (Nx or Turborepo)
-4. Set up E2E testing with Playwright for mobile
-5. Add mobile app store deployment automation
+1. Add mobile build/test/deploy to GitHub Actions
+2. Set up E2E testing with Playwright for mobile
+3. Add mobile app store deployment automation
 
 ## Implementation Steps
 
-1. [x] Set up Turborepo monorepo.
-2. [ ] Develop CLI tool with core generators and management features.
+1. [x] Set up Turborepo monorepo (NX fully removed).
+2. [x] Develop CLI tool with core generators and management features.
 3. [x] Build Next.js webpage with AI chat and deployment tools.
 4. [x] Create React Native app with shared features.
 5. [x] Implement API and database on Cloudflare.
-6. [x] Add GitHub OAuth authentication system.
+6. [x] Add GitHub OAuth + Discord OAuth authentication system.
 7. [x] Set up CI/CD pipelines.
-8. [ ] Add MCP integration across components.
+8. [x] Add MCP integration across components (CLI `mcp` command + agent WebSocket handlers + web settings tab).
 9. [ ] Ensure extensibility with plugin system.
 
 todoo:
@@ -158,7 +156,7 @@ todoo:
 - [x] Implement Settings/Profile Menu in Mobile.
 - [x] Implement real AI backend logic with streaming.
 - [x] Implement actual code generation in CLI and Web chat (prompt → full project).
-- [ ] MCP integration for developer tools.
+- [x] MCP integration for developer tools (CLI + agent + web).
 - [x] Update the .devcontainer.
 - [x] Set up CI/CD GitHub Actions.
 - [x] Fix mobile app Android build path length issues.
@@ -166,9 +164,12 @@ todoo:
 - [x] Implement dark mode support in mobile app.
 - [x] Convert app icons to PNG format.
 - [x] Add shell completions command to CLI.
-- [ ] Add Docker-Compose Quickstart for App Developing
+- [x] Consolidate build system — fully on Turborepo, NX removed.
+- [x] Remove Docker-based Android build (not needed).
 - [ ] Discord Bot for Community Server
 - [ ] Add Github App Support to install MagicAppDev on User Accounts to initialize Repos, Setup Workflows.
+- [ ] Add mobile app store deployment automation
+- [ ] Implement plugin system for agent tools
 
 ## ADD URL endpoints for @magicappdev/web/#Agents.md
 

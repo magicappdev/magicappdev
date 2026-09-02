@@ -22,14 +22,15 @@
 
 **Files:** `packages/api/src/middleware/rate-limit.ts`, `packages/api/src/app.ts`, `packages/api/test/rate-limit.test.ts`
 
-### A2 – Build System Consolidation (Turborepo single source of truth)
+### A2 – Build System Consolidation (Turborepo single source of truth) ✅
 
-- Audit `nx.json`, `project.json` files, and `turbo.json`.
-- Remove Nx targets for packages/apps already owned by Turborepo.
-- Update root scripts to use `turbo` exclusively.
-- Verify `bun run build && bun run typecheck` from root.
+- Removed `.nxignore`, `nx.json`, `project.json` files, and `migrations.json`.
+- Removed `nx-mcp` from `.mcp.json`, `.gemini/settings.json`, and `.claude/settings.local.json`.
+- Removed `"nx": true` from `knip.json`.
+- Updated root scripts to use `turbo` exclusively.
+- Verified `bun run build && bun run typecheck` from root.
 
-**Files:** `turbo.json`, `nx.json`, root `package.json`, individual `project.json` files
+**Files:** `turbo.json`, root `package.json`
 
 ---
 
@@ -39,13 +40,18 @@
 **Estimated effort:** ~1–2 weeks  
 **Deploy target:** Local Wrangler only.
 
-### B1 – Docker Compose Quickstart
+### B1 – Docker Compose Quickstart ⚠️ Cancelled
 
-- Create `docker-compose.yml` with services for `api`, `agent`, `wrangler` (D1 init), and `web`.
-- Add `docs/QUICKSTART.md` with one-command startup.
-- Test clean-machine boot.
+Docker-based Android build files (`Dockerfile.android`, `docker-compose.android.yml`) have been
+removed. Mobile builds now work natively via Expo CLI on Windows. The WebContainer-based
+preview handles cross-platform consistency in-browser. New contributors use:
 
-**Files:** `docker-compose.yml`, `docs/QUICKSTART.md`
+```bash
+bun install
+bun run dev       # starts web dev server
+cd packages/api && bun run dev   # API on :8787
+cd packages/agent && bun run dev  # Agent on :8788
+```
 
 ### B2 – CLI Template Rendering
 
@@ -83,13 +89,14 @@
 
 **Files:** `packages/agent/src/tools.ts`, `packages/agent/src/index.ts`
 
-### C2 – Lightweight Live Preview
+### C2 – Lightweight Live Preview ✅
 
-- Replace or supplement WebContainers with `srcdoc` iframe + `postMessage` relay.
-- Add hot-reload via polling or WebSocket broadcast from agent.
-- Keep existing `LivePreview.tsx` as fallback.
+- Enhanced `LivePreview.tsx` with `srcdoc` iframe + `postMessage` relay.
+- Added CSS file bundling and SCSS compilation (via `sass.js`) in `buildPreviewHtml`.
+- Console interceptor + error relay already wired via `postMessage`.
+- Hot reload via `MAGICAPPDEV_UPDATE_HTML` message with 800ms debounce.
 
-**Files:** `apps/web/src/components/workspace/LivePreview.tsx`, `apps/web/src/pages/projects/workspace.tsx`
+**Files:** `apps/web/src/components/workspace/LivePreview.tsx`
 
 ---
 

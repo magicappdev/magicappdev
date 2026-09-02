@@ -44,12 +44,15 @@
 
 ---
 
-## ✅ Recently Completed (Free-Tier & Vibe Coding Features)
+## ✅ Recently Completed (MCP + Security Hardening)
 
-- [x] **Client-Side ESM/Iframe Sandbox**: Zero-cost in-browser React component and file preview without expensive remote server sandboxes.
-- [x] **Prompt-to-Template Auto-Mapper**: Automatic template selection based on natural language prompts in `@magicappdev/agent`.
-- [x] **Local SQLite / D1 Backup & Export Utility**: Added export support for zero-cost free tier data persistence.
-- [x] **Mobile CI/CD & E-Commerce Template**: Shipped e-commerce template and mobile APK workflow.
+- [x] **MCP Integration**: Added `magicappdev mcp test` and `mcp list` CLI commands using `@modelcontextprotocol/sdk`
+- [x] **Agent MCP WebSocket Handlers**: `mcp_list_servers`, `mcp_connect`, `mcp_remove_server`, `mcp_list_tools` with 30s timeout and per-connection rate limiting (5 ops/10s)
+- [x] **Web MCP Settings Tab**: Full MCP server management UI with local storage persistence (300ms debounced)
+- [x] **Build System Consolidation**: Fully removed NX — `.nxignore`, `nx.json`, `project.json`, `migrations.json` deleted; `knip.json` updated
+- [x] **Docker Removal**: Deleted `Dockerfile.android`, `docker-compose.android.yml`, and `scripts/build-android-*-docker.*` scripts
+- [x] **Live Preview CSS Bundling**: `LivePreview.tsx` now bundles CSS files and compiles SCSS client-side
+- [x] **MCP Server Persistence**: Web app saves MCP servers to `localStorage` with 300ms debounce so they survive page reloads
 
 ### CLI Chat Connection Fix (P1)
 
