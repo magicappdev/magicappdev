@@ -168,6 +168,21 @@ Command-line interface tool for creating and managing MagicAppDev apps, providin
 - Leverage shell completions for improved developer experience.
 - Use the doctor command for diagnostics and troubleshooting.
 
+#### Templates Command
+
+The `templates` command manages app templates fetched from the standalone `magicappdev/templates` GitHub repo:
+
+```bash
+magicappdev templates list              # List available templates
+magicappdev templates info <name>       # Show template details
+magicappdev templates download <name>   # Download and cache a template
+magicappdev templates sync              # Refresh local template index
+magicappdev templates status            # Show cache status
+magicappdev templates delete <name>     # Remove cached template
+```
+
+Templates are cached at `~/.magicappdev/templates/`. The GitHub API client (`packages/cli/src/lib/github.ts`) fetches template index, metadata, and files from `raw.githubusercontent.com/magicappdev/templates/main`.
+
 #### Next Steps
 
 - [ ] Implement actual code generation in CLI
