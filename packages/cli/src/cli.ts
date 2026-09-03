@@ -4,6 +4,7 @@
 
 import { generateCommand } from "./commands/generate/index.js";
 import { completionsCommand } from "./commands/completions.js";
+import { templatesCommand } from "./commands/templates.js";
 import { doctorCommand } from "./commands/doctor.js";
 import { cloneCommand } from "./commands/clone.js";
 import { initCommand } from "./commands/init.js";
@@ -67,12 +68,29 @@ export function createProgram(): Command {
     .addHelpText(
       "after",
       `
-Examples:
-  $ magicappdev init my-app
-  $ magicappdev chat
-  $ magicappdev auth login
-  $ magicappdev clone --list
-  $ magicappdev doctor
+Quick start:
+  $ magicappdev init my-app                # Create a new Expo project
+  $ magicappdev init my-app -t tabs        # Use the tabs navigation template
+  $ magicappdev init my-app -f next        # Create a Next.js project
+  $ magicappdev init my-app -y             # Skip prompts, use defaults
+
+Generate code:
+  $ magicappdev generate component Button  # Generate a React component
+  $ magicappdev generate screen Home       # Generate a screen with SafeAreaView
+
+Manage projects:
+  $ magicappdev clone --list               # List cloud-saved projects
+  $ magicappdev clone abc-123              # Clone a project from the cloud
+  $ magicappdev doctor                     # Check your environment
+
+Templates:
+  $ magicappdev templates list             # Browse available templates
+  $ magicappdev templates download blank   # Cache a template locally
+
+AI & Configuration:
+  $ magicappdev auth login                 # Authenticate with MagicAppDev
+  $ magicappdev chat                       # Start an AI chat session
+  $ magicappdev mcp list                   # List MCP server connections
 `,
     )
     .hook("preAction", thisCommand => {
@@ -94,6 +112,7 @@ Examples:
   program.addCommand(doctorCommand);
   program.addCommand(completionsCommand);
   program.addCommand(mcpCommand);
+  program.addCommand(templatesCommand);
 
   return program;
 }
