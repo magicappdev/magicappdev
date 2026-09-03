@@ -62,10 +62,10 @@ export default function LoginScreen() {
 
         if (!token && sessionId) {
           try {
-            const res = await api.request<{ success: boolean; data?: { accessToken: string; refreshToken: string } }>(`/auth/check-session?sessionId=${sessionId}`);
-            if (res.success && res.data) {
-              token = res.data.accessToken;
-              refreshToken = res.data.refreshToken;
+            const res = await api.unwrapOrNull<{ accessToken: string; refreshToken: string }>(`/auth/check-session?sessionId=${sessionId}`);
+            if (res) {
+              token = res.accessToken;
+              refreshToken = res.refreshToken;
             }
           } catch (e) {
             console.error("Failed to fetch session from server in login screen", e);

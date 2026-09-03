@@ -50,10 +50,10 @@ export default function AuthCallback() {
       if (!resolvedToken && sessionId) {
         console.log("Received sessionId, fetching tokens from server...", sessionId);
         try {
-          const res = await api.request<{ success: boolean; data?: { accessToken: string; refreshToken: string } }>(`/auth/check-session?sessionId=${sessionId}`);
-          if (res.success && res.data) {
-            resolvedToken = res.data.accessToken;
-            resolvedRefreshToken = res.data.refreshToken;
+          const res = await api.unwrapOrNull<{ accessToken: string; refreshToken: string }>(`/auth/check-session?sessionId=${sessionId}`);
+          if (res) {
+            resolvedToken = res.accessToken;
+            resolvedRefreshToken = res.refreshToken;
           }
         } catch (e) {
           console.error("Failed to fetch session from server", e);

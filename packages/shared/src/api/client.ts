@@ -182,6 +182,22 @@ export class ApiClient {
     return response.data;
   }
 
+  /**
+   * Like `unwrap`, but returns `null` instead of throwing when `success` is
+   * false. Useful for endpoints where a non-success response is expected
+   * and not an error (e.g. check-session returning `{ success: false, pending: true }`).
+   */
+  async unwrapOrNull<T>(
+    path: string,
+    options: RequestInit = {},
+  ): Promise<T | null> {
+    const response = await this.request<ApiResponse<T>>(path, options);
+    if (!response.success) {
+      return null;
+    }
+    return response.data;
+  }
+
   getGitHubLoginUrl(
     platform: "web" | "mobile" = "web",
     redirectUri?: string,

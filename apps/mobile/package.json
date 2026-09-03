@@ -45,10 +45,12 @@
     "android:release": "expo run:android --variant release",
     "build": "expo export --platform android --output-dir dist",
     "clean": "bun -e \"fs.rmSync('dist', { recursive: true, force: true }); fs.rmSync('.expo', { recursive: true, force: true })\"",
+    "check": "bun run lint:fix && bun run typecheck && bunx expo install --check && bunx expo-doctor --verbose",
     "dev": "expo start",
     "export:android": "expo export --platform android",
     "ios": "expo run:ios",
     "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "prebuild:android": "expo prebuild --platform android",
     "typecheck": "tsc --noEmit",
     "web": "expo start --web"
