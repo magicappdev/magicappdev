@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator } from "rea
 import * as WebBrowser from "expo-web-browser";
 import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
-import { api, secureStorage } from "../lib/api";
+import { api, secureStorage } from "../../lib/api";
 
 WebBrowser.maybeCompleteAuthSession();
 

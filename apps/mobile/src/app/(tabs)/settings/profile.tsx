@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { api } from "../../lib/api";
+import { api } from "../../../lib/api";
 import type { User } from "@magicappdev/shared";
 import { Ionicons } from "@expo/vector-icons";
 

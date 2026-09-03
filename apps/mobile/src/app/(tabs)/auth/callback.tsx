@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
-import { api, secureStorage } from "../../lib/api";
+import { api, secureStorage } from "../../../lib/api";
 
 export default function AuthCallback() {
   const router = useRouter();

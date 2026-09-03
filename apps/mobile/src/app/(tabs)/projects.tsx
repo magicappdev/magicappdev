@@ -12,11 +12,11 @@ import {
   Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { api, secureStorage } from "../lib/api";
+import { api, secureStorage } from "../../lib/api";
 import type { Project } from "@magicappdev/shared";
 import { Ionicons } from "@expo/vector-icons";
-import { useTheme } from "../context/ThemeContext";
-import { getTemplateById } from "../lib/templates";
+import { useTheme } from "../../context/ThemeContext";
+import { getTemplateById } from "../../lib/templates";
 
 export default function ProjectsScreen() {
   useTheme();

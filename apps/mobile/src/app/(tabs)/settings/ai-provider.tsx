@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { api } from "../../lib/api";
+import { api } from "../../../lib/api";
 
 interface UserAiKey {
   id: string;

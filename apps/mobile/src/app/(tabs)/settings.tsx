@@ -9,7 +9,7 @@ import {
   Switch,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { api, secureStorage } from "../lib/api";
+import { api, secureStorage } from "../../lib/api";
 import type { User } from "@magicappdev/shared";
 import { Ionicons } from "@expo/vector-icons";
 

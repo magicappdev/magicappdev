@@ -10,9 +10,9 @@ import {
   Platform,
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import { api } from "../lib/api";
+import { api } from "../../lib/api";
 import { Ionicons } from "@expo/vector-icons";
-import { useTheme } from "../context/ThemeContext";
+import { useTheme } from "../../context/ThemeContext";
 import { getPromptPresets, type PromptPreset } from "@magicappdev/shared/utils";
 
 interface MessageItem {
