@@ -49,12 +49,9 @@ export default function AiProviderSettingsPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await api.request<{
-        success: boolean;
-        data: { keys: UserAiKey[] };
-      }>("/ai-keys");
-      if (res.success) {
-        setAiKeys(res.data.keys);
+      const res = await api.unwrap<{ keys: UserAiKey[] }>("/ai-keys");
+      if (res && res.keys) {
+        setAiKeys(res.keys);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load AI keys");
@@ -100,24 +97,14 @@ export default function AiProviderSettingsPage() {
     setError(null);
 
     try {
-      const res = await api.request<{
-        success: boolean;
-        data: { message?: string };
-      }>("/ai-keys/test", {
+      await api.unwrap("/ai-keys/test", {
         method: "POST",
         body: JSON.stringify({ provider, apiKey, baseUrl, modelName }),
       });
-      if (res.success) {
-        setTestResult({
-          success: true,
-          message: "Connection successful! Provider responded correctly.",
-        });
-      } else {
-        setTestResult({
-          success: false,
-          message: "Connection failed. Please check your credentials.",
-        });
-      }
+      setTestResult({
+        success: true,
+        message: "Connection successful! Provider responded correctly.",
+      });
     } catch {
       setTestResult({
         success: true,
@@ -141,7 +128,7 @@ export default function AiProviderSettingsPage() {
     setSuccess(null);
 
     try {
-      await api.request("/ai-keys", {
+      await api.unwrap("/ai-keys", {
         method: "POST",
         body: JSON.stringify({
           provider,
@@ -166,9 +153,7 @@ export default function AiProviderSettingsPage() {
   const handleDeleteKey = async (id: string) => {
     if (!confirm("Are you sure you want to remove this provider key?")) return;
     try {
-      await api.request(`/ai-keys/${id}`, {
-        method: "DELETE",
-      });
+      await api.unwrap(`/ai-keys/${id}`, { method: "DELETE" });
       setAiKeys(prev => prev.filter(k => k.id !== id));
       setSuccess("Provider key deleted successfully.");
     } catch (err) {

@@ -251,61 +251,34 @@ export class ApiClient {
   }
 
   async getCurrentUser(): Promise<User> {
-    const response = await this.request<ApiResponse<User>>("/auth/me");
-    if (!response.success) {
-      throw new Error(
-        response.error?.message || "Failed to fetch user profile",
-      );
-    }
-    return response.data;
+    return this.unwrap<User>("/auth/me");
   }
 
   async getProjects(): Promise<Project[]> {
-    const response =
-      await this.request<ApiResponse<ListProjectsResponse>>("/projects");
-    if (!response.success) {
-      throw new Error(response.error.message);
-    }
-    return response.data.data;
+    const res = await this.unwrap<ListProjectsResponse>("/projects");
+    return res.data;
   }
 
   async createProject(data: {
     name: string;
     description?: string;
   }): Promise<Project> {
-    const response = await this.request<ApiResponse<Project>>("/projects", {
+    return this.unwrap<Project>("/projects", {
       method: "POST",
       body: JSON.stringify({ ...data, config: {} }),
     });
-    if (!response.success) {
-      throw new Error(response.error.message);
-    }
-    return response.data;
   }
 
   async deleteProject(id: string): Promise<void> {
-    const response = await this.request<ApiResponse<void>>(`/projects/${id}`, {
-      method: "DELETE",
-    });
-    if (!response.success) {
-      throw new Error(response.error.message);
-    }
+    await this.unwrap<void>(`/projects/${id}`, { method: "DELETE" });
   }
 
   async sendMessage(messages: AiMessage[]): Promise<AiMessage> {
-    const response = await this.request<ApiResponse<AiChatResponse>>(
-      "/ai/chat",
-      {
-        method: "POST",
-        body: JSON.stringify({ messages }),
-      },
-    );
-
-    if (!response.success) {
-      throw new Error(response.error.message);
-    }
-
-    return response.data.message;
+    const res = await this.unwrap<AiChatResponse>("/ai/chat", {
+      method: "POST",
+      body: JSON.stringify({ messages }),
+    });
+    return res.message;
   }
 
   async submitContactForm(data: {
@@ -322,58 +295,35 @@ export class ApiClient {
   }
 
   async getTickets(): Promise<Ticket[]> {
-    const response = await this.request<ApiResponse<Ticket[]>>("/tickets");
-    if (!response.success) {
-      throw new Error(response.error.message);
-    }
-    return response.data;
+    return this.unwrap<Ticket[]>("/tickets");
   }
 
   async getTicket(id: string): Promise<Ticket> {
-    const response = await this.request<ApiResponse<Ticket>>(`/tickets/${id}`);
-    if (!response.success) {
-      throw new Error(response.error.message);
-    }
-    return response.data;
+    return this.unwrap<Ticket>(`/tickets/${id}`);
   }
 
   async createTicket(data: {
     subject: string;
     message: string;
   }): Promise<{ id: string }> {
-    const response = await this.request<ApiResponse<{ id: string }>>(
-      "/tickets",
-      {
-        method: "POST",
-        body: JSON.stringify(data),
-      },
-    );
-    if (!response.success) {
-      throw new Error(response.error.message);
-    }
-    return response.data;
+    return this.unwrap<{ id: string }>("/tickets", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
   }
 
   async updateTicketStatus(
     id: string,
     status: "open" | "in_progress" | "closed" | "resolved",
   ): Promise<void> {
-    const response = await this.request<ApiResponse<void>>(`/tickets/${id}`, {
+    await this.unwrap<void>(`/tickets/${id}`, {
       method: "PATCH",
       body: JSON.stringify({ status }),
     });
-    if (!response.success) {
-      throw new Error(response.error.message);
-    }
   }
 
   async getAdminUsers(): Promise<AdminUser[]> {
-    const response =
-      await this.request<ApiResponse<AdminUser[]>>("/admin/users");
-    if (!response.success) {
-      throw new Error(response.error.message);
-    }
-    return response.data;
+    return this.unwrap<AdminUser[]>("/admin/users");
   }
 
   async getAdminStats(): Promise<{
@@ -384,33 +334,21 @@ export class ApiClient {
     userGrowth: string;
     ticketUrgency: string;
   }> {
-    const response = await this.request<
-      ApiResponse<{
-        totalUsers: number;
-        openTickets: number;
-        databaseSize: string;
-        activeSessions: number;
-        userGrowth: string;
-        ticketUrgency: string;
-      }>
-    >("/admin/stats");
-    if (!response.success) {
-      throw new Error(response.error.message);
-    }
-    return response.data;
+    return this.unwrap<{
+      totalUsers: number;
+      openTickets: number;
+      databaseSize: string;
+      activeSessions: number;
+      userGrowth: string;
+      ticketUrgency: string;
+    }>("/admin/stats");
   }
 
   async updateUserRole(id: string, role: "admin" | "user"): Promise<void> {
-    const response = await this.request<ApiResponse<void>>(
-      `/admin/users/${id}/role`,
-      {
-        method: "PATCH",
-        body: JSON.stringify({ role }),
-      },
-    );
-    if (!response.success) {
-      throw new Error(response.error.message);
-    }
+    await this.unwrap<void>(`/admin/users/${id}/role`, {
+      method: "PATCH",
+      body: JSON.stringify({ role }),
+    });
   }
 
   async getAdminApiKeys(params?: {
@@ -424,13 +362,9 @@ export class ApiClient {
     if (params?.isActive !== undefined)
       searchParams.set("isActive", String(params.isActive));
     const query = searchParams.toString();
-    const response = await this.request<ApiResponse<AdminApiKey[]>>(
+    return this.unwrap<AdminApiKey[]>(
       `/admin/api-keys${query ? `?${query}` : ""}`,
     );
-    if (!response.success) {
-      throw new Error(response.error.message);
-    }
-    return response.data;
   }
 
   async createAdminApiKey(data: {
@@ -439,29 +373,14 @@ export class ApiClient {
     scopes: string[];
     expiresAt?: string;
   }): Promise<AdminApiKey> {
-    const response = await this.request<ApiResponse<AdminApiKey>>(
-      "/admin/api-keys",
-      {
-        method: "POST",
-        body: JSON.stringify(data),
-      },
-    );
-    if (!response.success) {
-      throw new Error(response.error.message);
-    }
-    return response.data;
+    return this.unwrap<AdminApiKey>("/admin/api-keys", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
   }
 
   async deleteAdminApiKey(id: string): Promise<void> {
-    const response = await this.request<ApiResponse<void>>(
-      `/admin/api-keys/${id}`,
-      {
-        method: "DELETE",
-      },
-    );
-    if (!response.success) {
-      throw new Error(response.error.message);
-    }
+    await this.unwrap<void>(`/admin/api-keys/${id}`, { method: "DELETE" });
   }
 
   async getSystemLogs(params?: {
@@ -478,63 +397,34 @@ export class ApiClient {
     if (params?.category) searchParams.set("category", params.category);
     if (params?.userId) searchParams.set("userId", params.userId);
     const query = searchParams.toString();
-    const response = await this.request<ApiResponse<SystemLog[]>>(
-      `/admin/logs${query ? `?${query}` : ""}`,
-    );
-    if (!response.success) {
-      throw new Error(response.error.message);
-    }
-    return response.data;
+    return this.unwrap<SystemLog[]>(`/admin/logs${query ? `?${query}` : ""}`);
   }
 
   async getLogsStats(): Promise<LogsStats> {
-    const response =
-      await this.request<ApiResponse<LogsStats>>("/admin/logs/stats");
-    if (!response.success) {
-      throw new Error(response.error.message);
-    }
-    return response.data;
+    return this.unwrap<LogsStats>("/admin/logs/stats");
   }
 
   async getGlobalConfig(): Promise<GlobalConfig> {
-    const response =
-      await this.request<ApiResponse<GlobalConfig>>("/admin/config");
-    if (!response.success) {
-      throw new Error(response.error.message);
-    }
-    return response.data;
+    return this.unwrap<GlobalConfig>("/admin/config");
   }
 
   async updateGlobalConfig(
     config: Partial<GlobalConfig>,
   ): Promise<GlobalConfig> {
-    const response = await this.request<ApiResponse<GlobalConfig>>(
-      "/admin/config",
-      {
-        method: "PUT",
-        body: JSON.stringify(config),
-      },
-    );
-    if (!response.success) {
-      throw new Error(response.error.message);
-    }
-    return response.data;
+    return this.unwrap<GlobalConfig>("/admin/config", {
+      method: "PUT",
+      body: JSON.stringify(config),
+    });
   }
 
   async changePassword(data: {
     currentPassword?: string;
     newPassword: string;
   }): Promise<void> {
-    const response = await this.request<ApiResponse<void>>(
-      "/auth/change-password",
-      {
-        method: "POST",
-        body: JSON.stringify(data),
-      },
-    );
-    if (!response.success) {
-      throw new Error(response.error.message);
-    }
+    await this.unwrap<void>("/auth/change-password", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
   }
 
   async updateProfile(data: {
@@ -542,32 +432,18 @@ export class ApiClient {
     bio?: string;
     region?: string;
   }): Promise<void> {
-    const response = await this.request<ApiResponse<void>>("/auth/profile", {
+    await this.unwrap<void>("/auth/profile", {
       method: "PUT",
       body: JSON.stringify(data),
     });
-    if (!response.success) {
-      throw new Error(response.error.message);
-    }
   }
 
   async deleteAccount(): Promise<void> {
-    const response = await this.request<ApiResponse<void>>("/auth/account", {
-      method: "DELETE",
-    });
-    if (!response.success) {
-      throw new Error(response.error.message);
-    }
+    await this.unwrap<void>("/auth/account", { method: "DELETE" });
   }
 
   async deleteUser(userId: string): Promise<void> {
-    const response = await this.request<ApiResponse<void>>(
-      `/admin/users/${userId}`,
-      { method: "DELETE" },
-    );
-    if (!response.success) {
-      throw new Error(response.error.message);
-    }
+    await this.unwrap<void>(`/admin/users/${userId}`, { method: "DELETE" });
   }
 
   async getLinkedAccounts(): Promise<
@@ -578,32 +454,20 @@ export class ApiClient {
       createdAt: string;
     }>
   > {
-    const response = await this.request<
-      ApiResponse<
-        Array<{
-          id: string;
-          provider: string;
-          providerAccountId: string;
-          createdAt: string;
-        }>
-      >
+    return this.unwrap<
+      Array<{
+        id: string;
+        provider: string;
+        providerAccountId: string;
+        createdAt: string;
+      }>
     >("/auth/accounts");
-    if (!response.success) {
-      throw new Error(response.error.message);
-    }
-    return response.data;
   }
 
   async unlinkAccount(provider: string): Promise<void> {
-    const response = await this.request<ApiResponse<void>>(
-      `/auth/accounts/${provider}`,
-      {
-        method: "DELETE",
-      },
-    );
-    if (!response.success) {
-      throw new Error(response.error.message);
-    }
+    await this.unwrap<void>(`/auth/accounts/${provider}`, {
+      method: "DELETE",
+    });
   }
 
   async getUserApiKeys(): Promise<
@@ -616,22 +480,16 @@ export class ApiClient {
       lastUsedAt: string | null;
     }>
   > {
-    const response = await this.request<
-      ApiResponse<
-        Array<{
-          id: string;
-          name: string;
-          keyPrefix: string;
-          isActive: number;
-          createdAt: string;
-          lastUsedAt: string | null;
-        }>
-      >
+    return this.unwrap<
+      Array<{
+        id: string;
+        name: string;
+        keyPrefix: string;
+        isActive: number;
+        createdAt: string;
+        lastUsedAt: string | null;
+      }>
     >("/auth/api-keys");
-    if (!response.success) {
-      throw new Error(response.error.message);
-    }
-    return response.data;
   }
 
   async createUserApiKey(name: string): Promise<{
@@ -640,33 +498,19 @@ export class ApiClient {
     key: string;
     keyPrefix: string;
   }> {
-    const response = await this.request<
-      ApiResponse<{
-        id: string;
-        name: string;
-        key: string;
-        keyPrefix: string;
-      }>
-    >("/auth/api-keys", {
+    return this.unwrap<{
+      id: string;
+      name: string;
+      key: string;
+      keyPrefix: string;
+    }>("/auth/api-keys", {
       method: "POST",
       body: JSON.stringify({ name }),
     });
-    if (!response.success) {
-      throw new Error(response.error.message);
-    }
-    return response.data;
   }
 
   async deleteUserApiKey(id: string): Promise<void> {
-    const response = await this.request<ApiResponse<void>>(
-      `/auth/api-keys/${id}`,
-      {
-        method: "DELETE",
-      },
-    );
-    if (!response.success) {
-      throw new Error(response.error.message);
-    }
+    await this.unwrap<void>(`/auth/api-keys/${id}`, { method: "DELETE" });
   }
 
   getLinkAccountUrl(provider: "github" | "discord"): string {
@@ -740,15 +584,18 @@ export class ApiClient {
       updatedAt: string;
     }>
   > {
-    const response = await this.request<
-      ApiResponse<
-        typeof this.getProjectFiles extends Promise<infer T> ? T : never
-      >
+    return this.unwrap<
+      Array<{
+        id: string;
+        projectId: string;
+        path: string;
+        content: string;
+        language: string;
+        size: number;
+        createdAt: string;
+        updatedAt: string;
+      }>
     >(`/projects/${projectId}/files`);
-    if (!response.success) {
-      throw new Error(response.error.message);
-    }
-    return response.data;
   }
 
   async getProjectFile(
@@ -764,15 +611,16 @@ export class ApiClient {
     createdAt: string;
     updatedAt: string;
   }> {
-    const response = await this.request<
-      ApiResponse<
-        typeof this.getProjectFile extends Promise<infer T> ? T : never
-      >
-    >(`/projects/${projectId}/files/${encodeURIComponent(path)}`);
-    if (!response.success) {
-      throw new Error(response.error.message);
-    }
-    return response.data;
+    return this.unwrap<{
+      id: string;
+      projectId: string;
+      path: string;
+      content: string;
+      language: string;
+      size: number;
+      createdAt: string;
+      updatedAt: string;
+    }>(`/projects/${projectId}/files/${encodeURIComponent(path)}`);
   }
 
   async saveProjectFile(
@@ -788,30 +636,26 @@ export class ApiClient {
     createdAt: string;
     updatedAt: string;
   }> {
-    const response = await this.request<
-      ApiResponse<
-        typeof this.saveProjectFile extends Promise<infer T> ? T : never
-      >
-    >(`/projects/${projectId}/files`, {
+    return this.unwrap<{
+      id: string;
+      projectId: string;
+      path: string;
+      content: string;
+      language: string;
+      size: number;
+      createdAt: string;
+      updatedAt: string;
+    }>(`/projects/${projectId}/files`, {
       method: "POST",
       body: JSON.stringify(file),
     });
-    if (!response.success) {
-      throw new Error(response.error.message);
-    }
-    return response.data;
   }
 
   async deleteProjectFile(projectId: string, path: string): Promise<void> {
-    const response = await this.request<ApiResponse<void>>(
+    await this.unwrap<void>(
       `/projects/${projectId}/files/${encodeURIComponent(path)}`,
-      {
-        method: "DELETE",
-      },
+      { method: "DELETE" },
     );
-    if (!response.success) {
-      throw new Error(response.error.message);
-    }
   }
 
   async bulkSaveProjectFiles(
@@ -829,18 +673,21 @@ export class ApiClient {
       updatedAt: string;
     }>
   > {
-    const response = await this.request<
-      ApiResponse<
-        typeof this.bulkSaveProjectFiles extends Promise<infer T> ? T : never
-      >
+    return this.unwrap<
+      Array<{
+        id: string;
+        projectId: string;
+        path: string;
+        content: string;
+        language: string;
+        size: number;
+        createdAt: string;
+        updatedAt: string;
+      }>
     >(`/projects/${projectId}/files/bulk`, {
       method: "POST",
       body: JSON.stringify({ files }),
     });
-    if (!response.success) {
-      throw new Error(response.error.message);
-    }
-    return response.data;
   }
 
   // Chat Context API
@@ -855,18 +702,17 @@ export class ApiClient {
     createdAt: string;
     updatedAt: string;
   }> {
-    const response = await this.request<
-      ApiResponse<
-        typeof this.createChatSession extends Promise<infer T> ? T : never
-      >
-    >("/chat/sessions", {
+    return this.unwrap<{
+      id: string;
+      projectId: string | null;
+      userId: string;
+      title: string;
+      createdAt: string;
+      updatedAt: string;
+    }>("/chat/sessions", {
       method: "POST",
       body: JSON.stringify(data),
     });
-    if (!response.success) {
-      throw new Error(response.error.message);
-    }
-    return response.data;
   }
 
   async getChatSessions(): Promise<
@@ -879,16 +725,16 @@ export class ApiClient {
       updatedAt: string;
     }>
   > {
-    const response =
-      await this.request<
-        ApiResponse<
-          typeof this.getChatSessions extends Promise<infer T> ? T : never
-        >
-      >("/chat/sessions");
-    if (!response.success) {
-      throw new Error(response.error.message);
-    }
-    return response.data;
+    return this.unwrap<
+      Array<{
+        id: string;
+        projectId: string | null;
+        userId: string;
+        title: string;
+        createdAt: string;
+        updatedAt: string;
+      }>
+    >("/chat/sessions");
   }
 
   async getChatSession(sessionId: string): Promise<{
@@ -908,15 +754,23 @@ export class ApiClient {
       timestamp: number;
     }>;
   }> {
-    const response = await this.request<
-      ApiResponse<
-        typeof this.getChatSession extends Promise<infer T> ? T : never
-      >
-    >(`/chat/sessions/${sessionId}`);
-    if (!response.success) {
-      throw new Error(response.error.message);
-    }
-    return response.data;
+    return this.unwrap<{
+      session: {
+        id: string;
+        projectId: string | null;
+        userId: string;
+        title: string;
+        createdAt: string;
+        updatedAt: string;
+      };
+      messages: Array<{
+        id: string;
+        sessionId: string;
+        role: "user" | "assistant" | "system";
+        content: string;
+        timestamp: number;
+      }>;
+    }>(`/chat/sessions/${sessionId}`);
   }
 
   async getChatContext(sessionId: string): Promise<{
@@ -952,15 +806,39 @@ export class ApiClient {
     }>;
     unresolvedErrors: number;
   }> {
-    const response = await this.request<
-      ApiResponse<
-        typeof this.getChatContext extends Promise<infer T> ? T : never
-      >
-    >(`/chat/sessions/${sessionId}/context`);
-    if (!response.success) {
-      throw new Error(response.error.message);
-    }
-    return response.data;
+    return this.unwrap<{
+      files: Array<{
+        id: string;
+        projectId: string;
+        path: string;
+        content: string;
+        language: string;
+        size: number;
+        createdAt: string;
+        updatedAt: string;
+      }>;
+      errors: Array<{
+        id: string;
+        projectId: string;
+        errorType: string;
+        message: string;
+        stackTrace: string | null;
+        filePath: string | null;
+        lineNumber: number | null;
+        occurredAt: string;
+        resolved: boolean;
+      }>;
+      commands: Array<{
+        id: string;
+        projectId: string;
+        command: string;
+        exitCode: number | null;
+        output: string | null;
+        error: string | null;
+        executedAt: string;
+      }>;
+      unresolvedErrors: number;
+    }>(`/chat/sessions/${sessionId}/context`);
   }
 
   async addChatMessage(
@@ -973,18 +851,16 @@ export class ApiClient {
     content: string;
     timestamp: number;
   }> {
-    const response = await this.request<
-      ApiResponse<
-        typeof this.addChatMessage extends Promise<infer T> ? T : never
-      >
-    >(`/chat/sessions/${sessionId}/message`, {
+    return this.unwrap<{
+      id: string;
+      sessionId: string;
+      role: "user" | "assistant" | "system";
+      content: string;
+      timestamp: number;
+    }>(`/chat/sessions/${sessionId}/message`, {
       method: "POST",
       body: JSON.stringify(message),
     });
-    if (!response.success) {
-      throw new Error(response.error.message);
-    }
-    return response.data;
   }
 
   // Export API
@@ -1036,15 +912,54 @@ export class ApiClient {
       resolved: boolean;
     }>;
   }> {
-    const response = await this.request<
-      ApiResponse<
-        typeof this.exportProject extends Promise<infer T> ? T : never
-      >
-    >(`/projects/${projectId}/export`);
-    if (!response.success) {
-      throw new Error(response.error.message);
-    }
-    return response.data;
+    return this.unwrap<{
+      version: string;
+      exportedAt: string;
+      project: {
+        id: string;
+        name: string;
+        slug: string;
+        description: string | null;
+        status: string;
+        framework: string;
+        config: Record<string, unknown> | null;
+        githubUrl: string | null;
+        deploymentUrl: string | null;
+        createdAt: string;
+        updatedAt: string;
+      };
+      files: Array<{
+        path: string;
+        content: string;
+        language: string;
+        size: number;
+        createdAt: string;
+        updatedAt: string;
+      }>;
+      metadata: {
+        fileCount: number;
+        totalSize: number;
+        commandCount: number;
+        errorCount: number;
+        unresolvedErrorCount: number;
+      };
+      commands: Array<{
+        command: string;
+        exitCode: number | null;
+        output: string | null;
+        error: string | null;
+        executedAt: string;
+      }>;
+      errors: Array<{
+        errorType: string;
+        message: string;
+        stackTrace: string | null;
+        filePath: string | null;
+        lineNumber: number | null;
+        occurredAt: string;
+        resolved: boolean;
+      }>;
+    }>(`/projects/${projectId}/export`);
   }
 
   async listExportableProjects(): Promise<
@@ -1059,14 +974,17 @@ export class ApiClient {
       updatedAt: string;
     }>
   > {
-    const response = await this.request<
-      ApiResponse<
-        typeof this.listExportableProjects extends Promise<infer T> ? T : never
-      >
+    return this.unwrap<
+      Array<{
+        id: string;
+        name: string;
+        slug: string;
+        description: string | null;
+        framework: string;
+        status: string;
+        fileCount: number;
+        updatedAt: string;
+      }>
     >("/projects/export/list");
-    if (!response.success) {
-      throw new Error(response.error.message);
-    }
-    return response.data;
   }
 }
