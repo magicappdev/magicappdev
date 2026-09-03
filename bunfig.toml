@@ -1,2 +1,17 @@
 [install]
 linker = "hoisted"
+concurrentScripts = 5
+
+[test]
+# Exclude from root-level `bun test` (Bun's built-in runner):
+#  - Playwright e2e specs (run via `playwright test`)
+#  - Compiled dist artifacts
+#  - React component tests that require jsdom/Vitest (run via `turbo test`)
+#  - Mobile package tests (separate Bun workspace)
+pathIgnorePatterns = [
+  "**/e2e/**",
+  "**/dist/",
+  "**/node_modules/",
+  "**/src/**/__tests__/*.test.tsx",
+  "apps/mobile/**",
+]

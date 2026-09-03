@@ -49,7 +49,7 @@ export default function AiProviderSettingsPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await api.unwrap<{ keys: UserAiKey[] }>("/ai-keys");
+      const res = await api.getAiKeys();
       if (res && res.keys) {
         setAiKeys(res.keys);
       }
@@ -97,10 +97,7 @@ export default function AiProviderSettingsPage() {
     setError(null);
 
     try {
-      await api.unwrap("/ai-keys/test", {
-        method: "POST",
-        body: JSON.stringify({ provider, apiKey, baseUrl, modelName }),
-      });
+      await api.testAiKey({ provider, apiKey, baseUrl, modelName });
       setTestResult({
         success: true,
         message: "Connection successful! Provider responded correctly.",
@@ -128,15 +125,12 @@ export default function AiProviderSettingsPage() {
     setSuccess(null);
 
     try {
-      await api.unwrap("/ai-keys", {
-        method: "POST",
-        body: JSON.stringify({
-          provider,
-          apiKey,
-          baseUrl: baseUrl || undefined,
-          modelName: modelName || undefined,
-          isDefault,
-        }),
+      await api.saveAiKey({
+        provider,
+        apiKey,
+        baseUrl: baseUrl || undefined,
+        modelName: modelName || undefined,
+        isDefault,
       });
       setSuccess("AI provider key saved successfully!");
       setApiKey("");
@@ -153,7 +147,7 @@ export default function AiProviderSettingsPage() {
   const handleDeleteKey = async (id: string) => {
     if (!confirm("Are you sure you want to remove this provider key?")) return;
     try {
-      await api.unwrap(`/ai-keys/${id}`, { method: "DELETE" });
+      await api.deleteAiKey(id);
       setAiKeys(prev => prev.filter(k => k.id !== id));
       setSuccess("Provider key deleted successfully.");
     } catch (err) {

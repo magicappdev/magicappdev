@@ -978,6 +978,59 @@ export class ApiClient {
     }>(`/projects/${projectId}/export`);
   }
 
+  async getAiKeys(): Promise<{
+    keys: Array<{
+      id: string;
+      provider: string;
+      baseUrl: string | null;
+      modelName: string | null;
+      isDefault: boolean | null;
+      createdAt: string;
+      updatedAt: string;
+    }>;
+  }> {
+    return this.unwrap<{
+      keys: Array<{
+        id: string;
+        provider: string;
+        baseUrl: string | null;
+        modelName: string | null;
+        isDefault: boolean | null;
+        createdAt: string;
+        updatedAt: string;
+      }>;
+    }>("/ai-keys");
+  }
+
+  async saveAiKey(data: {
+    provider: string;
+    apiKey: string;
+    baseUrl?: string;
+    modelName?: string;
+    isDefault?: boolean;
+  }): Promise<{ id: string; provider: string }> {
+    return this.unwrap<{ id: string; provider: string }>("/ai-keys", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async testAiKey(data: {
+    provider: string;
+    apiKey: string;
+    baseUrl?: string;
+    modelName?: string;
+  }): Promise<{ success: boolean; message: string }> {
+    return this.unwrap<{ success: boolean; message: string }>("/ai-keys/test", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteAiKey(id: string): Promise<void> {
+    await this.unwrap<void>(`/ai-keys/${id}`, { method: "DELETE" });
+  }
+
   async listExportableProjects(): Promise<
     Array<{
       id: string;

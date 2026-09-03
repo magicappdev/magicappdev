@@ -71,7 +71,7 @@
     "lint:fix": "turbo lint:fix",
     "postinstall": "node -e \"console.log('Skipping Windows powershell postinstall on non-Windows CI')\" || powershell -ExecutionPolicy Bypass -File scripts/postinstall.ps1",
     "prepare": "husky",
-    "test": "turbo test",
+    "test": "turbo test --concurrency=1",
     "typecheck": "turbo typecheck",
     "android": "bun run --filter=@magicappdev/mobile android"
   },

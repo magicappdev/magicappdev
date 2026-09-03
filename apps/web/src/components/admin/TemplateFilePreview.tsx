@@ -16,32 +16,33 @@ export function TemplateFilePreview({ files }: TemplateFilePreviewProps) {
     if (!codeRef.current) return;
     let cancelled = false;
 
-    import("highlight.js/lib/core").then(hljs => {
+    import("highlight.js/lib/core").then(async hljs => {
       if (cancelled) return;
       // Register only the languages we need
-      import("highlight.js/lib/languages/typescript").then(m => {
-        if (!cancelled) hljs.default.registerLanguage("typescript", m.default);
-      });
-      import("highlight.js/lib/languages/javascript").then(m => {
-        if (!cancelled) hljs.default.registerLanguage("javascript", m.default);
-      });
-      import("highlight.js/lib/languages/json").then(m => {
-        if (!cancelled) hljs.default.registerLanguage("json", m.default);
-      });
-      import("highlight.js/lib/languages/xml").then(m => {
-        if (!cancelled) hljs.default.registerLanguage("xml", m.default);
-      });
-      import("highlight.js/lib/languages/css").then(m => {
-        if (!cancelled) hljs.default.registerLanguage("css", m.default);
-      });
-      import("highlight.js/lib/languages/markdown").then(m => {
-        if (!cancelled) hljs.default.registerLanguage("markdown", m.default);
-      });
-      import("highlight.js/lib/languages/ini").then(m => {
-        if (!cancelled) hljs.default.registerLanguage("toml", m.default);
-      });
+      const langs = await Promise.all([
+        import("highlight.js/lib/languages/typescript"),
+        import("highlight.js/lib/languages/javascript"),
+        import("highlight.js/lib/languages/json"),
+        import("highlight.js/lib/languages/xml"),
+        import("highlight.js/lib/languages/css"),
+        import("highlight.js/lib/languages/markdown"),
+        import("highlight.js/lib/languages/ini"),
+      ]);
+      if (cancelled) return;
+      const names = [
+        "typescript",
+        "javascript",
+        "json",
+        "xml",
+        "css",
+        "markdown",
+        "toml",
+      ];
+      for (let i = 0; i < langs.length; i++) {
+        hljs.default.registerLanguage(names[i], langs[i].default);
+      }
 
-      if (codeRef.current) {
+      if (!cancelled && codeRef.current) {
         codeRef.current.removeAttribute("data-highlighted");
         hljs.default.highlightElement(codeRef.current);
       }

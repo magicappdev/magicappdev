@@ -1,5 +1,5 @@
 /**
- * Vitest component tests for TemplateCustomizer.tsx
+ * Component tests for TemplateCustomizer.tsx
  */
 
 import { TemplateCustomizer } from "@/components/admin/TemplateCustomizer";
@@ -61,17 +61,23 @@ const mockTemplate = {
   devDependencies: { typescript: "^5.0.0" },
 };
 
-vi.mock("@magicappdev/templates", async () => {
-  const actual = await vi.importActual("@magicappdev/templates");
-  return {
-    ...actual,
-    registry: {
-      get: vi.fn((id: string) =>
-        id === "saas-starter" ? mockTemplate : undefined,
-      ),
-    },
-  };
-});
+vi.mock("@magicappdev/templates", () => ({
+  registry: {
+    get: (id: string) => (id === "saas-starter" ? mockTemplate : undefined),
+    list: () => [mockTemplate],
+    getAll: () => [mockTemplate],
+  },
+  compileTemplate: (
+    content: string,
+    vars: Record<string, string | number | boolean>,
+  ) => {
+    let res = content;
+    for (const [k, v] of Object.entries(vars)) {
+      res = res.replaceAll(`{{${k}}}`, String(v));
+    }
+    return res;
+  },
+}));
 
 vi.mock("jszip", () => ({
   default: class MockJSZip {
@@ -79,7 +85,7 @@ vi.mock("jszip", () => ({
       return this;
     }
     async generateAsync() {
-      return new Blob(["mock zip"]);
+      return new globalThis.Blob(["mock zip"]);
     }
   },
 }));
