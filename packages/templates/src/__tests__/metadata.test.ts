@@ -11,12 +11,14 @@ const VALID_CATEGORIES: TemplateCategory[] = [
 ];
 
 const VALID_FRAMEWORKS: ProjectFramework[] = [
-  "expo",
+  "react",
   "react-native",
+  "expo",
   "next",
+  "nextjs",
   "remix",
-  "hono",
-  "cloudflare",
+  "ionic",
+  "cloudflare-workers",
 ];
 
 describe("built-in template metadata", () => {

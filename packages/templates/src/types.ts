@@ -2,7 +2,9 @@
  * Template types for the MagicAppDev template system
  */
 
-import type { ProjectFramework } from "@magicappdev/shared";
+import type { ProjectFramework as ProjectFrameworkBase } from "@magicappdev/shared";
+
+export type ProjectFramework = ProjectFrameworkBase;
 
 /** Template category */
 export type TemplateCategory = "app" | "component" | "screen" | "hook" | "api";
