@@ -19,7 +19,7 @@
     "@magicappdev/database": "workspace:*",
     "@magicappdev/shared": "workspace:*",
     "@types/sha256": "^0.2.2",
-    "axios": "^1.13.2",
+    "axios": "^1.20.0",
     "bcryptjs": "^3.0.3",
     "crypto": "^1.0.1",
     "hono": "^4.11.5",
@@ -28,15 +28,15 @@
     "tslib": "^2.3.0"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260207.0",
+    "@cloudflare/workers-types": "^4.20260702.1",
     "@types/bcryptjs": "^3.0.0",
     "@types/node": "^25.0.10",
-    "drizzle-orm": "^0.45.1",
+    "drizzle-orm": "^0.45.2",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.53.1",
     "vitest": "^4.0.18",
-    "wrangler": "^4.78.0"
+    "wrangler": "^4.128.0"
   }
 }
