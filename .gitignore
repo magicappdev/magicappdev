@@ -96,3 +96,5 @@ packages/templates/templates
 
 apps/web/playwright-report/
 apps/web/test-results/
+
+.cline
