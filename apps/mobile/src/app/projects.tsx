@@ -16,6 +16,7 @@ import { api, secureStorage } from "../lib/api";
 import type { Project } from "@magicappdev/shared";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
+import { getTemplateById } from "../lib/templates";
 
 export default function ProjectsScreen() {
   useTheme();
@@ -56,10 +57,8 @@ export default function ProjectsScreen() {
   }, [fetchProjects]);
 
   const handleOpenCreateModal = () => {
-    setEditingProject(null);
-    setName("");
-    setDescription("");
-    setModalVisible(true);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    router.push("/new-project" as any);
   };
 
   const handleOpenEditModal = (proj: Project) => {
@@ -152,23 +151,41 @@ export default function ProjectsScreen() {
             <Text style={styles.emptyText}>No projects found. Tap &ldquo;New Project&rdquo; to create one!</Text>
           </View>
         }
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.projectName}>{item.name}</Text>
-              {item.description && <Text style={styles.projectDesc}>{item.description}</Text>}
-              <Text style={styles.projectStatus}>Status: {item.status}</Text>
-            </View>
-            <View style={styles.cardActions}>
-              <TouchableOpacity onPress={() => handleOpenEditModal(item)} style={styles.actionIcon}>
-                <Ionicons name="pencil-outline" size={18} color="#3B82F6" />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => handleDeleteProject(item.id)} style={styles.actionIcon}>
-                <Ionicons name="trash-outline" size={18} color="#EF4444" />
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
+        renderItem={({ item }) => {
+          const template = item.templateId ? getTemplateById(item.templateId) : null;
+          return (
+            <TouchableOpacity
+              style={styles.card}
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              onPress={() => router.push(`/project/${item.id}` as any)}
+              activeOpacity={0.7}
+            >
+              <View style={{ flex: 1 }}>
+                <View style={styles.cardHeader}>
+                  <Text style={styles.projectName}>{item.name}</Text>
+                  {template && (
+                    <View style={[styles.templateTag, { backgroundColor: `${template.color}20` }]}>
+                      <Ionicons name={template.icon} size={10} color={template.color} />
+                      <Text style={[styles.templateTagText, { color: template.color }]}>
+                        {template.name}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+                {item.description && <Text style={styles.projectDesc}>{item.description}</Text>}
+                <Text style={styles.projectStatus}>Status: {item.status}</Text>
+              </View>
+              <View style={styles.cardActions}>
+                <TouchableOpacity onPress={() => handleOpenEditModal(item)} style={styles.actionIcon}>
+                  <Ionicons name="pencil-outline" size={18} color="#3B82F6" />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleDeleteProject(item.id)} style={styles.actionIcon}>
+                  <Ionicons name="trash-outline" size={18} color="#EF4444" />
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          );
+        }}
       />
 
       {/* Create / Edit Modal */}
@@ -287,6 +304,24 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#F8FAFC",
     marginBottom: 4,
+  },
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 4,
+  },
+  templateTag: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    gap: 4,
+  },
+  templateTagText: {
+    fontSize: 10,
+    fontWeight: "600",
   },
   projectDesc: {
     fontSize: 14,

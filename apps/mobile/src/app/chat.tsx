@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
+import { useLocalSearchParams } from "expo-router";
 import { api } from "../lib/api";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
@@ -28,6 +29,7 @@ interface AIModel {
 
 export default function ChatScreen() {
   useTheme();
+  const { sessionId, projectId } = useLocalSearchParams<{ sessionId?: string; projectId?: string }>();
   const [messages, setMessages] = useState<MessageItem[]>([
     { id: "init-1", role: "assistant", content: "Hello! What would you like to build today?" },
   ]);
@@ -65,6 +67,44 @@ export default function ChatScreen() {
       }),
     );
   }, [messages.length, presetSeed]);
+
+  // Load existing session messages if sessionId is provided
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const loadSession = async () => {
+      try {
+        const data = await api.request<{ data: { session: { title: string }; messages: Array<{ role: string; content: string }> } }>(
+          `/chat/sessions/${sessionId}`,
+        );
+        if (data.data.messages.length > 0) {
+          const loadedMessages: MessageItem[] = data.data.messages.map((m, i) => ({
+            id: `loaded-${i}`,
+            role: m.role as "user" | "assistant" | "system",
+            content: m.content,
+          }));
+          setMessages(loadedMessages);
+        }
+      } catch {
+        // Silently fail - keep default welcome message
+      }
+    };
+
+    loadSession();
+  }, [sessionId]);
+
+  // Set initial message when projectId is provided (new chat from project)
+  useEffect(() => {
+    if (projectId && !sessionId) {
+      setMessages([
+        {
+          id: "init-project",
+          role: "assistant",
+          content: "Hello! I see you're starting a chat about your project. How can I help you build or modify your app?",
+        },
+      ]);
+    }
+  }, [projectId, sessionId]);
 
   const handleRerollPrompts = useCallback(() => {
     setPresetSeed(prev => prev + 1);
@@ -133,6 +173,15 @@ export default function ChatScreen() {
           <Ionicons name={showModelPicker ? "chevron-up" : "chevron-down"} size={16} color="#94A3B8" style={{ marginLeft: 6 }} />
         </TouchableOpacity>
       </View>
+
+      {projectId && (
+        <View style={styles.projectBanner}>
+          <Ionicons name="folder-outline" size={14} color="#3B82F6" />
+          <Text style={styles.projectBannerText} numberOfLines={1}>
+            Chatting about project
+          </Text>
+        </View>
+      )}
 
       {showModelPicker && (
         <View style={styles.modelDropdown}>
@@ -282,6 +331,21 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 4,
     overflow: "hidden",
+  },
+  projectBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#1E3A8A20",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#334155",
+    gap: 8,
+  },
+  projectBannerText: {
+    color: "#3B82F6",
+    fontSize: 12,
+    fontWeight: "600",
   },
   chatArea: {
     flex: 1,

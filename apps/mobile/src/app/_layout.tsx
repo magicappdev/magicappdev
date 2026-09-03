@@ -86,6 +86,20 @@ function TabNavigator() {
           }}
         />
         <Tabs.Screen
+          name="new-project"
+          options={{
+            href: null,
+            title: "New Project",
+          }}
+        />
+        <Tabs.Screen
+          name="project/[id]"
+          options={{
+            href: null,
+            title: "Project",
+          }}
+        />
+        <Tabs.Screen
           name="auth/callback"
           options={{
             href: null,

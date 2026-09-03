@@ -88,6 +88,7 @@ projectsRoutes.post("/", async c => {
   const body = await c.req.json<{
     name: string;
     description?: string;
+    templateId?: string;
     config: Record<string, unknown>;
   }>();
   const db = c.var.db;
@@ -124,6 +125,7 @@ projectsRoutes.post("/", async c => {
         description: body.description,
         status: "draft",
         framework: "expo", // Default
+        templateId: body.templateId || null,
         config: body.config || {},
       })
       .returning()

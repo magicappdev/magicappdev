@@ -63,6 +63,7 @@ export interface Project {
   slug: string;
   description?: string;
   status: ProjectStatus;
+  templateId?: string;
   config: ProjectConfig;
   githubUrl?: string;
   deploymentUrl?: string;

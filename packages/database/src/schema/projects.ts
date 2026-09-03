@@ -32,6 +32,7 @@ export const projects = sqliteTable("projects", {
   description: text("description"),
   status: text("status", { enum: PROJECT_STATUS }).notNull().default("draft"),
   framework: text("framework", { enum: PROJECT_FRAMEWORK }).notNull(),
+  templateId: text("template_id"),
   config: text("config", { mode: "json" }).$type<ProjectConfig>(),
   githubUrl: text("github_url"),
   deploymentUrl: text("deployment_url"),
