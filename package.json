@@ -54,7 +54,7 @@
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s -r 0",
     "verify:mark": "bun -e \"import { mkdirSync, writeFileSync } from 'fs'; mkdirSync('.pipeline', { recursive: true }); writeFileSync('.pipeline/last-verify.json', JSON.stringify({ passed: true, at: new Date().toISOString() }));\"",
     "verify": "bun run check && bun run verify:mark",
-    "check": "turbo build lint typecheck test",
+    "check": "turbo build lint typecheck test && bun run --filter=@magicappdev/mobile check",
     "clean": "turbo run clean && bun -e \"fs.rmSync('node_modules', { recursive: true, force: true })\"",
     "deploy:agent": "turbo run deploy --filter=@magicappdev/agent",
     "deploy:api": "turbo run deploy --filter=@magicappdev/api",
@@ -72,7 +72,8 @@
     "postinstall": "node -e \"console.log('Skipping Windows powershell postinstall on non-Windows CI')\" || powershell -ExecutionPolicy Bypass -File scripts/postinstall.ps1",
     "prepare": "husky",
     "test": "turbo test",
-    "typecheck": "turbo typecheck"
+    "typecheck": "turbo typecheck",
+    "android": "bun run --filter=@magicappdev/mobile android"
   },
   "dependencies": {
     "ansi-regex": "^6.0.1",
