@@ -5,6 +5,14 @@ import tseslint from "typescript-eslint";
 export default defineConfig([
   tseslint.configs.recommended,
   {
+    files: ["**/*.ts"],
+    languageOptions: {
+      parserOptions: {
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
+  {
     rules: {
       "@typescript-eslint/no-explicit-any": "warn",
     },

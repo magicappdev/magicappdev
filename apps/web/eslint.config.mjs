@@ -7,6 +7,14 @@ const eslintConfig = defineConfig([
   tseslint.configs.recommended,
   {
     files: ["**/*.ts", "**/*.tsx"],
+    languageOptions: {
+      parserOptions: {
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
+  {
+    files: ["**/*.ts", "**/*.tsx"],
     ignores: ["**/*.test.ts", "**/*.test.tsx", "*.d.ts", ".next/**"],
     rules: {
       "@typescript-eslint/no-explicit-any": "warn",
