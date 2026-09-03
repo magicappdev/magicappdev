@@ -51,3 +51,9 @@ jobs:
 
       - name: Test
         run: bun run test
+
+      - name: Knip (unused dependencies)
+        run: bun run knip --include dependencies,unlisted
+
+      - name: Security Audit
+        run: bun audit

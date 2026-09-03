@@ -1,11 +1,18 @@
 import prettier from "eslint-config-prettier";
 import tseslint from "typescript-eslint";
 
-export default [
+export default tseslint.config(
   ...tseslint.configs.recommended,
   {
     rules: {
       "@typescript-eslint/no-explicit-any": "warn",
+    },
+  },
+  {
+    languageOptions: {
+      parserOptions: {
+        tsconfigRootDir: import.meta.dirname,
+      },
     },
   },
   prettier,
@@ -29,4 +36,4 @@ export default [
       "docs/skills/**",
     ],
   },
-];
+);

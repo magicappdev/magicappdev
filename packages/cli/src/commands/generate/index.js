@@ -8,7 +8,7 @@ import {
   generateScreen,
   screenTemplate,
   registry,
-} from "@magicappdev/templates";
+} from "@magicappdev/templates-engine";
 import {
   header,
   success,

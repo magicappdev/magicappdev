@@ -6,7 +6,7 @@ import {
   builtInTemplates,
   registry,
   saasTemplate,
-} from "@magicappdev/templates";
+} from "@magicappdev/templates-engine";
 import { describe, it, expect } from "vitest";
 
 describe("Template Registry", () => {

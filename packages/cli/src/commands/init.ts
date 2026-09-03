@@ -21,8 +21,8 @@ import {
   newline,
   divider,
 } from "../lib/ui.js";
-import { builtInTemplates } from "@magicappdev/templates";
-import { generateApp } from "@magicappdev/templates";
+import { builtInTemplates } from "@magicappdev/templates-engine";
+import { generateApp } from "@magicappdev/templates-engine";
 import { withSpinner } from "../lib/spinner.js";
 import { spawn } from "child_process";
 import { Command } from "commander";

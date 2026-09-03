@@ -1,5 +1,5 @@
 /**
- * @magicappdev/templates
+ * @magicappdev/templates-engine
  *
  * App templates and generators for the MagicAppDev platform
  */

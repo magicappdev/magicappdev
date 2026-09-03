@@ -4,7 +4,7 @@ import {
 } from "@/lib/template-preview";
 import { TemplateVariableForm } from "./TemplateVariableForm";
 import { TemplateFilePreview } from "./TemplateFilePreview";
-import { registry } from "@magicappdev/templates";
+import { registry } from "@magicappdev/templates-engine";
 import { useState, useMemo } from "react";
 import JSZip from "jszip";
 

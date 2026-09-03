@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "@magicappdev/shared": "workspace:*",
-    "@magicappdev/templates": "workspace:*",
+    "@magicappdev/templates-engine": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.30.0",
     "chalk": "^6.0.0",
     "commander": "^15.0.0",
@@ -36,7 +36,7 @@
     "open": "^11.0.2",
     "ora": "^9.4.1",
     "prompts": "^2.4.0",
-    "tslib": "^2.3.0",
+    "tslib": "^2.8.1",
     "ws": "^8.21.3"
   },
   "devDependencies": {

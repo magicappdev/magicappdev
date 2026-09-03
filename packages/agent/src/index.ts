@@ -14,10 +14,10 @@ import {
   compileFilePath,
   evaluateCondition,
   generateFromTemplate,
-} from "@magicappdev/templates";
+} from "@magicappdev/templates-engine";
+import type { Template, TemplateMetadata } from "@magicappdev/templates-engine";
 import { createDatabase, projectFiles, eq, and } from "@magicappdev/database";
-import type { Template, TemplateMetadata } from "@magicappdev/templates";
-import { registry } from "@magicappdev/templates/registry";
+import { registry } from "@magicappdev/templates-engine/registry";
 import type { Connection, WSMessage } from "agents";
 import { Agent, routeAgentRequest } from "agents";
 
@@ -441,7 +441,8 @@ export class MagicAgent extends Agent<Env, AgentState> {
           name,
           url,
           state: result.state,
-          authUrl: result.authUrl,
+          authUrl:
+            result.state === "authenticating" ? result.authUrl : undefined,
           serverId: result.id,
         }),
       );

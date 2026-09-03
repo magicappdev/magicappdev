@@ -1,4 +1,4 @@
-import type { TemplateVariable } from "@magicappdev/templates";
+import type { TemplateVariable } from "@magicappdev/templates-engine";
 
 interface TemplateVariableFormProps {
   variables: TemplateVariable[];

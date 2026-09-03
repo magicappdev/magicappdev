@@ -20,10 +20,10 @@ import type {
   GlobalConfig,
 } from "@magicappdev/shared/api";
 import { TemplateCustomizer } from "../../components/admin/TemplateCustomizer";
+import { registry } from "@magicappdev/templates-engine";
 import { Typography } from "@/components/ui/Typography";
 import { useAuth } from "../../contexts/AuthContext";
 import React, { useState, useEffect } from "react";
-import { registry } from "@magicappdev/templates";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { api } from "../../lib/api";

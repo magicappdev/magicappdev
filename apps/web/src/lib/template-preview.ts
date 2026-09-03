@@ -1,14 +1,14 @@
 /**
  * Browser-compatible template preview utilities.
- * Wraps @magicappdev/templates compile functions for client-side rendering.
+ * Wraps @magicappdev/templates-engine compile functions for client-side rendering.
  */
 
 import {
   compileTemplate,
   compileFilePath,
   evaluateCondition,
-} from "@magicappdev/templates";
-import type { Template, TemplateVariable } from "@magicappdev/templates";
+} from "@magicappdev/templates-engine";
+import type { Template, TemplateVariable } from "@magicappdev/templates-engine";
 
 /** Build default variable values from a template's variable definitions */
 export function buildDefaultVariables(

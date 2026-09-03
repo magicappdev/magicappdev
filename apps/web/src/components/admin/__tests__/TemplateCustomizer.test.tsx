@@ -61,7 +61,7 @@ const mockTemplate = {
   devDependencies: { typescript: "^5.0.0" },
 };
 
-vi.mock("@magicappdev/templates", () => ({
+vi.mock("@magicappdev/templates-engine", () => ({
   registry: {
     get: (id: string) => (id === "saas-starter" ? mockTemplate : undefined),
     list: () => [mockTemplate],

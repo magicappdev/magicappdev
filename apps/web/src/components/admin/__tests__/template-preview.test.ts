@@ -7,7 +7,7 @@ import {
   renderTemplateFiles,
   getFileLanguage,
 } from "@/lib/template-preview";
-import type { Template } from "@magicappdev/templates";
+import type { Template } from "@magicappdev/templates-engine";
 import { describe, it, expect } from "vitest";
 
 const mockTemplate: Template = {
