@@ -43,10 +43,10 @@
     "@types/node": "^25.0.10",
     "@types/prompts": "^2.4.0",
     "@types/ws": "^8.5.10",
-    "eslint": "^9.39.2",
+    "eslint": "^10.9.1",
     "eslint-config-prettier": "^10.1.8",
     "tsx": "^4.19.0",
     "typescript": "~5.9.3",
-    "typescript-eslint": "^8.53.1"
+    "typescript-eslint": "^8.69.0"
   }
 }
