@@ -4,18 +4,32 @@ const dom = new JSDOM("<!doctype html><html><body></body></html>", {
   url: "http://localhost",
 });
 
-globalThis.window = dom.window as unknown as Window & typeof globalThis;
-globalThis.document = dom.window.document;
-globalThis.navigator = dom.window.navigator;
-globalThis.HTMLElement = dom.window.HTMLElement;
-globalThis.HTMLInputElement = dom.window.HTMLInputElement;
-globalThis.Node = dom.window.Node;
-globalThis.Event = dom.window.Event;
-globalThis.CustomEvent = dom.window.CustomEvent;
-globalThis.MouseEvent = dom.window.MouseEvent;
-globalThis.Element = dom.window.Element;
-globalThis.Document = dom.window.Document;
-globalThis.NodeList = dom.window.NodeList;
-globalThis.HTMLCollection = dom.window.HTMLCollection;
+const win = dom.window as unknown as Window & typeof globalThis;
+
+function assign<K extends keyof typeof globalThis>(key: K, value: unknown) {
+  try {
+    Object.defineProperty(globalThis, key, {
+      value,
+      configurable: true,
+      writable: true,
+    });
+  } catch {
+    // some globals may already be configured; ignore
+  }
+}
+
+assign("window", win);
+assign("document", win.document);
+assign("navigator", win.navigator);
+assign("HTMLElement", win.HTMLElement);
+assign("HTMLInputElement", win.HTMLInputElement);
+assign("Node", win.Node);
+assign("Event", win.Event);
+assign("CustomEvent", win.CustomEvent);
+assign("MouseEvent", win.MouseEvent);
+assign("Element", win.Element);
+assign("Document", win.Document);
+assign("NodeList", win.NodeList);
+assign("HTMLCollection", win.HTMLCollection);
 
 export {};

@@ -1,12 +1,12 @@
 import { TurnstileWidget } from "@/components/ui/TurnstileWidget";
 import { Typography } from "@/components/ui/Typography";
+import { GitHubIcon } from "@/components/ui/GitHubIcon";
 import { useAuth } from "../../contexts/AuthContext";
 import { Navigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
 import React, { useState } from "react";
-import { Github } from "lucide-react";
 import { api } from "@/lib/api";
 
 export default function LoginPage() {
@@ -165,7 +165,7 @@ export default function LoginPage() {
           className="w-full flex items-center justify-center gap-3"
           disabled={isProcessing}
         >
-          <Github size={20} />
+          <GitHubIcon className="h-5 w-5" />
           GitHub
         </Button>
 

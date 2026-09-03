@@ -8,7 +8,6 @@ import {
   ExternalLink,
   FileCode,
   FolderOpen,
-  Github,
   Loader2,
   Paperclip,
   PenTool,
@@ -39,6 +38,7 @@ import { getPromptPresets, type PromptPreset } from "@magicappdev/shared/utils";
 import { Button, Dialog, Input, TooltipProvider } from "@cloudflare/kumo";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Preview, { type PreviewFile } from "@/components/ui/Preview.js";
+import { GitHubIcon as Github } from "@/components/ui/GitHubIcon";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
