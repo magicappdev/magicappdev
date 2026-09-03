@@ -74,11 +74,11 @@ export default function ChatScreen() {
 
     const loadSession = async () => {
       try {
-        const data = await api.request<{ success: boolean; data: { session: { title: string }; messages: Array<{ role: string; content: string }> } }>(
+        const data = await api.unwrap<{ session: { title: string }; messages: Array<{ role: string; content: string }> }>(
           `/chat/sessions/${sessionId}`,
         );
-        if (data.data.messages.length > 0) {
-          const loadedMessages: MessageItem[] = data.data.messages.map((m: { role: string; content: string }, i: number) => ({
+        if (data.messages.length > 0) {
+          const loadedMessages: MessageItem[] = data.messages.map((m: { role: string; content: string }, i: number) => ({
             id: `loaded-${i}`,
             role: m.role as "user" | "assistant" | "system",
             content: m.content,

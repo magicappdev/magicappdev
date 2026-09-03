@@ -61,7 +61,7 @@ export default function NewProjectScreen() {
       const token = await secureStorage.getItem("magicappdev_access_token");
       if (token) api.setToken(token);
 
-      const result = await api.request<{ success: boolean; data: { id: string } }>("/projects", {
+      const result = await api.unwrap<{ id: string }>("/projects", {
         method: "POST",
         body: JSON.stringify({
           name: name.trim(),
@@ -72,7 +72,7 @@ export default function NewProjectScreen() {
       });
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      router.replace(`/project/${result.data.id}` as any);
+      router.replace(`/project/${result.id}` as any);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to create project";
       Alert.alert("Error", message);

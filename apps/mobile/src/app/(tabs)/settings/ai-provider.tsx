@@ -42,12 +42,9 @@ export default function AiProviderSettingsScreen() {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await api.request<{
-        success: boolean;
-        data: { keys: UserAiKey[] };
-      }>("/ai-keys");
-      if (res && res.success) {
-        setAiKeys(res.data.keys);
+      const res = await api.unwrap<{ keys: UserAiKey[] }>("/ai-keys");
+      if (res && res.keys) {
+        setAiKeys(res.keys);
       }
     } catch (err) {
       // Graceful fallback if offline or backend route not yet reached
@@ -117,7 +114,7 @@ export default function AiProviderSettingsScreen() {
     setSuccess(null);
 
     try {
-      const resp = await api.request<{ success: boolean; data?: any }>("/ai-keys", {
+      await api.unwrap("/ai-keys", {
         method: "POST",
         body: JSON.stringify({
           provider,
@@ -127,9 +124,6 @@ export default function AiProviderSettingsScreen() {
           isDefault,
         }),
       });
-      if (resp && resp.success === false) {
-        throw new Error((resp as any).error?.message || "Failed to save key");
-      }
       setSuccess("AI provider key saved successfully!");
       setApiKey("");
       await loadAiKeys();

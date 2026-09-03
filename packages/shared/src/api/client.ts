@@ -167,6 +167,21 @@ export class ApiClient {
     return data as T;
   }
 
+  /**
+   * Unwrap an API response envelope.
+   *
+   * The API wraps every success response in `{ success: true, data: T }`.
+   * This helper calls `request`, checks `success`, and returns just `T`.
+   * On failure it throws with the error message from the envelope.
+   */
+  async unwrap<T>(path: string, options: RequestInit = {}): Promise<T> {
+    const response = await this.request<ApiResponse<T>>(path, options);
+    if (!response.success) {
+      throw new Error(response.error?.message || "Request failed");
+    }
+    return response.data;
+  }
+
   getGitHubLoginUrl(
     platform: "web" | "mobile" = "web",
     redirectUri?: string,

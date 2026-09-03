@@ -68,6 +68,7 @@ export declare class ApiClient {
   constructor(baseUrl: string);
   setToken(token: string | null): void;
   request<T>(path: string, options?: RequestInit): Promise<T>;
+  unwrap<T>(path: string, options?: RequestInit): Promise<T>;
   getGitHubLoginUrl(platform?: "web" | "mobile"): string;
   getDiscordLoginUrl(platform?: "web" | "mobile"): string;
   login(credentials: {
