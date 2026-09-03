@@ -40,8 +40,8 @@ export default function ProjectDetailScreen() {
       const token = await secureStorage.getItem("magicappdev_access_token");
       if (token) api.setToken(token);
 
-      const data = await api.request<Project>(`/projects/${id}`);
-      setProject(data);
+      const data = await api.request<{ success: boolean; data: Project }>(`/projects/${id}`);
+      setProject(data.data);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to load project";
       setError(message);
@@ -60,7 +60,7 @@ export default function ProjectDetailScreen() {
       const token = await secureStorage.getItem("magicappdev_access_token");
       if (token) api.setToken(token);
 
-      const data = await api.request<{ data: ChatSession[] }>("/chat/sessions");
+      const data = await api.request<{ success: boolean; data: ChatSession[] }>("/chat/sessions");
       const linked = data.data.filter((s: ChatSession) => {
         // Match sessions that reference this project by title pattern or id
         return s.title?.includes(id) || s.id.includes(id);
@@ -83,7 +83,7 @@ export default function ProjectDetailScreen() {
       if (token) api.setToken(token);
 
       // Create a new chat session linked to this project
-      const session = await api.request<{ data: { id: string } }>("/chat/sessions", {
+      const session = await api.request<{ success: boolean; data: { id: string } }>("/chat/sessions", {
         method: "POST",
         body: JSON.stringify({
           projectId: id,
