@@ -16,6 +16,8 @@ import * as WebBrowser from "expo-web-browser";
 import { useTheme } from "../../context/ThemeContext";
 import { api, secureStorage, API_BASE_URL } from "../../lib/api";
 import { getTemplateById } from "../../lib/templates";
+import { SyntaxHighlightedText } from "../../components/SyntaxHighlightedText";
+import { usePreviewErrorListener } from "../../lib/agent-websocket";
 import type { Project } from "@magicappdev/shared";
 
 interface ProjectFile {
@@ -50,6 +52,7 @@ export default function ProjectDetailScreen() {
   const [pushRepoName, setPushRepoName] = useState("");
   const [pushIsPrivate, setPushIsPrivate] = useState(false);
   const [pushing, setPushing] = useState(false);
+  const [previewError, setPreviewError] = useState<{ filePath: string; errorMessage: string; errorType: string } | null>(null);
 
   const template = project?.templateId ? getTemplateById(project.templateId) : null;
 
@@ -109,6 +112,14 @@ export default function ProjectDetailScreen() {
     fetchChatSessions();
     fetchFiles();
   }, [fetchProject, fetchChatSessions, fetchFiles]);
+
+  usePreviewErrorListener(payload => {
+    setPreviewError({
+      filePath: payload.filePath,
+      errorMessage: payload.errorMessage,
+      errorType: payload.errorType,
+    });
+  });
 
   const handleStartChat = async () => {
     if (!id) return;
@@ -215,6 +226,38 @@ export default function ProjectDetailScreen() {
         onClose={() => setShowPushModal(false)}
         onPush={handlePushToGitHub}
       />
+
+      {previewError && (
+        <Modal visible={!!previewError} transparent animationType="fade" onRequestClose={() => setPreviewError(null)}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Preview Error</Text>
+              <Text style={styles.modalDescription}>
+                The agent detected an error in <Text style={{ fontWeight: "600" }}>{previewError.filePath}</Text>
+              </Text>
+              <View style={styles.errorBox}>
+                <Text style={styles.errorType}>{previewError.errorType}</Text>
+                <Text style={styles.errorMessage}>{previewError.errorMessage}</Text>
+              </View>
+              <Text style={styles.modalDescription}>The agent is analyzing a patch. You can continue editing while the agent works on a fix.</Text>
+              <View style={styles.modalActions}>
+                <TouchableOpacity style={styles.modalCancel} onPress={() => setPreviewError(null)}>
+                  <Text style={styles.modalCancelText}>Dismiss</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.modalPush}
+                  onPress={() => {
+                    setPreviewError(null);
+                    router.push({ pathname: "/chat" as any, params: { projectId: id } });
+                  }}
+                >
+                  <Text style={styles.modalPushText}>Open AI Chat</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      )}
 
       {/* Header */}
       <View style={styles.header}>
@@ -327,9 +370,11 @@ export default function ProjectDetailScreen() {
                 </TouchableOpacity>
               </View>
               <ScrollView style={styles.fileModalBody}>
-                <Text style={styles.fileModalContentText} selectable>
-                  {selectedFile?.content}
-                </Text>
+                <SyntaxHighlightedText
+                  code={selectedFile?.content || ""}
+                  language={selectedFile?.language || "plaintext"}
+                  contentStyle={styles.fileModalContentText}
+                />
               </ScrollView>
             </View>
           </View>
@@ -695,6 +740,26 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 14,
     fontWeight: "700",
+  },
+  errorBox: {
+    backgroundColor: "#0F172A",
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "#334155",
+  },
+  errorType: {
+    color: "#EF4444",
+    fontSize: 12,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    marginBottom: 4,
+  },
+  errorMessage: {
+    color: "#F8FAFC",
+    fontSize: 13,
+    lineHeight: 18,
   },
   fileList: {
     maxHeight: 200,

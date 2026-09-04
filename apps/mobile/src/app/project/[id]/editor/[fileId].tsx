@@ -15,6 +15,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../../../context/ThemeContext";
 import { api, secureStorage } from "../../../../lib/api";
+import { SyntaxHighlightedText } from "../../../../components/SyntaxHighlightedText";
 
 interface ProjectFile {
   id: string;
@@ -142,6 +143,14 @@ export default function FileEditorScreen() {
         </TouchableOpacity>
       </View>
 
+      <View style={styles.previewContainer}>
+        <SyntaxHighlightedText
+          code={content}
+          language={file?.language || "plaintext"}
+          contentStyle={styles.previewContent}
+        />
+      </View>
+
       <ScrollView style={styles.editorContainer}>
         <TextInput
           style={styles.editor}
@@ -230,6 +239,15 @@ const styles = StyleSheet.create({
   },
   editorContainer: {
     flex: 1,
+  },
+  previewContainer: {
+    maxHeight: 120,
+    borderBottomWidth: 1,
+    borderBottomColor: "#334155",
+    backgroundColor: "#0F172A",
+  },
+  previewContent: {
+    padding: 12,
   },
   editor: {
     flex: 1,
