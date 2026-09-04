@@ -275,6 +275,10 @@ export class ApiClient {
     return res.data;
   }
 
+  async getProject(id: string): Promise<Project> {
+    return this.unwrap<Project>(`/projects/${id}`);
+  }
+
   async createProject(data: {
     name: string;
     description?: string;
@@ -1055,5 +1059,49 @@ export class ApiClient {
         updatedAt: string;
       }>
     >("/projects/export/list");
+  }
+
+  async pushProjectToGitHub(data: {
+    projectId: string;
+    repoName: string;
+    isPrivate?: boolean;
+  }): Promise<{
+    repoUrl: string;
+    cloneUrl: string;
+    owner: string;
+    name: string;
+    failedFiles: string[];
+  }> {
+    return this.unwrap<{
+      repoUrl: string;
+      cloneUrl: string;
+      owner: string;
+      name: string;
+      failedFiles: string[];
+    }>("/github/push-repo", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async downloadProjectZip(projectId: string): Promise<Blob> {
+    const url = `${this.baseUrl}/projects/${projectId}/export/zip`;
+    const response = await fetch(url, {
+      headers: {
+        ...(this.accessToken
+          ? { Authorization: `Bearer ${this.accessToken}` }
+          : {}),
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const message =
+        (errorData as { error?: { message?: string } })?.error?.message ||
+        `Failed to download ZIP: ${response.statusText}`;
+      throw new Error(message);
+    }
+
+    return response.blob();
   }
 }

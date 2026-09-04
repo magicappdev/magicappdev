@@ -919,6 +919,43 @@ export default function ChatPage() {
           setExpandedFiles(new Set([files[0].path]));
         }
         setIsGenerating(false);
+
+        // Auto-save the generated project to the user's workspace
+        if (files.length > 0) {
+          (async () => {
+            try {
+              const { api } = await import("@/lib/api.js");
+              const project = await api.createProject({
+                name: data.projectName as string,
+              });
+              await api.bulkSaveProjectFiles(
+                project.id,
+                files.map(f => ({
+                  path: f.path,
+                  content: f.content,
+                })),
+              );
+
+              setMessages(prev => [
+                ...prev,
+                {
+                  id: crypto.randomUUID(),
+                  role: "system",
+                  content: `Project saved to your workspace. ${files.length} files created.`,
+                  timestamp: Date.now(),
+                },
+                {
+                  id: crypto.randomUUID(),
+                  role: "assistant",
+                  content: `I built ${data.projectName} with ${files.length} files. You can continue editing it in the workspace, download it as ZIP, or push it to GitHub.`,
+                  timestamp: Date.now(),
+                },
+              ]);
+            } catch {
+              // Silently fail auto-save; user can still use manual Save button
+            }
+          })();
+        }
       } else if (type === "generation_error") {
         setIsGenerating(false);
         setMessages(prev => [

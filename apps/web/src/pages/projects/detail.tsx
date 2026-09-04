@@ -9,13 +9,17 @@ import {
   Globe,
   Loader2,
   AlertCircle,
+  X,
 } from "lucide-react";
-import { getProjects, type Project, deleteProject } from "@/lib/api";
+import { getProjects, type Project, deleteProject, api } from "@/lib/api";
+import { GitHubIcon as Github } from "@/components/ui/GitHubIcon";
 import { useNavigate, useParams } from "react-router-dom";
 import { Typography } from "@/components/ui/Typography";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
 import { useEffect, useState } from "react";
+import { Dialog } from "@cloudflare/kumo";
 
 export default function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -24,6 +28,7 @@ export default function ProjectDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showPushModal, setShowPushModal] = useState(false);
 
   useEffect(() => {
     async function loadProject() {
@@ -61,6 +66,21 @@ export default function ProjectDetailPage() {
     }
   };
 
+  const handlePushToGitHub = async (repoName: string, isPrivate: boolean) => {
+    if (!project) return;
+    try {
+      const res = await api.pushProjectToGitHub({
+        projectId: project.id,
+        repoName,
+        isPrivate,
+      });
+      window.open(res.repoUrl, "_blank");
+      setShowPushModal(false);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to push to GitHub");
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
@@ -84,6 +104,14 @@ export default function ProjectDetailPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
+      {showPushModal && project && (
+        <PushGitHubModal
+          projectName={project.name}
+          onClose={() => setShowPushModal(false)}
+          onPush={handlePushToGitHub}
+        />
+      )}
+
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
@@ -111,6 +139,13 @@ export default function ProjectDetailPage() {
             onClick={() => navigate(`/projects/${project.id}/settings`)}
           >
             <Settings size={16} className="mr-2" /> Settings
+          </Button>
+          <Button
+            variant="outlined"
+            size="sm"
+            onClick={() => setShowPushModal(true)}
+          >
+            <Github className="w-4 h-4" /> Push to GitHub
           </Button>
           <Button
             size="sm"
@@ -255,5 +290,111 @@ function DetailItem({
         <div className={`text-sm ${className}`}>{value}</div>
       </div>
     </div>
+  );
+}
+
+function PushGitHubModal({
+  projectName,
+  onClose,
+  onPush,
+}: {
+  projectName: string;
+  onClose: () => void;
+  onPush: (repoName: string, isPrivate: boolean) => Promise<void>;
+}) {
+  const [repoName, setRepoName] = useState(
+    projectName.toLowerCase().replace(/\s+/g, "-"),
+  );
+  const [isPrivate, setIsPrivate] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handlePush = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await onPush(repoName, isPrivate);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to push to GitHub");
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog.Root open onOpenChange={open => !open && onClose()}>
+      <Dialog size="lg" className="p-6 space-y-4">
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-1">
+            <Dialog.Title className="flex items-center gap-2">
+              <Github className="w-5 h-5" />
+              Push to GitHub
+            </Dialog.Title>
+            <Dialog.Description>
+              Create a repository for{" "}
+              <span className="font-medium">{projectName}</span> and push all
+              project files.
+            </Dialog.Description>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-foreground/50 hover:text-foreground transition-colors"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <Input
+          label="Repository Name"
+          value={repoName}
+          onChange={e => setRepoName(e.target.value)}
+          placeholder="my-awesome-app"
+          disabled={loading}
+        />
+
+        <label className="flex items-center gap-2 text-sm cursor-pointer">
+          <input
+            type="checkbox"
+            checked={isPrivate}
+            onChange={e => setIsPrivate(e.target.checked)}
+            disabled={loading}
+          />
+          Make repository private
+        </label>
+
+        {error && (
+          <p className="text-sm text-red-500 bg-red-500/10 rounded-lg px-3 py-2">
+            {error}
+          </p>
+        )}
+
+        <div className="flex justify-end gap-3">
+          <Button
+            type="button"
+            variant="outlined"
+            onClick={onClose}
+            disabled={loading}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            variant="filled"
+            onClick={handlePush}
+            disabled={loading || !repoName.trim()}
+          >
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" /> Pushing…
+              </>
+            ) : (
+              <>
+                <Github className="w-4 h-4" /> Push to GitHub
+              </>
+            )}
+          </Button>
+        </div>
+      </Dialog>
+    </Dialog.Root>
   );
 }

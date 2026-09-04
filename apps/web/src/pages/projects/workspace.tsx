@@ -17,6 +17,7 @@ import {
   ChevronDown,
   Plus,
   Trash2,
+  X,
 } from "lucide-react";
 import {
   PreviewModeToggle,
@@ -24,12 +25,15 @@ import {
 } from "@/components/workspace/PreviewModeToggle";
 import { WebContainerPreview } from "@/components/workspace/WebContainerPreview";
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
+import { GitHubIcon as Github } from "@/components/ui/GitHubIcon";
 import { LivePreview } from "@/components/workspace/LivePreview";
 import { useAgentConnection } from "@/lib/agent-websocket.js";
 import { isWebContainerSupported } from "@/lib/webcontainer";
 import { useParams, useNavigate } from "react-router-dom";
 import { Typography } from "@/components/ui/Typography";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Dialog } from "@cloudflare/kumo";
 import { api } from "@/lib/api";
 
 interface ProjectFile {
@@ -56,6 +60,7 @@ export default function ProjectWorkspacePage() {
   const navigate = useNavigate();
 
   const [projectFiles, setProjectFiles] = useState<ProjectFile[]>([]);
+  const [projectName, setProjectName] = useState("Project");
   const [selectedFile, setSelectedFile] = useState<ProjectFile | null>(null);
   const [fileContent, setFileContent] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -86,7 +91,11 @@ export default function ProjectWorkspacePage() {
       setIsLoading(true);
       setError(null);
       try {
-        const files = await api.getProjectFiles(id);
+        const [project, files] = await Promise.all([
+          api.getProject(id),
+          api.getProjectFiles(id),
+        ]);
+        setProjectName(project.name);
         setProjectFiles(files);
         if (files.length > 0 && !selectedFile) {
           setSelectedFile(files[0]);
@@ -237,6 +246,24 @@ export default function ProjectWorkspacePage() {
     }
   };
 
+  const [showPushModal, setShowPushModal] = useState(false);
+
+  // Push project to GitHub
+  const handlePushToGitHub = async (repoName: string, isPrivate: boolean) => {
+    if (!id) return;
+    try {
+      const res = await api.pushProjectToGitHub({
+        projectId: id,
+        repoName,
+        isPrivate,
+      });
+      window.open(res.repoUrl, "_blank");
+      setShowPushModal(false);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to push to GitHub");
+    }
+  };
+
   const toggleFolder = (path: string) => {
     setExpandedFolders(prev => {
       const next = new Set(prev);
@@ -273,6 +300,14 @@ export default function ProjectWorkspacePage() {
 
   return (
     <div className="h-screen flex flex-col bg-background">
+      {showPushModal && (
+        <PushGitHubModal
+          projectName={projectName}
+          onClose={() => setShowPushModal(false)}
+          onPush={handlePushToGitHub}
+        />
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-outline/10 bg-surface">
         <div className="flex items-center gap-4">
@@ -292,8 +327,15 @@ export default function ProjectWorkspacePage() {
           <Button variant="outlined" size="sm" onClick={handleExport}>
             <Download size={16} className="mr-2" /> Export
           </Button>
+          <Button
+            variant="outlined"
+            size="sm"
+            onClick={() => setShowPushModal(true)}
+          >
+            <Github className="w-4 h-4" /> Push to GitHub
+          </Button>
           <Button variant="outlined" size="sm">
-            <Settings size={16} className="mr-2" /> Settings
+            <Settings className="w-4 h-4" /> Settings
           </Button>
         </div>
       </div>
@@ -603,4 +645,110 @@ function buildFileTree(files: ProjectFile[]): FileNode[] {
   }
 
   return root;
+}
+
+function PushGitHubModal({
+  projectName,
+  onClose,
+  onPush,
+}: {
+  projectName: string;
+  onClose: () => void;
+  onPush: (repoName: string, isPrivate: boolean) => Promise<void>;
+}) {
+  const [repoName, setRepoName] = useState(
+    projectName.toLowerCase().replace(/\s+/g, "-"),
+  );
+  const [isPrivate, setIsPrivate] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handlePush = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await onPush(repoName, isPrivate);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to push to GitHub");
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog.Root open onOpenChange={open => !open && onClose()}>
+      <Dialog size="lg" className="p-6 space-y-4">
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-1">
+            <Dialog.Title className="flex items-center gap-2">
+              <Github className="w-5 h-5" />
+              Push to GitHub
+            </Dialog.Title>
+            <Dialog.Description>
+              Create a repository for{" "}
+              <span className="font-medium">{projectName}</span> and push all
+              project files.
+            </Dialog.Description>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-foreground/50 hover:text-foreground transition-colors"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <Input
+          label="Repository Name"
+          value={repoName}
+          onChange={e => setRepoName(e.target.value)}
+          placeholder="my-awesome-app"
+          disabled={loading}
+        />
+
+        <label className="flex items-center gap-2 text-sm cursor-pointer">
+          <input
+            type="checkbox"
+            checked={isPrivate}
+            onChange={e => setIsPrivate(e.target.checked)}
+            disabled={loading}
+          />
+          Make repository private
+        </label>
+
+        {error && (
+          <p className="text-sm text-red-500 bg-red-500/10 rounded-lg px-3 py-2">
+            {error}
+          </p>
+        )}
+
+        <div className="flex justify-end gap-3">
+          <Button
+            type="button"
+            variant="outlined"
+            onClick={onClose}
+            disabled={loading}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            variant="filled"
+            onClick={handlePush}
+            disabled={loading || !repoName.trim()}
+          >
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" /> Pushing…
+              </>
+            ) : (
+              <>
+                <Github className="w-4 h-4" /> Push to GitHub
+              </>
+            )}
+          </Button>
+        </div>
+      </Dialog>
+    </Dialog.Root>
+  );
 }

@@ -10,6 +10,7 @@ import type { AiMessage, Project } from "@magicappdev/shared";
 export type { AiMessage, Project };
 
 export const getProjects = () => api.getProjects();
+export const getProject = (id: string) => api.getProject(id);
 export const createProject = (data: { name: string; description?: string }) =>
   api.createProject(data);
 export const deleteProject = (id: string) => api.deleteProject(id);

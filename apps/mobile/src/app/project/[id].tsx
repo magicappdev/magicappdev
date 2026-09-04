@@ -7,13 +7,27 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Modal,
+  TextInput,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import * as WebBrowser from "expo-web-browser";
 import { useTheme } from "../../context/ThemeContext";
-import { api, secureStorage } from "../../lib/api";
+import { api, secureStorage, API_BASE_URL } from "../../lib/api";
 import { getTemplateById } from "../../lib/templates";
 import type { Project } from "@magicappdev/shared";
+
+interface ProjectFile {
+  id: string;
+  projectId: string;
+  path: string;
+  content: string;
+  language: string;
+  size: number;
+  createdAt: string;
+  updatedAt: string;
+}
 
 interface ChatSession {
   id: string;
@@ -27,9 +41,15 @@ export default function ProjectDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [project, setProject] = useState<Project | null>(null);
+  const [files, setFiles] = useState<ProjectFile[]>([]);
+  const [selectedFile, setSelectedFile] = useState<ProjectFile | null>(null);
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showPushModal, setShowPushModal] = useState(false);
+  const [pushRepoName, setPushRepoName] = useState("");
+  const [pushIsPrivate, setPushIsPrivate] = useState(false);
+  const [pushing, setPushing] = useState(false);
 
   const template = project?.templateId ? getTemplateById(project.templateId) : null;
 
@@ -71,10 +91,24 @@ export default function ProjectDetailScreen() {
     }
   }, [id]);
 
+  const fetchFiles = useCallback(async () => {
+    if (!id) return;
+    try {
+      const token = await secureStorage.getItem("magicappdev_access_token");
+      if (token) api.setToken(token);
+
+      const data = await api.getProjectFiles(id);
+      setFiles(data);
+    } catch {
+      // Silently fail - not critical
+    }
+  }, [id]);
+
   useEffect(() => {
     fetchProject();
     fetchChatSessions();
-  }, [fetchProject, fetchChatSessions]);
+    fetchFiles();
+  }, [fetchProject, fetchChatSessions, fetchFiles]);
 
   const handleStartChat = async () => {
     if (!id) return;
@@ -121,6 +155,38 @@ export default function ProjectDetailScreen() {
     ]);
   };
 
+  const handleDownloadZip = async () => {
+    if (!id || !project) return;
+    try {
+      const token = await secureStorage.getItem("magicappdev_access_token");
+      const url = `${API_BASE_URL}/projects/${id}/export/zip${token ? `?token=${token}` : ""}`;
+      await WebBrowser.openBrowserAsync(url);
+    } catch {
+      Alert.alert("Error", "Failed to download ZIP");
+    }
+  };
+
+  const handlePushToGitHub = async () => {
+    if (!id || !project || !pushRepoName.trim()) return;
+    setPushing(true);
+    try {
+      const token = await secureStorage.getItem("magicappdev_access_token");
+      if (token) api.setToken(token);
+
+      const res = await api.pushProjectToGitHub({
+        projectId: id,
+        repoName: pushRepoName.trim(),
+        isPrivate: pushIsPrivate,
+      });
+      setShowPushModal(false);
+      Alert.alert("Success", `Repository created: ${res.repoUrl}`);
+    } catch {
+      Alert.alert("Error", "Failed to push to GitHub");
+    } finally {
+      setPushing(false);
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.center}>
@@ -143,6 +209,13 @@ export default function ProjectDetailScreen() {
 
   return (
     <View style={styles.container}>
+      <PushGitHubModal
+        visible={showPushModal}
+        projectName={project.name}
+        onClose={() => setShowPushModal(false)}
+        onPush={handlePushToGitHub}
+      />
+
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
@@ -214,6 +287,53 @@ export default function ProjectDetailScreen() {
           />
         </View>
 
+        {/* Project Files Card */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Project Files ({files.length})</Text>
+          {files.length > 0 ? (
+            <ScrollView style={styles.fileList} nestedScrollEnabled>
+              {files.map(file => (
+                <TouchableOpacity
+                  key={file.id}
+                  style={styles.fileRow}
+                  onPress={() => setSelectedFile(file)}
+                >
+                  <Ionicons name="document-outline" size={16} color="#3B82F6" />
+                  <Text style={styles.fileRowText} numberOfLines={1}>
+                    {file.path}
+                  </Text>
+                  <Text style={styles.fileSizeText}>
+                    {file.size > 1024 ? `${(file.size / 1024).toFixed(1)}KB` : `${file.size}B`}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          ) : (
+            <Text style={styles.emptyChatText}>No files yet</Text>
+          )}
+        </View>
+
+        {/* File Content Modal */}
+        <Modal visible={!!selectedFile} animationType="slide" transparent onRequestClose={() => setSelectedFile(null)}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.fileModalContent}>
+              <View style={styles.fileModalHeader}>
+                <Text style={styles.fileModalTitle} numberOfLines={1}>
+                  {selectedFile?.path}
+                </Text>
+                <TouchableOpacity onPress={() => setSelectedFile(null)}>
+                  <Ionicons name="close" size={22} color="#F8FAFC" />
+                </TouchableOpacity>
+              </View>
+              <ScrollView style={styles.fileModalBody}>
+                <Text style={styles.fileModalContentText} selectable>
+                  {selectedFile?.content}
+                </Text>
+              </ScrollView>
+            </View>
+          </View>
+        </Modal>
+
         {/* Chat Sessions Card */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>AI Chat Sessions</Text>
@@ -242,6 +362,18 @@ export default function ProjectDetailScreen() {
           <Ionicons name="sparkles" size={20} color="#fff" />
           <Text style={styles.chatCtaText}>Start AI Chat</Text>
         </TouchableOpacity>
+
+        {/* Export Actions */}
+        <View style={styles.exportActions}>
+          <TouchableOpacity style={styles.exportButton} onPress={handleDownloadZip}>
+            <Ionicons name="download-outline" size={20} color="#3B82F6" />
+            <Text style={styles.exportButtonText}>Download ZIP</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.exportButton} onPress={() => setShowPushModal(true)}>
+            <Ionicons name="logo-github" size={20} color="#fff" />
+            <Text style={styles.exportButtonText}>Push to GitHub</Text>
+          </TouchableOpacity>
+        </View>
 
         <View style={{ height: 40 }} />
       </ScrollView>
@@ -449,4 +581,241 @@ const styles = StyleSheet.create({
     color: "#F8FAFC",
     fontWeight: "600",
   },
+  exportActions: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 16,
+  },
+  exportButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "#1E293B",
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#334155",
+  },
+  exportButtonText: {
+    color: "#F8FAFC",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "#000000AA",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
+  modalContent: {
+    backgroundColor: "#1E293B",
+    borderRadius: 16,
+    padding: 24,
+    width: "100%",
+    maxWidth: 400,
+    borderWidth: 1,
+    borderColor: "#334155",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#F8FAFC",
+    marginBottom: 8,
+  },
+  modalDescription: {
+    fontSize: 14,
+    color: "#94A3B8",
+    marginBottom: 20,
+    lineHeight: 20,
+  },
+  modalInput: {
+    backgroundColor: "#0F172A",
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    color: "#F8FAFC",
+    fontSize: 14,
+    borderWidth: 1,
+    borderColor: "#334155",
+    marginBottom: 16,
+  },
+  modalCheckboxRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 24,
+  },
+  modalCheckbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: "#64748B",
+    backgroundColor: "transparent",
+  },
+  modalCheckboxChecked: {
+    backgroundColor: "#3B82F6",
+    borderColor: "#3B82F6",
+  },
+  modalCheckboxLabel: {
+    color: "#CBD5E1",
+    fontSize: 14,
+  },
+  modalActions: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  modalCancel: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: "#334155",
+    alignItems: "center",
+  },
+  modalCancelText: {
+    color: "#F8FAFC",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  modalPush: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: "#3B82F6",
+    alignItems: "center",
+  },
+  modalPushDisabled: {
+    opacity: 0.5,
+  },
+  modalPushText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  fileList: {
+    maxHeight: 200,
+  },
+  fileRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#334155",
+    gap: 10,
+  },
+  fileRowText: {
+    flex: 1,
+    fontSize: 13,
+    color: "#CBD5E1",
+    fontFamily: "monospace",
+  },
+  fileSizeText: {
+    fontSize: 11,
+    color: "#64748B",
+  },
+  fileModalContent: {
+    backgroundColor: "#1E293B",
+    borderRadius: 16,
+    width: "100%",
+    maxHeight: "80%",
+    borderWidth: 1,
+    borderColor: "#334155",
+  },
+  fileModalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#334155",
+  },
+  fileModalTitle: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#F8FAFC",
+    fontFamily: "monospace",
+    marginRight: 12,
+  },
+  fileModalBody: {
+    padding: 16,
+    maxHeight: 400,
+  },
+  fileModalContentText: {
+    fontSize: 12,
+    color: "#CBD5E1",
+    fontFamily: "monospace",
+    lineHeight: 18,
+  },
 });
+
+function PushGitHubModal({
+  projectName,
+  visible,
+  onClose,
+  onPush,
+}: {
+  projectName: string;
+  visible: boolean;
+  onClose: () => void;
+  onPush: (repoName: string, isPrivate: boolean) => Promise<void>;
+}) {
+  const [repoName, setRepoName] = useState(projectName.toLowerCase().replace(/\s+/g, "-"));
+  const [isPrivate, setIsPrivate] = useState(false);
+  const [pushing, setPushing] = useState(false);
+
+  const handlePush = async () => {
+    setPushing(true);
+    try {
+      await onPush(repoName, isPrivate);
+    } finally {
+      setPushing(false);
+    }
+  };
+
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}>Push to GitHub</Text>
+          <Text style={styles.modalDescription}>
+            Create a repository for <Text style={{ fontWeight: "600" }}>{projectName}</Text> and push all files.
+          </Text>
+
+          <TextInput
+            style={styles.modalInput}
+            value={repoName}
+            onChangeText={setRepoName}
+            placeholder="Repository name"
+            placeholderTextColor="#64748B"
+            autoCapitalize="none"
+          />
+
+          <TouchableOpacity
+            style={styles.modalCheckboxRow}
+            onPress={() => setIsPrivate(!isPrivate)}
+          >
+            <View style={[styles.modalCheckbox, isPrivate && styles.modalCheckboxChecked]} />
+            <Text style={styles.modalCheckboxLabel}>Make repository private</Text>
+          </TouchableOpacity>
+
+          <View style={styles.modalActions}>
+            <TouchableOpacity style={styles.modalCancel} onPress={onClose} disabled={pushing}>
+              <Text style={styles.modalCancelText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.modalPush, (!repoName.trim() || pushing) && styles.modalPushDisabled]}
+              onPress={handlePush}
+              disabled={!repoName.trim() || pushing}
+            >
+              <Text style={styles.modalPushText}>{pushing ? "Pushing…" : "Push"}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+}

@@ -13,6 +13,7 @@ import {
 } from "@magicappdev/database";
 import type { AppContext } from "../types.js";
 import { eq } from "@magicappdev/database";
+import { zipSync, strToU8 } from "fflate";
 import { Hono } from "hono";
 
 export const exportRoutes = new Hono<AppContext>();
@@ -221,4 +222,74 @@ exportRoutes.get("/export/list", async c => {
     success: true,
     data: projectsWithCounts,
   });
+});
+
+/**
+ * Export a project as a ZIP archive
+ * Streams a ZIP file containing all project files
+ */
+exportRoutes.get("/:id/export/zip", async c => {
+  const projectId = c.req.param("id");
+  const userId = c.var.userId;
+  const userRole = c.var.userRole;
+  const db = c.var.db;
+
+  const project = await db.query.projects.findFirst({
+    where: eq(projects.id, projectId),
+  });
+
+  if (!project) {
+    return c.json(
+      {
+        success: false,
+        error: { code: "NOT_FOUND", message: "Project not found" },
+      },
+      404,
+    );
+  }
+
+  if (userRole !== "admin" && project.userId !== userId) {
+    return c.json(
+      {
+        success: false,
+        error: { code: "FORBIDDEN", message: "Forbidden" },
+      },
+      403,
+    );
+  }
+
+  const files = await db.query.projectFiles.findMany({
+    where: eq(projectFiles.projectId, projectId),
+  });
+
+  try {
+    const zipData: Record<string, Uint8Array> = {};
+
+    for (const file of files) {
+      const normalizedPath = file.path.replace(/\\/g, "/");
+      zipData[normalizedPath] = strToU8(file.content);
+    }
+
+    const zipped = zipSync(zipData, { level: 6 });
+    const blob = new Blob([zipped], { type: "application/zip" });
+
+    return new Response(blob, {
+      headers: {
+        "Content-Type": "application/zip",
+        "Content-Disposition": `attachment; filename="${project.name.replace(/[^a-z0-9_-]/gi, "_")}.zip"`,
+        "Cache-Control": "no-store",
+      },
+    });
+  } catch {
+    return c.json(
+      {
+        success: false,
+        error: {
+          code: "ZIP_ERROR",
+          message: "Failed to generate ZIP archive",
+        },
+      },
+      500,
+    );
+  }
 });

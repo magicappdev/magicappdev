@@ -1,4 +1,5 @@
 import { ApiClient } from "@magicappdev/shared/api";
+import type { AiMessage, Project } from "@magicappdev/shared";
 import * as SecureStore from "expo-secure-store";
 
 const TOKEN_KEY = "magicappdev_access_token";
@@ -33,6 +34,19 @@ const API_BASE_URL =
   "https://magicappdev-api.magicappdev.workers.dev";
 
 export const api = new ApiClient(API_BASE_URL);
+export { API_BASE_URL };
+
+// Re-export common types and methods for compatibility
+export type { AiMessage, Project };
+
+export const getProjects = () => api.getProjects();
+export const getProject = (id: string) => api.getProject(id);
+export const createProject = (data: { name: string; description?: string }) =>
+  api.createProject(data);
+export const deleteProject = (id: string) => api.deleteProject(id);
+export const sendMessage = (messages: AiMessage[]) => api.sendMessage(messages);
+export const streamMessage = (messages: AiMessage[]) =>
+  api.streamMessage(messages);
 
 // Initialize stored tokens synchronously / on boot
 export async function ensureApiToken() {
