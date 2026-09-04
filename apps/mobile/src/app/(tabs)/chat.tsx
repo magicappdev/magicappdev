@@ -10,10 +10,11 @@ import {
   Platform,
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import { api } from "../../lib/api";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../context/ThemeContext";
+import { api } from "../../lib/api";
 import { getPromptPresets, type PromptPreset } from "@magicappdev/shared/utils";
+import { useAgentConnection, useAgentMessages } from "../../lib/agent-websocket";
 
 interface MessageItem {
   id: string;
@@ -46,8 +47,9 @@ export default function ChatScreen() {
   const [promptPresets, setPromptPresets] = useState<PromptPreset[]>([]);
   const [presetSeed, setPresetSeed] = useState(() => Date.now());
 
+  const { connected, send } = useAgentConnection();
+
   useEffect(() => {
-    // Fetch dynamic models including Opencode Zen models
     fetch("https://magicappdev-api.magicappdev.workers.dev/ai/models")
       .then(res => res.json())
       .then((data: { success?: boolean; data?: { models?: AIModel[] } }) => {
@@ -68,7 +70,6 @@ export default function ChatScreen() {
     );
   }, [messages.length, presetSeed]);
 
-  // Load existing session messages if sessionId is provided
   useEffect(() => {
     if (!sessionId) return;
 
@@ -93,7 +94,6 @@ export default function ChatScreen() {
     loadSession();
   }, [sessionId]);
 
-  // Set initial message when projectId is provided (new chat from project)
   useEffect(() => {
     if (projectId && !sessionId) {
       setMessages([
@@ -105,6 +105,41 @@ export default function ChatScreen() {
       ]);
     }
   }, [projectId, sessionId]);
+
+  useEffect(() => {
+    useAgentMessages((type, data) => {
+      if (type === "chat_chunk") {
+        const chunk = (data.content as string) || "";
+        setMessages(prev => {
+          const last = prev[prev.length - 1];
+          if (last && last.role === "assistant" && last.id === "streaming") {
+            return [
+              ...prev.slice(0, -1),
+              { ...last, content: last.content + chunk },
+            ];
+          }
+          return [
+            ...prev,
+            {
+              id: "streaming",
+              role: "assistant",
+              content: chunk,
+              timestamp: Date.now(),
+            },
+          ];
+        });
+      } else if (type === "chat_done") {
+        setMessages(prev => {
+          const last = prev[prev.length - 1];
+          if (last && last.id === "streaming") {
+            return [...prev.slice(0, -1), { ...last, id: crypto.randomUUID() }];
+          }
+          return prev;
+        });
+        setLoading(false);
+      }
+    });
+  }, []);
 
   const handleRerollPrompts = useCallback(() => {
     setPresetSeed(prev => prev + 1);
@@ -124,31 +159,7 @@ export default function ChatScreen() {
     setPromptPresets([]);
     setLoading(true);
 
-    try {
-      const assistantMsg: MessageItem = {
-        id: `assistant-${Date.now()}`,
-        role: "assistant",
-        content: "",
-      };
-      setMessages([...updatedMessages, assistantMsg]);
-
-      for await (const chunk of api.streamMessage(updatedMessages)) {
-        assistantMsg.content += chunk;
-        setMessages([...updatedMessages, { ...assistantMsg }]);
-      }
-    } catch (err: unknown) {
-      const errorObj = err as Error;
-      setMessages([
-        ...updatedMessages,
-        {
-          id: `error-${Date.now()}`,
-          role: "assistant",
-          content: `Error: ${errorObj?.message || "Failed to get response"}`,
-        },
-      ]);
-    } finally {
-      setLoading(false);
-    }
+    send({ type: "chat", content: userMsg.content, model: selectedModel });
   };
 
   const currentModelObj = models.find(m => m.id === selectedModel);

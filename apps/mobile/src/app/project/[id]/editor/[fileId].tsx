@@ -1,0 +1,279 @@
+import React, { useEffect, useState, useCallback } from "react";
+import {
+  StyleSheet,
+  Text,
+  View,
+  TextInput,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { useTheme } from "../../../../context/ThemeContext";
+import { api, secureStorage } from "../../../../lib/api";
+
+interface ProjectFile {
+  id: string;
+  projectId: string;
+  path: string;
+  content: string;
+  language: string;
+  size: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export default function FileEditorScreen() {
+  useTheme();
+  const router = useRouter();
+  const { projectId, fileId } = useLocalSearchParams<{ projectId?: string; fileId?: string }>();
+  const [file, setFile] = useState<ProjectFile | null>(null);
+  const [content, setContent] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
+
+  const loadFile = useCallback(async () => {
+    if (!projectId || !fileId) return;
+    try {
+      const token = await secureStorage.getItem("magicappdev_access_token");
+      if (token) api.setToken(token);
+
+      const files = await api.getProjectFiles(projectId);
+      const found = files.find((f: ProjectFile) => f.id === fileId);
+      if (found) {
+        setFile(found);
+        setContent(found.content);
+      }
+    } catch {
+      Alert.alert("Error", "Failed to load file");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [projectId, fileId]);
+
+  useEffect(() => {
+    loadFile();
+  }, [loadFile]);
+
+  const handleSave = async () => {
+    if (!file || !projectId) return;
+    setIsSaving(true);
+    try {
+      const token = await secureStorage.getItem("magicappdev_access_token");
+      if (token) api.setToken(token);
+
+      const updated = await api.saveProjectFile(projectId, {
+        path: file.path,
+        content,
+        language: file.language,
+      });
+      setFile(updated);
+      setHasChanges(false);
+      Alert.alert("Saved", "File saved successfully");
+    } catch {
+      Alert.alert("Error", "Failed to save file");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleBack = () => {
+    if (hasChanges) {
+      Alert.alert("Unsaved changes", "You have unsaved changes. Discard them?", [
+        { text: "Cancel", style: "cancel" },
+        { text: "Discard", style: "destructive", onPress: () => router.back() },
+      ]);
+    } else {
+      router.back();
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#3B82F6" />
+      </View>
+    );
+  }
+
+  if (!file) {
+    return (
+      <View style={styles.center}>
+        <Ionicons name="alert-circle-outline" size={48} color="#EF4444" />
+        <Text style={styles.errorText}>File not found</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={handleBack}>
+          <Text style={styles.retryButtonText}>Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  return (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.container}
+      keyboardVerticalOffset={90}
+    >
+      <View style={styles.header}>
+        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={22} color="#F8FAFC" />
+        </TouchableOpacity>
+        <View style={styles.headerTitleContainer}>
+          <Text style={styles.headerTitle} numberOfLines={1}>
+            {file.path}
+          </Text>
+          <Text style={styles.headerSubtitle}>{file.language}</Text>
+        </View>
+        <TouchableOpacity
+          onPress={handleSave}
+          disabled={isSaving || !hasChanges}
+          style={[styles.saveButton, (!hasChanges || isSaving) && styles.saveButtonDisabled]}
+        >
+          {isSaving ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Text style={styles.saveButtonText}>Save</Text>
+          )}
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView style={styles.editorContainer}>
+        <TextInput
+          style={styles.editor}
+          value={content}
+          onChangeText={text => {
+            setContent(text);
+            setHasChanges(text !== file.content);
+          }}
+          multiline
+          autoCapitalize="none"
+          autoCorrect={false}
+          spellCheck={false}
+          textAlignVertical="top"
+          placeholder="File content..."
+          placeholderTextColor="#64748B"
+        />
+      </ScrollView>
+
+      {hasChanges && (
+        <View style={styles.unsavedBar}>
+          <Text style={styles.unsavedText}>Unsaved changes</Text>
+          <TouchableOpacity onPress={handleSave} disabled={isSaving}>
+            <Text style={styles.unsavedSaveText}>Save now</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </KeyboardAvoidingView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#0B0F19",
+  },
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+    backgroundColor: "#0B0F19",
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 8,
+    backgroundColor: "#1E293B",
+    borderBottomWidth: 1,
+    borderBottomColor: "#334155",
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  headerTitleContainer: {
+    flex: 1,
+    marginHorizontal: 12,
+  },
+  headerTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#F8FAFC",
+  },
+  headerSubtitle: {
+    fontSize: 12,
+    color: "#64748B",
+    textTransform: "uppercase",
+  },
+  saveButton: {
+    backgroundColor: "#3B82F6",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  saveButtonDisabled: {
+    opacity: 0.5,
+  },
+  saveButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  editorContainer: {
+    flex: 1,
+  },
+  editor: {
+    flex: 1,
+    padding: 16,
+    color: "#F8FAFC",
+    fontSize: 13,
+    fontFamily: "monospace",
+    lineHeight: 20,
+    minHeight: "100%",
+  },
+  unsavedBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: "#1E3A8A20",
+    borderTopWidth: 1,
+    borderTopColor: "#334155",
+  },
+  unsavedText: {
+    color: "#94A3B8",
+    fontSize: 13,
+  },
+  unsavedSaveText: {
+    color: "#3B82F6",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  errorText: {
+    color: "#EF4444",
+    fontSize: 16,
+    marginTop: 12,
+    textAlign: "center",
+  },
+  retryButton: {
+    marginTop: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: "#334155",
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: "#F8FAFC",
+    fontWeight: "600",
+  },
+});

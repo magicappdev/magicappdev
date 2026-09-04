@@ -296,7 +296,7 @@ export default function ProjectDetailScreen() {
                 <TouchableOpacity
                   key={file.id}
                   style={styles.fileRow}
-                  onPress={() => setSelectedFile(file)}
+                  onPress={() => router.push({ pathname: `/project/${id}/editor/${file.id}` as any })}
                 >
                   <Ionicons name="document-outline" size={16} color="#3B82F6" />
                   <Text style={styles.fileRowText} numberOfLines={1}>
@@ -305,6 +305,7 @@ export default function ProjectDetailScreen() {
                   <Text style={styles.fileSizeText}>
                     {file.size > 1024 ? `${(file.size / 1024).toFixed(1)}KB` : `${file.size}B`}
                   </Text>
+                  <Ionicons name="chevron-forward" size={16} color="#64748B" />
                 </TouchableOpacity>
               ))}
             </ScrollView>
