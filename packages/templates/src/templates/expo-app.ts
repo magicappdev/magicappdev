@@ -23,6 +23,7 @@ export const expoAppTemplate: Template = {
     "android",
     "typescript",
   ],
+  free: false,
   variables: [
     {
       name: "name",

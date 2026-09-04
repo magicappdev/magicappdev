@@ -46,6 +46,11 @@ export function TemplateCard({ template, selected, onPress }: TemplateCardProps)
       >
         {template.description}
       </Text>
+      {!template.free && (
+        <View style={styles.proBadge}>
+          <Text style={styles.proBadgeText}>PRO</Text>
+        </View>
+      )}
       {selected && (
         <View style={[styles.checkmark, { backgroundColor: template.color }]}>
           <Ionicons name="checkmark" size={12} color="#fff" />
@@ -96,5 +101,22 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
+  },
+  proBadge: {
+    position: "absolute",
+    top: 8,
+    left: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    backgroundColor: "#F59E0B20",
+    borderWidth: 1,
+    borderColor: "#F59E0B40",
+  },
+  proBadgeText: {
+    fontSize: 9,
+    fontWeight: "700",
+    color: "#F59E0B",
+    textTransform: "uppercase",
   },
 });

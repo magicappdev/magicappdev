@@ -15,6 +15,7 @@ export const ecommerceTemplate: Template = {
   version: "1.0.0",
   author: "MagicAppDev",
   tags: ["ecommerce", "store", "shop", "react", "tailwind", "cart"],
+  free: false,
   variables: [
     {
       name: "name",

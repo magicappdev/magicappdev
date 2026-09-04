@@ -24,6 +24,7 @@ export const honoApiTemplate: Template = {
     "typescript",
     "rest",
   ],
+  free: false,
   variables: [
     {
       name: "name",

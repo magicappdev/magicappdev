@@ -16,6 +16,7 @@ export const saasTemplate: Template = {
   version: "1.0.0",
   author: "MagicAppDev",
   tags: ["saas", "dashboard", "starter", "react", "tailwind", "landing"],
+  free: false,
   variables: [
     {
       name: "name",

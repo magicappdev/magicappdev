@@ -7,6 +7,7 @@ export interface MobileTemplate {
   icon: keyof typeof Ionicons.glyphMap;
   color: string;
   tags: string[];
+  free?: boolean;
 }
 
 export const MOBILE_TEMPLATES: MobileTemplate[] = [
@@ -25,6 +26,7 @@ export const MOBILE_TEMPLATES: MobileTemplate[] = [
     icon: "cart-outline",
     color: "#10B981",
     tags: ["shop", "cart", "products"],
+    free: false,
   },
   {
     id: "fitness",
@@ -57,6 +59,7 @@ export const MOBILE_TEMPLATES: MobileTemplate[] = [
     icon: "chatbubbles-outline",
     color: "#06B6D4",
     tags: ["messaging", "chat", "dm"],
+    free: false,
   },
   {
     id: "news",

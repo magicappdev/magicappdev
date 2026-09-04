@@ -23,6 +23,7 @@ export const nextAppTemplate: Template = {
     "ssr",
     "cloudflare",
   ],
+  free: false,
   variables: [
     {
       name: "name",

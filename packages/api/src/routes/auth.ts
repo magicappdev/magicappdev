@@ -148,6 +148,8 @@ authRoutes.post("/register", async c => {
     passwordHash,
     role: "user",
     emailVerified: false,
+    isPro: false,
+    plan: "free",
   });
 
   await db.insert(profiles).values({
@@ -617,6 +619,8 @@ authRoutes.get("/callback/discord", async c => {
             avatarUrl,
             emailVerified: true,
             role: "user",
+            isPro: false,
+            plan: "free",
           });
 
           await db.insert(profiles).values({
@@ -1229,6 +1233,8 @@ authRoutes.get("/callback/github", async c => {
             avatarUrl: githubUser.avatar_url,
             emailVerified: true,
             role: "user",
+            isPro: false,
+            plan: "free",
           });
 
           await db.insert(profiles).values({

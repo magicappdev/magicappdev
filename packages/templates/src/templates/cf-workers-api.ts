@@ -24,6 +24,7 @@ export const cfWorkersApiTemplate: Template = {
     "typescript",
     "rest",
   ],
+  free: false,
   variables: [
     {
       name: "name",

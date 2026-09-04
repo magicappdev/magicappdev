@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -28,8 +28,34 @@ export default function NewProjectScreen() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [isPro, setIsPro] = useState(false);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const token = await secureStorage.getItem("magicappdev_access_token");
+        if (token) api.setToken(token);
+        const user = await api.getCurrentUser();
+        setIsPro(!!user.isPro);
+      } catch {
+        // Not logged in or failed — treat as free
+      }
+    };
+    fetchUser();
+  }, []);
 
   const handleSelectTemplate = (template: MobileTemplate) => {
+    if (!template.free && !isPro) {
+      Alert.alert(
+        "PRO Template",
+        `${template.name} is a PRO template. Upgrade to unlock all premium templates.`,
+        [
+          { text: "Maybe later", style: "cancel" },
+          { text: "Learn more", onPress: () => Alert.alert("Coming soon", "Pro upgrades will be available soon.") },
+        ],
+      );
+      return;
+    }
     setSelectedTemplate(template);
   };
 

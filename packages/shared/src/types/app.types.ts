@@ -13,6 +13,8 @@ export interface User {
   role: "admin" | "user";
   hasPassword?: boolean;
   profile?: Profile;
+  isPro?: boolean;
+  plan?: "free" | "pro" | "lifetime";
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

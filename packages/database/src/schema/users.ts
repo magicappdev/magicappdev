@@ -17,6 +17,10 @@ export const users = sqliteTable("users", {
   emailVerified: integer("email_verified", { mode: "boolean" })
     .notNull()
     .default(false),
+  isPro: integer("is_pro", { mode: "boolean" }).notNull().default(false),
+  plan: text("plan", { enum: ["free", "pro", "lifetime"] })
+    .notNull()
+    .default("free"),
   createdAt: text("created_at")
     .notNull()
     .$defaultFn(() => new Date().toISOString()),

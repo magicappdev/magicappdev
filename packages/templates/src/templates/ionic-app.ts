@@ -14,6 +14,7 @@ export const ionicAppTemplate: Template = {
   version: "1.0.0",
   author: "MagicAppDev",
   tags: ["starter", "mobile", "ionic", "capacitor", "cross-platform"],
+  free: false,
   variables: [
     {
       name: "name",

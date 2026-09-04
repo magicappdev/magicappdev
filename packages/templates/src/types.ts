@@ -54,6 +54,8 @@ export interface TemplateMetadata {
   author?: string;
   /** Tags for search */
   tags?: string[];
+  /** Whether this template is available for free */
+  free?: boolean;
 }
 
 /** Complete template definition */
