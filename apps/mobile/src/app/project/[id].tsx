@@ -53,6 +53,7 @@ export default function ProjectDetailScreen() {
   const [pushIsPrivate, setPushIsPrivate] = useState(false);
   const [pushing, setPushing] = useState(false);
   const [previewError, setPreviewError] = useState<{ filePath: string; errorMessage: string; errorType: string; fileId?: string } | null>(null);
+  const [fileViewerWordWrap, setFileViewerWordWrap] = useState(true);
 
   const template = project?.templateId ? getTemplateById(project.templateId) : null;
 
@@ -392,9 +393,18 @@ export default function ProjectDetailScreen() {
                 <Text style={styles.fileModalTitle} numberOfLines={1}>
                   {selectedFile?.path}
                 </Text>
-                <TouchableOpacity onPress={() => setSelectedFile(null)}>
-                  <Ionicons name="close" size={22} color="#F8FAFC" />
-                </TouchableOpacity>
+                <View style={styles.fileModalHeaderActions}>
+                  <TouchableOpacity onPress={() => setFileViewerWordWrap(!fileViewerWordWrap)}>
+                    <Ionicons
+                      name={fileViewerWordWrap ? "document-text-outline" : "document-text-sharp"}
+                      size={18}
+                      color="#94A3B8"
+                    />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => setSelectedFile(null)}>
+                    <Ionicons name="close" size={22} color="#F8FAFC" />
+                  </TouchableOpacity>
+                </View>
               </View>
               <ScrollView style={styles.fileModalBody}>
                 <SyntaxHighlightedText
@@ -402,6 +412,7 @@ export default function ProjectDetailScreen() {
                   language={selectedFile?.language || "plaintext"}
                   contentStyle={styles.fileModalContentText}
                   showLineNumbers
+                  wordWrap={fileViewerWordWrap}
                 />
               </ScrollView>
             </View>
@@ -825,6 +836,11 @@ const styles = StyleSheet.create({
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: "#334155",
+  },
+  fileModalHeaderActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
   },
   fileModalTitle: {
     flex: 1,

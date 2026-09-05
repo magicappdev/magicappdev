@@ -12,6 +12,7 @@ interface SyntaxHighlightedTextProps {
   style?: object;
   contentStyle?: object;
   showLineNumbers?: boolean;
+  wordWrap?: boolean;
 }
 
 const KEYWORDS = new Set([
@@ -147,28 +148,45 @@ export const SyntaxHighlightedText: React.FC<SyntaxHighlightedTextProps> = ({
   style,
   contentStyle,
   showLineNumbers,
+  wordWrap = true,
 }) => {
   const tokens = highlightCode(code, language);
   const lines = code.split("\n");
 
-  return (
-    <ScrollView style={[styles.container, style]} contentContainerStyle={contentStyle}>
-      {showLineNumbers ? (
-        <View style={styles.lineNumbersContainer}>
-          {lines.map((_, index) => (
-            <Text key={index} style={styles.lineNumber}>
-              {index + 1}
-            </Text>
-          ))}
-        </View>
-      ) : null}
-      <Text style={styles.text}>
-        {tokens.map((token, index) => (
-          <Text key={index} style={{ color: token.color }}>
-            {token.text}
+  const codeContent = (
+    <Text style={[styles.text, !wordWrap && styles.textNoWrap]}>
+      {tokens.map((token, index) => (
+        <Text key={index} style={{ color: token.color }}>
+          {token.text}
+        </Text>
+      ))}
+    </Text>
+  );
+
+  const highlightedCode = showLineNumbers ? (
+    <View style={styles.codeRow}>
+      <View style={styles.lineNumbersContainer}>
+        {lines.map((_, index) => (
+          <Text key={index} style={styles.lineNumber}>
+            {index + 1}
           </Text>
         ))}
-      </Text>
+      </View>
+      <View style={styles.codeContainer}>{codeContent}</View>
+    </View>
+  ) : (
+    codeContent
+  );
+
+  return (
+    <ScrollView style={[styles.container, style]} contentContainerStyle={contentStyle}>
+      {showLineNumbers || !wordWrap ? (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} nestedScrollEnabled>
+          {highlightedCode}
+        </ScrollView>
+      ) : (
+        highlightedCode
+      )}
     </ScrollView>
   );
 };
@@ -181,6 +199,15 @@ const styles = StyleSheet.create({
     fontFamily: "monospace",
     fontSize: 13,
     lineHeight: 20,
+  },
+  textNoWrap: {
+    flexShrink: 1,
+  },
+  codeRow: {
+    flexDirection: "row",
+  },
+  codeContainer: {
+    flex: 1,
   },
   lineNumbersContainer: {
     marginRight: 12,

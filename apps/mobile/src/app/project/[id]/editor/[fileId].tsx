@@ -38,6 +38,7 @@ export default function FileEditorScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [editorMode, setEditorMode] = useState<"edit" | "preview">("edit");
+  const [wordWrap, setWordWrap] = useState(true);
 
   const loadFile = useCallback(async () => {
     if (!projectId || !fileId) return;
@@ -157,6 +158,19 @@ export default function FileEditorScreen() {
         >
           <Text style={[styles.modeToggleText, editorMode === "preview" && styles.modeToggleTextActive]}>Preview</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.modeToggleButton, styles.wordWrapButton, !wordWrap && styles.modeToggleButtonActive]}
+          onPress={() => setWordWrap(!wordWrap)}
+        >
+          <Ionicons
+            name={wordWrap ? "document-text-outline" : "document-text-sharp"}
+            size={16}
+            color={wordWrap ? "#94A3B8" : "#fff"}
+          />
+          <Text style={[styles.modeToggleText, !wordWrap && styles.modeToggleTextActive]}>
+            {wordWrap ? "Wrap" : "No Wrap"}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {editorMode === "preview" ? (
@@ -166,12 +180,13 @@ export default function FileEditorScreen() {
             language={file?.language || "plaintext"}
             contentStyle={styles.previewContentText}
             showLineNumbers
+            wordWrap={wordWrap}
           />
         </ScrollView>
       ) : (
-        <ScrollView style={styles.editorContainer}>
+        <ScrollView style={styles.editorContainer} horizontal={!wordWrap} showsHorizontalScrollIndicator={!wordWrap}>
           <TextInput
-            style={styles.editor}
+            style={[styles.editor, !wordWrap && styles.editorNoWrap]}
             value={content}
             onChangeText={text => {
               setContent(text);
@@ -304,6 +319,11 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "600",
   },
+  wordWrapButton: {
+    flexDirection: "row",
+    gap: 6,
+    paddingHorizontal: 10,
+  },
   editor: {
     flex: 1,
     padding: 16,
@@ -312,6 +332,10 @@ const styles = StyleSheet.create({
     fontFamily: "monospace",
     lineHeight: 20,
     minHeight: "100%",
+  },
+  editorNoWrap: {
+    minWidth: "100%",
+    width: "auto",
   },
   unsavedBar: {
     flexDirection: "row",
