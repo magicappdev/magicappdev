@@ -9,22 +9,31 @@
 import { generateSeedSQL, buildResetSQL } from "./src/seed.js";
 import { spawn } from "node:child_process";
 import * as path from "node:path";
+import * as os from "node:os";
 import * as fs from "node:fs";
 
 const DB_NAME = "magicappdev-db";
 const WRANGLER_TOML = path.join(process.cwd(), "wrangler.toml");
 const PERSIST_DIR = path.join(process.cwd(), "..", "..", ".wrangler", "state");
 
-function runWrangler(args: string[]): Promise<void> {
+function runWranglerWithFile(sql: string): Promise<void> {
   return new Promise((resolve, reject) => {
+    const sqlFile = path.join(
+      os.tmpdir(),
+      `magicappdev-seed-${Date.now()}.sql`,
+    );
+    fs.writeFileSync(sqlFile, sql);
+
     const proc = spawn(
-      "npx",
+      "bunx",
       [
         "wrangler",
         "d1",
         "execute",
         DB_NAME,
-        ...args,
+        "--local",
+        "--file",
+        sqlFile,
         "-c",
         WRANGLER_TOML,
         "--persist-to",
@@ -37,6 +46,12 @@ function runWrangler(args: string[]): Promise<void> {
     );
 
     proc.on("close", code => {
+      try {
+        fs.unlinkSync(sqlFile);
+      } catch {
+        // ignore cleanup errors
+      }
+
       if (code === 0) {
         resolve();
       } else {
@@ -48,24 +63,14 @@ function runWrangler(args: string[]): Promise<void> {
 
 async function reset(): Promise<void> {
   console.log("Resetting database...");
-
-  await runWrangler(["--command", buildResetSQL()]);
-
+  await runWranglerWithFile(buildResetSQL());
   console.log("Database reset complete.");
 }
 
 async function seed(): Promise<void> {
   const sql = generateSeedSQL();
-
-  const sqlFile = path.join(process.cwd(), "seed.sql");
-  fs.writeFileSync(sqlFile, sql);
-
-  try {
-    await runWrangler(["--file", sqlFile]);
-    console.log("Seed data inserted successfully.");
-  } finally {
-    fs.unlinkSync(sqlFile);
-  }
+  await runWranglerWithFile(sql);
+  console.log("Seed data inserted successfully.");
 }
 
 async function main(): Promise<void> {
