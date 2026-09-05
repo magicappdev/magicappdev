@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
   StyleSheet,
   Text,
@@ -39,6 +39,9 @@ export default function FileEditorScreen() {
   const [hasChanges, setHasChanges] = useState(false);
   const [editorMode, setEditorMode] = useState<"edit" | "preview">("edit");
   const [wordWrap, setWordWrap] = useState(true);
+  const [lineNumber, setLineNumber] = useState("");
+  const previewScrollRef = useRef<ScrollView>(null);
+  const LINE_HEIGHT = 20;
 
   const loadFile = useCallback(async () => {
     if (!projectId || !fileId) return;
@@ -62,6 +65,37 @@ export default function FileEditorScreen() {
   useEffect(() => {
     loadFile();
   }, [loadFile]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const stored = await secureStorage.getItem("magicappdev_editor_word_wrap");
+        if (!cancelled && stored !== null) {
+          setWordWrap(stored === "true");
+        }
+      } catch {
+        // ignore storage errors
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    secureStorage.setItem("magicappdev_editor_word_wrap", wordWrap ? "true" : "false");
+  }, [wordWrap]);
+
+  const handleScrollToLine = () => {
+    if (!lineNumber || !previewScrollRef.current) return;
+    const line = parseInt(lineNumber, 10);
+    if (Number.isNaN(line) || line < 1) return;
+    const maxLine = content.split("\n").length;
+    const target = Math.min(line, maxLine);
+    const offset = Math.max(0, LINE_HEIGHT * (target - 1));
+    previewScrollRef.current.scrollTo({ y: offset, animated: true });
+  };
 
   const handleSave = async () => {
     if (!file || !projectId) return;
@@ -158,23 +192,45 @@ export default function FileEditorScreen() {
         >
           <Text style={[styles.modeToggleText, editorMode === "preview" && styles.modeToggleTextActive]}>Preview</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.modeToggleButton, styles.wordWrapButton, !wordWrap && styles.modeToggleButtonActive]}
-          onPress={() => setWordWrap(!wordWrap)}
-        >
-          <Ionicons
-            name={wordWrap ? "document-text-outline" : "document-text-sharp"}
-            size={16}
-            color={wordWrap ? "#94A3B8" : "#fff"}
-          />
-          <Text style={[styles.modeToggleText, !wordWrap && styles.modeToggleTextActive]}>
-            {wordWrap ? "Wrap" : "No Wrap"}
-          </Text>
-        </TouchableOpacity>
+        {editorMode === "preview" ? (
+          <View style={styles.lineJumpRow}>
+            <TextInput
+              style={styles.lineJumpInput}
+              value={lineNumber}
+              onChangeText={setLineNumber}
+              placeholder="Line"
+              placeholderTextColor="#64748B"
+              keyboardType="number-pad"
+              returnKeyType="go"
+              blurOnSubmit={false}
+              onSubmitEditing={handleScrollToLine}
+            />
+            <TouchableOpacity
+              style={[styles.modeToggleButton, styles.lineJumpButton]}
+              onPress={handleScrollToLine}
+            >
+              <Ionicons name="arrow-down" size={16} color={lineNumber ? "#fff" : "#94A3B8"} />
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <TouchableOpacity
+            style={[styles.modeToggleButton, styles.wordWrapButton, !wordWrap && styles.modeToggleButtonActive]}
+            onPress={() => setWordWrap(!wordWrap)}
+          >
+            <Ionicons
+              name={wordWrap ? "document-text-outline" : "document-text-sharp"}
+              size={16}
+              color={wordWrap ? "#94A3B8" : "#fff"}
+            />
+            <Text style={[styles.modeToggleText, !wordWrap && styles.modeToggleTextActive]}>
+              {wordWrap ? "Wrap" : "No Wrap"}
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {editorMode === "preview" ? (
-        <ScrollView style={styles.previewContainer} contentContainerStyle={styles.previewContent}>
+        <ScrollView ref={previewScrollRef} style={styles.previewContainer} contentContainerStyle={styles.previewContent}>
           <SyntaxHighlightedText
             code={content}
             language={file?.language || "plaintext"}
@@ -323,6 +379,28 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 6,
     paddingHorizontal: 10,
+  },
+  lineJumpRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    flex: 1,
+  },
+  lineJumpInput: {
+    flex: 1,
+    height: 32,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    backgroundColor: "#0F172A",
+    borderWidth: 1,
+    borderColor: "#334155",
+    color: "#F8FAFC",
+    fontSize: 13,
+    fontFamily: "monospace",
+  },
+  lineJumpButton: {
+    width: 36,
+    paddingVertical: 0,
   },
   editor: {
     flex: 1,
