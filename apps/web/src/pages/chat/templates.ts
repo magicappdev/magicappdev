@@ -13,6 +13,7 @@ export interface Template {
   free: boolean;
   author: string;
   likes: number;
+  preview?: string;
 }
 
 export const TEMPLATE_CATEGORIES: Array<{
@@ -145,6 +146,7 @@ export const TEMPLATES: Template[] = [
     free: true,
     author: "MagicApp",
     likes: 789,
+    preview: "Form fields with validation states",
   },
   {
     id: "data-table",
@@ -159,6 +161,7 @@ export const TEMPLATES: Template[] = [
     free: true,
     author: "MagicApp",
     likes: 543,
+    preview: "Sortable columns, search, pagination",
   },
   {
     id: "image-gallery",
@@ -173,6 +176,7 @@ export const TEMPLATES: Template[] = [
     free: true,
     author: "MagicApp",
     likes: 678,
+    preview: "Masonry grid with lightbox zoom",
   },
   // Dashboards
   {
@@ -329,5 +333,81 @@ export const TEMPLATES: Template[] = [
     free: true,
     author: "MagicApp",
     likes: 1120,
+  },
+  // Components
+  {
+    id: "card",
+    name: "Card",
+    description: "Versatile card with header, body, footer slots",
+    category: "component",
+    prompt:
+      "Create a versatile card component with header, body, and footer slots. Include padding variants and hover effects.",
+    emoji: "🃏",
+    gradientFrom: "from-indigo-500",
+    gradientTo: "to-blue-400",
+    free: true,
+    author: "MagicApp",
+    likes: 650,
+    preview: "Header, body, footer slots",
+  },
+  {
+    id: "input",
+    name: "Input",
+    description: "Form input with label, validation states, and variants",
+    category: "component",
+    prompt:
+      "Create a form input component with label, hint, error state, and variants. Include icon slot support.",
+    emoji: "🔤",
+    gradientFrom: "from-emerald-500",
+    gradientTo: "to-teal-400",
+    free: true,
+    author: "MagicApp",
+    likes: 540,
+    preview: "Label, hint, error, success states",
+  },
+  {
+    id: "modal",
+    name: "Modal",
+    description: "Accessible dialog with overlay, close button, and sizes",
+    category: "component",
+    prompt:
+      "Create an accessible modal dialog with overlay, close button, title, description, and size variants.",
+    emoji: "🪟",
+    gradientFrom: "from-violet-500",
+    gradientTo: "to-purple-400",
+    free: true,
+    author: "MagicApp",
+    likes: 720,
+    preview: "Overlay, focus trap, size variants",
+  },
+  {
+    id: "navbar",
+    name: "Navbar",
+    description: "Responsive navbar with logo, links, and CTA",
+    category: "component",
+    prompt:
+      "Create a responsive navbar with brand logo, navigation links, CTA button, and mobile menu toggle.",
+    emoji: "🧭",
+    gradientFrom: "from-slate-600",
+    gradientTo: "to-slate-400",
+    free: true,
+    author: "MagicApp",
+    likes: 810,
+    preview: "Responsive links, CTA, mobile menu",
+  },
+  {
+    id: "badge",
+    name: "Badge",
+    description: "Compact status badge with color variants and sizes",
+    category: "component",
+    prompt:
+      "Create a compact badge component with color variants, sizes, and optional leading status dot.",
+    emoji: "🏷️",
+    gradientFrom: "from-amber-500",
+    gradientTo: "to-orange-400",
+    free: true,
+    author: "MagicApp",
+    likes: 470,
+    preview: "Color variants, sizes, status dot",
   },
 ];

@@ -3,8 +3,13 @@
  */
 
 import { dashboardAnalyticsTemplate } from "./dashboard-analytics.js";
+import { navbarComponentTemplate } from "./navbar-component.js";
 import { buttonComponentTemplate } from "./button-component.js";
+import { modalComponentTemplate } from "./modal-component.js";
+import { inputComponentTemplate } from "./input-component.js";
+import { badgeComponentTemplate } from "./badge-component.js";
 import { reactNativeTemplate } from "./react-native-app.js";
+import { cardComponentTemplate } from "./card-component.js";
 import { cfWorkersApiTemplate } from "./cf-workers-api.js";
 import { ecommerceTemplate } from "./ecommerce-store.js";
 import { honoApiTemplate } from "./hono-drizzle-api.js";
@@ -49,6 +54,11 @@ export const builtInTemplates = [
   landingPageTemplate,
   taskManagerTemplate,
   weatherAppTemplate,
+  cardComponentTemplate,
+  inputComponentTemplate,
+  modalComponentTemplate,
+  navbarComponentTemplate,
+  badgeComponentTemplate,
 ];
 
 /** Export individual templates */
@@ -75,4 +85,9 @@ export {
   landingPageTemplate,
   taskManagerTemplate,
   weatherAppTemplate,
+  cardComponentTemplate,
+  inputComponentTemplate,
+  modalComponentTemplate,
+  navbarComponentTemplate,
+  badgeComponentTemplate,
 };

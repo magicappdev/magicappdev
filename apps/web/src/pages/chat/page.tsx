@@ -117,10 +117,20 @@ function TemplateGallery({ onSelect }: { onSelect: (t: Template) => void }) {
                     PRO
                   </span>
                 )}
+                {template.category === "component" && (
+                  <span className="shrink-0 px-1.5 py-0.5 text-[9px] font-bold rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                    COMPONENT
+                  </span>
+                )}
               </div>
               <p className="text-[11px] text-zinc-500 line-clamp-2 mb-2">
                 {template.description}
               </p>
+              {template.preview && (
+                <p className="text-[10px] text-zinc-600 line-clamp-1 mb-2">
+                  {template.preview}
+                </p>
+              )}
               <div className="flex items-center gap-1.5 text-[10px] text-zinc-600">
                 <Star className="w-2.5 h-2.5 fill-zinc-600" />
                 <span>{template.likes.toLocaleString()}</span>
