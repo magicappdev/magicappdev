@@ -352,6 +352,62 @@ export const AGENT_TOOLS: Record<string, ToolDefinition> = {
     },
     requiresApproval: true,
   },
+
+  startWizard: {
+    name: "startWizard",
+    description:
+      "Start the MagicAppDev project wizard in the web app. Use this when the user wants to create a new app and you want to guide them through template selection, naming, preview, and deployment.",
+    parameters: {
+      idea: {
+        type: "string",
+        description:
+          "The user's idea or description of what they want to build",
+        required: true,
+      },
+    },
+    requiresApproval: false,
+  },
+
+  advanceWizard: {
+    name: "advanceWizard",
+    description: "Advance the project wizard to the next step.",
+    parameters: {},
+    requiresApproval: false,
+  },
+
+  selectWizardTemplate: {
+    name: "selectWizardTemplate",
+    description: "Select a template in the project wizard by slug or id.",
+    parameters: {
+      templateId: {
+        type: "string",
+        description: "Template slug or id to select",
+        required: true,
+      },
+    },
+    requiresApproval: false,
+  },
+
+  setWizardProjectName: {
+    name: "setWizardProjectName",
+    description: "Set the project name in the wizard.",
+    parameters: {
+      name: {
+        type: "string",
+        description: "Project name",
+        required: true,
+      },
+    },
+    requiresApproval: false,
+  },
+
+  completeWizard: {
+    name: "completeWizard",
+    description:
+      "Complete the wizard by saving the generated project to the workspace.",
+    parameters: {},
+    requiresApproval: true,
+  },
 };
 
 /**

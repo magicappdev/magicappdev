@@ -1795,11 +1795,25 @@ User Request: ${userPrompt}`;
         /GENERATE:\s*([a-zA-Z0-9-]+)\s+["']?([^"'\n]+?)["']?\s*(?:\n|$)/,
       );
       if (generateMatch) {
+        connection.send(
+          JSON.stringify({
+            type: "wizard_start",
+            idea: content,
+            templateSlug: generateMatch[1].trim(),
+            projectName: generateMatch[2].trim(),
+          }),
+        );
         await this.handleGenerateProject(
           connection,
           generateMatch[1].trim(),
           generateMatch[2].trim(),
           {},
+        );
+        connection.send(
+          JSON.stringify({
+            type: "wizard_complete",
+            success: true,
+          }),
         );
       } else {
         // Fallback: if user clearly wants to build an app but LLM skipped GENERATE directive
@@ -1808,7 +1822,21 @@ User Request: ${userPrompt}`;
         if (buildAppRegex.test(content)) {
           const slug = this.inferTemplateSlug(content);
           const projectName = this.extractProjectName(content);
+          connection.send(
+            JSON.stringify({
+              type: "wizard_start",
+              idea: content,
+              templateSlug: slug,
+              projectName,
+            }),
+          );
           await this.handleGenerateProject(connection, slug, projectName, {});
+          connection.send(
+            JSON.stringify({
+              type: "wizard_complete",
+              success: true,
+            }),
+          );
         }
       }
 

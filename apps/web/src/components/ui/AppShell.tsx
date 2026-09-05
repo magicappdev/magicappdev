@@ -10,6 +10,7 @@ import {
   Mail,
   Ticket,
   ShieldCheck,
+  Wand2,
 } from "lucide-react";
 import { Link, useLocation, Navigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
@@ -64,6 +65,7 @@ export function AppShell({ children }: AppShellProps) {
   if (user) {
     navItems.push(
       { label: "Projects", icon: Folder, href: "/projects" },
+      { label: "Wizard", icon: Wand2, href: "/wizard" },
       // Chat already in base nav items
       { label: "Tickets", icon: Ticket, href: "/tickets" },
       { label: "Settings", icon: Settings, href: "/settings" },

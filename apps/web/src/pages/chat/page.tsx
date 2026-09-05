@@ -1029,6 +1029,8 @@ export default function ChatPage() {
             timestamp: Date.now(),
           },
         ]);
+      } else if (type === "wizard_start") {
+        navigate("/wizard");
       }
     },
     [],
