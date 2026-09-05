@@ -34,6 +34,8 @@ export const QUICK_SUGGESTIONS = getPromptPresetsAsStrings({ count: 6 });
 const UI_TEMPLATE_META: Record<
   string,
   {
+    name: string;
+    description: string;
     emoji: string;
     gradientFrom: string;
     gradientTo: string;
@@ -44,6 +46,8 @@ const UI_TEMPLATE_META: Record<
   }
 > = {
   "react-spa": {
+    name: "React Starter",
+    description: "Single-page app with React 18, Vite, and Tailwind",
     emoji: "⚛️",
     gradientFrom: "from-blue-600",
     gradientTo: "to-cyan-500",
@@ -54,6 +58,8 @@ const UI_TEMPLATE_META: Record<
       "Create a React 18 single-page app with Vite, TypeScript, and Tailwind CSS. Include routing, state management, and a polished dashboard layout.",
   },
   "vue-spa": {
+    name: "Vue Starter",
+    description: "Single-page app with Vue 3, Router, and Pinia",
     emoji: "💚",
     gradientFrom: "from-emerald-600",
     gradientTo: "to-green-400",
@@ -64,6 +70,8 @@ const UI_TEMPLATE_META: Record<
       "Create a Vue 3 + Vite + TypeScript single-page app with Vue Router, Pinia state management, Tailwind CSS styling, and a polished dashboard layout.",
   },
   "express-api": {
+    name: "Express API",
+    description: "REST API with TypeScript, Zod validation, and logging",
     emoji: "⚡",
     gradientFrom: "from-gray-700",
     gradientTo: "to-gray-500",
@@ -74,6 +82,8 @@ const UI_TEMPLATE_META: Record<
       "Create an Express + TypeScript REST API with Zod validation, CORS, structured logging, and health checks. Include user and project routes as a starting point.",
   },
   "astro-site": {
+    name: "Astro Site",
+    description: "Static site with Tailwind and multiple pages",
     emoji: "🚀",
     gradientFrom: "from-purple-700",
     gradientTo: "to-indigo-400",
@@ -84,6 +94,8 @@ const UI_TEMPLATE_META: Record<
       "Create an Astro static site with Tailwind CSS, TypeScript, and multiple pages including Home and About. Optimize for Vercel serverless deployment.",
   },
   "chat-app": {
+    name: "Chat App",
+    description: "Real-time chat UI with sidebar and dark theme",
     emoji: "💬",
     gradientFrom: "from-sky-600",
     gradientTo: "to-blue-400",
@@ -94,6 +106,8 @@ const UI_TEMPLATE_META: Record<
       "Create a real-time chat application UI with user sidebar, message history, input area, and smooth animations. Use a modern dark theme and clean layout.",
   },
   blog: {
+    name: "Blog",
+    description: "Astro blog with content collections, tags, and RSS",
     emoji: "✍️",
     gradientFrom: "from-orange-600",
     gradientTo: "to-amber-400",
@@ -104,6 +118,8 @@ const UI_TEMPLATE_META: Record<
       "Create an Astro-based blog with content collections, markdown posts, tags, and an RSS feed. Include Home and About pages with Tailwind styling.",
   },
   "dashboard-analytics": {
+    name: "Analytics Dashboard",
+    description: "KPI cards, revenue charts, and data visualization",
     emoji: "📊",
     gradientFrom: "from-indigo-600",
     gradientTo: "to-blue-400",
@@ -114,6 +130,8 @@ const UI_TEMPLATE_META: Record<
       "Create an analytics dashboard with KPI cards, area chart for revenue, bar chart for user acquisition, and dark theme.",
   },
   "landing-page": {
+    name: "Landing Page",
+    description: "Marketing page with hero, pricing, FAQ, and footer",
     emoji: "🚀",
     gradientFrom: "from-pink-600",
     gradientTo: "to-rose-400",
@@ -124,6 +142,8 @@ const UI_TEMPLATE_META: Record<
       "Create a modern marketing landing page with animated hero, features grid, testimonials carousel, pricing table, FAQ, and footer.",
   },
   "task-manager": {
+    name: "Task Manager",
+    description: "Tasks with priorities, due dates, and filtering",
     emoji: "✅",
     gradientFrom: "from-emerald-600",
     gradientTo: "to-green-400",
@@ -134,6 +154,8 @@ const UI_TEMPLATE_META: Record<
       "Create a task manager app with task creation, priority levels, completion toggling, due dates, filtering, and clean dark UI.",
   },
   "weather-app": {
+    name: "Weather App",
+    description: "City search, current conditions, and 5-day forecast",
     emoji: "🌤️",
     gradientFrom: "from-sky-600",
     gradientTo: "to-blue-400",
@@ -144,6 +166,8 @@ const UI_TEMPLATE_META: Record<
       "Create a weather app with city search, current conditions, 5-day forecast, and dynamic gradient backgrounds.",
   },
   "card-component": {
+    name: "Card",
+    description: "Versatile card with header, body, and footer slots",
     emoji: "🃏",
     gradientFrom: "from-indigo-500",
     gradientTo: "to-blue-400",
@@ -154,6 +178,8 @@ const UI_TEMPLATE_META: Record<
       "Create a versatile card component with header, body, and footer slots. Include padding variants and hover effects.",
   },
   "input-component": {
+    name: "Input",
+    description: "Form input with label, hint, and error states",
     emoji: "🔤",
     gradientFrom: "from-emerald-500",
     gradientTo: "to-teal-400",
@@ -164,6 +190,8 @@ const UI_TEMPLATE_META: Record<
       "Create a form input component with label, hint, error state, and variants. Include icon slot support.",
   },
   "modal-component": {
+    name: "Modal",
+    description: "Accessible dialog with overlay and size variants",
     emoji: "🪟",
     gradientFrom: "from-violet-500",
     gradientTo: "to-purple-400",
@@ -174,6 +202,8 @@ const UI_TEMPLATE_META: Record<
       "Create an accessible modal dialog with overlay, close button, title, description, and size variants.",
   },
   "navbar-component": {
+    name: "Navbar",
+    description: "Responsive navbar with links, CTA, and mobile menu",
     emoji: "🧭",
     gradientFrom: "from-slate-600",
     gradientTo: "to-slate-400",
@@ -184,6 +214,8 @@ const UI_TEMPLATE_META: Record<
       "Create a responsive navbar with brand logo, navigation links, CTA button, and mobile menu toggle.",
   },
   "badge-component": {
+    name: "Badge",
+    description: "Compact badge with color variants and status dot",
     emoji: "🏷️",
     gradientFrom: "from-amber-500",
     gradientTo: "to-orange-400",
@@ -375,8 +407,8 @@ function toWebTemplate(
 ): Template {
   return {
     id,
-    name: meta.prompt.split(" ").slice(0, 2).join(" ") || id,
-    description: meta.prompt.slice(0, 80) + "...",
+    name: meta.name,
+    description: meta.description,
     category: meta.category,
     prompt: meta.prompt,
     emoji: meta.emoji,
