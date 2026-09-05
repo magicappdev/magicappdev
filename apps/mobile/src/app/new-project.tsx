@@ -21,7 +21,6 @@ import { MOBILE_TEMPLATES, type MobileTemplate } from "../lib/templates";
 type WizardStep = "template" | "details";
 
 export default function NewProjectScreen() {
-  useTheme();
   const router = useRouter();
   const [step, setStep] = useState<WizardStep>("template");
   const [selectedTemplate, setSelectedTemplate] = useState<MobileTemplate | null>(null);

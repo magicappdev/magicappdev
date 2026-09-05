@@ -7,7 +7,10 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  BackHandler,
+  Linking,
 } from "react-native";
+import { useRouter } from "expo-router";
 import { api } from "../../../lib/api";
 import type { User } from "@magicappdev/shared";
 import { Ionicons } from "@expo/vector-icons";
@@ -21,22 +24,41 @@ export default function ProfileSettingsScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
+    const backHandler = BackHandler.addEventListener("hardwareBackPress", () => {
+      router.replace("/settings");
+      return true;
+    });
+    return () => backHandler.remove();
+  }, [router]);
+
+  useEffect(() => {
+    let cancelled = false;
     api
       .getCurrentUser()
       .then(u => {
-        setUser(u);
-        if (u) {
-          setName(u.name || "");
-          setBio(u.profile?.bio || "");
-          setRegion(u.profile?.region || "Automatic (Global)");
+        if (!cancelled) {
+          setUser(u);
+          if (u) {
+            setName(u.name || "");
+            setBio(u.profile?.bio || "");
+            setRegion(u.profile?.region || "Automatic (Global)");
+          }
         }
       })
       .catch(err => {
-        setError(err instanceof Error ? err.message : "Failed to load profile");
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Failed to load profile");
+        }
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleSave = async () => {
@@ -52,6 +74,10 @@ export default function ProfileSettingsScreen() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleOpenWebsite = () => {
+    Linking.openURL("https://app.magicappdev.workers.dev");
   };
 
   if (loading) {
@@ -134,6 +160,12 @@ export default function ProfileSettingsScreen() {
           )}
         </TouchableOpacity>
       </View>
+
+      <TouchableOpacity style={styles.websiteButton} onPress={handleOpenWebsite}>
+        <Ionicons name="globe-outline" size={18} color="#2563EB" style={{ marginRight: 8 }} />
+        <Text style={styles.websiteButtonText}>Open MagicAppDev Website</Text>
+        <Ionicons name="open-outline" size={16} color="#2563EB" style={{ marginLeft: 6 }} />
+      </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -252,5 +284,21 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.6,
+  },
+  websiteButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#EFF6FF",
+    borderWidth: 1,
+    borderColor: "#BFDBFE",
+    borderRadius: 12,
+    paddingVertical: 14,
+    marginTop: 16,
+  },
+  websiteButtonText: {
+    color: "#2563EB",
+    fontSize: 15,
+    fontWeight: "600",
   },
 });

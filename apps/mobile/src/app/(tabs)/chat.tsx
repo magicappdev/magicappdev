@@ -12,7 +12,7 @@ import {
 import { useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../context/ThemeContext";
-import { api } from "../../lib/api";
+import { api, API_BASE_URL } from "../../lib/api";
 import { getPromptPresets, type PromptPreset } from "@magicappdev/shared/utils";
 import { useAgentConnection, useAgentMessages } from "../../lib/agent-websocket";
 
@@ -29,7 +29,6 @@ interface AIModel {
 }
 
 export default function ChatScreen() {
-  useTheme();
   const { sessionId, projectId } = useLocalSearchParams<{ sessionId?: string; projectId?: string }>();
   const [messages, setMessages] = useState<MessageItem[]>([
     { id: "init-1", role: "assistant", content: "Hello! What would you like to build today?" },
@@ -50,7 +49,8 @@ export default function ChatScreen() {
   const { connected, send } = useAgentConnection();
 
   useEffect(() => {
-    fetch("https://magicappdev-api.magicappdev.workers.dev/ai/models")
+    const controller = new AbortController();
+    fetch(`${API_BASE_URL}/ai/models`, { signal: controller.signal })
       .then(res => res.json())
       .then((data: { success?: boolean; data?: { models?: AIModel[] } }) => {
         if (data?.success && data?.data?.models) {
@@ -58,6 +58,7 @@ export default function ChatScreen() {
         }
       })
       .catch(() => {});
+    return () => controller.abort();
   }, []);
 
   useEffect(() => {

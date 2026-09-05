@@ -7,28 +7,53 @@ import {
   TouchableOpacity,
   View,
   Switch,
+  BackHandler,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { api, secureStorage } from "../../lib/api";
 import type { User } from "@magicappdev/shared";
 import { Ionicons } from "@expo/vector-icons";
+import { useTheme } from "../../context/ThemeContext";
 
 export default function SettingsScreen() {
+  const { colors, theme, setTheme } = useTheme();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isDarkMode, setIsDarkMode] = useState(true); // Default dark mode standard
-  const [isHackerTheme, setIsHackerTheme] = useState(false);
   const router = useRouter();
 
+  const isDarkMode = theme === "dark";
+  const isHackerTheme = theme === "hacker";
+
   useEffect(() => {
+    const backHandler = BackHandler.addEventListener("hardwareBackPress", () => {
+      if (router.canGoBack()) {
+        router.back();
+        return true;
+      }
+      return false;
+    });
+    return () => backHandler.remove();
+  }, [router]);
+
+  useEffect(() => {
+    let cancelled = false;
     api
       .getCurrentUser()
-      .then(u => setUser(u))
-      .catch(() => {
-        secureStorage.removeItem("magicappdev_access_token");
-        router.replace("/");
+      .then(u => {
+        if (!cancelled) setUser(u);
       })
-      .finally(() => setLoading(false));
+      .catch(() => {
+        if (!cancelled) {
+          secureStorage.removeItem("magicappdev_access_token");
+          router.replace("/");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   const handleLogout = async () => {
@@ -38,101 +63,97 @@ export default function SettingsScreen() {
     router.replace("/");
   };
 
-  const currentTheme = isHackerTheme
-    ? hackerTheme
-    : isDarkMode
-      ? darkTheme
-      : lightTheme;
+  const handleDarkModeToggle = (val: boolean) => {
+    setTheme(val ? "dark" : "light");
+  };
+
+  const handleHackerToggle = (val: boolean) => {
+    setTheme(val ? "hacker" : isDarkMode ? "dark" : "light");
+  };
 
   if (loading) {
     return (
-      <View style={[styles.center, { backgroundColor: currentTheme.bg }]}>
-        <ActivityIndicator size="large" color={currentTheme.primary} />
+      <View style={[styles.center, { backgroundColor: colors.bg }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: currentTheme.bg }]}
+      style={[styles.container, { backgroundColor: colors.bg }]}
       contentContainerStyle={styles.contentContainer}
     >
-      <View style={[styles.headerBanner, { backgroundColor: currentTheme.cardBg, borderColor: currentTheme.border }]}>
-        <View style={[styles.avatarPlaceholder, { backgroundColor: currentTheme.primary }]}>
+      <View style={[styles.headerBanner, { backgroundColor: colors.cardBg, borderColor: colors.border }]}>
+        <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primary }]}>
           <Text style={styles.avatarText}>{user?.name?.[0]?.toUpperCase() || "U"}</Text>
         </View>
-        <Text style={[styles.userName, { color: currentTheme.text }]}>{user?.name || "User"}</Text>
-        <Text style={[styles.userEmail, { color: currentTheme.subText }]}>{user?.email || ""}</Text>
+        <Text style={[styles.userName, { color: colors.text }]}>{user?.name || "User"}</Text>
+        <Text style={[styles.userEmail, { color: colors.subText }]}>{user?.email || ""}</Text>
       </View>
 
-      <Text style={[styles.sectionHeader, { color: currentTheme.subText }]}>Preferences & Configuration</Text>
+      <Text style={[styles.sectionHeader, { color: colors.subText }]}>Preferences & Configuration</Text>
 
-      <View style={[styles.menuCard, { backgroundColor: currentTheme.cardBg, borderColor: currentTheme.border }]}>
+      <View style={[styles.menuCard, { backgroundColor: colors.cardBg, borderColor: colors.border }]}>
         <TouchableOpacity
           style={styles.menuItem}
           onPress={() => router.push("/settings/profile" as unknown as never)}
         >
-          <View style={[styles.iconContainer, { backgroundColor: currentTheme.iconBg1 }]}>
-            <Ionicons name="person-outline" size={20} color={currentTheme.iconColor1} />
+          <View style={[styles.iconContainer, { backgroundColor: colors.iconBg1 }]}>
+            <Ionicons name="person-outline" size={20} color={colors.iconColor1} />
           </View>
           <View style={styles.menuTextContainer}>
-            <Text style={[styles.menuTitle, { color: currentTheme.text }]}>Profile Settings</Text>
-            <Text style={[styles.menuSubtitle, { color: currentTheme.subText }]}>Update bio, website, location & username</Text>
+            <Text style={[styles.menuTitle, { color: colors.text }]}>Profile Settings</Text>
+            <Text style={[styles.menuSubtitle, { color: colors.subText }]}>Update bio, website, location & username</Text>
           </View>
-          <Ionicons name="chevron-forward" size={18} color={currentTheme.subText} />
+          <Ionicons name="chevron-forward" size={18} color={colors.subText} />
         </TouchableOpacity>
 
-        <View style={[styles.separator, { backgroundColor: currentTheme.separator }]} />
+        <View style={[styles.separator, { backgroundColor: colors.separator }]} />
 
         <TouchableOpacity
           style={styles.menuItem}
           onPress={() => router.push("/settings/ai-provider" as unknown as never)}
         >
-          <View style={[styles.iconContainer, { backgroundColor: currentTheme.iconBg2 }]}>
-            <Ionicons name="key-outline" size={20} color={currentTheme.iconColor2} />
+          <View style={[styles.iconContainer, { backgroundColor: colors.iconBg2 }]}>
+            <Ionicons name="key-outline" size={20} color={colors.iconColor2} />
           </View>
           <View style={styles.menuTextContainer}>
-            <Text style={[styles.menuTitle, { color: currentTheme.text }]}>AI Provider / BYOK</Text>
-            <Text style={[styles.menuSubtitle, { color: currentTheme.subText }]}>Configure OpenAI, Anthropic, DeepSeek & Groq keys</Text>
+            <Text style={[styles.menuTitle, { color: colors.text }]}>AI Provider / BYOK</Text>
+            <Text style={[styles.menuSubtitle, { color: colors.subText }]}>Configure OpenAI, Anthropic, DeepSeek & Groq keys</Text>
           </View>
-          <Ionicons name="chevron-forward" size={18} color={currentTheme.subText} />
+          <Ionicons name="chevron-forward" size={18} color={colors.subText} />
         </TouchableOpacity>
 
-        <View style={[styles.separator, { backgroundColor: currentTheme.separator }]} />
+        <View style={[styles.separator, { backgroundColor: colors.separator }]} />
 
         <View style={styles.menuItem}>
-          <View style={[styles.iconContainer, { backgroundColor: currentTheme.iconBg3 }]}>
-            <Ionicons name="moon-outline" size={20} color={currentTheme.iconColor3} />
+          <View style={[styles.iconContainer, { backgroundColor: colors.iconBg3 }]}>
+            <Ionicons name="moon-outline" size={20} color={colors.iconColor3} />
           </View>
           <View style={styles.menuTextContainer}>
-            <Text style={[styles.menuTitle, { color: currentTheme.text }]}>Dark Mode</Text>
-            <Text style={[styles.menuSubtitle, { color: currentTheme.subText }]}>Enable standard dark theme</Text>
+            <Text style={[styles.menuTitle, { color: colors.text }]}>Dark Mode</Text>
+            <Text style={[styles.menuSubtitle, { color: colors.subText }]}>Enable standard dark theme</Text>
           </View>
           <Switch
             value={isDarkMode && !isHackerTheme}
-            onValueChange={val => {
-              setIsDarkMode(val);
-              if (val) setIsHackerTheme(false);
-            }}
+            onValueChange={handleDarkModeToggle}
           />
         </View>
 
-        <View style={[styles.separator, { backgroundColor: currentTheme.separator }]} />
+        <View style={[styles.separator, { backgroundColor: colors.separator }]} />
 
         <View style={styles.menuItem}>
           <View style={[styles.iconContainer, { backgroundColor: "#064E3B" }]}>
             <Ionicons name="terminal-outline" size={20} color="#10B981" />
           </View>
           <View style={styles.menuTextContainer}>
-            <Text style={[styles.menuTitle, { color: currentTheme.text }]}>Hacker Theme (Matrix)</Text>
-            <Text style={[styles.menuSubtitle, { color: currentTheme.subText }]}>Neon green terminal cyberpunk aesthetic</Text>
+            <Text style={[styles.menuTitle, { color: colors.text }]}>Hacker Theme (Matrix)</Text>
+            <Text style={[styles.menuSubtitle, { color: colors.subText }]}>Neon green terminal cyberpunk aesthetic</Text>
           </View>
           <Switch
             value={isHackerTheme}
-            onValueChange={val => {
-              setIsHackerTheme(val);
-              if (val) setIsDarkMode(true);
-            }}
+            onValueChange={handleHackerToggle}
             trackColor={{ false: "#767577", true: "#059669" }}
             thumbColor={isHackerTheme ? "#34D399" : "#f4f3f4"}
           />
@@ -146,54 +167,6 @@ export default function SettingsScreen() {
     </ScrollView>
   );
 }
-
-const lightTheme = {
-  bg: "#F8FAFC",
-  cardBg: "#FFFFFF",
-  text: "#0F172A",
-  subText: "#64748B",
-  border: "#E2E8F0",
-  separator: "#F1F5F9",
-  primary: "#2563EB",
-  iconBg1: "#DBEAFE",
-  iconColor1: "#2563EB",
-  iconBg2: "#F3E8FF",
-  iconColor2: "#9333EA",
-  iconBg3: "#FEF3C7",
-  iconColor3: "#D97706",
-};
-
-const darkTheme = {
-  bg: "#0B0F19",
-  cardBg: "#1E293B",
-  text: "#F8FAFC",
-  subText: "#94A3B8",
-  border: "#334155",
-  separator: "#334155",
-  primary: "#3B82F6",
-  iconBg1: "#1E3A8A",
-  iconColor1: "#60A5FA",
-  iconBg2: "#581C87",
-  iconColor2: "#C084FC",
-  iconBg3: "#78350F",
-  iconColor3: "#FBBF24",
-};
-
-const hackerTheme = {
-  bg: "#020617",
-  cardBg: "#030712",
-  text: "#34D399",
-  subText: "#059669",
-  border: "#065F46",
-  separator: "#064E3B",
-  primary: "#10B981",
-  iconBg1: "#064E3B",
-  iconColor1: "#34D399",
-  iconBg2: "#064E3B",
-  iconColor2: "#34D399",
-  iconBg3: "#064E3B",
-  iconColor3: "#34D399",
-};
 
 const styles = StyleSheet.create({
   container: {

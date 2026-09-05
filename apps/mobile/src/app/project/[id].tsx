@@ -39,7 +39,6 @@ interface ChatSession {
 }
 
 export default function ProjectDetailScreen() {
-  useTheme();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [project, setProject] = useState<Project | null>(null);

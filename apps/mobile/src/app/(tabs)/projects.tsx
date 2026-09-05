@@ -19,7 +19,6 @@ import { useTheme } from "../../context/ThemeContext";
 import { getTemplateById } from "../../lib/templates";
 
 export default function ProjectsScreen() {
-  useTheme();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);

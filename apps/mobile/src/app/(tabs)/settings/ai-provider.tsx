@@ -9,8 +9,10 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  BackHandler,
 } from "react-native";
 import { api } from "../../../lib/api";
+import { useRouter } from "expo-router";
 
 interface UserAiKey {
   id: string;
@@ -23,6 +25,7 @@ interface UserAiKey {
 }
 
 export default function AiProviderSettingsScreen() {
+  const router = useRouter();
   const [aiKeys, setAiKeys] = useState<UserAiKey[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -58,6 +61,14 @@ export default function AiProviderSettingsScreen() {
     loadAiKeys();
   }, []);
 
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener("hardwareBackPress", () => {
+      router.back();
+      return true;
+    });
+    return () => backHandler.remove();
+  }, [router]);
+
   const handleProviderSelect = (selectedProvider: string) => {
     setProvider(selectedProvider);
     if (selectedProvider === "openai") {
@@ -73,7 +84,7 @@ export default function AiProviderSettingsScreen() {
       setBaseUrl("https://api.groq.com/openai/v1");
       setModelName("llama-3.3-70b-versatile");
     } else if (selectedProvider === "opencode") {
-      setBaseUrl("https://zen.opencode.ai/v1");
+      setBaseUrl("https://opencode.ai/zen/v1");
       setModelName("opencode-zen-default");
     } else if (selectedProvider === "custom") {
       setBaseUrl("");

@@ -13,12 +13,16 @@ export default function LoginScreen() {
   const router = useRouter();
 
   useEffect(() => {
+    let cancelled = false;
     secureStorage.getItem("magicappdev_access_token").then((token: string | null) => {
-      if (token) {
+      if (token && !cancelled) {
         api.setToken(token);
         router.replace("/projects");
       }
     });
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   const handleGitHubLogin = async () => {
