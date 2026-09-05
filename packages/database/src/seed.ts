@@ -92,5 +92,25 @@ VALUES
   ('msg-3', '${SEED_SESSION_2_ID}', 'user', 'Add a dashboard', ${timestamp}),
   ('msg-4', '${SEED_SESSION_2_ID}', 'assistant', 'I will add a dashboard to your Next.js app.', ${timestamp + 1});`);
 
+  parts.push(`INSERT INTO user_ai_keys (id, user_id, provider, api_key, base_url, model_name, is_default, created_at, updated_at)
+VALUES
+  ('uak-1', '${SEED_USER_ID}', 'openai', 'sk-demo-openai', NULL, 'gpt-4o', 1, '${now}', '${now}'),
+  ('uak-2', '${SEED_USER_2_ID}', 'anthropic', 'sk-demo-anthropic', NULL, 'claude-3-5-sonnet', 1, '${now}', '${now}');`);
+
+  parts.push(`INSERT INTO tickets (id, user_id, subject, message, status, created_at, updated_at)
+VALUES
+  ('ticket-1', '${SEED_USER_ID}', 'Deployment failing', 'The deploy button returns a 500 error.', 'open', '${now}', '${now}'),
+  ('ticket-2', '${SEED_USER_2_ID}', 'Feature request: offline mode', 'Please add offline support for mobile.', 'in_progress', '${now}', '${now}');`);
+
+  parts.push(`INSERT INTO project_files (id, project_id, path, content, language, size, created_at, updated_at)
+VALUES
+  ('file-1', '${SEED_PROJECT_ID}', 'app/LoginScreen.tsx', 'export default function LoginScreen() { return null; }', 'typescript', 78, '${now}', '${now}'),
+  ('file-2', '${SEED_PROJECT_ID}', 'app/Dashboard.tsx', 'export default function Dashboard() { return null; }', 'typescript', 82, '${now}', '${now}');`);
+
+  parts.push(`INSERT INTO system_logs (id, level, category, message, details, user_id, metadata, created_at)
+VALUES
+  ('log-1', 'info', 'system', 'Seed data loaded', NULL, NULL, NULL, '${now}'),
+  ('log-2', 'warn', 'api', 'Rate limit threshold approaching', NULL, '${SEED_USER_ID}', NULL, '${now}');`);
+
   return parts.join("\n\n");
 }

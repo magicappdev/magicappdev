@@ -38,6 +38,24 @@ cd packages/api && bun run dev
 cd apps/web && bun run dev
 ```
 
+### 4. Seed Local Database
+
+MagicAppDev uses Cloudflare D1 for persistence. To populate your local database with demo data:
+
+```bash
+cd packages/database
+bun run seed
+```
+
+To wipe all data and reseed from scratch:
+
+```bash
+cd packages/database
+bun run seed --reset
+```
+
+This creates demo users, projects, chat sessions, AI keys, tickets, project files, and system logs for local development and E2E testing.
+
 ---
 
 ## 🏗️ Architecture Overview
