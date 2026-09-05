@@ -307,6 +307,7 @@ githubRoutes.post("/push-repo", async c => {
   // Fetch all project files
   const files = await db.query.projectFiles.findMany({
     where: eq(schema.projectFiles.projectId, projectId),
+    limit: 500,
   });
 
   // Push each file via the Contents API (parallelized)

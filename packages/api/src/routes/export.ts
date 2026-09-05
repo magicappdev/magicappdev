@@ -57,6 +57,7 @@ exportRoutes.get("/:id/export", async c => {
   // Get all project files
   const files = await db.query.projectFiles.findMany({
     where: eq(projectFiles.projectId, projectId),
+    limit: 500,
   });
 
   // Get project commands
@@ -166,6 +167,7 @@ exportRoutes.get("/:id/export/minimal", async c => {
 
   const files = await db.query.projectFiles.findMany({
     where: eq(projectFiles.projectId, projectId),
+    limit: 500,
   });
 
   const exportData = {
@@ -203,6 +205,7 @@ exportRoutes.get("/export/list", async c => {
     projects_list.map(async (p: typeof projects.$inferSelect) => {
       const files = await db.query.projectFiles.findMany({
         where: eq(projectFiles.projectId, p.id),
+        limit: 100,
       });
 
       return {
@@ -260,6 +263,7 @@ exportRoutes.get("/:id/export/zip", async c => {
 
   const files = await db.query.projectFiles.findMany({
     where: eq(projectFiles.projectId, projectId),
+    limit: 500,
   });
 
   try {

@@ -156,6 +156,7 @@ chatContextRoutes.get("/sessions/:id/context", async c => {
     // Get project files
     context.files = await db.query.projectFiles.findMany({
       where: eq(projectFiles.projectId, session.projectId),
+      limit: 100,
     });
 
     // Get project errors

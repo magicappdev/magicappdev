@@ -84,6 +84,7 @@ projectFilesRoutes.get("/:projectId/files", async c => {
   const results = await db.query.projectFiles.findMany({
     where: eq(projectFiles.projectId, projectId),
     orderBy: [projectFiles.path],
+    limit: 200,
   });
 
   return c.json({

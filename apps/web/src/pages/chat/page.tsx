@@ -1,26 +1,18 @@
 import {
-  BookOpen,
-  Bot,
   ChevronDown,
   ChevronRight,
   Cloud,
   Download,
-  ExternalLink,
   FileCode,
   FolderOpen,
   Loader2,
-  Paperclip,
-  PenTool,
-  Send,
   Sparkles,
-  Star,
-  Upload,
   User as UserIcon,
-  X,
+  Bot,
 } from "lucide-react";
 import {
-  generateStitchStarterScreen,
   isStitchConfigured,
+  generateStitchStarterScreen,
   type StitchStarterScreen,
 } from "@/lib/stitch.js";
 import {
@@ -28,21 +20,25 @@ import {
   useAgentMessages,
   usePreviewErrorListener,
 } from "@/lib/agent-websocket.js";
-import {
-  TEMPLATE_CATEGORIES,
-  TEMPLATES,
-  type Template,
-  type TemplateCategory,
-} from "./templates.js";
 import { getPromptPresets, type PromptPreset } from "@magicappdev/shared/utils";
-import { Button, Dialog, Input, TooltipProvider } from "@cloudflare/kumo";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Preview, { type PreviewFile } from "@/components/ui/Preview.js";
-import { GitHubIcon as Github } from "@/components/ui/GitHubIcon";
+import { Button, TooltipProvider } from "@cloudflare/kumo";
+import { GitHubIcon } from "@/components/ui/GitHubIcon";
 import { MessageType } from "@magicappdev/shared/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+
+import {
+  TemplateGallery,
+  InputArea,
+  DeployModal,
+  ExportGitHubModal,
+  UpgradeModal,
+} from "./components/index.js";
+
+import { type Template } from "./templates.js";
 
 interface Message {
   id: string;
@@ -62,705 +58,6 @@ interface GeneratedProject {
   files: GeneratedFile[];
   dependencies: Record<string, string>;
   devDependencies: Record<string, string>;
-}
-
-// ─── TemplateGallery ─────────────────────────────────────────────────────────
-function TemplateGallery({ onSelect }: { onSelect: (t: Template) => void }) {
-  const [activeTab, setActiveTab] = useState<TemplateCategory>("all");
-  const filtered =
-    activeTab === "all"
-      ? TEMPLATES
-      : TEMPLATES.filter(t => t.category === activeTab);
-
-  return (
-    <div>
-      <div className="flex gap-1 mb-6 overflow-x-auto pb-1">
-        {TEMPLATE_CATEGORIES.map(cat => (
-          <button
-            key={cat.id}
-            type="button"
-            onClick={() => setActiveTab(cat.id)}
-            className={cn(
-              "px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors",
-              activeTab === cat.id
-                ? "bg-white text-black"
-                : "text-zinc-400 hover:text-white hover:bg-zinc-800",
-            )}
-          >
-            {cat.label}
-          </button>
-        ))}
-      </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-        {filtered.map(template => (
-          <button
-            key={template.id}
-            type="button"
-            onClick={() => onSelect(template)}
-            className="group text-left rounded-2xl overflow-hidden border border-zinc-800 hover:border-zinc-600 transition-all duration-200 hover:scale-[1.02] active:scale-[0.99]"
-          >
-            <div
-              className={cn(
-                "h-28 flex items-center justify-center text-4xl bg-gradient-to-br",
-                template.gradientFrom,
-                template.gradientTo,
-              )}
-            >
-              {template.emoji}
-            </div>
-            <div className="p-3 bg-zinc-900">
-              <div className="flex items-start justify-between gap-1 mb-1">
-                <span className="text-xs font-semibold text-white leading-tight">
-                  {template.name}
-                </span>
-                {!template.free && (
-                  <span className="shrink-0 px-1.5 py-0.5 text-[9px] font-bold rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
-                    PRO
-                  </span>
-                )}
-                {template.category === "component" && (
-                  <span className="shrink-0 px-1.5 py-0.5 text-[9px] font-bold rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20">
-                    COMPONENT
-                  </span>
-                )}
-              </div>
-              <p className="text-[11px] text-zinc-500 line-clamp-2 mb-2">
-                {template.description}
-              </p>
-              {template.preview && (
-                <p className="text-[10px] text-zinc-600 line-clamp-1 mb-2">
-                  {template.preview}
-                </p>
-              )}
-              <div className="flex items-center gap-1.5 text-[10px] text-zinc-600">
-                <Star className="w-2.5 h-2.5 fill-zinc-600" />
-                <span>{template.likes.toLocaleString()}</span>
-              </div>
-            </div>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ─── InputArea ────────────────────────────────────────────────────────────────
-interface InputAreaProps {
-  input: string;
-  setInput: (v: string) => void;
-  isLoading: boolean;
-  isConnected: boolean;
-  isGeneratingStitch: boolean;
-  stitchAvailable: boolean;
-  uploadedFile: File | null;
-  onUploadFile: (file: File | null) => void;
-  onGenerateWithStitch: () => void | Promise<void>;
-  textareaRef: React.RefObject<HTMLTextAreaElement | null>;
-  onSubmit: (promptText?: string) => void;
-  isLanding?: boolean;
-}
-
-function InputArea({
-  input,
-  setInput,
-  isLoading,
-  isConnected,
-  isGeneratingStitch,
-  stitchAvailable,
-  uploadedFile,
-  onUploadFile,
-  onGenerateWithStitch,
-  textareaRef,
-  onSubmit,
-  isLanding = false,
-}: InputAreaProps) {
-  const [attachmentOpen, setAttachmentOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (!attachmentOpen) return;
-    const handler = (e: MouseEvent) => {
-      if (!containerRef.current?.contains(e.target as Node))
-        setAttachmentOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [attachmentOpen]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInput(e.target.value);
-    const el = e.target;
-    el.style.height = "auto";
-    el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      onSubmit();
-    }
-  };
-
-  return (
-    <div className="relative" ref={containerRef}>
-      {/* Attachment popover */}
-      {attachmentOpen && (
-        <div className="absolute bottom-full left-0 mb-2 z-50 shadow-2xl">
-          <div className="bg-zinc-900 border border-zinc-700 rounded-xl overflow-hidden min-w-[220px]">
-            <div className="px-3 pt-3 pb-1">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
-                Add Attachments
-              </p>
-            </div>
-            <div className="p-1">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-zinc-200 hover:bg-zinc-800 transition-colors"
-              >
-                <Upload className="w-4 h-4 text-zinc-400 shrink-0" />
-                Upload a file
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                className="hidden"
-                onChange={e => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    onUploadFile(file);
-                    setAttachmentOpen(false);
-                  }
-                }}
-              />
-            </div>
-            <div className="px-3 pt-2 pb-1">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
-                Add a Starting Point
-              </p>
-            </div>
-            <div className="p-1 pb-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setAttachmentOpen(false);
-                  const raw = window.prompt(
-                    "Enter Figma file URL. Leave blank to generate a starter screen with Stitch.",
-                  );
-                  if (raw === null) return;
-                  const url = raw.trim();
-                  if (!url) {
-                    if (stitchAvailable) {
-                      void onGenerateWithStitch();
-                    } else {
-                      window.alert(
-                        "No Figma URL provided. Configure Stitch to generate a starter screen instead.",
-                      );
-                    }
-                    return;
-                  }
-                  try {
-                    const parsed = new URL(url);
-                    if (parsed.protocol !== "https:") {
-                      window.alert("Please enter an HTTPS URL.");
-                      return;
-                    }
-                    setInput(
-                      input + (input ? "\n" : "") + `[Figma: ${parsed.href}]`,
-                    );
-                  } catch {
-                    window.alert("Please enter a valid URL.");
-                  }
-                }}
-                className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-zinc-200 hover:bg-zinc-800 transition-colors"
-              >
-                <PenTool className="w-4 h-4 text-zinc-400 shrink-0" />
-                Import a Figma design
-              </button>
-              <button
-                type="button"
-                disabled={!stitchAvailable || isGeneratingStitch}
-                onClick={() => {
-                  setAttachmentOpen(false);
-                  void onGenerateWithStitch();
-                }}
-                className={cn(
-                  "flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm transition-colors",
-                  stitchAvailable && !isGeneratingStitch
-                    ? "text-zinc-200 hover:bg-zinc-800"
-                    : "text-zinc-500 cursor-not-allowed",
-                )}
-              >
-                {isGeneratingStitch ? (
-                  <Loader2 className="w-4 h-4 text-zinc-400 shrink-0 animate-spin" />
-                ) : (
-                  <Sparkles className="w-4 h-4 text-zinc-400 shrink-0" />
-                )}
-                {isGeneratingStitch
-                  ? "Generating with Stitch..."
-                  : "Generate a screen with Stitch"}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setAttachmentOpen(false);
-                  const raw = window.prompt("Enter GitHub repository URL:");
-                  if (!raw) return;
-                  const url = raw.trim();
-                  try {
-                    const parsed = new URL(url);
-                    if (parsed.protocol !== "https:") {
-                      window.alert("Please enter an HTTPS URL.");
-                      return;
-                    }
-                    setInput(
-                      input +
-                        (input ? "\n" : "") +
-                        `[GitHub repo: ${parsed.href}]`,
-                    );
-                  } catch {
-                    window.alert("Please enter a valid URL.");
-                  }
-                }}
-                className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-zinc-200 hover:bg-zinc-800 transition-colors"
-              >
-                <Github className="w-4 h-4 text-zinc-400 shrink-0" />
-                Import an existing project
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setAttachmentOpen(false);
-                  document
-                    .getElementById("template-gallery")
-                    ?.scrollIntoView({ behavior: "smooth" });
-                }}
-                className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-zinc-200 hover:bg-zinc-800 transition-colors"
-              >
-                <BookOpen className="w-4 h-4 text-zinc-400 shrink-0" />
-                Browse templates
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Main input card */}
-      <div className="bg-zinc-900/80 border border-zinc-700 rounded-2xl focus-within:border-zinc-500 transition-colors backdrop-blur-sm">
-        {uploadedFile && (
-          <div className="flex items-center gap-2 px-4 pt-3">
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 rounded-lg text-xs text-zinc-300">
-              <Upload className="w-3 h-3 text-zinc-400" />
-              <span className="max-w-[160px] truncate">
-                {uploadedFile.name}
-              </span>
-              <button
-                type="button"
-                onClick={() => onUploadFile(null)}
-                className="ml-1 text-zinc-500 hover:text-zinc-200 transition-colors"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </div>
-          </div>
-        )}
-        <textarea
-          ref={textareaRef as React.RefObject<HTMLTextAreaElement>}
-          value={input}
-          onChange={handleChange}
-          onKeyDown={handleKeyDown}
-          placeholder={
-            isLanding
-              ? "Describe what you want to build… (Shift+Enter for new line)"
-              : "Continue the conversation…"
-          }
-          className="w-full bg-transparent text-white placeholder-zinc-600 resize-none outline-none px-4 pt-4 pb-2 text-sm leading-relaxed"
-          style={{ minHeight: isLanding ? "96px" : "60px", maxHeight: "200px" }}
-          disabled={!isConnected}
-          rows={isLanding ? 3 : 2}
-        />
-        <div className="flex items-center justify-between px-4 pb-3 pt-1">
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() => setAttachmentOpen(v => !v)}
-              className={cn(
-                "p-1.5 rounded-lg text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 transition-colors",
-                attachmentOpen && "text-zinc-200 bg-zinc-800",
-              )}
-              title="Add attachment or starting point"
-            >
-              <Paperclip className="w-4 h-4" />
-            </button>
-            {!isConnected && (
-              <span className="text-[11px] text-zinc-600 ml-1">
-                Reconnecting…
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            {isLoading && (
-              <span className="text-xs text-zinc-500 flex items-center gap-1.5">
-                <Loader2 className="w-3 h-3 animate-spin" />
-                Thinking…
-              </span>
-            )}
-            <button
-              type="button"
-              onClick={() => onSubmit()}
-              disabled={!input.trim() || isLoading || !isConnected}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-black text-sm font-medium rounded-xl hover:bg-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-            >
-              {isLoading ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <Send className="w-3.5 h-3.5" />
-              )}
-              {isLanding ? "Create" : "Send"}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── DeployModal ──────────────────────────────────────────────────────────────
-function DeployModal({
-  project,
-  onClose,
-}: {
-  project: GeneratedProject;
-  onClose: () => void;
-}) {
-  return (
-    <Dialog.Root open onOpenChange={open => !open && onClose()}>
-      <Dialog size="lg" className="p-6 space-y-5">
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-1">
-            <Dialog.Title className="flex items-center gap-2 text-white">
-              <Cloud className="w-5 h-5 text-orange-400" />
-              Deploy to Cloudflare
-            </Dialog.Title>
-            <Dialog.Description className="text-sm text-zinc-400">
-              Deploy{" "}
-              <span className="font-medium text-zinc-100">
-                {project.projectName}
-              </span>{" "}
-              to Cloudflare Workers or Pages.
-            </Dialog.Description>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-zinc-500 hover:text-white transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <div className="space-y-3">
-          <div className="bg-zinc-800/60 rounded-xl p-4 border border-zinc-700/50">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 mb-3">
-              One-Click Deploy to Cloudflare Pages
-            </p>
-            <Button
-              type="button"
-              variant="primary"
-              className="w-full justify-center"
-              icon={<ExternalLink className="w-4 h-4" />}
-              onClick={() =>
-                window.open(
-                  "https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/workers-sdk/tree/main/templates/worker-typescript",
-                  "_blank",
-                  "noopener,noreferrer",
-                )
-              }
-            >
-              Deploy Now
-            </Button>
-          </div>
-          <div className="bg-zinc-800/60 rounded-xl p-4 border border-zinc-700/50">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 mb-2">
-              CLI Deploy
-            </p>
-            <pre className="text-xs text-green-400 bg-black/60 rounded-lg p-3 overflow-x-auto leading-relaxed">
-              {`cd ${project.projectName}\nnpx wrangler deploy`}
-            </pre>
-          </div>
-        </div>
-
-        <div className="flex justify-end">
-          <Button type="button" variant="secondary" onClick={onClose}>
-            Close
-          </Button>
-        </div>
-      </Dialog>
-    </Dialog.Root>
-  );
-}
-
-// ─── ExportGitHubModal ────────────────────────────────────────────────────────
-function ExportGitHubModal({
-  project,
-  onClose,
-}: {
-  project: GeneratedProject;
-  onClose: () => void;
-}) {
-  const [repoName, setRepoName] = useState(
-    project.projectName.toLowerCase().replace(/\s+/g, "-"),
-  );
-  const [isPrivate, setIsPrivate] = useState(false);
-  const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">(
-    "idle",
-  );
-  const [resultUrl, setResultUrl] = useState<string | null>(null);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
-  const handleCreate = async () => {
-    setStatus("loading");
-    setErrorMsg(null);
-    try {
-      const { api } = await import("@/lib/api.js");
-      try {
-        const res = await api.unwrap<{ repoUrl: string }>(
-          "/github/create-repo",
-          {
-            method: "POST",
-            body: JSON.stringify({
-              name: repoName,
-              description: `Generated by MagicAppDev — ${project.projectName}`,
-              isPrivate,
-              files: project.files,
-            }),
-          },
-        );
-        setResultUrl(res.repoUrl ?? null);
-        setStatus("done");
-      } catch (err) {
-        setErrorMsg(err instanceof Error ? err.message : "Unknown error");
-        setStatus("error");
-      }
-    } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : "Unknown error");
-      setStatus("error");
-    }
-  };
-
-  return (
-    <Dialog.Root open onOpenChange={open => !open && onClose()}>
-      <Dialog size="lg" className="p-6 space-y-4">
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-1">
-            <Dialog.Title className="flex items-center gap-2 text-white">
-              <Github className="w-5 h-5 text-white" />
-              Export to GitHub
-            </Dialog.Title>
-            <Dialog.Description className="text-sm text-zinc-400">
-              Create a GitHub repository for{" "}
-              <span className="font-medium text-zinc-100">
-                {project.projectName}
-              </span>{" "}
-              and push all{" "}
-              <span className="font-medium text-zinc-100">
-                {project.files.length} files
-              </span>
-              .
-            </Dialog.Description>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-zinc-500 hover:text-white transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {status === "done" && resultUrl ? (
-          <div className="bg-green-900/30 border border-green-700/50 rounded-xl p-4 space-y-2">
-            <p className="text-sm font-semibold text-green-300">
-              ✓ Repository created!
-            </p>
-            <a
-              href={resultUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-green-400 underline break-all"
-            >
-              {resultUrl}
-            </a>
-          </div>
-        ) : (
-          <>
-            <Input
-              label="Repository Name"
-              value={repoName}
-              onChange={e => setRepoName(e.target.value)}
-              placeholder="my-awesome-app"
-              disabled={status === "loading"}
-            />
-
-            <label className="flex items-center gap-2 text-sm text-zinc-300 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={isPrivate}
-                onChange={e => setIsPrivate(e.target.checked)}
-                className="rounded border-zinc-600"
-                disabled={status === "loading"}
-              />
-              Make repository private
-            </label>
-
-            {errorMsg && (
-              <p className="text-sm text-red-400 bg-red-900/20 border border-red-800/40 rounded-lg px-3 py-2">
-                {errorMsg}
-              </p>
-            )}
-
-            <div className="bg-zinc-800/60 rounded-xl p-4 border border-zinc-700/50">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 mb-2">
-                Manual alternative
-              </p>
-              <pre className="text-xs text-green-400 bg-black/60 rounded-lg p-3 overflow-x-auto leading-relaxed">
-                {`cd ${repoName || "my-app"}\ngit init && git add .\ngit commit -m "Initial commit"\ngh repo create ${repoName || "my-app"} --public --push --source=.`}
-              </pre>
-            </div>
-          </>
-        )}
-
-        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-          <Button type="button" variant="secondary" onClick={onClose}>
-            {status === "done" ? "Close" : "Cancel"}
-          </Button>
-          {status !== "done" && (
-            <Button
-              type="button"
-              variant="primary"
-              icon={
-                status === "loading" ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Github className="w-4 h-4" />
-                )
-              }
-              onClick={handleCreate}
-              disabled={status === "loading" || !repoName.trim()}
-            >
-              {status === "loading" ? "Creating…" : "Create on GitHub"}
-            </Button>
-          )}
-        </div>
-      </Dialog>
-    </Dialog.Root>
-  );
-}
-
-function StitchPreviewCard({
-  preview,
-  isGenerating,
-  error,
-  onUseInPrompt,
-  onClear,
-}: {
-  preview: StitchStarterScreen | null;
-  isGenerating: boolean;
-  error: string | null;
-  onUseInPrompt: () => void;
-  onClear: () => void;
-}) {
-  if (!preview && !isGenerating && !error) {
-    return null;
-  }
-
-  return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4 shadow-2xl backdrop-blur-sm">
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 text-sm font-semibold text-white">
-            <Sparkles className="w-4 h-4 text-orange-400" />
-            Stitch starter screen
-          </div>
-          <p className="text-sm text-zinc-400">
-            {preview
-              ? `Generated from: "${preview.prompt}"`
-              : "Create a visual starting point from your prompt before sending it to the agent."}
-          </p>
-        </div>
-        {(preview || error) && (
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            shape="square"
-            aria-label="Dismiss Stitch preview"
-            onClick={onClear}
-            icon={<X className="w-4 h-4" />}
-          />
-        )}
-      </div>
-
-      {isGenerating && (
-        <div className="mt-4 flex items-center gap-2 rounded-xl border border-zinc-800 bg-black/30 px-4 py-3 text-sm text-zinc-300">
-          <Loader2 className="w-4 h-4 animate-spin text-orange-400" />
-          Generating a starter screen with Stitch...
-        </div>
-      )}
-
-      {error && (
-        <div className="mt-4 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-          {error}
-        </div>
-      )}
-
-      {preview && (
-        <div className="mt-4 space-y-4">
-          <div className="overflow-hidden rounded-xl border border-zinc-800 bg-black/40">
-            <img
-              src={preview.imageUrl}
-              alt={`Stitch preview for ${preview.prompt}`}
-              className="w-full h-auto object-cover"
-              loading="lazy"
-            />
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              type="button"
-              size="sm"
-              variant="primary"
-              icon={<ExternalLink className="w-4 h-4" />}
-              onClick={() =>
-                window.open(preview.htmlUrl, "_blank", "noopener,noreferrer")
-              }
-            >
-              Open HTML
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              icon={<ExternalLink className="w-4 h-4" />}
-              onClick={() =>
-                window.open(preview.imageUrl, "_blank", "noopener,noreferrer")
-              }
-            >
-              Open Screenshot
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              onClick={onUseInPrompt}
-            >
-              Use in prompt
-            </Button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
 }
 
 export default function ChatPage() {
@@ -789,7 +86,6 @@ export default function ChatPage() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeTemplate, setUpgradeTemplate] = useState<Template | null>(null);
 
-  // New AI Studio Canvas Layout mode state
   const [canvasViewMode, setCanvasViewMode] = useState<
     "split" | "chat" | "preview"
   >("split");
@@ -802,7 +98,6 @@ export default function ChatPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const sessionIdRef = useRef<string | null>(null);
-
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = useCallback(() => {
@@ -1308,23 +603,15 @@ export default function ChatPage() {
                   textareaRef={textareaRef}
                   onSubmit={handleSubmit}
                   isLanding
+                  stitchPreview={stitchPreview}
+                  stitchError={stitchError}
+                  onUseStitchInPrompt={attachStitchPreviewToPrompt}
+                  onClearStitch={() => {
+                    setStitchPreview(null);
+                    setStitchError(null);
+                  }}
                 />
               </div>
-
-              {(stitchPreview || isGeneratingStitch || stitchError) && (
-                <div className="mb-8">
-                  <StitchPreviewCard
-                    preview={stitchPreview}
-                    isGenerating={isGeneratingStitch}
-                    error={stitchError}
-                    onUseInPrompt={attachStitchPreviewToPrompt}
-                    onClear={() => {
-                      setStitchPreview(null);
-                      setStitchError(null);
-                    }}
-                  />
-                </div>
-              )}
 
               <div className="flex flex-wrap gap-2 justify-center mb-16">
                 {promptPresets.map(preset => (
@@ -1479,7 +766,7 @@ export default function ChatPage() {
                       size="sm"
                       variant="secondary"
                       onClick={() => setShowExportModal(true)}
-                      icon={<Github className="w-3.5 h-3.5" />}
+                      icon={<GitHubIcon className="w-3.5 h-3.5" />}
                     >
                       GitHub
                     </Button>
@@ -1609,6 +896,13 @@ export default function ChatPage() {
                     onGenerateWithStitch={handleGenerateWithStitch}
                     textareaRef={textareaRef}
                     onSubmit={handleSubmit}
+                    stitchPreview={stitchPreview}
+                    stitchError={stitchError}
+                    onUseStitchInPrompt={attachStitchPreviewToPrompt}
+                    onClearStitch={() => {
+                      setStitchPreview(null);
+                      setStitchError(null);
+                    }}
                   />
                 </div>
               </div>
@@ -1731,84 +1025,13 @@ export default function ChatPage() {
             </div>
           </>
         )}
+
+        <UpgradeModal
+          open={showUpgradeModal}
+          onOpenChange={setShowUpgradeModal}
+          upgradeTemplate={upgradeTemplate}
+        />
       </div>
-      {showUpgradeModal && upgradeTemplate && (
-        <Dialog.Root open={showUpgradeModal} onOpenChange={setShowUpgradeModal}>
-          <Dialog size="lg" className="p-6 space-y-4">
-            <div className="flex items-center justify-between mb-4">
-              <Dialog.Title className="text-lg font-bold text-white">
-                Upgrade to Pro
-              </Dialog.Title>
-              <button
-                type="button"
-                onClick={() => setShowUpgradeModal(false)}
-                className="text-zinc-400 hover:text-white transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <Dialog.Description className="text-sm text-zinc-400 mb-6">
-              <span className="text-white font-semibold">
-                {upgradeTemplate.name}
-              </span>{" "}
-              is a PRO template. Upgrade to unlock all premium templates,
-              priority support, and unlimited projects.
-            </Dialog.Description>
-            <div className="bg-zinc-800/60 rounded-xl p-4 mb-6 border border-zinc-700">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-full bg-yellow-500/10 flex items-center justify-center">
-                  <Star className="w-5 h-5 text-yellow-400" />
-                </div>
-                <div>
-                  <div className="text-white font-semibold">Pro Plan</div>
-                  <div className="text-xs text-zinc-400">
-                    $0/month — Free during beta
-                  </div>
-                </div>
-              </div>
-              <ul className="space-y-2 text-sm text-zinc-300">
-                <li className="flex items-center gap-2">
-                  <span className="text-green-400">✓</span>
-                  All premium templates
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-green-400">✓</span>
-                  Unlimited projects
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-green-400">✓</span>
-                  Priority AI models
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-green-400">✓</span>
-                  GitHub repo push
-                </li>
-              </ul>
-            </div>
-            <div className="flex gap-3">
-              <Button
-                variant="secondary"
-                className="flex-1"
-                onClick={() => setShowUpgradeModal(false)}
-              >
-                Maybe later
-              </Button>
-              <Button
-                variant="primary"
-                className="flex-1"
-                onClick={() => {
-                  window.alert(
-                    "Pro upgrades will be available soon. Stay tuned!",
-                  );
-                  setShowUpgradeModal(false);
-                }}
-              >
-                Upgrade now
-              </Button>
-            </div>
-          </Dialog>
-        </Dialog.Root>
-      )}
     </TooltipProvider>
   );
 }

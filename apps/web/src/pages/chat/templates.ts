@@ -31,8 +31,155 @@ import { getPromptPresetsAsStrings } from "@magicappdev/shared/utils";
 
 export const QUICK_SUGGESTIONS = getPromptPresetsAsStrings({ count: 6 });
 
-export const TEMPLATES: Template[] = [
-  // Apps & Games
+const UI_TEMPLATE_META: Record<
+  string,
+  {
+    emoji: string;
+    gradientFrom: string;
+    gradientTo: string;
+    likes: number;
+    preview?: string;
+    prompt: string;
+  }
+> = {
+  "react-spa": {
+    emoji: "⚛️",
+    gradientFrom: "from-blue-600",
+    gradientTo: "to-cyan-500",
+    likes: 2340,
+    preview: "React + Vite + TypeScript + Tailwind",
+    prompt:
+      "Create a React 18 single-page app with Vite, TypeScript, and Tailwind CSS. Include routing, state management, and a polished dashboard layout.",
+  },
+  "vue-spa": {
+    emoji: "💚",
+    gradientFrom: "from-emerald-600",
+    gradientTo: "to-green-400",
+    likes: 1870,
+    preview: "Vue 3 + Vite + TypeScript + Tailwind",
+    prompt:
+      "Create a Vue 3 + Vite + TypeScript single-page app with Vue Router, Pinia state management, Tailwind CSS styling, and a polished dashboard layout.",
+  },
+  "express-api": {
+    emoji: "⚡",
+    gradientFrom: "from-gray-700",
+    gradientTo: "to-gray-500",
+    likes: 1340,
+    preview: "Express + TypeScript + Zod validation",
+    prompt:
+      "Create an Express + TypeScript REST API with Zod validation, CORS, structured logging, and health checks. Include user and project routes as a starting point.",
+  },
+  "astro-site": {
+    emoji: "🚀",
+    gradientFrom: "from-purple-700",
+    gradientTo: "to-indigo-400",
+    likes: 980,
+    preview: "Astro + Tailwind + TypeScript",
+    prompt:
+      "Create an Astro static site with Tailwind CSS, TypeScript, and multiple pages including Home and About. Optimize for Vercel serverless deployment.",
+  },
+  "chat-app": {
+    emoji: "💬",
+    gradientFrom: "from-sky-600",
+    gradientTo: "to-blue-400",
+    likes: 1560,
+    preview: "Real-time chat UI with sidebar",
+    prompt:
+      "Create a real-time chat application UI with user sidebar, message history, input area, and smooth animations. Use a modern dark theme and clean layout.",
+  },
+  blog: {
+    emoji: "✍️",
+    gradientFrom: "from-orange-600",
+    gradientTo: "to-amber-400",
+    likes: 1120,
+    preview: "Astro blog with content collections",
+    prompt:
+      "Create an Astro-based blog with content collections, markdown posts, tags, and an RSS feed. Include Home and About pages with Tailwind styling.",
+  },
+  "dashboard-analytics": {
+    emoji: "📊",
+    gradientFrom: "from-indigo-600",
+    gradientTo: "to-blue-400",
+    likes: 2100,
+    preview: "KPI cards, charts, data viz",
+    prompt:
+      "Create an analytics dashboard with KPI cards, area chart for revenue, bar chart for user acquisition, and dark theme.",
+  },
+  "landing-page": {
+    emoji: "🚀",
+    gradientFrom: "from-pink-600",
+    gradientTo: "to-rose-400",
+    likes: 1890,
+    preview: "Hero, features, pricing, CTA",
+    prompt:
+      "Create a modern marketing landing page with animated hero, features grid, testimonials carousel, pricing table, FAQ, and footer.",
+  },
+  "task-manager": {
+    emoji: "✅",
+    gradientFrom: "from-emerald-600",
+    gradientTo: "to-green-400",
+    likes: 1450,
+    preview: "Tasks, priorities, due dates",
+    prompt:
+      "Create a task manager app with task creation, priority levels, completion toggling, due dates, filtering, and clean dark UI.",
+  },
+  "weather-app": {
+    emoji: "🌤️",
+    gradientFrom: "from-sky-600",
+    gradientTo: "to-blue-400",
+    likes: 1230,
+    preview: "Forecast, search, dynamic UI",
+    prompt:
+      "Create a weather app with city search, current conditions, 5-day forecast, and dynamic gradient backgrounds.",
+  },
+  "card-component": {
+    emoji: "🃏",
+    gradientFrom: "from-indigo-500",
+    gradientTo: "to-blue-400",
+    likes: 780,
+    preview: "Header, body, footer slots",
+    prompt:
+      "Create a versatile card component with header, body, and footer slots. Include padding variants and hover effects.",
+  },
+  "input-component": {
+    emoji: "🔤",
+    gradientFrom: "from-emerald-500",
+    gradientTo: "to-teal-400",
+    likes: 650,
+    preview: "Label, hint, error, success states",
+    prompt:
+      "Create a form input component with label, hint, error state, and variants. Include icon slot support.",
+  },
+  "modal-component": {
+    emoji: "🪟",
+    gradientFrom: "from-violet-500",
+    gradientTo: "to-purple-400",
+    likes: 890,
+    preview: "Overlay, focus trap, size variants",
+    prompt:
+      "Create an accessible modal dialog with overlay, close button, title, description, and size variants.",
+  },
+  "navbar-component": {
+    emoji: "🧭",
+    gradientFrom: "from-slate-600",
+    gradientTo: "to-slate-400",
+    likes: 920,
+    preview: "Responsive links, CTA, mobile menu",
+    prompt:
+      "Create a responsive navbar with brand logo, navigation links, CTA button, and mobile menu toggle.",
+  },
+  "badge-component": {
+    emoji: "🏷️",
+    gradientFrom: "from-amber-500",
+    gradientTo: "to-orange-400",
+    likes: 540,
+    preview: "Color variants, sizes, status dot",
+    prompt:
+      "Create a compact badge component with color variants, sizes, and optional leading status dot.",
+  },
+};
+
+const WEB_ONLY_TEMPLATES: Template[] = [
   {
     id: "todo-app",
     name: "Todo App",
@@ -89,7 +236,6 @@ export const TEMPLATES: Template[] = [
     author: "MagicApp",
     likes: 432,
   },
-  // Landing Pages
   {
     id: "saas-landing",
     name: "SaaS Landing",
@@ -132,7 +278,6 @@ export const TEMPLATES: Template[] = [
     author: "MagicApp",
     likes: 987,
   },
-  // Components
   {
     id: "contact-form",
     name: "Contact Form",
@@ -178,7 +323,6 @@ export const TEMPLATES: Template[] = [
     likes: 678,
     preview: "Masonry grid with lightbox zoom",
   },
-  // Dashboards
   {
     id: "analytics-dashboard",
     name: "Analytics Dashboard",
@@ -207,207 +351,48 @@ export const TEMPLATES: Template[] = [
     author: "MagicApp",
     likes: 1234,
   },
-  {
-    id: "vue-spa",
-    name: "Vue SPA",
-    description: "Vue 3 + Vite + TypeScript starter with routing and Tailwind",
-    category: "app",
-    prompt:
-      "Create a Vue 3 + Vite + TypeScript single-page app with Vue Router, Pinia state management, Tailwind CSS styling, and a polished dashboard layout.",
-    emoji: "💚",
-    gradientFrom: "from-emerald-600",
-    gradientTo: "to-green-400",
+];
+
+function toWebTemplate(
+  id: string,
+  meta: (typeof UI_TEMPLATE_META)[string],
+): Template {
+  return {
+    id,
+    name: meta.prompt.split(" ").slice(0, 2).join(" ") || id,
+    description: meta.prompt.slice(0, 80) + "...",
+    category:
+      id === "react-spa" ||
+      id === "vue-spa" ||
+      id === "express-api" ||
+      id === "chat-app" ||
+      id === "task-manager" ||
+      id === "weather-app"
+        ? "app"
+        : id === "astro-site" ||
+            id === "blog" ||
+            id === "landing-page" ||
+            id === "saas-landing" ||
+            id === "portfolio" ||
+            id === "product-showcase"
+          ? "landing"
+          : id === "dashboard-analytics" || id === "admin-panel"
+            ? "dashboard"
+            : "component",
+    prompt: meta.prompt,
+    emoji: meta.emoji,
+    gradientFrom: meta.gradientFrom,
+    gradientTo: meta.gradientTo,
     free: true,
     author: "MagicApp",
-    likes: 876,
-  },
-  {
-    id: "express-api",
-    name: "Express API",
-    description: "Express + TypeScript REST API starter with validation",
-    category: "app",
-    prompt:
-      "Create an Express + TypeScript REST API with Zod validation, CORS, structured logging, and health checks. Include user and project routes as a starting point.",
-    emoji: "⚡",
-    gradientFrom: "from-gray-700",
-    gradientTo: "to-gray-500",
-    free: true,
-    author: "MagicApp",
-    likes: 745,
-  },
-  {
-    id: "astro-site",
-    name: "Astro Site",
-    description: "Astro + Tailwind content site with multiple pages",
-    category: "landing",
-    prompt:
-      "Create an Astro static site with Tailwind CSS, TypeScript, and multiple pages including Home and About. Optimize for Vercel serverless deployment.",
-    emoji: "🚀",
-    gradientFrom: "from-purple-700",
-    gradientTo: "to-indigo-400",
-    free: true,
-    author: "MagicApp",
-    likes: 632,
-  },
-  {
-    id: "chat-app",
-    name: "Chat App",
-    description: "Real-time chat UI with message list and user sidebar",
-    category: "app",
-    prompt:
-      "Create a real-time chat application UI with user sidebar, message history, input area, and smooth animations. Use a modern dark theme and clean layout.",
-    emoji: "💬",
-    gradientFrom: "from-sky-600",
-    gradientTo: "to-blue-400",
-    free: true,
-    author: "MagicApp",
-    likes: 921,
-  },
-  {
-    id: "blog",
-    name: "Blog",
-    description: "Astro blog with content collections and RSS feed",
-    category: "landing",
-    prompt:
-      "Create an Astro-based blog with content collections, markdown posts, tags, and an RSS feed. Include Home and About pages with Tailwind styling.",
-    emoji: "✍️",
-    gradientFrom: "from-orange-600",
-    gradientTo: "to-amber-400",
-    free: true,
-    author: "MagicApp",
-    likes: 1043,
-  },
-  {
-    id: "dashboard-analytics",
-    name: "Analytics Dashboard",
-    description: "KPI cards, charts, and data visualization with dark theme",
-    category: "dashboard",
-    prompt:
-      "Create an analytics dashboard with KPI cards, area chart for revenue, bar chart for user acquisition, and dark theme.",
-    emoji: "📊",
-    gradientFrom: "from-indigo-600",
-    gradientTo: "to-blue-400",
-    free: false,
-    author: "MagicApp",
-    likes: 1567,
-  },
-  {
-    id: "landing-page",
-    name: "Landing Page",
-    description:
-      "Marketing landing page with hero, features, testimonials, and pricing",
-    category: "landing",
-    prompt:
-      "Create a modern marketing landing page with animated hero, features grid, testimonials carousel, pricing table, FAQ, and footer.",
-    emoji: "🚀",
-    gradientFrom: "from-pink-600",
-    gradientTo: "to-rose-400",
-    free: true,
-    author: "MagicApp",
-    likes: 1320,
-  },
-  {
-    id: "task-manager",
-    name: "Task Manager",
-    description: "Task management with priorities, due dates, and filtering",
-    category: "app",
-    prompt:
-      "Create a task manager app with task creation, priority levels, completion toggling, due dates, filtering, and clean dark UI.",
-    emoji: "✅",
-    gradientFrom: "from-emerald-600",
-    gradientTo: "to-green-400",
-    free: true,
-    author: "MagicApp",
-    likes: 980,
-  },
-  {
-    id: "weather-app",
-    name: "Weather App",
-    description: "Weather dashboard with forecast, search, and dynamic UI",
-    category: "app",
-    prompt:
-      "Create a weather app with city search, current conditions, 5-day forecast, and dynamic gradient backgrounds.",
-    emoji: "🌤️",
-    gradientFrom: "from-sky-600",
-    gradientTo: "to-blue-400",
-    free: true,
-    author: "MagicApp",
-    likes: 1120,
-  },
-  // Components
-  {
-    id: "card",
-    name: "Card",
-    description: "Versatile card with header, body, footer slots",
-    category: "component",
-    prompt:
-      "Create a versatile card component with header, body, and footer slots. Include padding variants and hover effects.",
-    emoji: "🃏",
-    gradientFrom: "from-indigo-500",
-    gradientTo: "to-blue-400",
-    free: true,
-    author: "MagicApp",
-    likes: 650,
-    preview: "Header, body, footer slots",
-  },
-  {
-    id: "input",
-    name: "Input",
-    description: "Form input with label, validation states, and variants",
-    category: "component",
-    prompt:
-      "Create a form input component with label, hint, error state, and variants. Include icon slot support.",
-    emoji: "🔤",
-    gradientFrom: "from-emerald-500",
-    gradientTo: "to-teal-400",
-    free: true,
-    author: "MagicApp",
-    likes: 540,
-    preview: "Label, hint, error, success states",
-  },
-  {
-    id: "modal",
-    name: "Modal",
-    description: "Accessible dialog with overlay, close button, and sizes",
-    category: "component",
-    prompt:
-      "Create an accessible modal dialog with overlay, close button, title, description, and size variants.",
-    emoji: "🪟",
-    gradientFrom: "from-violet-500",
-    gradientTo: "to-purple-400",
-    free: true,
-    author: "MagicApp",
-    likes: 720,
-    preview: "Overlay, focus trap, size variants",
-  },
-  {
-    id: "navbar",
-    name: "Navbar",
-    description: "Responsive navbar with logo, links, and CTA",
-    category: "component",
-    prompt:
-      "Create a responsive navbar with brand logo, navigation links, CTA button, and mobile menu toggle.",
-    emoji: "🧭",
-    gradientFrom: "from-slate-600",
-    gradientTo: "to-slate-400",
-    free: true,
-    author: "MagicApp",
-    likes: 810,
-    preview: "Responsive links, CTA, mobile menu",
-  },
-  {
-    id: "badge",
-    name: "Badge",
-    description: "Compact status badge with color variants and sizes",
-    category: "component",
-    prompt:
-      "Create a compact badge component with color variants, sizes, and optional leading status dot.",
-    emoji: "🏷️",
-    gradientFrom: "from-amber-500",
-    gradientTo: "to-orange-400",
-    free: true,
-    author: "MagicApp",
-    likes: 470,
-    preview: "Color variants, sizes, status dot",
-  },
+    likes: meta.likes,
+    preview: meta.preview,
+  };
+}
+
+export const TEMPLATES: Template[] = [
+  ...WEB_ONLY_TEMPLATES,
+  ...Object.entries(UI_TEMPLATE_META).map(([id, meta]) =>
+    toWebTemplate(id, meta),
+  ),
 ];
