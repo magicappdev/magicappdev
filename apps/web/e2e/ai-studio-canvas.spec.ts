@@ -11,7 +11,10 @@ async function submitPrompt(page: Page) {
     .locator("textarea")
     .fill("Build a modern task management dashboard with kanban board");
 
-  const createButton = page.getByRole("button", { name: /Create|Send/ });
+  const createButton = page.getByRole("button", {
+    name: "Create",
+    exact: true,
+  });
   await expect(createButton).toBeVisible({ timeout: 10_000 });
   await createButton.click();
 }
