@@ -142,17 +142,30 @@ When the user wants to BUILD, CREATE, MAKE, or GENERATE an app, website, API, or
 GENERATE: <slug> "<Project Name>"
 
 Available template slugs:
-- react-spa   → React 18 + Vite + TypeScript + Tailwind CSS, deploys to Cloudflare Pages
-- next-app    → Next.js 14 App Router + Cloudflare Pages adapter (full-stack)
+- react-spa   → React 18 + Vite + TypeScript + Tailwind CSS
+- next-app    → Next.js 14 App Router + Cloudflare Pages adapter
 - cf-workers-api → Hono REST API on Cloudflare Workers with D1 database
 - expo-app    → Expo SDK 52 + Expo Router for iOS/Android/Web
 - ionic       → Ionic + Capacitor mobile app
+- vue-spa     → Vue 3 + Vite + TypeScript
+- express-api → Express + TypeScript REST API
+- astro-site  → Astro + TypeScript + Tailwind static site
+- chat-app    → Real-time chat UI with React + Vite
+- blog        → Astro blog with content collections and RSS
+- ecommerce-store → Full-featured e-commerce store
+- dashboard-analytics → Analytics dashboard with charts
+- landing-page → Marketing landing page with hero, features, testimonials, pricing
+- task-manager → Task management with priorities and filtering
+- weather-app → Weather dashboard with forecast and search
 
 Examples:
 - "Build a compound interest calculator" → GENERATE: react-spa "Compound Interest Calculator"
 - "Create a React Native todo list" → GENERATE: expo-app "Todo List"
 - "Build a REST API for my blog" → GENERATE: cf-workers-api "Blog API"
 - "Make a Next.js e-commerce site" → GENERATE: next-app "E-Commerce Site"
+- "Build a dashboard for my SaaS" → GENERATE: dashboard-analytics "SaaS Dashboard"
+- "Create a marketing landing page" → GENERATE: landing-page "Product Launch"
+- "Make a task manager app" → GENERATE: task-manager "My Tasks"
 
 Default to react-spa for general web apps. After the GENERATE line, briefly explain what was scaffolded and suggest next steps. At the end output: SUGGEST_PROMPTS: ["prompt1", "prompt2", "prompt3"]`,
   },
@@ -561,6 +574,23 @@ export class MagicAgent extends Agent<Env, AgentState> {
       m.includes("hono")
     )
       return "cf-workers-api";
+    if (m.includes("dashboard") || m.includes("analytics"))
+      return "dashboard-analytics";
+    if (m.includes("landing") || m.includes("marketing")) return "landing-page";
+    if (
+      m.includes("task") ||
+      m.includes("todo") ||
+      m.includes("project manager")
+    )
+      return "task-manager";
+    if (m.includes("weather")) return "weather-app";
+    if (m.includes("ecommerce") || m.includes("shop") || m.includes("store"))
+      return "ecommerce-store";
+    if (m.includes("vue")) return "vue-spa";
+    if (m.includes("express") || m.includes("node api")) return "express-api";
+    if (m.includes("astro")) return "astro-site";
+    if (m.includes("chat")) return "chat-app";
+    if (m.includes("blog")) return "blog";
     return "react-spa";
   }
 
@@ -767,8 +797,6 @@ export class MagicAgent extends Agent<Env, AgentState> {
     );
 
     try {
-      // Tool execution logic - this would integrate with actual file system/commands
-      // For now, we send a placeholder result
       const result = await this.executeToolAction(
         approval.tool,
         approval.parameters,
@@ -783,7 +811,34 @@ export class MagicAgent extends Agent<Env, AgentState> {
         }),
       );
 
-      // Update tool call status
+      if (
+        approval.tool === "selectWizardTemplate" &&
+        result &&
+        typeof result === "object" &&
+        "templateId" in result
+      ) {
+        connection.send(
+          JSON.stringify({
+            type: "wizard_select_template",
+            templateId: (result as Record<string, unknown>).templateId,
+          }),
+        );
+      }
+
+      if (
+        approval.tool === "setWizardProjectName" &&
+        result &&
+        typeof result === "object" &&
+        "name" in result
+      ) {
+        connection.send(
+          JSON.stringify({
+            type: "wizard_set_name",
+            name: (result as Record<string, unknown>).name,
+          }),
+        );
+      }
+
       const toolCallIndex = this.state.toolCalls.findIndex(
         tc => tc.tool === approval.tool && tc.status === "pending",
       );
@@ -1057,6 +1112,39 @@ export class MagicAgent extends Agent<Env, AgentState> {
           files: result.files.map(f => f.path),
           dependencies: result.dependencies,
           devDependencies: result.devDependencies,
+        };
+      }
+
+      case "selectWizardTemplate": {
+        const templateId = parameters.templateId as string;
+        const template = registry.get(templateId);
+        if (!template) {
+          return { error: `Template "${templateId}" not found` };
+        }
+
+        this.setState({
+          ...this.state,
+          suggestedTemplate: template.slug || template.id,
+        });
+
+        return {
+          success: true,
+          templateId: template.slug || template.id,
+          templateName: template.name,
+        };
+      }
+
+      case "setWizardProjectName": {
+        const name = (parameters.name as string) || "";
+
+        this.setState({
+          ...this.state,
+          config: { ...this.state.config, projectName: name },
+        });
+
+        return {
+          success: true,
+          name,
         };
       }
 
@@ -1916,6 +2004,34 @@ User Request: ${userPrompt}`;
               autoExecuted: true,
             }),
           );
+
+          if (
+            toolCall.tool === "selectWizardTemplate" &&
+            result &&
+            typeof result === "object" &&
+            "templateId" in result
+          ) {
+            connection.send(
+              JSON.stringify({
+                type: "wizard_select_template",
+                templateId: (result as Record<string, unknown>).templateId,
+              }),
+            );
+          }
+
+          if (
+            toolCall.tool === "setWizardProjectName" &&
+            result &&
+            typeof result === "object" &&
+            "name" in result
+          ) {
+            connection.send(
+              JSON.stringify({
+                type: "wizard_set_name",
+                name: (result as Record<string, unknown>).name,
+              }),
+            );
+          }
         } catch (err) {
           const error = err instanceof Error ? err.message : String(err);
           connection.send(

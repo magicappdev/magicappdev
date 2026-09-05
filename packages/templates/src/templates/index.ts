@@ -2,11 +2,15 @@
  * Built-in template definitions
  */
 
+import { dashboardAnalyticsTemplate } from "./dashboard-analytics.js";
 import { buttonComponentTemplate } from "./button-component.js";
 import { reactNativeTemplate } from "./react-native-app.js";
 import { cfWorkersApiTemplate } from "./cf-workers-api.js";
 import { ecommerceTemplate } from "./ecommerce-store.js";
 import { honoApiTemplate } from "./hono-drizzle-api.js";
+import { taskManagerTemplate } from "./task-manager.js";
+import { landingPageTemplate } from "./landing-page.js";
+import { weatherAppTemplate } from "./weather-app.js";
 import { expressApiTemplate } from "./express-api.js";
 import { astroSiteTemplate } from "./astro-site.js";
 import { reactSpaTemplate } from "./react-spa.js";
@@ -41,6 +45,10 @@ export const builtInTemplates = [
   astroSiteTemplate,
   chatAppTemplate,
   blogTemplate,
+  dashboardAnalyticsTemplate,
+  landingPageTemplate,
+  taskManagerTemplate,
+  weatherAppTemplate,
 ];
 
 /** Export individual templates */
@@ -63,4 +71,8 @@ export {
   astroSiteTemplate,
   chatAppTemplate,
   blogTemplate,
+  dashboardAnalyticsTemplate,
+  landingPageTemplate,
+  taskManagerTemplate,
+  weatherAppTemplate,
 };
