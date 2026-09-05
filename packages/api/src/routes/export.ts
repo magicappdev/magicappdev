@@ -63,11 +63,13 @@ exportRoutes.get("/:id/export", async c => {
   // Get project commands
   const commands = await db.query.projectCommands.findMany({
     where: eq(projectCommands.projectId, projectId),
+    limit: 500,
   });
 
   // Get project errors
   const errors = await db.query.projectErrors.findMany({
     where: eq(projectErrors.projectId, projectId),
+    limit: 200,
   });
 
   // Build export structure

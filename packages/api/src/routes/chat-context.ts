@@ -163,6 +163,7 @@ chatContextRoutes.get("/sessions/:id/context", async c => {
     context.errors = await db.query.projectErrors.findMany({
       where: eq(projectErrors.projectId, session.projectId),
       orderBy: [desc(projectErrors.occurredAt)],
+      limit: 200,
     });
 
     // Count unresolved errors

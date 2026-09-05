@@ -40,6 +40,7 @@ const UI_TEMPLATE_META: Record<
     likes: number;
     preview?: string;
     prompt: string;
+    category: Exclude<TemplateCategory, "all">;
   }
 > = {
   "react-spa": {
@@ -48,6 +49,7 @@ const UI_TEMPLATE_META: Record<
     gradientTo: "to-cyan-500",
     likes: 2340,
     preview: "React + Vite + TypeScript + Tailwind",
+    category: "app",
     prompt:
       "Create a React 18 single-page app with Vite, TypeScript, and Tailwind CSS. Include routing, state management, and a polished dashboard layout.",
   },
@@ -57,6 +59,7 @@ const UI_TEMPLATE_META: Record<
     gradientTo: "to-green-400",
     likes: 1870,
     preview: "Vue 3 + Vite + TypeScript + Tailwind",
+    category: "app",
     prompt:
       "Create a Vue 3 + Vite + TypeScript single-page app with Vue Router, Pinia state management, Tailwind CSS styling, and a polished dashboard layout.",
   },
@@ -66,6 +69,7 @@ const UI_TEMPLATE_META: Record<
     gradientTo: "to-gray-500",
     likes: 1340,
     preview: "Express + TypeScript + Zod validation",
+    category: "app",
     prompt:
       "Create an Express + TypeScript REST API with Zod validation, CORS, structured logging, and health checks. Include user and project routes as a starting point.",
   },
@@ -75,6 +79,7 @@ const UI_TEMPLATE_META: Record<
     gradientTo: "to-indigo-400",
     likes: 980,
     preview: "Astro + Tailwind + TypeScript",
+    category: "landing",
     prompt:
       "Create an Astro static site with Tailwind CSS, TypeScript, and multiple pages including Home and About. Optimize for Vercel serverless deployment.",
   },
@@ -84,6 +89,7 @@ const UI_TEMPLATE_META: Record<
     gradientTo: "to-blue-400",
     likes: 1560,
     preview: "Real-time chat UI with sidebar",
+    category: "app",
     prompt:
       "Create a real-time chat application UI with user sidebar, message history, input area, and smooth animations. Use a modern dark theme and clean layout.",
   },
@@ -93,6 +99,7 @@ const UI_TEMPLATE_META: Record<
     gradientTo: "to-amber-400",
     likes: 1120,
     preview: "Astro blog with content collections",
+    category: "landing",
     prompt:
       "Create an Astro-based blog with content collections, markdown posts, tags, and an RSS feed. Include Home and About pages with Tailwind styling.",
   },
@@ -102,6 +109,7 @@ const UI_TEMPLATE_META: Record<
     gradientTo: "to-blue-400",
     likes: 2100,
     preview: "KPI cards, charts, data viz",
+    category: "dashboard",
     prompt:
       "Create an analytics dashboard with KPI cards, area chart for revenue, bar chart for user acquisition, and dark theme.",
   },
@@ -111,6 +119,7 @@ const UI_TEMPLATE_META: Record<
     gradientTo: "to-rose-400",
     likes: 1890,
     preview: "Hero, features, pricing, CTA",
+    category: "landing",
     prompt:
       "Create a modern marketing landing page with animated hero, features grid, testimonials carousel, pricing table, FAQ, and footer.",
   },
@@ -120,6 +129,7 @@ const UI_TEMPLATE_META: Record<
     gradientTo: "to-green-400",
     likes: 1450,
     preview: "Tasks, priorities, due dates",
+    category: "app",
     prompt:
       "Create a task manager app with task creation, priority levels, completion toggling, due dates, filtering, and clean dark UI.",
   },
@@ -129,6 +139,7 @@ const UI_TEMPLATE_META: Record<
     gradientTo: "to-blue-400",
     likes: 1230,
     preview: "Forecast, search, dynamic UI",
+    category: "app",
     prompt:
       "Create a weather app with city search, current conditions, 5-day forecast, and dynamic gradient backgrounds.",
   },
@@ -138,6 +149,7 @@ const UI_TEMPLATE_META: Record<
     gradientTo: "to-blue-400",
     likes: 780,
     preview: "Header, body, footer slots",
+    category: "component",
     prompt:
       "Create a versatile card component with header, body, and footer slots. Include padding variants and hover effects.",
   },
@@ -147,6 +159,7 @@ const UI_TEMPLATE_META: Record<
     gradientTo: "to-teal-400",
     likes: 650,
     preview: "Label, hint, error, success states",
+    category: "component",
     prompt:
       "Create a form input component with label, hint, error state, and variants. Include icon slot support.",
   },
@@ -156,6 +169,7 @@ const UI_TEMPLATE_META: Record<
     gradientTo: "to-purple-400",
     likes: 890,
     preview: "Overlay, focus trap, size variants",
+    category: "component",
     prompt:
       "Create an accessible modal dialog with overlay, close button, title, description, and size variants.",
   },
@@ -165,6 +179,7 @@ const UI_TEMPLATE_META: Record<
     gradientTo: "to-slate-400",
     likes: 920,
     preview: "Responsive links, CTA, mobile menu",
+    category: "component",
     prompt:
       "Create a responsive navbar with brand logo, navigation links, CTA button, and mobile menu toggle.",
   },
@@ -174,6 +189,7 @@ const UI_TEMPLATE_META: Record<
     gradientTo: "to-orange-400",
     likes: 540,
     preview: "Color variants, sizes, status dot",
+    category: "component",
     prompt:
       "Create a compact badge component with color variants, sizes, and optional leading status dot.",
   },
@@ -361,24 +377,7 @@ function toWebTemplate(
     id,
     name: meta.prompt.split(" ").slice(0, 2).join(" ") || id,
     description: meta.prompt.slice(0, 80) + "...",
-    category:
-      id === "react-spa" ||
-      id === "vue-spa" ||
-      id === "express-api" ||
-      id === "chat-app" ||
-      id === "task-manager" ||
-      id === "weather-app"
-        ? "app"
-        : id === "astro-site" ||
-            id === "blog" ||
-            id === "landing-page" ||
-            id === "saas-landing" ||
-            id === "portfolio" ||
-            id === "product-showcase"
-          ? "landing"
-          : id === "dashboard-analytics" || id === "admin-panel"
-            ? "dashboard"
-            : "component",
+    category: meta.category,
     prompt: meta.prompt,
     emoji: meta.emoji,
     gradientFrom: meta.gradientFrom,

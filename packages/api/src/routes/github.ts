@@ -9,6 +9,55 @@ import type { AppContext } from "../types.js";
 import { eq, and } from "drizzle-orm";
 import { Hono } from "hono";
 
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  concurrency: number,
+  fn: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let index = 0;
+  const workers: Promise<void>[] = [];
+
+  for (let w = 0; w < concurrency; w++) {
+    workers.push(
+      (async (): Promise<void> => {
+        while (index < items.length) {
+          const i = index++;
+          results[i] = await fn(items[i], i);
+        }
+      })(),
+    );
+  }
+
+  await Promise.all(workers);
+  return results;
+}
+
+function normalizePath(rawPath: string): string {
+  const parts = rawPath.split("/");
+  const result: string[] = [];
+  for (const part of parts) {
+    if (part === "..") {
+      result.pop();
+    } else if (part !== "." && part !== "") {
+      result.push(part);
+    }
+  }
+  return result.join("/");
+}
+
+function sanitizePath(rawPath: string): string {
+  const normalized = normalizePath(rawPath.replace(/\\/g, "/"));
+  if (
+    normalized.startsWith("/") ||
+    normalized.startsWith("..") ||
+    normalized.includes("/..")
+  ) {
+    throw new Error("path_traversal");
+  }
+  return normalized;
+}
+
 export const githubRoutes = new Hono<AppContext>();
 
 interface FileEntry {
@@ -124,48 +173,24 @@ githubRoutes.post("/create-repo", async c => {
   };
 
   // Push each file via the Contents API (parallelized)
-  const results = await Promise.allSettled(
-    files.map(async file => {
-      // Path traversal protection: reject paths with ".." or absolute paths
-      const normalized = file.path.replace(/\\/g, "/");
-      if (normalized.startsWith("/") || normalized.includes("..")) {
-        return {
-          ok: false,
-          path: file.path,
-          reason: "path_traversal",
-        } as { ok: false; path: string; reason: string };
-      }
+  const results = await mapWithConcurrency(files, 10, async file => {
+    const safePath = sanitizePath(file.path);
+    const encoded = btoa(unescape(encodeURIComponent(file.content)));
+    const putResp = await fetch(
+      `https://api.github.com/repos/${owner}/${name}/contents/${safePath}`,
+      {
+        method: "PUT",
+        headers,
+        body: JSON.stringify({
+          message: `Add ${safePath}`,
+          content: encoded,
+        }),
+      },
+    );
+    return { ok: putResp.ok, path: safePath };
+  });
 
-      const encoded = btoa(unescape(encodeURIComponent(file.content)));
-      const putResp = await fetch(
-        `https://api.github.com/repos/${owner}/${name}/contents/${file.path}`,
-        {
-          method: "PUT",
-          headers,
-          body: JSON.stringify({
-            message: `Add ${file.path}`,
-            content: encoded,
-          }),
-        },
-      );
-      return { ok: putResp.ok, path: file.path } as {
-        ok: boolean;
-        path: string;
-      };
-    }),
-  );
-
-  const failures = results
-    .filter(
-      (
-        r,
-      ): r is PromiseFulfilledResult<{
-        ok: false;
-        path: string;
-        reason: string;
-      }> => r.status === "fulfilled" && !r.value.ok,
-    )
-    .map(r => r.value.path);
+  const failures = results.filter(r => !r.ok).map(r => r.path);
 
   return c.json({
     success: true,
@@ -179,10 +204,6 @@ githubRoutes.post("/create-repo", async c => {
   });
 });
 
-/**
- * Push an existing project's files to GitHub
- * Creates the repo if it doesn't exist, then pushes all project files
- */
 githubRoutes.post("/push-repo", async c => {
   const userId = c.get("userId") as string;
   const db = c.get("db");
@@ -311,47 +332,24 @@ githubRoutes.post("/push-repo", async c => {
   });
 
   // Push each file via the Contents API (parallelized)
-  const results = await Promise.allSettled(
-    files.map(async file => {
-      const normalized = file.path.replace(/\\/g, "/");
-      if (normalized.startsWith("/") || normalized.includes("..")) {
-        return {
-          ok: false,
-          path: file.path,
-          reason: "path_traversal",
-        } as { ok: false; path: string; reason: string };
-      }
+  const results = await mapWithConcurrency(files, 10, async file => {
+    const safePath = sanitizePath(file.path);
+    const encoded = btoa(unescape(encodeURIComponent(file.content)));
+    const putResp = await fetch(
+      `https://api.github.com/repos/${owner}/${name}/contents/${safePath}`,
+      {
+        method: "PUT",
+        headers,
+        body: JSON.stringify({
+          message: `Add ${safePath}`,
+          content: encoded,
+        }),
+      },
+    );
+    return { ok: putResp.ok, path: safePath };
+  });
 
-      const encoded = btoa(unescape(encodeURIComponent(file.content)));
-      const putResp = await fetch(
-        `https://api.github.com/repos/${owner}/${repoName}/contents/${file.path}`,
-        {
-          method: "PUT",
-          headers,
-          body: JSON.stringify({
-            message: `Add ${file.path}`,
-            content: encoded,
-          }),
-        },
-      );
-      return { ok: putResp.ok, path: file.path } as {
-        ok: boolean;
-        path: string;
-      };
-    }),
-  );
-
-  const failures = results
-    .filter(
-      (
-        r,
-      ): r is PromiseFulfilledResult<{
-        ok: false;
-        path: string;
-        reason: string;
-      }> => r.status === "fulfilled" && !r.value.ok,
-    )
-    .map(r => r.value.path);
+  const failures = results.filter(r => !r.ok).map(r => r.path);
 
   return c.json({
     success: true,
