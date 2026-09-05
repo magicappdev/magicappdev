@@ -111,11 +111,10 @@ describe("seed utilities", () => {
     it("references user IDs consistently across tables", () => {
       const sql = generateSeedSQL();
 
-      // Both users referenced in: users, profiles, projects, chat_sessions
       expect(sql).toContain("'user-1'");
       expect(sql).toContain("'user-2'");
-      expect(sql.match(/'user-1'/g)).toHaveLength(4); // users + profile + project + chat_session
-      expect(sql.match(/'user-2'/g)).toHaveLength(4); // users + profile + project + chat_session
+      expect(sql.match(/'user-1'/g)).toHaveLength(11); // users + profile + project + chat_session + user_ai_keys + tickets + system_logs + admin_api_keys + api_keys + file_history (x2)
+      expect(sql.match(/'user-2'/g)).toHaveLength(7); // users + profile + project + chat_session + user_ai_keys + tickets + api_keys
     });
 
     it("uses valid ISO timestamps for created_at and updated_at", () => {
