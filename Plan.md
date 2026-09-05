@@ -101,7 +101,17 @@ Previously, typing "Build a compound interest calculator" returned raw markdown 
 - Uses the user's GitHub OAuth token from the `accounts` table
 - Returns `{ repoUrl, cloneUrl, failedFiles }`
 
-### Recent Improvements (January 23, 2026)
+### Recent Improvements (January 24, 2026)
+
+#### Mobile App Bug Fixes ✅
+
+- **Invalid hook call**: Fixed duplicate React resolution by adding `resolver.extraNodeModules` to `metro.config.js` and moving `useAgentMessages` out of `useEffect` in chat screen
+- **Theme persistence**: Rewrote settings screen to use `ThemeContext` instead of local state; hacker theme now persists via `expo-secure-store`
+- **Navigation**: Fixed back gesture handling in hidden tab screens (`settings/profile`, `settings/ai-provider`) to return to `/settings` instead of popping stack
+- **OpenCode endpoint**: Corrected URL from `zen.opencode.ai/v1` to `opencode.ai/zen/v1` in AI provider settings
+- **Profile settings**: Added "Open MagicAppDev Website" button linking to `app.magicappdev.workers.dev`
+- **Async cleanup**: Added `AbortController`/cancellation flags in `index.tsx`, `chat.tsx`, and `settings.tsx` to prevent state updates on unmounted components
+- **Removed conflicting hook**: Deleted `src/hooks/use-theme.ts` which shadowed the context hook and caused hook collisions
 
 #### Mobile App Enhancements ✅
 
@@ -166,6 +176,11 @@ todoo:
 - [x] Add shell completions command to CLI.
 - [x] Consolidate build system — fully on Turborepo, NX removed.
 - [x] Remove Docker-based Android build (not needed).
+- [x] Fix Invalid hook call / duplicate React in mobile app.
+- [x] Fix hacker theme persistence via expo-secure-store.
+- [x] Fix back navigation for hidden tab screens in mobile app.
+- [x] Fix OpenCode endpoint URL in mobile AI provider settings.
+- [x] Add website link button in mobile profile settings.
 - [ ] Discord Bot for Community Server
 - [ ] Add Github App Support to install MagicAppDev on User Accounts to initialize Repos, Setup Workflows.
 - [ ] Add mobile app store deployment automation

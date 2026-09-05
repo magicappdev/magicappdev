@@ -102,10 +102,15 @@ MagicAppDev is a comprehensive monorepo-based fullstack app building platform in
 - GitHub Auth integration
 - Projects listing interface
 - Streaming AI Chat
-- Dark Mode support with Light/Dark/Auto themes
+- Dark Mode support with Light/Dark/Hacker themes
+- Theme persistence via expo-secure-store
 - App icons converted to PNG with transparency
 - Metro bundler fixes for Windows/pnpm
 - Android build path length issues resolved
+- Invalid hook call / duplicate React resolution fixed
+- Back navigation fixed for hidden tab screens
+- OpenCode endpoint corrected to opencode.ai/zen/v1
+- Website link added in profile settings
 
 #### Backend API ✅
 

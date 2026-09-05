@@ -365,11 +365,16 @@ Ionicframeworkd based mobile application mirroring the web interface features, p
 - ✅ GitHub Auth integration
 - ✅ Projects listing interface
 - ✅ Streaming AI Chat
-- ✅ Dark Mode support with Light/Dark/Auto themes
+- ✅ Dark Mode support with Light/Dark/Hacker themes
+- ✅ Theme persistence via expo-secure-store
 - ✅ App icons converted to PNG with transparency
 - ✅ Metro bundler fixes for Windows
 - ✅ Android build path length issues resolved
 - ✅ Settings submenu with User Profile management and BYOK AI Provider configuration
+- ✅ Invalid hook call / duplicate React resolution fixed
+- ✅ Back navigation fixed for hidden tab screens
+- ✅ OpenCode endpoint corrected to opencode.ai/zen/v1
+- ✅ Website link added in profile settings
 
 #### Usage Guidelines
 
