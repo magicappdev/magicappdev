@@ -37,6 +37,7 @@ export default function FileEditorScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [editorMode, setEditorMode] = useState<"edit" | "preview">("edit");
 
   const loadFile = useCallback(async () => {
     if (!projectId || !fileId) return;
@@ -143,31 +144,48 @@ export default function FileEditorScreen() {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.previewContainer}>
-        <SyntaxHighlightedText
-          code={content}
-          language={file?.language || "plaintext"}
-          contentStyle={styles.previewContent}
-        />
+      <View style={styles.modeToggleContainer}>
+        <TouchableOpacity
+          style={[styles.modeToggleButton, editorMode === "edit" && styles.modeToggleButtonActive]}
+          onPress={() => setEditorMode("edit")}
+        >
+          <Text style={[styles.modeToggleText, editorMode === "edit" && styles.modeToggleTextActive]}>Edit</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.modeToggleButton, editorMode === "preview" && styles.modeToggleButtonActive]}
+          onPress={() => setEditorMode("preview")}
+        >
+          <Text style={[styles.modeToggleText, editorMode === "preview" && styles.modeToggleTextActive]}>Preview</Text>
+        </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.editorContainer}>
-        <TextInput
-          style={styles.editor}
-          value={content}
-          onChangeText={text => {
-            setContent(text);
-            setHasChanges(text !== file.content);
-          }}
-          multiline
-          autoCapitalize="none"
-          autoCorrect={false}
-          spellCheck={false}
-          textAlignVertical="top"
-          placeholder="File content..."
-          placeholderTextColor="#64748B"
-        />
-      </ScrollView>
+      {editorMode === "preview" ? (
+        <ScrollView style={styles.previewContainer} contentContainerStyle={styles.previewContent}>
+          <SyntaxHighlightedText
+            code={content}
+            language={file?.language || "plaintext"}
+            contentStyle={styles.previewContentText}
+          />
+        </ScrollView>
+      ) : (
+        <ScrollView style={styles.editorContainer}>
+          <TextInput
+            style={styles.editor}
+            value={content}
+            onChangeText={text => {
+              setContent(text);
+              setHasChanges(text !== file.content);
+            }}
+            multiline
+            autoCapitalize="none"
+            autoCorrect={false}
+            spellCheck={false}
+            textAlignVertical="top"
+            placeholder="File content..."
+            placeholderTextColor="#64748B"
+          />
+        </ScrollView>
+      )}
 
       {hasChanges && (
         <View style={styles.unsavedBar}>
@@ -241,13 +259,49 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   previewContainer: {
-    maxHeight: 120,
-    borderBottomWidth: 1,
-    borderBottomColor: "#334155",
+    flex: 1,
     backgroundColor: "#0F172A",
   },
   previewContent: {
-    padding: 12,
+    flexGrow: 1,
+  },
+  previewContentText: {
+    padding: 16,
+    fontSize: 13,
+    color: "#CBD5E1",
+    fontFamily: "monospace",
+    lineHeight: 20,
+  },
+  modeToggleContainer: {
+    flexDirection: "row",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: "#1E293B",
+    borderBottomWidth: 1,
+    borderBottomColor: "#334155",
+    gap: 8,
+  },
+  modeToggleButton: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: "#0F172A",
+    borderWidth: 1,
+    borderColor: "#334155",
+    alignItems: "center",
+  },
+  modeToggleButtonActive: {
+    backgroundColor: "#3B82F6",
+    borderColor: "#3B82F6",
+  },
+  modeToggleText: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: "#94A3B8",
+  },
+  modeToggleTextActive: {
+    color: "#fff",
+    fontWeight: "600",
   },
   editor: {
     flex: 1,

@@ -52,7 +52,7 @@ export default function ProjectDetailScreen() {
   const [pushRepoName, setPushRepoName] = useState("");
   const [pushIsPrivate, setPushIsPrivate] = useState(false);
   const [pushing, setPushing] = useState(false);
-  const [previewError, setPreviewError] = useState<{ filePath: string; errorMessage: string; errorType: string } | null>(null);
+  const [previewError, setPreviewError] = useState<{ filePath: string; errorMessage: string; errorType: string; fileId?: string } | null>(null);
 
   const template = project?.templateId ? getTemplateById(project.templateId) : null;
 
@@ -114,10 +114,12 @@ export default function ProjectDetailScreen() {
   }, [fetchProject, fetchChatSessions, fetchFiles]);
 
   usePreviewErrorListener(payload => {
+    const file = files.find(f => f.path === payload.filePath);
     setPreviewError({
       filePath: payload.filePath,
       errorMessage: payload.errorMessage,
       errorType: payload.errorType,
+      fileId: file?.id,
     });
   });
 
@@ -244,8 +246,19 @@ export default function ProjectDetailScreen() {
                 <TouchableOpacity style={styles.modalCancel} onPress={() => setPreviewError(null)}>
                   <Text style={styles.modalCancelText}>Dismiss</Text>
                 </TouchableOpacity>
+                {previewError?.fileId && (
+                  <TouchableOpacity
+                    style={styles.modalPush}
+                    onPress={() => {
+                      setPreviewError(null);
+                      router.push({ pathname: `/project/${id}/editor/${previewError.fileId}` as any });
+                    }}
+                  >
+                    <Text style={styles.modalPushText}>Go to file</Text>
+                  </TouchableOpacity>
+                )}
                 <TouchableOpacity
-                  style={styles.modalPush}
+                  style={[styles.modalPush, !previewError?.fileId && styles.modalPushDisabled]}
                   onPress={() => {
                     setPreviewError(null);
                     router.push({ pathname: "/chat" as any, params: { projectId: id } });
