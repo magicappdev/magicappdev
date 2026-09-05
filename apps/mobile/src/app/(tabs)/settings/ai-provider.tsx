@@ -63,7 +63,7 @@ export default function AiProviderSettingsScreen() {
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener("hardwareBackPress", () => {
-      router.back();
+      router.replace("/settings");
       return true;
     });
     return () => backHandler.remove();

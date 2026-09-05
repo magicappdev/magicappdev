@@ -107,40 +107,40 @@ export default function ChatScreen() {
     }
   }, [projectId, sessionId]);
 
-  useEffect(() => {
-    useAgentMessages((type, data) => {
-      if (type === "chat_chunk") {
-        const chunk = (data.content as string) || "";
-        setMessages(prev => {
-          const last = prev[prev.length - 1];
-          if (last && last.role === "assistant" && last.id === "streaming") {
-            return [
-              ...prev.slice(0, -1),
-              { ...last, content: last.content + chunk },
-            ];
-          }
+  const handleAgentMessage = useCallback((type: string, data: Record<string, unknown>) => {
+    if (type === "chat_chunk") {
+      const chunk = (data.content as string) || "";
+      setMessages(prev => {
+        const last = prev[prev.length - 1];
+        if (last && last.role === "assistant" && last.id === "streaming") {
           return [
-            ...prev,
-            {
-              id: "streaming",
-              role: "assistant",
-              content: chunk,
-              timestamp: Date.now(),
-            },
+            ...prev.slice(0, -1),
+            { ...last, content: last.content + chunk },
           ];
-        });
-      } else if (type === "chat_done") {
-        setMessages(prev => {
-          const last = prev[prev.length - 1];
-          if (last && last.id === "streaming") {
-            return [...prev.slice(0, -1), { ...last, id: crypto.randomUUID() }];
-          }
-          return prev;
-        });
-        setLoading(false);
-      }
-    });
+        }
+        return [
+          ...prev,
+          {
+            id: "streaming",
+            role: "assistant",
+            content: chunk,
+            timestamp: Date.now(),
+          },
+        ];
+      });
+    } else if (type === "chat_done") {
+      setMessages(prev => {
+        const last = prev[prev.length - 1];
+        if (last && last.id === "streaming") {
+          return [...prev.slice(0, -1), { ...last, id: crypto.randomUUID() }];
+        }
+        return prev;
+      });
+      setLoading(false);
+    }
   }, []);
+
+  useAgentMessages(handleAgentMessage);
 
   const handleRerollPrompts = useCallback(() => {
     setPresetSeed(prev => prev + 1);
