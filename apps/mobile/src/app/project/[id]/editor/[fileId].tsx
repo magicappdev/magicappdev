@@ -165,6 +165,7 @@ export default function FileEditorScreen() {
             code={content}
             language={file?.language || "plaintext"}
             contentStyle={styles.previewContentText}
+            showLineNumbers
           />
         </ScrollView>
       ) : (

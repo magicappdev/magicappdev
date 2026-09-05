@@ -123,6 +123,16 @@ export default function ProjectDetailScreen() {
     });
   });
 
+  useEffect(() => {
+    if (previewError?.fileId && id) {
+      const timer = setTimeout(() => {
+        setPreviewError(null);
+        router.push({ pathname: `/project/${id}/editor/${previewError.fileId}` as any });
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [previewError?.fileId, id, router]);
+
   const handleStartChat = async () => {
     if (!id) return;
     try {
@@ -241,7 +251,11 @@ export default function ProjectDetailScreen() {
                 <Text style={styles.errorType}>{previewError.errorType}</Text>
                 <Text style={styles.errorMessage}>{previewError.errorMessage}</Text>
               </View>
-              <Text style={styles.modalDescription}>The agent is analyzing a patch. You can continue editing while the agent works on a fix.</Text>
+              <Text style={styles.modalDescription}>
+                {previewError.fileId
+                  ? "Opening the file editor shortly so you can review the issue."
+                  : "The agent is analyzing a patch. You can continue editing while the agent works on a fix."}
+              </Text>
               <View style={styles.modalActions}>
                 <TouchableOpacity style={styles.modalCancel} onPress={() => setPreviewError(null)}>
                   <Text style={styles.modalCancelText}>Dismiss</Text>
@@ -387,6 +401,7 @@ export default function ProjectDetailScreen() {
                   code={selectedFile?.content || ""}
                   language={selectedFile?.language || "plaintext"}
                   contentStyle={styles.fileModalContentText}
+                  showLineNumbers
                 />
               </ScrollView>
             </View>

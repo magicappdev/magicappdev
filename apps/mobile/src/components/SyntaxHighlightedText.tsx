@@ -1,5 +1,5 @@
 import React from "react";
-import { Text, ScrollView, StyleSheet } from "react-native";
+import { Text, ScrollView, StyleSheet, View } from "react-native";
 
 interface Token {
   text: string;
@@ -11,6 +11,7 @@ interface SyntaxHighlightedTextProps {
   language: string;
   style?: object;
   contentStyle?: object;
+  showLineNumbers?: boolean;
 }
 
 const KEYWORDS = new Set([
@@ -145,11 +146,22 @@ export const SyntaxHighlightedText: React.FC<SyntaxHighlightedTextProps> = ({
   language,
   style,
   contentStyle,
+  showLineNumbers,
 }) => {
   const tokens = highlightCode(code, language);
+  const lines = code.split("\n");
 
   return (
     <ScrollView style={[styles.container, style]} contentContainerStyle={contentStyle}>
+      {showLineNumbers ? (
+        <View style={styles.lineNumbersContainer}>
+          {lines.map((_, index) => (
+            <Text key={index} style={styles.lineNumber}>
+              {index + 1}
+            </Text>
+          ))}
+        </View>
+      ) : null}
       <Text style={styles.text}>
         {tokens.map((token, index) => (
           <Text key={index} style={{ color: token.color }}>
@@ -169,5 +181,18 @@ const styles = StyleSheet.create({
     fontFamily: "monospace",
     fontSize: 13,
     lineHeight: 20,
+  },
+  lineNumbersContainer: {
+    marginRight: 12,
+    paddingRight: 8,
+    borderRightWidth: 1,
+    borderRightColor: "#334155",
+  },
+  lineNumber: {
+    fontFamily: "monospace",
+    fontSize: 13,
+    lineHeight: 20,
+    color: "#64748B",
+    textAlign: "right",
   },
 });
