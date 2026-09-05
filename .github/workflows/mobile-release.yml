@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.0
 
@@ -27,7 +27,7 @@ jobs:
         run: npm install -g expo-cli
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
         with:
           api-level: 35
           build-tools: "35.0.0"
@@ -50,7 +50,7 @@ jobs:
           echo "Found APK: $APK_PATH"
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: ${{ steps.apk.outputs.apk_path }}
           name: Release ${{ github.ref_name }}
