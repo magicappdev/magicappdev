@@ -112,5 +112,29 @@ VALUES
   ('log-1', 'info', 'system', 'Seed data loaded', NULL, NULL, NULL, '${now}'),
   ('log-2', 'warn', 'api', 'Rate limit threshold approaching', NULL, '${SEED_USER_ID}', NULL, '${now}');`);
 
+  parts.push(`INSERT INTO admin_api_keys (id, name, key, key_prefix, description, scopes, is_active, created_by, created_at, updated_at)
+VALUES
+  ('ak-1', 'CI Deploy Key', 'magicappdev_ci_0123456789', 'magicapp', 'Used by GitHub Actions for deploy', '["read","write"]', 1, '${SEED_USER_ID}', '${now}', '${now}');`);
+
+  parts.push(`INSERT INTO api_keys (id, user_id, provider, api_key, label, created_at, updated_at)
+VALUES
+  ('apik-1', '${SEED_USER_ID}', 'openai', 'encrypted-demo-openai-key', 'My OpenAI Key', '${now}', '${now}'),
+  ('apik-2', '${SEED_USER_2_ID}', 'anthropic', 'encrypted-demo-anthropic-key', 'Work Anthropic Key', '${now}', '${now}');`);
+
+  parts.push(`INSERT INTO project_commands (id, project_id, command, exit_code, output, error, executed_at)
+VALUES
+  ('cmd-1', '${SEED_PROJECT_ID}', 'npm run lint', 0, 'Lint passed', NULL, '${now}'),
+  ('cmd-2', '${SEED_PROJECT_ID}', 'npm run build', 1, NULL, 'Build failed: missing env', '${now}');`);
+
+  parts.push(`INSERT INTO project_errors (id, project_id, error_type, message, stack_trace, file_path, line_number, occurred_at, resolved)
+VALUES
+  ('err-1', '${SEED_PROJECT_ID}', 'build', 'Missing env var', NULL, 'apps/web/.env', 12, '${now}', 0),
+  ('err-2', '${SEED_PROJECT_ID}', 'runtime', 'Hydration mismatch', NULL, 'app/Dashboard.tsx', 45, '${now}', 1);`);
+
+  parts.push(`INSERT INTO file_history (id, file_id, content, change_type, changed_by, changed_at)
+VALUES
+  ('fh-1', 'file-1', 'export default function LoginScreen() { return null; }', 'created', '${SEED_USER_ID}', '${now}'),
+  ('fh-2', 'file-2', 'export default function Dashboard() { return null; }', 'created', '${SEED_USER_ID}', '${now}');`);
+
   return parts.join("\n\n");
 }
