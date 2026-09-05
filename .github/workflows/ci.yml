@@ -52,6 +52,11 @@ jobs:
       - name: Test
         run: bun run test
 
+      - name: Install Playwright browsers
+        run: |
+          cd apps/web
+          bunx playwright install --with-deps chromium
+
       - name: E2E Tests (Playwright)
         run: |
           cd apps/web
