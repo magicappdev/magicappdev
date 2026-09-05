@@ -38,6 +38,7 @@ The `@magicappdev/web` application is the primary Next.js-based interface for Ma
 - [x] Project management dashboard.
 - [x] Live UI preview for generated code via LivePreviewPanel.
 - [x] E2E testing with Playwright configured and in CI.
+- [x] Agent-driven project wizard flow.
 - [ ] Migrate fully to Cloudflare Workers (Next-on-Pages).
 - [ ] Add collaborative editing features.
 

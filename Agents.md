@@ -444,8 +444,8 @@ Ionicframeworkd based mobile application mirroring the web interface features, p
 - [x] Stateful MagicAgent with Cloudflare Agents SDK.
 - [x] Model Routing (Fast/Complex/Code).
 - [x] Real-time streaming AI responses.
-- [ ] Tool Use: Agent-driven template selection.
-- [ ] Agent-led project setup wizard.
+- [x] Agent-driven template selection.
+- [x] Agent-led project setup wizard.
 
 ### Phase 3: No-Code Capabilities (In Progress)
 
