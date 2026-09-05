@@ -451,7 +451,7 @@ Ionicframeworkd based mobile application mirroring the web interface features, p
 
 - [x] Basic project scaffolding.
 - [x] AI-powered code generation.
-- [ ] Real-time UI preview.
+- [x] Real-time UI preview.
 - [ ] Visual app builder interface.
 - [ ] Template marketplace.
 
