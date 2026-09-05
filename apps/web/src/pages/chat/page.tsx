@@ -39,6 +39,7 @@ import { Button, Dialog, Input, TooltipProvider } from "@cloudflare/kumo";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Preview, { type PreviewFile } from "@/components/ui/Preview.js";
 import { GitHubIcon as Github } from "@/components/ui/GitHubIcon";
+import { MessageType } from "@magicappdev/shared/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -244,20 +245,32 @@ function InputArea({
                 type="button"
                 onClick={() => {
                   setAttachmentOpen(false);
-                  const url = window.prompt(
+                  const raw = window.prompt(
                     "Enter Figma file URL. Leave blank to generate a starter screen with Stitch.",
                   );
-                  if (url === null) return;
-                  if (url.trim()) {
-                    setInput(input + (input ? "\n" : "") + `[Figma: ${url}]`);
+                  if (raw === null) return;
+                  const url = raw.trim();
+                  if (!url) {
+                    if (stitchAvailable) {
+                      void onGenerateWithStitch();
+                    } else {
+                      window.alert(
+                        "No Figma URL provided. Configure Stitch to generate a starter screen instead.",
+                      );
+                    }
                     return;
                   }
-                  if (stitchAvailable) {
-                    void onGenerateWithStitch();
-                  } else {
-                    window.alert(
-                      "No Figma URL provided. Configure Stitch to generate a starter screen instead.",
+                  try {
+                    const parsed = new URL(url);
+                    if (parsed.protocol !== "https:") {
+                      window.alert("Please enter an HTTPS URL.");
+                      return;
+                    }
+                    setInput(
+                      input + (input ? "\n" : "") + `[Figma: ${parsed.href}]`,
                     );
+                  } catch {
+                    window.alert("Please enter a valid URL.");
                   }
                 }}
                 className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-zinc-200 hover:bg-zinc-800 transition-colors"
@@ -292,11 +305,23 @@ function InputArea({
                 type="button"
                 onClick={() => {
                   setAttachmentOpen(false);
-                  const url = window.prompt("Enter GitHub repository URL:");
-                  if (url)
+                  const raw = window.prompt("Enter GitHub repository URL:");
+                  if (!raw) return;
+                  const url = raw.trim();
+                  try {
+                    const parsed = new URL(url);
+                    if (parsed.protocol !== "https:") {
+                      window.alert("Please enter an HTTPS URL.");
+                      return;
+                    }
                     setInput(
-                      input + (input ? "\n" : "") + `[GitHub repo: ${url}]`,
+                      input +
+                        (input ? "\n" : "") +
+                        `[GitHub repo: ${parsed.href}]`,
                     );
+                  } catch {
+                    window.alert("Please enter a valid URL.");
+                  }
                 }}
                 className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-zinc-200 hover:bg-zinc-800 transition-colors"
               >
@@ -850,7 +875,7 @@ export default function ChatPage() {
         setMessages(historyMessages);
       } else if (type === "history_cleared") {
         setMessages([]);
-      } else if (type === "chat_chunk") {
+      } else if (type === MessageType.CHAT_CHUNK) {
         const chunk = (data.content as string) || "";
         setMessages(prev => {
           const last = prev[prev.length - 1];
@@ -870,7 +895,7 @@ export default function ChatPage() {
             },
           ];
         });
-      } else if (type === "chat_done") {
+      } else if (type === MessageType.CHAT_DONE) {
         let completedContent = "";
         setMessages(prev => {
           const last = prev[prev.length - 1];
@@ -880,7 +905,6 @@ export default function ChatPage() {
           }
           return prev;
         });
-        // Persist completed assistant message to session (best-effort)
         if (sessionIdRef.current && completedContent) {
           import("@/lib/api.js").then(({ api }) => {
             api
@@ -888,7 +912,9 @@ export default function ChatPage() {
                 role: "assistant",
                 content: completedContent,
               })
-              .catch(() => {});
+              .catch(err =>
+                console.warn("Failed to persist assistant message", err),
+              );
           });
         }
         setIsLoading(false);
@@ -898,7 +924,7 @@ export default function ChatPage() {
         if (Array.isArray(data.suggestedPrompts)) {
           setSuggestedPrompts(data.suggestedPrompts as string[]);
         }
-      } else if (type === "error") {
+      } else if (type === MessageType.ERROR) {
         setIsLoading(false);
         setIsGenerating(false);
         setMessages(prev => [
@@ -910,16 +936,16 @@ export default function ChatPage() {
             timestamp: Date.now(),
           },
         ]);
-      } else if (type === "generation_start") {
+      } else if (type === MessageType.GENERATION_START) {
         setIsGenerating(true);
         pendingFilesRef.current = [];
         setGeneratedProject(null);
-      } else if (type === "generation_file") {
+      } else if (type === MessageType.GENERATION_FILE) {
         pendingFilesRef.current = [
           ...pendingFilesRef.current,
           { path: data.path as string, content: data.content as string },
         ];
-      } else if (type === "generation_complete") {
+      } else if (type === MessageType.GENERATION_COMPLETE) {
         const files = pendingFilesRef.current;
         setGeneratedProject({
           projectName: data.projectName as string,
@@ -965,12 +991,12 @@ export default function ChatPage() {
                   timestamp: Date.now(),
                 },
               ]);
-            } catch {
-              // Silently fail auto-save; user can still use manual Save button
+            } catch (err) {
+              console.warn("Auto-save failed", err);
             }
           })();
         }
-      } else if (type === "generation_error") {
+      } else if (type === MessageType.GENERATION_ERROR) {
         setIsGenerating(false);
         setMessages(prev => [
           ...prev,
@@ -981,7 +1007,7 @@ export default function ChatPage() {
             timestamp: Date.now(),
           },
         ]);
-      } else if (type === "tool_pending_approval") {
+      } else if (type === MessageType.TOOL_PENDING_APPROVAL) {
         const approval = data.approval as
           | {
               id: string;
@@ -1000,7 +1026,7 @@ export default function ChatPage() {
             },
           ]);
         }
-      } else if (type === "tool_result") {
+      } else if (type === MessageType.TOOL_RESULT) {
         const tool = data.tool as string;
         const result = data.result as Record<string, unknown> | undefined;
 
@@ -1029,7 +1055,7 @@ export default function ChatPage() {
             timestamp: Date.now(),
           },
         ]);
-      } else if (type === "tool_error") {
+      } else if (type === MessageType.TOOL_ERROR) {
         setMessages(prev => [
           ...prev,
           {
@@ -1039,7 +1065,7 @@ export default function ChatPage() {
             timestamp: Date.now(),
           },
         ]);
-      } else if (type === "wizard_start") {
+      } else if (type === MessageType.WIZARD_START) {
         navigate("/wizard");
       }
     },
@@ -1095,7 +1121,7 @@ export default function ChatPage() {
           role: "user",
           content: userMsg.content,
         })
-        .catch(() => {});
+        .catch(err => console.warn("Failed to persist user message", err));
     }
   };
 

@@ -283,7 +283,7 @@ export default function ProjectWizardPage() {
       )}
 
       {state.step === "idea" && (
-        <div className="space-y-4">
+        <div className="space-y-4" data-testid="wizard-step-idea">
           <h2 className="text-2xl font-bold text-white">
             What do you want to build?
           </h2>
@@ -295,10 +295,12 @@ export default function ProjectWizardPage() {
             onChange={e => updateState({ idea: e.target.value })}
             placeholder="e.g., A todo app with dark mode, drag-and-drop, and due dates..."
             className="w-full h-32 p-4 bg-zinc-900 border border-zinc-700 rounded-xl text-white placeholder-zinc-600 resize-none focus:outline-none focus:border-primary"
+            data-testid="wizard-idea-input"
           />
           <div className="flex justify-end">
             <button
               type="button"
+              data-testid="wizard-idea-continue"
               onClick={() =>
                 state.idea.trim() && handleIdeaSubmit(state.idea.trim())
               }
@@ -312,7 +314,7 @@ export default function ProjectWizardPage() {
       )}
 
       {state.step === "template" && (
-        <div className="space-y-4">
+        <div className="space-y-4" data-testid="wizard-step-template">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold text-white">
@@ -324,6 +326,7 @@ export default function ProjectWizardPage() {
             </div>
             <button
               type="button"
+              data-testid="wizard-back"
               onClick={goBack}
               className="text-sm text-zinc-400 hover:text-white"
             >
@@ -340,6 +343,7 @@ export default function ProjectWizardPage() {
                 <button
                   key={template.id}
                   type="button"
+                  data-testid={`wizard-template-${template.id}`}
                   onClick={() => handleTemplateSelect(template)}
                   className="text-left rounded-2xl overflow-hidden border border-zinc-800 hover:border-zinc-600 transition-all duration-200 hover:scale-[1.02] active:scale-[0.99]"
                 >
@@ -368,7 +372,7 @@ export default function ProjectWizardPage() {
       )}
 
       {state.step === "name" && (
-        <div className="space-y-4">
+        <div className="space-y-4" data-testid="wizard-step-name">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold text-white">
@@ -380,6 +384,7 @@ export default function ProjectWizardPage() {
             </div>
             <button
               type="button"
+              data-testid="wizard-back"
               onClick={goBack}
               className="text-sm text-zinc-400 hover:text-white"
             >
@@ -391,11 +396,13 @@ export default function ProjectWizardPage() {
             value={state.projectName}
             onChange={e => updateState({ projectName: e.target.value })}
             placeholder="my-awesome-app"
+            data-testid="wizard-project-name-input"
             className="w-full p-4 bg-zinc-900 border border-zinc-700 rounded-xl text-white placeholder-zinc-600 focus:outline-none focus:border-primary"
           />
           <div className="flex justify-end">
             <button
               type="button"
+              data-testid="wizard-generate-project"
               onClick={() =>
                 state.projectName.trim() &&
                 handleNameSubmit(state.projectName.trim())
@@ -410,7 +417,7 @@ export default function ProjectWizardPage() {
       )}
 
       {state.step === "preview" && (
-        <div className="space-y-4">
+        <div className="space-y-4" data-testid="wizard-step-preview">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold text-white">
@@ -420,6 +427,7 @@ export default function ProjectWizardPage() {
             </div>
             <button
               type="button"
+              data-testid="wizard-back"
               onClick={goBack}
               className="text-sm text-zinc-400 hover:text-white"
             >

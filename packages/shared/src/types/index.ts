@@ -76,3 +76,6 @@ export type {
   RegisterRequest,
   UpdateProjectRequest,
 } from "./api.types";
+
+// Agent message types
+export { MessageType, type MessageTypeValue } from "./message-type";

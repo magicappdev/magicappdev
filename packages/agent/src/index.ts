@@ -9,10 +9,15 @@ import {
   parseToolCalls,
   requiresApproval,
 } from "./tools";
+import {
+  safeGlobToRegExp,
+  validateProjectFilePath,
+} from "./lib/agent-utils.js";
 import type { Template, TemplateMetadata } from "@magicappdev/templates-engine";
 import { createDatabase, projectFiles, eq, and } from "@magicappdev/database";
 import { generateFromTemplate } from "@magicappdev/templates-engine";
 import { registry } from "@magicappdev/templates-engine/registry";
+import { MessageType } from "@magicappdev/shared/types";
 import type { Connection, WSMessage } from "agents";
 import { Agent, routeAgentRequest } from "agents";
 
@@ -198,6 +203,49 @@ export class MagicAgent extends Agent<Env, AgentState> {
     this.cleanupMcpRateLimits();
   }
 
+  /**
+   * Upsert a project file in D1. Reuses the same logic across multiple tools
+   * to avoid duplication and keep file writes consistent.
+   */
+  private async upsertProjectFile(
+    db: ReturnType<typeof createDatabase>,
+    projectId: string,
+    path: string,
+    content: string,
+  ): Promise<void> {
+    const language = path.split(".").pop() || "text";
+    const size = content.length;
+
+    const existing = await db.query.projectFiles.findFirst({
+      where: and(
+        eq(projectFiles.projectId, projectId),
+        eq(projectFiles.path, path),
+      ),
+    });
+
+    if (existing) {
+      await db
+        .update(projectFiles)
+        .set({
+          content,
+          language,
+          size,
+          updatedAt: new Date().toISOString(),
+        })
+        .where(eq(projectFiles.id, existing.id));
+      return;
+    }
+
+    await db.insert(projectFiles).values({
+      id: crypto.randomUUID(),
+      projectId,
+      path,
+      content,
+      language,
+      size,
+    });
+  }
+
   override async onMessage(connection: Connection, message: WSMessage) {
     if (typeof message !== "string") return;
     try {
@@ -283,12 +331,15 @@ export class MagicAgent extends Agent<Env, AgentState> {
           break;
         default:
           connection.send(
-            JSON.stringify({ type: "error", message: "Unknown message type" }),
+            JSON.stringify({
+              type: MessageType.ERROR,
+              message: "Unknown message type",
+            }),
           );
       }
     } catch {
       connection.send(
-        JSON.stringify({ type: "error", message: "Invalid JSON" }),
+        JSON.stringify({ type: MessageType.ERROR, message: "Invalid JSON" }),
       );
     }
   }
@@ -640,7 +691,7 @@ export class MagicAgent extends Agent<Env, AgentState> {
   ) {
     connection.send(
       JSON.stringify({
-        type: "generation_start",
+        type: MessageType.GENERATION_START,
         templateSlug,
         projectName,
       }),
@@ -652,7 +703,7 @@ export class MagicAgent extends Agent<Env, AgentState> {
       if (!template) {
         connection.send(
           JSON.stringify({
-            type: "generation_error",
+            type: MessageType.GENERATION_ERROR,
             error: `Template "${templateSlug}" not found`,
           }),
         );
@@ -686,7 +737,7 @@ export class MagicAgent extends Agent<Env, AgentState> {
       if (!result.success) {
         connection.send(
           JSON.stringify({
-            type: "generation_error",
+            type: MessageType.GENERATION_ERROR,
             error: result.error,
           }),
         );
@@ -697,7 +748,7 @@ export class MagicAgent extends Agent<Env, AgentState> {
       for (const file of result.files) {
         connection.send(
           JSON.stringify({
-            type: "generation_file",
+            type: MessageType.GENERATION_FILE,
             path: file.path,
             content: file.content,
           }),
@@ -707,7 +758,7 @@ export class MagicAgent extends Agent<Env, AgentState> {
       // Send completion message
       connection.send(
         JSON.stringify({
-          type: "generation_complete",
+          type: MessageType.GENERATION_COMPLETE,
           projectName,
           templateSlug,
           fileCount: result.files.length,
@@ -719,7 +770,7 @@ export class MagicAgent extends Agent<Env, AgentState> {
       const message = err instanceof Error ? err.message : String(err);
       connection.send(
         JSON.stringify({
-          type: "generation_error",
+          type: MessageType.GENERATION_ERROR,
           error: message,
         }),
       );
@@ -740,7 +791,10 @@ export class MagicAgent extends Agent<Env, AgentState> {
     );
     if (approvalIndex === -1) {
       connection.send(
-        JSON.stringify({ type: "error", message: "Approval not found" }),
+        JSON.stringify({
+          type: MessageType.ERROR,
+          message: "Approval not found",
+        }),
       );
       return;
     }
@@ -780,7 +834,7 @@ export class MagicAgent extends Agent<Env, AgentState> {
     if (!tool) {
       connection.send(
         JSON.stringify({
-          type: "tool_error",
+          type: MessageType.TOOL_ERROR,
           tool: approval.tool,
           error: "Unknown tool",
         }),
@@ -804,7 +858,7 @@ export class MagicAgent extends Agent<Env, AgentState> {
 
       connection.send(
         JSON.stringify({
-          type: "tool_result",
+          type: MessageType.TOOL_RESULT,
           tool: approval.tool,
           result,
           success: true,
@@ -819,7 +873,7 @@ export class MagicAgent extends Agent<Env, AgentState> {
       ) {
         connection.send(
           JSON.stringify({
-            type: "wizard_select_template",
+            type: MessageType.WIZARD_SELECT_TEMPLATE,
             templateId: (result as Record<string, unknown>).templateId,
           }),
         );
@@ -833,7 +887,7 @@ export class MagicAgent extends Agent<Env, AgentState> {
       ) {
         connection.send(
           JSON.stringify({
-            type: "wizard_set_name",
+            type: MessageType.WIZARD_SET_NAME,
             name: (result as Record<string, unknown>).name,
           }),
         );
@@ -855,7 +909,7 @@ export class MagicAgent extends Agent<Env, AgentState> {
       const error = err instanceof Error ? err.message : String(err);
       connection.send(
         JSON.stringify({
-          type: "tool_error",
+          type: MessageType.TOOL_ERROR,
           tool: approval.tool,
           error,
         }),
@@ -877,6 +931,13 @@ export class MagicAgent extends Agent<Env, AgentState> {
       case "readFile": {
         if (!projectId) return { error: "No project selected" };
         const filePath = parameters.path as string;
+        try {
+          validateProjectFilePath(filePath);
+        } catch (err) {
+          return {
+            error: err instanceof Error ? err.message : "Invalid file path",
+          };
+        }
         const file = await db.query.projectFiles.findFirst({
           where: and(
             eq(projectFiles.projectId, projectId),
@@ -895,38 +956,15 @@ export class MagicAgent extends Agent<Env, AgentState> {
         if (!projectId) return { error: "No project selected" };
         const filePath = parameters.path as string;
         const content = parameters.content as string;
-        const language = filePath.split(".").pop() || "text";
-        const size = content.length;
-
-        const existing = await db.query.projectFiles.findFirst({
-          where: and(
-            eq(projectFiles.projectId, projectId),
-            eq(projectFiles.path, filePath),
-          ),
-        });
-
-        if (existing) {
-          await db
-            .update(projectFiles)
-            .set({
-              content,
-              language,
-              size,
-              updatedAt: new Date().toISOString(),
-            })
-            .where(eq(projectFiles.id, existing.id));
-          return { success: true, path: filePath, message: "File updated" };
+        try {
+          validateProjectFilePath(filePath);
+        } catch (err) {
+          return {
+            error: err instanceof Error ? err.message : "Invalid file path",
+          };
         }
-
-        await db.insert(projectFiles).values({
-          id: crypto.randomUUID(),
-          projectId,
-          path: filePath,
-          content,
-          language,
-          size,
-        });
-        return { success: true, path: filePath, message: "File created" };
+        await this.upsertProjectFile(db, projectId, filePath, content);
+        return { success: true, path: filePath, message: "File saved" };
       }
 
       case "listFiles": {
@@ -938,19 +976,12 @@ export class MagicAgent extends Agent<Env, AgentState> {
           where: eq(projectFiles.projectId, projectId),
         });
 
-        // Filter by directory
         if (dirPath) {
           files = files.filter(f => f.path.startsWith(dirPath));
         }
 
-        // Filter by glob pattern (simple implementation)
         if (pattern) {
-          const regex = new RegExp(
-            pattern
-              .replace(/\./g, "\\.")
-              .replace(/\*/g, ".*")
-              .replace(/\?/g, "."),
-          );
+          const regex = safeGlobToRegExp(pattern);
           files = files.filter(f => regex.test(f.path));
         }
 
@@ -970,14 +1001,8 @@ export class MagicAgent extends Agent<Env, AgentState> {
           where: eq(projectFiles.projectId, projectId),
         });
 
-        // Filter by file pattern
         if (filePattern) {
-          const regex = new RegExp(
-            filePattern
-              .replace(/\./g, "\\.")
-              .replace(/\*/g, ".*")
-              .replace(/\?/g, "."),
-          );
+          const regex = safeGlobToRegExp(filePattern);
           files = files.filter(f => regex.test(f.path));
         }
 
@@ -1073,34 +1098,19 @@ export class MagicAgent extends Agent<Env, AgentState> {
 
         if (projectId) {
           for (const file of result.files) {
-            const language = file.path.split(".").pop() || "text";
-            const size = file.content.length;
-            const existing = await db.query.projectFiles.findFirst({
-              where: and(
-                eq(projectFiles.projectId, projectId),
-                eq(projectFiles.path, file.path),
-              ),
-            });
-            if (existing) {
-              await db
-                .update(projectFiles)
-                .set({
-                  content: file.content,
-                  language,
-                  size,
-                  updatedAt: new Date().toISOString(),
-                })
-                .where(eq(projectFiles.id, existing.id));
-            } else {
-              await db.insert(projectFiles).values({
-                id: crypto.randomUUID(),
-                projectId,
-                path: file.path,
-                content: file.content,
-                language,
-                size,
-              });
+            try {
+              validateProjectFilePath(file.path);
+            } catch (err) {
+              return {
+                error: err instanceof Error ? err.message : "Invalid file path",
+              };
             }
+            await this.upsertProjectFile(
+              db,
+              projectId,
+              file.path,
+              file.content,
+            );
           }
         }
 
@@ -1156,36 +1166,14 @@ export class MagicAgent extends Agent<Env, AgentState> {
 
         for (const file of fileList) {
           if (!file.path || typeof file.content !== "string") continue;
-          const language = file.path.split(".").pop() || "text";
-          const size = file.content.length;
-
-          const existing = await db.query.projectFiles.findFirst({
-            where: and(
-              eq(projectFiles.projectId, projectId),
-              eq(projectFiles.path, file.path),
-            ),
-          });
-
-          if (existing) {
-            await db
-              .update(projectFiles)
-              .set({
-                content: file.content,
-                language,
-                size,
-                updatedAt: new Date().toISOString(),
-              })
-              .where(eq(projectFiles.id, existing.id));
-          } else {
-            await db.insert(projectFiles).values({
-              id: crypto.randomUUID(),
-              projectId,
-              path: file.path,
-              content: file.content,
-              language,
-              size,
-            });
+          try {
+            validateProjectFilePath(file.path);
+          } catch (err) {
+            return {
+              error: err instanceof Error ? err.message : "Invalid file path",
+            };
           }
+          await this.upsertProjectFile(db, projectId, file.path, file.content);
           writtenFiles.push(file.path);
         }
 
@@ -1199,6 +1187,13 @@ export class MagicAgent extends Agent<Env, AgentState> {
       case "deleteFile": {
         if (!projectId) return { error: "No project selected" };
         const filePath = parameters.path as string;
+        try {
+          validateProjectFilePath(filePath);
+        } catch (err) {
+          return {
+            error: err instanceof Error ? err.message : "Invalid file path",
+          };
+        }
         const existing = await db.query.projectFiles.findFirst({
           where: and(
             eq(projectFiles.projectId, projectId),
@@ -1250,36 +1245,20 @@ Respond with a JSON object: { "summary": "one-line cause", "patch": "exact code 
               patchedPath &&
               patchedPath !== "unknown"
             ) {
-              const language = patchedPath.split(".").pop() || "text";
-              const size = (patchText as string).length;
-
-              const existingFile = await db.query.projectFiles.findFirst({
-                where: and(
-                  eq(projectFiles.projectId, projectId),
-                  eq(projectFiles.path, patchedPath),
-                ),
-              });
-
-              if (existingFile) {
-                await db
-                  .update(projectFiles)
-                  .set({
-                    content: patchText as string,
-                    language,
-                    size,
-                    updatedAt: new Date().toISOString(),
-                  })
-                  .where(eq(projectFiles.id, existingFile.id));
-              } else {
-                await db.insert(projectFiles).values({
-                  id: crypto.randomUUID(),
-                  projectId,
-                  path: patchedPath,
-                  content: patchText as string,
-                  language,
-                  size,
-                });
+              try {
+                validateProjectFilePath(patchedPath);
+              } catch (err) {
+                return {
+                  error:
+                    err instanceof Error ? err.message : "Invalid file path",
+                };
               }
+              await this.upsertProjectFile(
+                db,
+                projectId,
+                patchedPath,
+                patchText as string,
+              );
             }
 
             return {
@@ -1578,7 +1557,7 @@ Respond with a JSON object: { "summary": "one-line cause", "patch": "exact code 
     if (!this.state.toolsEnabled) {
       connection.send(
         JSON.stringify({
-          type: "error",
+          type: MessageType.ERROR,
           message: `Preview error in ${filePath}: ${errorMessage}. Enable tools for auto-patching.`,
         }),
       );
@@ -1609,7 +1588,7 @@ Respond with a JSON object: { "summary": "one-line cause", "patch": "exact code 
 
       connection.send(
         JSON.stringify({
-          type: "tool_pending_approval",
+          type: MessageType.TOOL_PENDING_APPROVAL,
           approval,
         }),
       );
@@ -1627,7 +1606,7 @@ Respond with a JSON object: { "summary": "one-line cause", "patch": "exact code 
         );
         connection.send(
           JSON.stringify({
-            type: "tool_result",
+            type: MessageType.TOOL_RESULT,
             tool: toolCall.tool,
             result,
             success: true,
@@ -1647,7 +1626,7 @@ Respond with a JSON object: { "summary": "one-line cause", "patch": "exact code 
         const error = err instanceof Error ? err.message : String(err);
         connection.send(
           JSON.stringify({
-            type: "tool_error",
+            type: MessageType.TOOL_ERROR,
             tool: toolCall.tool,
             error,
             autoExecuted: true,
@@ -1795,7 +1774,10 @@ User Request: ${userPrompt}`;
         // Cache hit — send cached response directly
         assistantContent = cachedResponse;
         connection.send(
-          JSON.stringify({ type: "chat_chunk", content: assistantContent }),
+          JSON.stringify({
+            type: MessageType.CHAT_CHUNK,
+            content: assistantContent,
+          }),
         );
       } else {
         // Cache miss — call AI and stream
@@ -1838,7 +1820,7 @@ User Request: ${userPrompt}`;
                       assistantContent += parsed.response;
                       connection.send(
                         JSON.stringify({
-                          type: "chat_chunk",
+                          type: MessageType.CHAT_CHUNK,
                           content: parsed.response,
                         }),
                       );
@@ -1859,7 +1841,7 @@ User Request: ${userPrompt}`;
             assistantContent = response.response;
             connection.send(
               JSON.stringify({
-                type: "chat_chunk",
+                type: MessageType.CHAT_CHUNK,
                 content: assistantContent,
               }),
             );
@@ -1899,7 +1881,7 @@ User Request: ${userPrompt}`;
         );
         connection.send(
           JSON.stringify({
-            type: "wizard_complete",
+            type: MessageType.WIZARD_COMPLETE,
             success: true,
           }),
         );
@@ -1912,7 +1894,7 @@ User Request: ${userPrompt}`;
           const projectName = this.extractProjectName(content);
           connection.send(
             JSON.stringify({
-              type: "wizard_start",
+              type: MessageType.WIZARD_START,
               idea: content,
               templateSlug: slug,
               projectName,
@@ -1921,7 +1903,7 @@ User Request: ${userPrompt}`;
           await this.handleGenerateProject(connection, slug, projectName, {});
           connection.send(
             JSON.stringify({
-              type: "wizard_complete",
+              type: MessageType.WIZARD_COMPLETE,
               success: true,
             }),
           );
@@ -1961,7 +1943,7 @@ User Request: ${userPrompt}`;
           // Notify client about pending approval
           connection.send(
             JSON.stringify({
-              type: "tool_pending_approval",
+              type: MessageType.TOOL_PENDING_APPROVAL,
               approval,
             }),
           );
@@ -1997,7 +1979,7 @@ User Request: ${userPrompt}`;
           );
           connection.send(
             JSON.stringify({
-              type: "tool_result",
+              type: MessageType.TOOL_RESULT,
               tool: toolCall.tool,
               result,
               success: true,
@@ -2013,7 +1995,7 @@ User Request: ${userPrompt}`;
           ) {
             connection.send(
               JSON.stringify({
-                type: "wizard_select_template",
+                type: MessageType.WIZARD_SELECT_TEMPLATE,
                 templateId: (result as Record<string, unknown>).templateId,
               }),
             );
@@ -2027,7 +2009,7 @@ User Request: ${userPrompt}`;
           ) {
             connection.send(
               JSON.stringify({
-                type: "wizard_set_name",
+                type: MessageType.WIZARD_SET_NAME,
                 name: (result as Record<string, unknown>).name,
               }),
             );
@@ -2036,7 +2018,7 @@ User Request: ${userPrompt}`;
           const error = err instanceof Error ? err.message : String(err);
           connection.send(
             JSON.stringify({
-              type: "tool_error",
+              type: MessageType.TOOL_ERROR,
               tool: toolCall.tool,
               error,
               autoExecuted: true,
@@ -2047,7 +2029,7 @@ User Request: ${userPrompt}`;
 
       connection.send(
         JSON.stringify({
-          type: "chat_done",
+          type: MessageType.CHAT_DONE,
           suggestedTemplate: this.state.suggestedTemplate,
           suggestedPrompts: this.state.suggestedPrompts,
           toolCalls: toolCalls.length,
@@ -2057,7 +2039,10 @@ User Request: ${userPrompt}`;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       connection.send(
-        JSON.stringify({ type: "error", message: "AI failed: " + message }),
+        JSON.stringify({
+          type: MessageType.ERROR,
+          message: "AI failed: " + message,
+        }),
       );
     }
   }
