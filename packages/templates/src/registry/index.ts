@@ -2,8 +2,26 @@
  * Template registry for managing and accessing templates
  */
 
+import {
+  compileFilePath,
+  compileTemplate,
+  evaluateCondition,
+} from "../utils/index.js";
 import type { Template, TemplateCategory, TemplateMetadata } from "../types.js";
 import type { ProjectFramework } from "@magicappdev/shared";
+
+export interface GeneratedFile {
+  path: string;
+  content: string;
+}
+
+export interface GenerateProjectResult {
+  success: boolean;
+  files: GeneratedFile[];
+  dependencies: Record<string, string>;
+  devDependencies: Record<string, string>;
+  error?: string;
+}
 
 /** Template registry */
 class TemplateRegistry {
@@ -97,6 +115,73 @@ class TemplateRegistry {
       ({ files, variables, dependencies, devDependencies, ...metadata }) =>
         metadata,
     );
+  }
+
+  /** Generate files from a template in memory */
+  generate(
+    slug: string,
+    projectName: string,
+    variables: Record<string, unknown> = {},
+  ): GenerateProjectResult {
+    const template = this.getBySlug(slug);
+    if (!template) {
+      return {
+        success: false,
+        files: [],
+        dependencies: {},
+        devDependencies: {},
+        error: `Template "${slug}" not found`,
+      };
+    }
+
+    const finalVariables: Record<string, unknown> = {
+      name: projectName,
+      appName: projectName,
+      ...variables,
+    };
+
+    for (const varDef of template.variables || []) {
+      if (
+        finalVariables[varDef.name] === undefined &&
+        varDef.default !== undefined
+      ) {
+        finalVariables[varDef.name] = varDef.default;
+      }
+    }
+
+    const files: GeneratedFile[] = [];
+
+    for (const templateFile of template.files) {
+      if (templateFile.condition) {
+        const shouldInclude = evaluateCondition(
+          templateFile.condition,
+          finalVariables,
+        );
+        if (!shouldInclude) continue;
+      }
+
+      try {
+        const filePath = compileFilePath(templateFile.path, finalVariables);
+        const content = compileTemplate(templateFile.content, finalVariables);
+        files.push({ path: filePath, content });
+      } catch (err) {
+        return {
+          success: false,
+          files,
+          dependencies: template.dependencies || {},
+          devDependencies: template.devDependencies || {},
+          error:
+            err instanceof Error ? err.message : "Failed to generate template",
+        };
+      }
+    }
+
+    return {
+      success: true,
+      files,
+      dependencies: template.dependencies || {},
+      devDependencies: template.devDependencies || {},
+    };
   }
 
   /** Clear all templates */

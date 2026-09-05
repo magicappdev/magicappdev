@@ -228,7 +228,7 @@ MagicAppDev is a comprehensive monorepo-based fullstack app building platform in
 
 #### AI & Agent Capabilities
 
-- [ ] Agent tool calling for `registry.generate()`
+- [x] Agent tool calling for `registry.generate()`
 - [ ] File write/read tools for agents
 - [ ] Human-in-the-Loop approval workflows
 - [ ] Rollback capabilities for agent actions
@@ -259,9 +259,9 @@ MagicAppDev is a comprehensive monorepo-based fullstack app building platform in
 
 #### Infrastructure & DevOps
 
-- [ ] Consolidated build system (Nx or Turborepo)
-- [ ] E2E testing suite with Playwright
-- [ ] Automated mobile app deployment to CI/CD
+- [x] Consolidated build system (Nx removed, Turborepo is single source of truth)
+- [x] E2E testing suite with Playwright
+- [x] Automated mobile app deployment to CI/CD
 - [ ] Rate limiting on API endpoints
 - [ ] Request/response logging for debugging
 - [ ] Docker-Compose Quickstart for app development

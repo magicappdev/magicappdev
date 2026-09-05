@@ -101,7 +101,7 @@ Previously, typing "Build a compound interest calculator" returned raw markdown 
 - Uses the user's GitHub OAuth token from the `accounts` table
 - Returns `{ repoUrl, cloneUrl, failedFiles }`
 
-### Recent Improvements (January 24, 2026)
+### Recent Improvements (September 2026)
 
 #### Mobile App Bug Fixes ✅
 
@@ -181,6 +181,10 @@ todoo:
 - [x] Fix back navigation for hidden tab screens in mobile app.
 - [x] Fix OpenCode endpoint URL in mobile AI provider settings.
 - [x] Add website link button in mobile profile settings.
+- [x] Add `registry.generate()` method for in-memory template generation.
+- [x] Wire up web app Live Preview page with real project file rendering.
+- [x] Add Playwright E2E tests to main CI workflow.
+- [x] Add mobile CI/CD workflows (typecheck, lint, export, release APK).
 - [ ] Discord Bot for Community Server
 - [ ] Add Github App Support to install MagicAppDev on User Accounts to initialize Repos, Setup Workflows.
 - [ ] Add mobile app store deployment automation

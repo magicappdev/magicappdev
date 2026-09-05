@@ -9,32 +9,12 @@ import {
   parseToolCalls,
   requiresApproval,
 } from "./tools";
-import {
-  compileTemplate,
-  compileFilePath,
-  evaluateCondition,
-  generateFromTemplate,
-} from "@magicappdev/templates-engine";
 import type { Template, TemplateMetadata } from "@magicappdev/templates-engine";
 import { createDatabase, projectFiles, eq, and } from "@magicappdev/database";
+import { generateFromTemplate } from "@magicappdev/templates-engine";
 import { registry } from "@magicappdev/templates-engine/registry";
 import type { Connection, WSMessage } from "agents";
 import { Agent, routeAgentRequest } from "agents";
-
-/** Generated file result */
-interface GeneratedFile {
-  path: string;
-  content: string;
-}
-
-/** Project generation result */
-interface GenerateProjectResult {
-  success: boolean;
-  files: GeneratedFile[];
-  dependencies: Record<string, string>;
-  devDependencies: Record<string, string>;
-  error?: string;
-}
 
 // Re-export tool types for external use
 export { AGENT_TOOLS, getTool, requiresApproval };
@@ -666,8 +646,12 @@ export class MagicAgent extends Agent<Env, AgentState> {
         }
       }
 
-      // Generate files in memory
-      const result = this.generateFilesInMemory(template, finalVariables);
+      // Generate files in memory using registry
+      const result = registry.generate(
+        templateSlug,
+        projectName,
+        finalVariables,
+      );
 
       if (!result.success) {
         connection.send(
@@ -709,53 +693,6 @@ export class MagicAgent extends Agent<Env, AgentState> {
           error: message,
         }),
       );
-    }
-  }
-
-  /**
-   * Generate files in memory from a template
-   */
-  private generateFilesInMemory(
-    template: Template,
-    variables: Record<string, unknown>,
-  ): GenerateProjectResult {
-    try {
-      const files: GeneratedFile[] = [];
-
-      for (const templateFile of template.files) {
-        // Check condition
-        if (templateFile.condition) {
-          const shouldInclude = evaluateCondition(
-            templateFile.condition,
-            variables,
-          );
-          if (!shouldInclude) continue;
-        }
-
-        // Compile the file path
-        const filePath = compileFilePath(templateFile.path, variables);
-
-        // Compile the content
-        const content = compileTemplate(templateFile.content, variables);
-
-        files.push({ path: filePath, content });
-      }
-
-      return {
-        success: true,
-        files,
-        dependencies: template.dependencies || {},
-        devDependencies: template.devDependencies || {},
-      };
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      return {
-        success: false,
-        files: [],
-        dependencies: {},
-        devDependencies: {},
-        error: message,
-      };
     }
   }
 
@@ -1070,7 +1007,11 @@ export class MagicAgent extends Agent<Env, AgentState> {
           ...variables,
         };
 
-        const result = this.generateFilesInMemory(template, finalVariables);
+        const result = registry.generate(
+          templateSlug,
+          projectName,
+          finalVariables,
+        );
         if (!result.success) {
           return { error: result.error };
         }

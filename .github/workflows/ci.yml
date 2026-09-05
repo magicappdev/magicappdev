@@ -52,6 +52,11 @@ jobs:
       - name: Test
         run: bun run test
 
+      - name: E2E Tests (Playwright)
+        run: |
+          cd apps/web
+          bun run test:e2e
+
       - name: Knip (unused dependencies)
         run: bun run knip --include dependencies,unlisted
 

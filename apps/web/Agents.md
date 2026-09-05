@@ -36,7 +36,8 @@ The `@magicappdev/web` application is the primary Next.js-based interface for Ma
 - [x] GitHub OAuth integration.
 - [x] Responsive layout with Tailwind CSS.
 - [x] Project management dashboard.
-- [ ] Implement live UI preview for generated code.
+- [x] Live UI preview for generated code via LivePreviewPanel.
+- [x] E2E testing with Playwright configured and in CI.
 - [ ] Migrate fully to Cloudflare Workers (Next-on-Pages).
 - [ ] Add collaborative editing features.
 
@@ -48,6 +49,7 @@ The `@magicappdev/web` application is the primary Next.js-based interface for Ma
 
 ## Next Steps
 
-- Setup E2E testing with Playwright.
+- Migrate fully to Cloudflare Workers (Next-on-Pages).
+- Add collaborative editing features.
 - Integrate with `@magicappdev/agent` for advanced scaffolding previews.
 - Add more comprehensive user settings and profile management.

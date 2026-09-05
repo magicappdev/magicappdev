@@ -1,19 +1,45 @@
-import { ArrowLeft, ExternalLink, Loader2 } from "lucide-react";
+import { ArrowLeft, ExternalLink, Loader2, FileCode2 } from "lucide-react";
+import { LivePreviewPanel } from "@/components/LivePreviewPanel";
 import { useParams, useNavigate } from "react-router-dom";
 import { Typography } from "@/components/ui/Typography";
 import { Button } from "@/components/ui/Button";
 import { useEffect, useState } from "react";
+import { api } from "@/lib/api";
+
+interface ProjectFile {
+  id: string;
+  path: string;
+  content: string;
+  language: string;
+  size: number;
+}
 
 export default function ProjectPreviewPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
+  const [files, setFiles] = useState<ProjectFile[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Simulate loading the preview
-    const timer = setTimeout(() => setIsLoading(false), 1000);
-    return () => clearTimeout(timer);
-  }, []);
+    async function loadFiles() {
+      if (!id) return;
+      setIsLoading(true);
+      setError(null);
+      try {
+        const data = await api.getProjectFiles(id);
+        setFiles(data as ProjectFile[]);
+      } catch {
+        setError("Failed to load project files");
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadFiles();
+  }, [id]);
+
+  const entryFile = files.find(f => f.path === "index.html") || files[0];
+  const previewCode = entryFile?.content || "";
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -32,7 +58,7 @@ export default function ProjectPreviewPage() {
       </div>
 
       <div className="flex items-center gap-3">
-        <ExternalLink size={24} className="text-primary" />
+        <FileCode2 size={24} className="text-primary" />
         <Typography variant="headline">Live Preview</Typography>
       </div>
 
@@ -44,14 +70,20 @@ export default function ProjectPreviewPage() {
               <Typography>Loading preview...</Typography>
             </div>
           </div>
-        ) : (
+        ) : error || !previewCode ? (
           <div className="flex flex-col items-center justify-center h-[500px] space-y-4 text-foreground/40">
-            <ExternalLink size={48} className="opacity-20" />
-            <Typography variant="title">Preview Coming Soon</Typography>
+            <FileCode2 size={48} className="opacity-20" />
+            <Typography variant="title">No Preview Available</Typography>
             <Typography variant="body">
-              Live preview of your project will appear here.
+              {error ||
+                "This project does not have a previewable entry file yet."}
             </Typography>
           </div>
+        ) : (
+          <LivePreviewPanel
+            initialCode={previewCode}
+            projectName={entryFile.path.split("/").pop() || "Preview"}
+          />
         )}
       </div>
     </div>
