@@ -66,4 +66,10 @@ jobs:
         run: bun run knip --include dependencies,unlisted
 
       - name: Security Audit
-        run: bun audit
+        # image-size has no patched release (advisories cover all versions
+        # through latest 2.0.2) and is a dev-only transitive dep of metro in
+        # the mobile toolchain, never shipped to Workers. Revisit on new release.
+        run: >
+          bun audit
+          --ignore=GHSA-w3rx-r6r6-pgpr
+          --ignore=GHSA-5p2g-fcmc-qvqq
