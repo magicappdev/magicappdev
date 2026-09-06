@@ -4,36 +4,13 @@
  * POST /github/push-repo — creates/pushes an existing project's files to GitHub
  */
 
+import { mapWithConcurrency } from "@magicappdev/shared/utils/concurrency";
 import { schema } from "@magicappdev/database";
 import type { AppContext } from "../types.js";
 import { eq, and } from "drizzle-orm";
 import { Hono } from "hono";
 
-async function mapWithConcurrency<T, R>(
-  items: T[],
-  concurrency: number,
-  fn: (item: T, index: number) => Promise<R>,
-): Promise<R[]> {
-  const results: R[] = new Array(items.length);
-  let index = 0;
-  const workers: Promise<void>[] = [];
-
-  for (let w = 0; w < concurrency; w++) {
-    workers.push(
-      (async (): Promise<void> => {
-        while (index < items.length) {
-          const i = index++;
-          results[i] = await fn(items[i], i);
-        }
-      })(),
-    );
-  }
-
-  await Promise.all(workers);
-  return results;
-}
-
-function normalizePath(rawPath: string): string {
+export function normalizePath(rawPath: string): string {
   const parts = rawPath.split("/");
   const result: string[] = [];
   for (const part of parts) {
@@ -46,7 +23,7 @@ function normalizePath(rawPath: string): string {
   return result.join("/");
 }
 
-function sanitizePath(rawPath: string): string {
+export function sanitizePath(rawPath: string): string {
   const normalized = normalizePath(rawPath.replace(/\\/g, "/"));
   if (
     normalized.startsWith("/") ||
@@ -190,7 +167,11 @@ githubRoutes.post("/create-repo", async c => {
     return { ok: putResp.ok, path: safePath };
   });
 
-  const failures = results.filter(r => !r.ok).map(r => r.path);
+  const failures = results
+    .filter(r => r.ok)
+    .map(r => r.value)
+    .filter(r => !r.ok)
+    .map(r => r.path);
 
   return c.json({
     success: true,
@@ -349,7 +330,11 @@ githubRoutes.post("/push-repo", async c => {
     return { ok: putResp.ok, path: safePath };
   });
 
-  const failures = results.filter(r => !r.ok).map(r => r.path);
+  const failures = results
+    .filter(r => r.ok)
+    .map(r => r.value)
+    .filter(r => !r.ok)
+    .map(r => r.path);
 
   return c.json({
     success: true,

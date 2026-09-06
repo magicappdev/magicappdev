@@ -24,6 +24,10 @@
       "types": "./dist/utils/index.d.ts",
       "import": "./dist/utils/index.js"
     },
+    "./utils/concurrency": {
+      "types": "./dist/utils/concurrency.d.ts",
+      "import": "./dist/utils/concurrency.js"
+    },
     "./errors": {
       "types": "./dist/errors/index.d.ts",
       "import": "./dist/errors/index.js"

@@ -11,8 +11,8 @@ import {
   projectCommands,
   projectErrors,
 } from "@magicappdev/database";
+import { eq, inArray } from "@magicappdev/database";
 import type { AppContext } from "../types.js";
-import { eq } from "@magicappdev/database";
 import { zipSync, strToU8 } from "fflate";
 import { Hono } from "hono";
 
@@ -200,26 +200,33 @@ exportRoutes.get("/export/list", async c => {
   const projects_list = await db.query.projects.findMany({
     orderBy: [projects.updatedAt],
     where: userRole === "admin" ? undefined : eq(projects.userId, userId || ""),
+    limit: 100,
   });
 
-  // Get file counts for each project
-  const projectsWithCounts = await Promise.all(
-    projects_list.map(async (p: typeof projects.$inferSelect) => {
-      const files = await db.query.projectFiles.findMany({
-        where: eq(projectFiles.projectId, p.id),
-        limit: 100,
-      });
+  // Batch-fetch file counts for all listed projects in one query
+  const fileCountByProject: Record<string, number> = {};
+  if (projects_list.length > 0) {
+    const projectIds = projects_list.map(p => p.id);
+    const allFiles = await db.query.projectFiles.findMany({
+      where: inArray(projectFiles.projectId, projectIds),
+    });
 
-      return {
-        id: p.id,
-        name: p.name,
-        slug: p.slug,
-        description: p.description,
-        framework: p.framework,
-        status: p.status,
-        fileCount: files.length,
-        updatedAt: p.updatedAt,
-      };
+    for (const file of allFiles) {
+      fileCountByProject[file.projectId] =
+        (fileCountByProject[file.projectId] || 0) + 1;
+    }
+  }
+
+  const projectsWithCounts = projects_list.map(
+    (p: typeof projects.$inferSelect) => ({
+      id: p.id,
+      name: p.name,
+      slug: p.slug,
+      description: p.description,
+      framework: p.framework,
+      status: p.status,
+      fileCount: Math.min(fileCountByProject[p.id] || 0, 100),
+      updatedAt: p.updatedAt,
     }),
   );
 

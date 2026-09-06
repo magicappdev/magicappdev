@@ -62,3 +62,6 @@ export {
   getPromptPresetsAsStrings,
   type PromptPreset,
 } from "./chat-prompts";
+
+// Concurrency utilities
+export { mapWithConcurrency, type ConcurrencyResult } from "./concurrency";
