@@ -1,5 +1,5 @@
+import { describe, expect, it, vi, beforeAll, afterAll } from "vitest";
 import { rateLimitMiddleware } from "../middlewares/rate-limit.js";
-import { describe, it, expect, vi } from "vitest";
 import type { AppContext } from "../types.js";
 import { Hono } from "hono";
 
@@ -45,6 +45,17 @@ function setupApp(overrides: Record<string, unknown> = {}) {
 }
 
 describe("rateLimitMiddleware", () => {
+  const FIXED_NOW = 1_700_000_000_000;
+
+  beforeAll(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(FIXED_NOW));
+  });
+
+  afterAll(() => {
+    vi.useRealTimers();
+  });
+
   it("allows requests under the limit", async () => {
     const { app } = setupApp();
     const res = await app.request("/test", {

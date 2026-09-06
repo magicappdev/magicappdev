@@ -11,7 +11,7 @@ import {
   projectCommands,
   projectErrors,
 } from "@magicappdev/database";
-import { eq, inArray } from "@magicappdev/database";
+import { eq, and, inArray, or, lt } from "@magicappdev/database";
 import type { AppContext } from "../types.js";
 import { zipSync, strToU8 } from "fflate";
 import { Hono } from "hono";
@@ -190,23 +190,76 @@ exportRoutes.get("/:id/export/minimal", async c => {
 /**
  * List available projects for clone
  * Returns public projects or user's own projects
+ *
+ * Query params:
+ *   limit  - page size (default 20, max 100)
+ *   cursor - opaque base64 cursor from a previous response
  */
 exportRoutes.get("/export/list", async c => {
   const db = c.var.db;
   const userId = c.var.userId;
   const userRole = c.var.userRole;
 
-  // List user's own projects (or all projects for admin)
+  const limit = Math.min(
+    Math.max(parseInt(c.req.query("limit") || "20", 10), 1),
+    100,
+  );
+
+  let cursor: { updatedAt: string; id: string } | null = null;
+  const cursorRaw = c.req.query("cursor");
+  if (cursorRaw) {
+    try {
+      cursor = JSON.parse(Buffer.from(cursorRaw, "base64").toString());
+    } catch {
+      cursor = null;
+    }
+  }
+
+  const whereClause =
+    userRole === "admin" ? undefined : eq(projects.userId, userId || "");
+
+  const orderBy = [projects.updatedAt, projects.id];
+
+  let cursorFilter: { updatedAt: string; id: string } | undefined;
+  if (cursor) {
+    cursorFilter = {
+      updatedAt: cursor.updatedAt,
+      id: cursor.id,
+    };
+  }
+
   const projects_list = await db.query.projects.findMany({
-    orderBy: [projects.updatedAt],
-    where: userRole === "admin" ? undefined : eq(projects.userId, userId || ""),
-    limit: 100,
+    orderBy,
+    where: cursorFilter
+      ? and(
+          whereClause,
+          or(
+            lt(projects.updatedAt, cursorFilter.updatedAt),
+            and(
+              eq(projects.updatedAt, cursorFilter.updatedAt),
+              lt(projects.id, cursorFilter.id),
+            ),
+          ),
+        )
+      : whereClause,
+    limit: limit + 1,
   });
+
+  let nextCursor: string | null = null;
+  let page = projects_list;
+  if (projects_list.length > limit) {
+    page = projects_list.slice(0, limit);
+    const last = page[page.length - 1];
+    nextCursor = Buffer.from(
+      JSON.stringify({ updatedAt: last.updatedAt, id: last.id }),
+    ).toString("base64");
+  }
+
+  const projectIds = page.map(p => p.id);
 
   // Batch-fetch file counts for all listed projects in one query
   const fileCountByProject: Record<string, number> = {};
-  if (projects_list.length > 0) {
-    const projectIds = projects_list.map(p => p.id);
+  if (projectIds.length > 0) {
     const allFiles = await db.query.projectFiles.findMany({
       where: inArray(projectFiles.projectId, projectIds),
     });
@@ -217,22 +270,21 @@ exportRoutes.get("/export/list", async c => {
     }
   }
 
-  const projectsWithCounts = projects_list.map(
-    (p: typeof projects.$inferSelect) => ({
-      id: p.id,
-      name: p.name,
-      slug: p.slug,
-      description: p.description,
-      framework: p.framework,
-      status: p.status,
-      fileCount: Math.min(fileCountByProject[p.id] || 0, 100),
-      updatedAt: p.updatedAt,
-    }),
-  );
+  const projectsWithCounts = page.map((p: typeof projects.$inferSelect) => ({
+    id: p.id,
+    name: p.name,
+    slug: p.slug,
+    description: p.description,
+    framework: p.framework,
+    status: p.status,
+    fileCount: Math.min(fileCountByProject[p.id] || 0, 100),
+    updatedAt: p.updatedAt,
+  }));
 
   return c.json({
     success: true,
     data: projectsWithCounts,
+    nextCursor,
   });
 });
 
