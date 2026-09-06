@@ -6,10 +6,11 @@
   "type": "module",
   "main": "src/index.ts",
   "scripts": {
-    "build": "tsc -b",
+    "build": "tsc -p tsconfig.lib.json",
     "deploy": "npx wrangler deploy -c wrangler.toml",
     "dev": "npx wrangler dev -c wrangler.toml --persist-to ../../.wrangler/state",
     "lint": "eslint .",
+    "test": "vitest run --passWithNoTests",
     "typecheck": "tsc -b"
   },
   "dependencies": {
@@ -23,6 +24,7 @@
     "@cloudflare/workers-types": "^5.20260903.1",
     "eslint": "^10.9.1",
     "typescript": "~5.9.3",
+    "vitest": "^5.0.0",
     "wrangler": "^4.128.0"
   }
 }

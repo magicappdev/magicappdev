@@ -17,6 +17,7 @@ import type { Template, TemplateMetadata } from "@magicappdev/templates-engine";
 import { createDatabase, projectFiles, eq, and } from "@magicappdev/database";
 import { generateFromTemplate } from "@magicappdev/templates-engine";
 import { registry } from "@magicappdev/templates-engine/registry";
+import { upsertProjectFile } from "./lib/project-files.js";
 import { MessageType } from "@magicappdev/shared/types";
 import type { Connection, WSMessage } from "agents";
 import { Agent, routeAgentRequest } from "agents";
@@ -213,37 +214,7 @@ export class MagicAgent extends Agent<Env, AgentState> {
     path: string,
     content: string,
   ): Promise<void> {
-    const language = path.split(".").pop() || "text";
-    const size = content.length;
-
-    const existing = await db.query.projectFiles.findFirst({
-      where: and(
-        eq(projectFiles.projectId, projectId),
-        eq(projectFiles.path, path),
-      ),
-    });
-
-    if (existing) {
-      await db
-        .update(projectFiles)
-        .set({
-          content,
-          language,
-          size,
-          updatedAt: new Date().toISOString(),
-        })
-        .where(eq(projectFiles.id, existing.id));
-      return;
-    }
-
-    await db.insert(projectFiles).values({
-      id: crypto.randomUUID(),
-      projectId,
-      path,
-      content,
-      language,
-      size,
-    });
+    return upsertProjectFile(db, projectId, path, content);
   }
 
   override async onMessage(connection: Connection, message: WSMessage) {

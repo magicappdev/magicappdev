@@ -5,9 +5,9 @@
 /**
  * Safely convert a glob-like pattern to a RegExp.
  *
- * Only supports a safe subset: literal segments, `*` (match anything except `/`),
- * and `?` (match a single character). All other regex metacharacters are escaped
- * to prevent ReDoS and unintended matches.
+ * Only supports a safe subset: literal segments, `*` (match anything,
+ * including `/`), and `?` (match a single character). All other regex
+ * metacharacters are escaped to prevent ReDoS and unintended matches.
  */
 export function safeGlobToRegExp(pattern: string): RegExp {
   const escaped = pattern

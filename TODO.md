@@ -237,10 +237,20 @@ bun run version:major   # 0.0.3 → 1.0.0, buildNumber: 3 → 4
 
 ### Tool Use for Agent
 
-- [ ] Define tool schema for file operations
-- [ ] Implement file write/read tools
-- [ ] Add project scaffold generation
-- [ ] Implement code generation tools
+Tool schemas and file-operation implementations already exist
+(`packages/agent/src/tools.ts` `AGENT_TOOLS`, `executeToolAction` in
+`packages/agent/src/index.ts`, D1-backed with path validation):
+
+- [x] Define tool schema for file operations
+- [x] Implement file write/read tools
+- [x] Add project scaffold generation
+- [x] Implement code generation tools
+- [x] Backend approval workflow (`approve_tool`/`reject_tool`/`get_pending_approvals`)
+- [x] File versioning writes (`file_history` on API write paths)
+- [ ] Add approval/confirmation UI in web and mobile chat
+- [ ] Add file rollback (restore from `file_history`)
+- [ ] Record `file_history` on agent-side `upsertProjectFile` writes
+- [ ] Add test coverage for `packages/agent` (no test script yet)
 
 ### Human-in-the-Loop Flows
 
