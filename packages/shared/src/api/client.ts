@@ -1035,8 +1035,11 @@ export class ApiClient {
     await this.unwrap<void>(`/ai-keys/${id}`, { method: "DELETE" });
   }
 
-  async listExportableProjects(): Promise<
-    Array<{
+  async listExportableProjects(options?: {
+    limit?: number;
+    cursor?: string;
+  }): Promise<{
+    projects: Array<{
       id: string;
       name: string;
       slug: string;
@@ -1045,10 +1048,22 @@ export class ApiClient {
       status: string;
       fileCount: number;
       updatedAt: string;
-    }>
-  > {
-    return this.unwrap<
-      Array<{
+    }>;
+    nextCursor: string | null;
+  }> {
+    const params = new URLSearchParams();
+    if (options?.limit) {
+      params.set("limit", String(options.limit));
+    }
+    if (options?.cursor) {
+      params.set("cursor", options.cursor);
+    }
+    const query = params.toString();
+    const path = `/projects/export/list${query ? `?${query}` : ""}`;
+
+    const response = await this.request<{
+      success: boolean;
+      data: Array<{
         id: string;
         name: string;
         slug: string;
@@ -1057,8 +1072,21 @@ export class ApiClient {
         status: string;
         fileCount: number;
         updatedAt: string;
-      }>
-    >("/projects/export/list");
+      }>;
+      nextCursor: string | null;
+    }>(path);
+
+    if (!response.success) {
+      throw new Error(
+        (response as { error?: { message?: string } }).error?.message ||
+          "Request failed",
+      );
+    }
+
+    return {
+      projects: response.data,
+      nextCursor: response.nextCursor ?? null,
+    };
   }
 
   async pushProjectToGitHub(data: {

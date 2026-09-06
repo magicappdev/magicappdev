@@ -99,24 +99,56 @@ Examples:
         divider();
         info("Fetching available projects...");
 
-        const projects = await withSpinner(
-          "Loading projects...",
-          async () => {
-            return await api.listExportableProjects();
-          },
-          { successText: "Projects loaded" },
-        );
+        const allProjects: Array<{
+          id: string;
+          name: string;
+          slug: string;
+          description: string | null;
+          framework: string;
+          status: string;
+          fileCount: number;
+          updatedAt: string;
+        }> = [];
+
+        let cursor: string | undefined;
+        do {
+          const page = await withSpinner<{
+            projects: Array<{
+              id: string;
+              name: string;
+              slug: string;
+              description: string | null;
+              framework: string;
+              status: string;
+              fileCount: number;
+              updatedAt: string;
+            }>;
+            nextCursor: string | null;
+          }>(
+            cursor ? "Loading more projects..." : "Loading projects...",
+            async () => {
+              return await api.listExportableProjects({
+                limit: 100,
+                cursor: cursor ?? undefined,
+              });
+            },
+            { successText: "Projects loaded" },
+          );
+
+          allProjects.push(...page.projects);
+          cursor = page.nextCursor ?? undefined;
+        } while (cursor);
 
         newline();
-        if (projects.length === 0) {
+        if (allProjects.length === 0) {
           info("No projects available to clone.");
           return;
         }
 
-        info(`Found ${projects.length} project(s):`);
+        info(`Found ${allProjects.length} project(s):`);
         newline();
 
-        for (const p of projects) {
+        for (const p of allProjects) {
           divider();
           keyValue("Name", p.name);
           keyValue("ID", p.id);

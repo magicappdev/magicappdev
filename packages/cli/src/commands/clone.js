@@ -81,21 +81,30 @@ Examples:
       if (options.list) {
         divider();
         info("Fetching available projects...");
-        const projects = await withSpinner(
-          "Loading projects...",
-          async () => {
-            return await api.listExportableProjects();
-          },
-          { successText: "Projects loaded" },
-        );
+        const allProjects = [];
+        let cursor;
+        do {
+          const page = await withSpinner(
+            cursor ? "Loading more projects..." : "Loading projects...",
+            async () => {
+              return await api.listExportableProjects({
+                limit: 100,
+                cursor: cursor ?? undefined,
+              });
+            },
+            { successText: "Projects loaded" },
+          );
+          allProjects.push(...page.projects);
+          cursor = page.nextCursor ?? undefined;
+        } while (cursor);
         newline();
-        if (projects.length === 0) {
+        if (allProjects.length === 0) {
           info("No projects available to clone.");
           return;
         }
-        info(`Found ${projects.length} project(s):`);
+        info(`Found ${allProjects.length} project(s):`);
         newline();
-        for (const p of projects) {
+        for (const p of allProjects) {
           divider();
           keyValue("Name", p.name);
           keyValue("ID", p.id);
