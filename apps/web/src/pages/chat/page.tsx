@@ -36,6 +36,8 @@ import {
   DeployModal,
   ExportGitHubModal,
   UpgradeModal,
+  PendingApprovals,
+  type PendingApproval,
 } from "./components/index.js";
 
 import { type Template } from "./templates.js";
@@ -59,6 +61,15 @@ interface GeneratedProject {
   dependencies: Record<string, string>;
   devDependencies: Record<string, string>;
 }
+
+/**
+ * Approvals left unanswered for longer than this are auto-rejected so agent
+ * generations can't hang silently when the user walks away. The rejection is
+ * posted as a system message and sent to the agent like a manual reject.
+ */
+const APPROVAL_TIMEOUT_MS = 5 * 60 * 1000;
+/** How often stale approvals are swept for auto-rejection. */
+const APPROVAL_SWEEP_MS = 30 * 1000;
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -85,6 +96,10 @@ export default function ChatPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeTemplate, setUpgradeTemplate] = useState<Template | null>(null);
+  const [pendingApprovals, setPendingApprovals] = useState<PendingApproval[]>(
+    [],
+  );
+  const [respondingIds, setRespondingIds] = useState<Set<string>>(new Set());
 
   const [canvasViewMode, setCanvasViewMode] = useState<
     "split" | "chat" | "preview"
@@ -303,20 +318,38 @@ export default function ChatPage() {
           },
         ]);
       } else if (type === MessageType.TOOL_PENDING_APPROVAL) {
-        const approval = data.approval as
-          | {
-              id: string;
-              tool: string;
-              description?: string;
-            }
-          | undefined;
-        if (approval) {
+        const approval = data.approval as PendingApproval | undefined;
+        if (approval?.id) {
+          setPendingApprovals(prev => {
+            const rest = prev.filter(a => a.id !== approval.id);
+            return [...rest, approval];
+          });
+        }
+      } else if (type === "pending_approvals") {
+        const approvals = Array.isArray(data.approvals)
+          ? (data.approvals as PendingApproval[]).filter(a => a?.id)
+          : [];
+        setPendingApprovals(approvals);
+      } else if (type === "approval_result") {
+        const approvalId = data.approvalId as string | undefined;
+        const approved = data.approved as boolean | undefined;
+        const tool = data.tool as string | undefined;
+        if (approvalId) {
+          setPendingApprovals(prev => prev.filter(a => a.id !== approvalId));
+          setRespondingIds(prev => {
+            const next = new Set(prev);
+            next.delete(approvalId);
+            return next;
+          });
+          respondingRef.current.delete(approvalId);
           setMessages(prev => [
             ...prev,
             {
               id: crypto.randomUUID(),
               role: "system",
-              content: `Tool "${approval.tool}" needs approval: ${approval.description || "auto-triggered"}. Open the workspace to approve.`,
+              content: approved
+                ? `Approved tool "${tool ?? "unknown"}" — executing…`
+                : `Rejected tool "${tool ?? "unknown"}".`,
               timestamp: Date.now(),
             },
           ]);
@@ -372,6 +405,83 @@ export default function ChatPage() {
     setIsConnected(connected);
   }, [connected]);
   useAgentMessages(handleAgentMessage);
+
+  const respondingRef = useRef<Set<string>>(new Set());
+  const respondToApproval = useCallback(
+    (approvalId: string, approved: boolean) => {
+      if (respondingRef.current.has(approvalId)) return;
+      respondingRef.current.add(approvalId);
+      setRespondingIds(prev => new Set(prev).add(approvalId));
+      const ok = send({
+        type: approved ? "approve_tool" : "reject_tool",
+        approvalId,
+        userId: user?.id,
+      });
+      if (!ok) {
+        respondingRef.current.delete(approvalId);
+        setRespondingIds(prev => {
+          const next = new Set(prev);
+          next.delete(approvalId);
+          return next;
+        });
+        setMessages(prev => [
+          ...prev,
+          {
+            id: crypto.randomUUID(),
+            role: "system",
+            content: "Agent is not connected — reconnect and try again.",
+            timestamp: Date.now(),
+          },
+        ]);
+      }
+    },
+    [send, user?.id],
+  );
+
+  // Re-sync pending approvals whenever the socket (re)connects, so approvals
+  // created while the page was closed or disconnected still surface.
+  useEffect(() => {
+    if (connected) {
+      send({ type: "get_pending_approvals" });
+    }
+  }, [connected, send]);
+
+  // Auto-reject approvals left unanswered past APPROVAL_TIMEOUT_MS.
+  const approvalsRef = useRef(pendingApprovals);
+  useEffect(() => {
+    approvalsRef.current = pendingApprovals;
+  }, [pendingApprovals]);
+  const sendRef = useRef(send);
+  useEffect(() => {
+    sendRef.current = send;
+  }, [send]);
+  useEffect(() => {
+    const sweep = setInterval(() => {
+      const now = Date.now();
+      const stale = approvalsRef.current.filter(
+        a => now - a.timestamp > APPROVAL_TIMEOUT_MS,
+      );
+      if (stale.length === 0) return;
+      const staleIds = new Set(stale.map(a => a.id));
+      setPendingApprovals(prev => prev.filter(a => !staleIds.has(a.id)));
+      for (const approval of stale) {
+        sendRef.current({
+          type: "reject_tool",
+          approvalId: approval.id,
+        });
+      }
+      setMessages(prev => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          role: "system",
+          content: `Auto-rejected ${stale.length === 1 ? `tool "${stale[0].tool}"` : `${stale.length} tools`} after 5 minutes with no response.`,
+          timestamp: Date.now(),
+        },
+      ]);
+    }, APPROVAL_SWEEP_MS);
+    return () => clearInterval(sweep);
+  }, []);
   usePreviewErrorListener(payload => {
     setMessages(prev => [
       ...prev,
@@ -884,6 +994,12 @@ export default function ChatPage() {
                   )}
 
                 <div className="p-4 bg-zinc-950/80 border-t border-zinc-800 shrink-0">
+                  <PendingApprovals
+                    approvals={pendingApprovals}
+                    respondingIds={respondingIds}
+                    onApprove={id => respondToApproval(id, true)}
+                    onReject={id => respondToApproval(id, false)}
+                  />
                   <InputArea
                     input={input}
                     setInput={setInput}

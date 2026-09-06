@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   StyleSheet,
   Text,
@@ -21,6 +21,24 @@ interface MessageItem {
   role: "system" | "user" | "assistant";
   content: string;
 }
+
+/** Mirrors the agent's PendingApproval WS payload (see packages/agent). */
+interface PendingApproval {
+  id: string;
+  tool: string;
+  parameters: Record<string, unknown>;
+  description: string;
+  timestamp: number;
+}
+
+/**
+ * Approvals left unanswered for longer than this are auto-rejected so agent
+ * generations can't hang silently when the user walks away. The rejection is
+ * posted as a system message and sent to the agent like a manual reject.
+ */
+const APPROVAL_TIMEOUT_MS = 5 * 60 * 1000;
+/** How often stale approvals are swept for auto-rejection. */
+const APPROVAL_SWEEP_MS = 30 * 1000;
 
 interface AIModel {
   id: string;
@@ -45,6 +63,11 @@ export default function ChatScreen() {
   const [showModelPicker, setShowModelPicker] = useState(false);
   const [promptPresets, setPromptPresets] = useState<PromptPreset[]>([]);
   const [presetSeed, setPresetSeed] = useState(() => Date.now());
+  const [pendingApprovals, setPendingApprovals] = useState<PendingApproval[]>(
+    [],
+  );
+  const [respondingIds, setRespondingIds] = useState<Set<string>>(new Set());
+  const respondingRef = useRef<Set<string>>(new Set());
 
   const { connected, send } = useAgentConnection();
 
@@ -137,10 +160,119 @@ export default function ChatScreen() {
         return prev;
       });
       setLoading(false);
+    } else if (type === "tool_pending_approval") {
+      const approval = data.approval as PendingApproval | undefined;
+      if (approval?.id) {
+        setPendingApprovals(prev => {
+          const rest = prev.filter(a => a.id !== approval.id);
+          return [...rest, approval];
+        });
+      }
+    } else if (type === "pending_approvals") {
+      const approvals = Array.isArray(data.approvals)
+        ? (data.approvals as PendingApproval[]).filter(a => a?.id)
+        : [];
+      setPendingApprovals(approvals);
+    } else if (type === "approval_result") {
+      const approvalId = data.approvalId as string | undefined;
+      const approved = data.approved as boolean | undefined;
+      const tool = data.tool as string | undefined;
+      if (approvalId) {
+        respondingRef.current.delete(approvalId);
+        setPendingApprovals(prev => prev.filter(a => a.id !== approvalId));
+        setRespondingIds(prev => {
+          const next = new Set(prev);
+          next.delete(approvalId);
+          return next;
+        });
+        setMessages(prev => [
+          ...prev,
+          {
+            id: `approval-${approvalId}-${Date.now()}`,
+            role: "system",
+            content: approved
+              ? `Approved tool "${tool ?? "unknown"}" — executing…`
+              : `Rejected tool "${tool ?? "unknown"}".`,
+          },
+        ]);
+      }
     }
   }, []);
 
   useAgentMessages(handleAgentMessage);
+
+  const respondToApproval = useCallback(
+    (approvalId: string, approved: boolean) => {
+      if (respondingRef.current.has(approvalId)) return;
+      respondingRef.current.add(approvalId);
+      setRespondingIds(prev => new Set(prev).add(approvalId));
+      const ok = send({
+        type: approved ? "approve_tool" : "reject_tool",
+        approvalId,
+      });
+      if (!ok) {
+        respondingRef.current.delete(approvalId);
+        setRespondingIds(prev => {
+          const next = new Set(prev);
+          next.delete(approvalId);
+          return next;
+        });
+        setMessages(prev => [
+          ...prev,
+          {
+            id: `approval-send-fail-${Date.now()}`,
+            role: "system",
+            content: "Agent is not connected — reconnect and try again.",
+          },
+        ]);
+      }
+    },
+    [send],
+  );
+
+  // Re-sync pending approvals whenever the socket (re)connects, so approvals
+  // created while the screen was closed or disconnected still surface.
+  useEffect(() => {
+    if (connected) {
+      send({ type: "get_pending_approvals" });
+    }
+  }, [connected, send]);
+
+  // Auto-reject approvals left unanswered past APPROVAL_TIMEOUT_MS.
+  const approvalsRef = useRef(pendingApprovals);
+  useEffect(() => {
+    approvalsRef.current = pendingApprovals;
+  }, [pendingApprovals]);
+  const sendRef = useRef(send);
+  useEffect(() => {
+    sendRef.current = send;
+  }, [send]);
+  useEffect(() => {
+    const sweep = setInterval(() => {
+      const now = Date.now();
+      const stale = approvalsRef.current.filter(
+        a => now - a.timestamp > APPROVAL_TIMEOUT_MS,
+      );
+      if (stale.length === 0) return;
+      const staleIds = new Set(stale.map(a => a.id));
+      setPendingApprovals(prev => prev.filter(a => !staleIds.has(a.id)));
+      for (const approval of stale) {
+        sendRef.current({
+          type: "reject_tool",
+          approvalId: approval.id,
+        });
+      }
+      setMessages(prev => [
+        ...prev,
+        {
+          id: `approval-timeout-${Date.now()}`,
+          role: "system",
+          content: `Auto-rejected ${stale.length === 1 ? `tool "${stale[0].tool}"` : `${stale.length} tools`} after 5 minutes with no response.`,
+        },
+      ]);
+    }, APPROVAL_SWEEP_MS);
+    return () => clearInterval(sweep);
+  }, []);
 
   const handleRerollPrompts = useCallback(() => {
     setPresetSeed(prev => prev + 1);
@@ -263,6 +395,56 @@ export default function ChatScreen() {
           </View>
         )}
       </ScrollView>
+
+      {pendingApprovals.length > 0 && (
+        <View style={styles.approvalsContainer}>
+          {pendingApprovals.map(approval => {
+            const responding = respondingIds.has(approval.id);
+            const description =
+              approval.description.length > 300
+                ? `${approval.description.slice(0, 300)}…`
+                : approval.description;
+            return (
+              <View key={approval.id} style={styles.approvalCard}>
+                <View style={styles.approvalHeader}>
+                  <Ionicons name="shield-half" size={16} color="#FBBF24" />
+                  <Text style={styles.approvalTool} numberOfLines={1}>
+                    {approval.tool}
+                  </Text>
+                  <Text style={styles.approvalBadge}>needs approval</Text>
+                </View>
+                <Text style={styles.approvalDescription}>{description}</Text>
+                <View style={styles.approvalActions}>
+                  <TouchableOpacity
+                    style={[
+                      styles.approveButton,
+                      responding && styles.actionButtonDisabled,
+                    ]}
+                    onPress={() => respondToApproval(approval.id, true)}
+                    disabled={responding}
+                    accessibilityLabel={`Approve ${approval.tool}`}
+                  >
+                    <Ionicons name="checkmark" size={14} color="#fff" />
+                    <Text style={styles.approveButtonText}>Approve</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.rejectButton,
+                      responding && styles.actionButtonDisabled,
+                    ]}
+                    onPress={() => respondToApproval(approval.id, false)}
+                    disabled={responding}
+                    accessibilityLabel={`Reject ${approval.tool}`}
+                  >
+                    <Ionicons name="close" size={14} color="#FCA5A5" />
+                    <Text style={styles.rejectButtonText}>Reject</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            );
+          })}
+        </View>
+      )}
 
       <View style={styles.inputArea}>
         <TextInput
@@ -471,5 +653,76 @@ const styles = StyleSheet.create({
     color: "#F8FAFC",
     fontSize: 13,
     fontWeight: "500",
+  },
+  approvalsContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    gap: 8,
+  },
+  approvalCard: {
+    backgroundColor: "#451A0355",
+    borderWidth: 1,
+    borderColor: "#B45309",
+    borderRadius: 12,
+    padding: 12,
+  },
+  approvalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 6,
+  },
+  approvalTool: {
+    color: "#FDE68A",
+    fontSize: 14,
+    fontWeight: "700",
+    flex: 1,
+  },
+  approvalBadge: {
+    color: "#FBBF24",
+    fontSize: 11,
+    fontWeight: "500",
+  },
+  approvalDescription: {
+    color: "#E7E5E4",
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: 10,
+  },
+  approvalActions: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  approveButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "#15803D",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  approveButtonText: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  rejectButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    borderWidth: 1,
+    borderColor: "#B91C1C",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  rejectButtonText: {
+    color: "#FCA5A5",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  actionButtonDisabled: {
+    opacity: 0.5,
   },
 });

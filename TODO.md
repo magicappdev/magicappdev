@@ -247,14 +247,14 @@ Tool schemas and file-operation implementations already exist
 - [x] Implement code generation tools
 - [x] Backend approval workflow (`approve_tool`/`reject_tool`/`get_pending_approvals`)
 - [x] File versioning writes (`file_history` on API write paths)
-- [ ] Add approval/confirmation UI in web and mobile chat
+- [x] Add approval/confirmation UI in web and mobile chat
 - [ ] Add file rollback (restore from `file_history`)
 - [ ] Record `file_history` on agent-side `upsertProjectFile` writes
-- [ ] Add test coverage for `packages/agent` (no test script yet)
+- [x] Add test coverage for `packages/agent` (vitest harness + 28 tests)
 
 ### Human-in-the-Loop Flows
 
-- [ ] Design confirmation UI for critical actions
+- [x] Design confirmation UI for critical actions
 - [ ] Implement approval workflow for:
   - [ ] File modifications
   - [ ] Dependency installations
