@@ -42,6 +42,9 @@ The `@magicappdev/database` package provides the data persistence layer for Magi
 - Handle relations carefully within Cloudflare Worker memory constraints.
 - Run `bun run seed` to populate demo data for local development.
 - Run `bun run seed --reset` to wipe all data and reseed.
+- Run `bun run backup` to export the local D1 database to `backups/`.
+- Run `bun run backup --remote` to export the production D1 database.
+- Run `bun run restore --file <path>` to restore local D1 from a dump file.
 
 ## Next Steps
 
