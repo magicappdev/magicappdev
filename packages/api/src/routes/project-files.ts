@@ -93,10 +93,13 @@ projectFilesRoutes.get("/:projectId/files", async c => {
   });
 });
 
+// NOTE: file paths are a single URI-encoded segment (`:filePath`), so nested
+// paths arrive as `src%2Fapp.ts` and Hono decodes them. A mid-pattern `*`
+// wildcard does not match here, which is why named params are used.
 // Get specific file
-projectFilesRoutes.get("/:projectId/files/*", async c => {
+projectFilesRoutes.get("/:projectId/files/:filePath", async c => {
   const projectId = c.req.param("projectId");
-  const path = c.req.param("*");
+  const path = c.req.param("filePath");
   const db = c.var.db;
 
   const access = await verifyProjectAccess(c, projectId);
@@ -137,9 +140,9 @@ projectFilesRoutes.get("/:projectId/files/*", async c => {
 });
 
 // Get file history
-projectFilesRoutes.get("/:projectId/files/*/history", async c => {
+projectFilesRoutes.get("/:projectId/files/:filePath/history", async c => {
   const projectId = c.req.param("projectId");
-  const path = c.req.param("*");
+  const path = c.req.param("filePath");
   const db = c.var.db;
 
   const access = await verifyProjectAccess(c, projectId);
@@ -183,6 +186,99 @@ projectFilesRoutes.get("/:projectId/files/*/history", async c => {
   return c.json({
     success: true,
     data: history,
+  });
+});
+
+// Restore a file to a previous version from its history.
+// The restore is recorded as a NEW history entry (changeType "updated") —
+// history is append-only and never rewritten.
+projectFilesRoutes.post("/:projectId/files/:filePath/restore", async c => {
+  const projectId = c.req.param("projectId");
+  const path = c.req.param("filePath");
+  const body = await c.req.json<{ historyId?: string }>();
+  const db = c.var.db;
+  const userId = c.var.userId || "system";
+
+  const access = await verifyProjectAccess(c, projectId);
+  if (!access) return c.json({ error: "Project not found" }, 404);
+  if (access === "FORBIDDEN") return c.json({ error: "Forbidden" }, 403);
+
+  if (!path) {
+    return c.json(
+      {
+        success: false,
+        error: { code: "BAD_REQUEST", message: "path is required" },
+      },
+      400,
+    );
+  }
+
+  if (!body.historyId) {
+    return c.json(
+      {
+        success: false,
+        error: { code: "BAD_REQUEST", message: "historyId is required" },
+      },
+      400,
+    );
+  }
+
+  const file = await db.query.projectFiles.findFirst({
+    where: and(
+      eq(projectFiles.projectId, projectId),
+      eq(projectFiles.path, path),
+    ),
+  });
+
+  if (!file) {
+    return c.json(
+      {
+        success: false,
+        error: { code: "NOT_FOUND", message: "File not found" },
+      },
+      404,
+    );
+  }
+
+  const entry = await db.query.fileHistory.findFirst({
+    where: and(
+      eq(fileHistory.id, body.historyId),
+      eq(fileHistory.fileId, file.id),
+    ),
+  });
+
+  if (!entry) {
+    return c.json(
+      {
+        success: false,
+        error: { code: "NOT_FOUND", message: "History entry not found" },
+      },
+      404,
+    );
+  }
+
+  const restored = await db
+    .update(projectFiles)
+    .set({
+      content: entry.content,
+      size: entry.content.length,
+      updatedAt: new Date().toISOString(),
+    })
+    .where(eq(projectFiles.id, file.id))
+    .returning()
+    .get();
+
+  await db.insert(fileHistory).values({
+    id: crypto.randomUUID(),
+    fileId: file.id,
+    content: entry.content,
+    changeType: "updated",
+    changedBy: userId,
+  } satisfies NewFileHistory);
+
+  return c.json({
+    success: true,
+    data: restored,
   });
 });
 
@@ -288,9 +384,9 @@ projectFilesRoutes.post("/:projectId/files", async c => {
 });
 
 // Delete file
-projectFilesRoutes.delete("/:projectId/files/*", async c => {
+projectFilesRoutes.delete("/:projectId/files/:filePath", async c => {
   const projectId = c.req.param("projectId");
-  const path = c.req.param("*");
+  const path = c.req.param("filePath");
   const db = c.var.db;
   const userId = c.var.userId || "system";
 

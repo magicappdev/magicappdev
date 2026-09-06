@@ -18,6 +18,7 @@ import {
   Plus,
   Trash2,
   X,
+  History,
 } from "lucide-react";
 import {
   PreviewModeToggle,
@@ -55,6 +56,15 @@ interface FileNode {
   file?: ProjectFile;
 }
 
+interface FileHistoryEntry {
+  id: string;
+  fileId: string;
+  content: string;
+  changeType: string;
+  changedBy: string;
+  changedAt: string;
+}
+
 export default function ProjectWorkspacePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -71,6 +81,10 @@ export default function ProjectWorkspacePage() {
   );
   const [isEditing, setIsEditing] = useState(false);
   const [highlightedCode, setHighlightedCode] = useState("");
+  const [showHistory, setShowHistory] = useState(false);
+  const [historyEntries, setHistoryEntries] = useState<FileHistoryEntry[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [restoringId, setRestoringId] = useState<string | null>(null);
   const codeRef = useRef<HTMLPreElement>(null);
   const [previewMode, setPreviewMode] = useState<PreviewMode>("cloud");
   const webContainerSupported = useMemo(() => isWebContainerSupported(), []);
@@ -220,8 +234,64 @@ export default function ProjectWorkspacePage() {
       setProjectFiles(files => files.filter(f => f.id !== selectedFile.id));
       setSelectedFile(null);
       setFileContent("");
+      setShowHistory(false);
+      setHistoryEntries([]);
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to delete file");
+    }
+  };
+
+  // Load version history for the selected file
+  const loadHistory = async () => {
+    if (!selectedFile || !id) return;
+    setIsLoadingHistory(true);
+    try {
+      const entries = await api.getFileHistory(id, selectedFile.path);
+      setHistoryEntries(entries);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to load history");
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
+
+  const handleToggleHistory = () => {
+    if (showHistory) {
+      setShowHistory(false);
+      return;
+    }
+    setShowHistory(true);
+    void loadHistory();
+  };
+
+  // Restore the selected file to a previous version. The restore is saved as
+  // a new version (append-only history), so it can itself be undone.
+  const handleRestore = async (entry: FileHistoryEntry) => {
+    if (!selectedFile || !id || restoringId) return;
+    if (
+      !confirm(
+        `Restore ${selectedFile.path} to the version from ${new Date(entry.changedAt).toLocaleString()}? Current content will be saved as a new version.`,
+      )
+    ) {
+      return;
+    }
+    setRestoringId(entry.id);
+    try {
+      const restored = await api.restoreProjectFile(
+        id,
+        selectedFile.path,
+        entry.id,
+      );
+      setSelectedFile(restored);
+      setFileContent(restored.content);
+      setProjectFiles(files =>
+        files.map(f => (f.id === restored.id ? restored : f)),
+      );
+      await loadHistory();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to restore version");
+    } finally {
+      setRestoringId(null);
     }
   };
 
@@ -386,6 +456,8 @@ export default function ProjectWorkspacePage() {
                   if (file) {
                     setSelectedFile(file);
                     setFileContent(file.content);
+                    setShowHistory(false);
+                    setHistoryEntries([]);
                   }
                 }}
                 onToggle={toggleFolder}
@@ -415,6 +487,14 @@ export default function ProjectWorkspacePage() {
                   <Button
                     variant="outlined"
                     size="sm"
+                    onClick={handleToggleHistory}
+                  >
+                    <History size={14} className="mr-1" />
+                    History
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    size="sm"
                     onClick={handleSave}
                     disabled={isSaving}
                   >
@@ -438,6 +518,74 @@ export default function ProjectWorkspacePage() {
 
               {/* Code Editor */}
               <div className="flex-1 overflow-hidden">
+                {showHistory && (
+                  <div className="border-b border-outline/10 bg-surface-variant/5 max-h-56 overflow-y-auto">
+                    <div className="px-4 py-2 flex items-center justify-between">
+                      <Typography
+                        variant="label"
+                        className="text-xs uppercase tracking-wider"
+                      >
+                        Version history ({historyEntries.length})
+                      </Typography>
+                      <button
+                        type="button"
+                        onClick={() => setShowHistory(false)}
+                        className="text-foreground/40 hover:text-foreground transition-colors"
+                        aria-label="Close history"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                    {isLoadingHistory ? (
+                      <div className="flex items-center gap-2 px-4 py-3 text-sm text-foreground/50">
+                        <Loader2 size={14} className="animate-spin" />
+                        Loading versions…
+                      </div>
+                    ) : historyEntries.length === 0 ? (
+                      <div className="px-4 py-3 text-sm text-foreground/40">
+                        No versions recorded yet.
+                      </div>
+                    ) : (
+                      <ul>
+                        {historyEntries.map(entry => (
+                          <li
+                            key={entry.id}
+                            className="flex items-center gap-3 px-4 py-2 border-t border-outline/10"
+                          >
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-primary/10 text-primary shrink-0">
+                              {entry.changeType}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-xs text-foreground/80">
+                                {new Date(entry.changedAt).toLocaleString()}
+                              </div>
+                              <div className="text-[11px] text-foreground/40 truncate">
+                                by {entry.changedBy} · {entry.content.length}{" "}
+                                chars
+                              </div>
+                            </div>
+                            <Button
+                              variant="outlined"
+                              size="sm"
+                              onClick={() => handleRestore(entry)}
+                              disabled={restoringId !== null}
+                            >
+                              {restoringId === entry.id ? (
+                                <Loader2
+                                  size={14}
+                                  className="animate-spin mr-1"
+                                />
+                              ) : (
+                                <History size={14} className="mr-1" />
+                              )}
+                              Restore
+                            </Button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
                 {isEditing ? (
                   <textarea
                     value={fileContent}

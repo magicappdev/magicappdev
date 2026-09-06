@@ -725,6 +725,60 @@ export class ApiClient {
     });
   }
 
+  async getFileHistory(
+    projectId: string,
+    path: string,
+  ): Promise<
+    Array<{
+      id: string;
+      fileId: string;
+      content: string;
+      changeType: string;
+      changedBy: string;
+      changedAt: string;
+    }>
+  > {
+    return this.unwrap<
+      Array<{
+        id: string;
+        fileId: string;
+        content: string;
+        changeType: string;
+        changedBy: string;
+        changedAt: string;
+      }>
+    >(`/projects/${projectId}/files/${encodeURIComponent(path)}/history`);
+  }
+
+  async restoreProjectFile(
+    projectId: string,
+    path: string,
+    historyId: string,
+  ): Promise<{
+    id: string;
+    projectId: string;
+    path: string;
+    content: string;
+    language: string;
+    size: number;
+    createdAt: string;
+    updatedAt: string;
+  }> {
+    return this.unwrap<{
+      id: string;
+      projectId: string;
+      path: string;
+      content: string;
+      language: string;
+      size: number;
+      createdAt: string;
+      updatedAt: string;
+    }>(`/projects/${projectId}/files/${encodeURIComponent(path)}/restore`, {
+      method: "POST",
+      body: JSON.stringify({ historyId }),
+    });
+  }
+
   // Chat Context API
   async createChatSession(data: {
     projectId?: string;

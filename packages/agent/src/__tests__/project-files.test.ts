@@ -1,4 +1,5 @@
 import { upsertProjectFile } from "../lib/project-files.js";
+import { fileHistory } from "@magicappdev/database";
 import { describe, expect, it, vi } from "vitest";
 
 interface StoredFile {
@@ -15,15 +16,18 @@ function createFakeDb(initial: StoredFile[] = []) {
   const files = new Map<string, StoredFile>(
     initial.map(f => [`${f.projectId}:${f.path}`, f]),
   );
-  const historyWrites: unknown[] = [];
+  const historyWrites: Array<{
+    fileId: string;
+    content: string;
+    changeType: string;
+    changedBy: string;
+  }> = [];
 
   const db = {
     query: {
       projectFiles: {
         findFirst: vi.fn(async () => undefined as StoredFile | undefined),
       },
-      // file_history is never queried here — its absence is the point:
-      // agent-side upserts do not record history (P8 rollback work).
       fileHistory: {
         findMany: vi.fn(async () => historyWrites),
       },
@@ -33,10 +37,17 @@ function createFakeDb(initial: StoredFile[] = []) {
         where: vi.fn(async () => undefined),
       })),
     })),
-    insert: vi.fn(() => ({
-      values: vi.fn(async (row: StoredFile) => {
-        files.set(`${row.projectId}:${row.path}`, row);
-      }),
+    insert: vi.fn((table: unknown) => ({
+      values: vi.fn(
+        async (row: StoredFile | (typeof historyWrites)[number]) => {
+          if (table === fileHistory) {
+            historyWrites.push(row as (typeof historyWrites)[number]);
+          } else {
+            const file = row as StoredFile;
+            files.set(`${file.projectId}:${file.path}`, file);
+          }
+        },
+      ),
     })),
   };
 
@@ -73,6 +84,28 @@ describe("upsertProjectFile", () => {
     expect(typeof stored?.id).toBe("string");
   });
 
+  it("records a created history entry on insert", async () => {
+    const { db, files, historyWrites } = createFakeDb();
+    (
+      db.query.projectFiles.findFirst as ReturnType<typeof vi.fn>
+    ).mockResolvedValueOnce(undefined);
+
+    await upsertProjectFile(
+      db as never,
+      "project-1",
+      "src/app.ts",
+      "console.log(1);",
+    );
+
+    expect(historyWrites).toHaveLength(1);
+    expect(historyWrites[0]).toMatchObject({
+      fileId: files.get("project-1:src/app.ts")?.id,
+      content: "console.log(1);",
+      changeType: "created",
+      changedBy: "agent",
+    });
+  });
+
   it("updates the existing file instead of inserting", async () => {
     const existing: StoredFile = {
       id: "file-1",
@@ -98,7 +131,6 @@ describe("upsertProjectFile", () => {
 
     await upsertProjectFile(db as never, "project-1", "src/app.ts", "new!");
 
-    expect(db.insert).not.toHaveBeenCalled();
     expect(updatedRow).toMatchObject({
       content: "new!",
       language: "ts",
@@ -107,16 +139,38 @@ describe("upsertProjectFile", () => {
     expect(files.get("project-1:src/app.ts")?.content).toBe("new!");
   });
 
-  it("does not record file_history (known gap, P8 rollback work)", async () => {
-    const { db, historyWrites } = createFakeDb();
+  it("records an updated history entry on update, not a new file", async () => {
+    const existing: StoredFile = {
+      id: "file-1",
+      projectId: "project-1",
+      path: "src/app.ts",
+      content: "old",
+      language: "ts",
+      size: 3,
+    };
+    const { db, files, historyWrites } = createFakeDb([existing]);
     (
       db.query.projectFiles.findFirst as ReturnType<typeof vi.fn>
-    ).mockResolvedValueOnce(undefined);
+    ).mockResolvedValueOnce(existing);
 
-    await upsertProjectFile(db as never, "project-1", "src/app.ts", "x");
+    (db.update as ReturnType<typeof vi.fn>).mockReturnValueOnce({
+      set: vi.fn((row: Partial<StoredFile>) => {
+        files.set("project-1:src/app.ts", { ...existing, ...row });
+        return { where: vi.fn(async () => undefined) };
+      }),
+    });
 
-    // No history entry is written by agent-side upserts today. Phase 3 must
-    // flip this test to assert that a history row IS recorded.
-    expect(historyWrites).toHaveLength(0);
+    await upsertProjectFile(db as never, "project-1", "src/app.ts", "new!");
+
+    // The only insert is the history entry — no new project_files row.
+    expect(db.insert).toHaveBeenCalledTimes(1);
+    expect(db.insert).toHaveBeenCalledWith(fileHistory);
+    expect(historyWrites).toHaveLength(1);
+    expect(historyWrites[0]).toMatchObject({
+      fileId: "file-1",
+      content: "new!",
+      changeType: "updated",
+      changedBy: "agent",
+    });
   });
 });
