@@ -4,7 +4,7 @@ import {
   type Template,
   type TemplateCategory,
 } from "../templates.js";
-import { Star } from "lucide-react";
+import { Star, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
@@ -14,13 +14,28 @@ interface TemplateGalleryProps {
 
 export function TemplateGallery({ onSelect }: TemplateGalleryProps) {
   const [activeTab, setActiveTab] = useState<TemplateCategory>("all");
-  const filtered =
-    activeTab === "all"
-      ? TEMPLATES
-      : TEMPLATES.filter(t => t.category === activeTab);
+  const [query, setQuery] = useState("");
+  const q = query.trim().toLowerCase();
+  const filtered = TEMPLATES.filter(
+    t =>
+      (activeTab === "all" || t.category === activeTab) &&
+      (!q ||
+        t.name.toLowerCase().includes(q) ||
+        t.description.toLowerCase().includes(q)),
+  );
 
   return (
     <div>
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+        <input
+          type="text"
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          placeholder="Search templates..."
+          className="w-full bg-zinc-900 border border-zinc-800 rounded-full pl-9 pr-4 py-2 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-zinc-600"
+        />
+      </div>
       <div className="flex gap-1 mb-6 overflow-x-auto pb-1">
         {TEMPLATE_CATEGORIES.map(cat => (
           <button
@@ -39,6 +54,12 @@ export function TemplateGallery({ onSelect }: TemplateGalleryProps) {
         ))}
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        {filtered.length === 0 && (
+          <p className="col-span-full text-center text-sm text-zinc-500 py-8">
+            No templates match &ldquo;{query.trim()}&rdquo;. Try a different
+            search.
+          </p>
+        )}
         {filtered.map(template => (
           <button
             key={template.id}

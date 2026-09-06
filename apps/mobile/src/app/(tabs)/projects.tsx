@@ -23,6 +23,8 @@ export default function ProjectsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
   // Modal State for Create / Edit Project
   const [modalVisible, setModalVisible] = useState(false);
@@ -33,10 +35,10 @@ export default function ProjectsScreen() {
 
   const router = useRouter();
 
-  const fetchProjects = useCallback(async () => {
+  const fetchProjects = useCallback(async (search?: string) => {
     try {
       setError(null);
-      const data = await api.getProjects();
+      const data = await api.getProjects(search ? { search } : undefined);
       setProjects(data);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to load projects";
@@ -52,8 +54,16 @@ export default function ProjectsScreen() {
   }, [router]);
 
   useEffect(() => {
-    fetchProjects();
-  }, [fetchProjects]);
+    const timer = setTimeout(
+      () => setDebouncedSearch(searchTerm.trim()),
+      400,
+    );
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    fetchProjects(debouncedSearch || undefined);
+  }, [debouncedSearch, fetchProjects]);
 
   const handleOpenCreateModal = () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -138,16 +148,38 @@ export default function ProjectsScreen() {
 
       {error && <Text style={styles.error}>{error}</Text>}
 
+      <View style={styles.searchBar}>
+        <Ionicons name="search-outline" size={18} color="#64748B" />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search projects..."
+          placeholderTextColor="#64748B"
+          value={searchTerm}
+          onChangeText={setSearchTerm}
+          autoCapitalize="none"
+          autoCorrect={false}
+        />
+        {searchTerm.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchTerm("")}>
+            <Ionicons name="close-circle" size={18} color="#64748B" />
+          </TouchableOpacity>
+        )}
+      </View>
+
       <FlatList
         data={projects}
         keyExtractor={item => item.id}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchProjects(); }} tintColor="#3B82F6" />
+          <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchProjects(debouncedSearch || undefined); }} tintColor="#3B82F6" />
         }
         ListEmptyComponent={
           <View style={styles.center}>
             <Ionicons name="folder-open-outline" size={48} color="#64748B" style={{ marginBottom: 12 }} />
-            <Text style={styles.emptyText}>No projects found. Tap &ldquo;New Project&rdquo; to create one!</Text>
+            <Text style={styles.emptyText}>
+              {debouncedSearch
+                ? `No projects match "${debouncedSearch}".`
+                : "No projects found. Tap \u201cNew Project\u201d to create one!"}
+            </Text>
           </View>
         }
         renderItem={({ item }) => {
@@ -269,6 +301,23 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "600",
     fontSize: 14,
+  },
+  searchBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#1E293B",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#334155",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 12,
+    gap: 8,
+  },
+  searchInput: {
+    flex: 1,
+    color: "#F8FAFC",
+    fontSize: 15,
   },
   center: {
     flex: 1,

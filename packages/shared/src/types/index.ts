@@ -73,7 +73,9 @@ export type {
   ListTemplatesRequest,
   ListTemplatesResponse,
   LoginRequest,
+  ProjectSearchResult,
   RegisterRequest,
+  SearchProjectsResponse,
   UpdateProjectRequest,
 } from "./api.types";
 

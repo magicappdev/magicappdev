@@ -1,10 +1,17 @@
 import {
+  Plus,
+  Folder,
+  Loader2,
+  AlertCircle,
+  Trash2,
+  Search,
+} from "lucide-react";
+import {
   getProjects,
   createProject,
   deleteProject,
   type Project,
 } from "@/lib/api";
-import { Plus, Folder, Loader2, AlertCircle, Trash2 } from "lucide-react";
 import { ProtectedRoute } from "@/components/ui/ProtectedRoute";
 import { useEffect, useState, useCallback } from "react";
 import { Typography } from "@/components/ui/Typography";
@@ -25,15 +32,19 @@ export default function ProjectsPage() {
   const [deletingProjectId, setDeletingProjectId] = useState<string | null>(
     null,
   );
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
   useEffect(() => {
-    loadProjects();
-  }, []);
+    const timer = setTimeout(() => setDebouncedSearch(searchTerm.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
-  async function loadProjects() {
+  const loadProjects = useCallback(async (search?: string) => {
     setError(null);
+    setIsLoading(true);
     try {
-      const data = await getProjects();
+      const data = await getProjects(search ? { search } : undefined);
       setProjects(data);
     } catch (error) {
       const errorMessage =
@@ -43,7 +54,11 @@ export default function ProjectsPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    loadProjects(debouncedSearch || undefined);
+  }, [debouncedSearch, loadProjects]);
 
   async function handleCreateProject(e: React.FormEvent) {
     e.preventDefault();
@@ -108,8 +123,7 @@ export default function ProjectsPage() {
   );
 
   const handleRetry = () => {
-    setIsLoading(true);
-    loadProjects();
+    loadProjects(debouncedSearch || undefined);
   };
 
   return (
@@ -208,6 +222,23 @@ export default function ProjectsPage() {
           </Card>
         )}
 
+        {/* Search */}
+        {(projects.length > 0 || searchTerm) && (
+          <div className="relative max-w-md">
+            <Search
+              size={16}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40"
+            />
+            <Input
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              placeholder="Search projects by name or description..."
+              disabled={isLoading}
+              className="pl-9"
+            />
+          </div>
+        )}
+
         {isLoading ? (
           <div className="flex justify-center p-12">
             <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
@@ -218,12 +249,22 @@ export default function ProjectsPage() {
               <Folder size={32} />
             </div>
             <Typography variant="title" className="mb-2">
-              No projects yet
+              {debouncedSearch ? "No projects found" : "No projects yet"}
             </Typography>
             <Typography variant="body" className="mb-6 max-w-sm mx-auto">
-              Create your first project to start building with MagicAppDev.
+              {debouncedSearch
+                ? `Nothing matches "${debouncedSearch}". Try a different search or create a new project.`
+                : "Create your first project to start building with MagicAppDev."}
             </Typography>
-            <Button onClick={() => setIsCreating(true)}>Create Project</Button>
+            {debouncedSearch ? (
+              <Button variant="text" onClick={() => setSearchTerm("")}>
+                Clear search
+              </Button>
+            ) : (
+              <Button onClick={() => setIsCreating(true)}>
+                Create Project
+              </Button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

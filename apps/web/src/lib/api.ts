@@ -9,7 +9,10 @@ export const api = new ApiClient(API_URL);
 import type { AiMessage, Project } from "@magicappdev/shared";
 export type { AiMessage, Project };
 
-export const getProjects = () => api.getProjects();
+export const getProjects = (options?: { search?: string }) =>
+  api.getProjects(options);
+export const searchProjects = (query: string, options?: { limit?: number }) =>
+  api.searchProjects(query, options);
 export const getProject = (id: string) => api.getProject(id);
 export const createProject = (data: { name: string; description?: string }) =>
   api.createProject(data);

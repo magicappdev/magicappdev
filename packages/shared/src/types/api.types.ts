@@ -3,13 +3,18 @@
  */
 
 import type {
+  Id,
+  PaginatedResponse,
+  PaginationParams,
+  Timestamp,
+} from "./common.types";
+import type {
   Deployment,
   Project,
   ProjectConfig,
   Template,
   User,
 } from "./app.types";
-import type { Id, PaginatedResponse, PaginationParams } from "./common.types";
 
 /** API error response structure */
 export interface ApiErrorResponse {
@@ -67,6 +72,22 @@ export interface ListProjectsRequest extends PaginationParams {
 
 /** List projects response */
 export type ListProjectsResponse = PaginatedResponse<Project>;
+
+/** Project summary returned by global search */
+export interface ProjectSearchResult {
+  id: Id;
+  name: string;
+  slug: string;
+  description?: string | null;
+  status: Project["status"];
+  framework: string;
+  updatedAt: Timestamp;
+}
+
+/** Global search response */
+export interface SearchProjectsResponse {
+  projects: ProjectSearchResult[];
+}
 
 /** List templates request */
 export interface ListTemplatesRequest extends PaginationParams {

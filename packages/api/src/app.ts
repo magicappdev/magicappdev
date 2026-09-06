@@ -12,6 +12,7 @@ import { verifyTurnstile } from "./utils/turnstile.js";
 import { projectsRoutes } from "./routes/projects.js";
 import { ticketsRoutes } from "./routes/tickets.js";
 import { aiKeysRoutes } from "./routes/ai-keys.js";
+import { searchRoutes } from "./routes/search.js";
 import { githubRoutes } from "./routes/github.js";
 import { exportRoutes } from "./routes/export.js";
 import { adminRoutes } from "./routes/admin.js";
@@ -104,6 +105,9 @@ export function createApp() {
 
   app.use("/chat*", authMiddleware);
   app.route("/chat", chatContextRoutes);
+
+  app.use("/search*", authMiddleware);
+  app.route("/search", searchRoutes);
 
   app.use("/ai*", authMiddleware);
   app.route("/ai", aiRoutes);

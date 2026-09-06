@@ -162,6 +162,15 @@ function TemplateSelectionStep({
   onContinue: () => void;
 }) {
   const { colors } = useTheme();
+  const [templateQuery, setTemplateQuery] = useState("");
+  const q = templateQuery.trim().toLowerCase();
+  const visibleTemplates = MOBILE_TEMPLATES.filter(
+    t =>
+      !q ||
+      t.name.toLowerCase().includes(q) ||
+      t.description.toLowerCase().includes(q) ||
+      t.tags.some(tag => tag.toLowerCase().includes(q)),
+  );
 
   return (
     <View style={styles.stepContainer}>
@@ -169,9 +178,32 @@ function TemplateSelectionStep({
         Pick a starting point for your app
       </Text>
 
+      <View
+        style={[
+          styles.templateSearchBar,
+          { backgroundColor: colors.cardBg, borderColor: colors.border },
+        ]}
+      >
+        <Ionicons name="search-outline" size={18} color={colors.subText} />
+        <TextInput
+          style={[styles.templateSearchInput, { color: colors.text }]}
+          placeholder="Search templates..."
+          placeholderTextColor={colors.subText}
+          value={templateQuery}
+          onChangeText={setTemplateQuery}
+          autoCapitalize="none"
+          autoCorrect={false}
+        />
+        {templateQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setTemplateQuery("")}>
+            <Ionicons name="close-circle" size={18} color={colors.subText} />
+          </TouchableOpacity>
+        )}
+      </View>
+
       <ScrollView style={styles.scrollArea} showsVerticalScrollIndicator={false}>
         <View style={styles.grid}>
-          {MOBILE_TEMPLATES.map(template => (
+          {visibleTemplates.map(template => (
             <TemplateCard
               key={template.id}
               template={template}
@@ -180,6 +212,11 @@ function TemplateSelectionStep({
             />
           ))}
         </View>
+        {visibleTemplates.length === 0 && (
+          <Text style={[styles.noTemplateResults, { color: colors.subText }]}>
+            No templates match &ldquo;{templateQuery.trim()}&rdquo;.
+          </Text>
+        )}
       </ScrollView>
 
       <TouchableOpacity
@@ -332,6 +369,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: "center",
     marginBottom: 12,
+  },
+  templateSearchBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 10,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 12,
+    gap: 8,
+  },
+  templateSearchInput: {
+    flex: 1,
+    fontSize: 15,
+  },
+  noTemplateResults: {
+    textAlign: "center",
+    fontSize: 14,
+    marginTop: 24,
   },
   scrollArea: {
     flex: 1,

@@ -3,28 +3,42 @@
  */
 
 import { projects, PROJECT_STATUS } from "@magicappdev/database";
-import { eq, desc } from "@magicappdev/database";
+import { and, desc, eq, like, or } from "@magicappdev/database";
 import type { AppContext } from "../types.js";
 import { Hono } from "hono";
 
 export const projectsRoutes = new Hono<AppContext>();
 
-// List projects
+// List projects (supports ?search= against name/description/slug)
 projectsRoutes.get("/", async c => {
   const page = parseInt(c.req.query("page") || "1");
   const limit = parseInt(c.req.query("limit") || "20");
   const offset = (page - 1) * limit;
+  const search = (c.req.query("search") || "").trim();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = c.var.db as any;
 
   const userId = c.var.userId;
   const userRole = c.var.userRole;
 
+  const scope =
+    userRole === "admin" ? undefined : eq(projects.userId, userId || "");
+  const where = search
+    ? and(
+        scope,
+        or(
+          like(projects.name, `%${search}%`),
+          like(projects.description, `%${search}%`),
+          like(projects.slug, `%${search}%`),
+        ),
+      )
+    : scope;
+
   const results = await db.query.projects.findMany({
     limit,
     offset,
     orderBy: [desc(projects.updatedAt)],
-    where: userRole === "admin" ? undefined : eq(projects.userId, userId || ""),
+    where,
   });
 
   // Get total count (simplified for now)

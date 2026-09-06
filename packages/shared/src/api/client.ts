@@ -5,6 +5,7 @@ import type {
   AuthResponse,
   ListProjectsResponse,
   Project,
+  SearchProjectsResponse,
   User,
 } from "../types/index";
 
@@ -270,9 +271,23 @@ export class ApiClient {
     return this.unwrap<User>("/auth/me");
   }
 
-  async getProjects(): Promise<Project[]> {
-    const res = await this.unwrap<ListProjectsResponse>("/projects");
+  async getProjects(options?: { search?: string }): Promise<Project[]> {
+    const query = options?.search?.trim()
+      ? `?search=${encodeURIComponent(options.search.trim())}`
+      : "";
+    const res = await this.unwrap<ListProjectsResponse>(`/projects${query}`);
     return res.data;
+  }
+
+  async searchProjects(
+    query: string,
+    options?: { limit?: number },
+  ): Promise<SearchProjectsResponse> {
+    const params = new URLSearchParams({ q: query.trim() });
+    if (options?.limit) {
+      params.set("limit", String(options.limit));
+    }
+    return this.unwrap<SearchProjectsResponse>(`/search?${params.toString()}`);
   }
 
   async getProject(id: string): Promise<Project> {
