@@ -31,6 +31,8 @@
     "migrate:local": "npx wrangler d1 migrations apply magicappdev-db --local --persist-to ../../.wrangler/state -c wrangler.toml",
     "migrate:prod": "npx wrangler d1 migrations apply magicappdev-db --remote -c wrangler.toml",
     "seed": "bun run seed.ts",
+    "backup": "bun run backup.ts",
+    "restore": "bun run backup.ts --restore",
     "test": "vitest run --passWithNoTests",
     "typecheck": "tsc -b"
   },

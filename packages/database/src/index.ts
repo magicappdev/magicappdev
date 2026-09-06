@@ -10,6 +10,15 @@ export * from "./schema/index.js";
 // Seed utilities
 export { generateSeedSQL, getTableList, buildResetSQL } from "./seed.js";
 
+// Backup/restore utilities
+export {
+  BACKUP_FILE_PREFIX,
+  buildBackupFilename,
+  getRestoreFile,
+  isRemoteBackup,
+  isRestore,
+} from "./backup.js";
+
 // Re-export common drizzle-orm members
 export * from "drizzle-orm";
 

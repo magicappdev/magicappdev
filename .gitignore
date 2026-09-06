@@ -94,4 +94,7 @@ packages/templates/templates
 apps/web/playwright-report/
 apps/web/test-results/
 
+# Local database backups
+packages/database/backups/
+
 .cline
