@@ -8,6 +8,8 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Clipboard,
+  Alert,
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -83,6 +85,8 @@ export default function ChatScreen() {
   const respondingRef = useRef<Set<string>>(new Set());
   const [generatedProject, setGeneratedProject] = useState<GeneratedProject | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSavingProject, setIsSavingProject] = useState(false);
+  const isSavingProjectRef = useRef(false);
   const pendingFilesRef = useRef<GeneratedFile[]>([]);
 
   const { connected, send } = useAgentConnection();
@@ -187,8 +191,9 @@ export default function ChatScreen() {
       ];
     } else if (type === "generation_complete") {
       const files = pendingFilesRef.current;
+      const projectName = (data.projectName as string) || "generated-app";
       setGeneratedProject({
-        projectName: (data.projectName as string) || "generated-app",
+        projectName,
         templateSlug: (data.templateSlug as string) || "",
         files,
         dependencies: (data.dependencies as Record<string, string>) || {},
@@ -200,9 +205,83 @@ export default function ChatScreen() {
         {
           id: `gen-complete-${Date.now()}`,
           role: "system",
-          content: `Generated ${files.length} files for ${data.projectName as string}. Tap "Files" to review.`,
+          content: `Generated ${files.length} files for ${projectName}. Use the actions below to review, copy dependencies, or save to your workspace.`,
         },
       ]);
+
+      const allDeps = {
+        ...(data.dependencies as Record<string, string>),
+        ...(data.devDependencies as Record<string, string>),
+      };
+      const depText = Object.entries(allDeps)
+        .map(([name, version]) => `${name}@${version}`)
+        .join("\n");
+
+      const copyDependencies = async () => {
+        try {
+          await Clipboard.setString(depText);
+          setMessages(prev => [
+            ...prev,
+            {
+              id: `gen-copy-${Date.now()}`,
+              role: "system",
+              content: "Dependencies copied to clipboard.",
+            },
+          ]);
+        } catch {
+          Alert.alert("Clipboard unavailable", "Please copy the dependencies manually from below.");
+        }
+      };
+
+      const saveProject = async () => {
+        if (isSavingProjectRef.current || files.length === 0) return;
+        isSavingProjectRef.current = true;
+        setIsSavingProject(true);
+        try {
+          const project = await api.createProject({ name: projectName });
+          await api.bulkSaveProjectFiles(
+            project.id,
+            files.map(f => ({ path: f.path, content: f.content })),
+          );
+          setMessages(prev => [
+            ...prev,
+            {
+              id: `gen-save-${Date.now()}`,
+              role: "system",
+              content: `Project saved to your workspace as "${projectName}". You can open it from the Projects tab.`,
+            },
+          ]);
+        } catch (err) {
+          setMessages(prev => [
+            ...prev,
+            {
+              id: `gen-save-fail-${Date.now()}`,
+              role: "system",
+              content: `Failed to save project: ${err instanceof Error ? err.message : "Unknown error"}`,
+            },
+          ]);
+        } finally {
+          isSavingProjectRef.current = false;
+          setIsSavingProject(false);
+        }
+      };
+
+      const downloadZip = async () => {
+        try {
+          const blob = await api.downloadProjectZip(projectName);
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const base64 = (reader.result as string).split(",")[1];
+            Alert.alert("ZIP ready", "Download is not wired in this build. You can save the project instead.");
+          };
+          reader.readAsDataURL(blob);
+        } catch {
+          Alert.alert("Download failed", "Could not download the project ZIP. Try saving to workspace instead.");
+        }
+      };
+
+      void copyDependencies();
+      void saveProject();
     } else if (type === "generation_error") {
       setIsGenerating(false);
       setMessages(prev => [
@@ -347,6 +426,75 @@ export default function ChatScreen() {
 
     send({ type: "chat", content: userMsg.content, model: selectedModel });
   };
+
+  const handleCopyDependencies = useCallback(async () => {
+    if (!generatedProject) return;
+    const allDeps = {
+      ...generatedProject.dependencies,
+      ...generatedProject.devDependencies,
+    };
+    const depText = Object.entries(allDeps)
+      .map(([name, version]) => `${name}@${version}`)
+      .join("\n");
+    try {
+      await Clipboard.setString(depText);
+      setMessages(prev => [
+        ...prev,
+        {
+          id: `gen-copy-${Date.now()}`,
+          role: "system",
+          content: "Dependencies copied to clipboard.",
+        },
+      ]);
+    } catch {
+      Alert.alert("Clipboard unavailable", "Please copy the dependencies manually from below.");
+    }
+  }, [generatedProject]);
+
+  const handleSaveProject = useCallback(async () => {
+    if (!generatedProject || isSavingProject || generatedProject.files.length === 0) return;
+    setIsSavingProject(true);
+    try {
+      const project = await api.createProject({ name: generatedProject.projectName });
+      await api.bulkSaveProjectFiles(
+        project.id,
+        generatedProject.files.map(f => ({ path: f.path, content: f.content })),
+      );
+      setMessages(prev => [
+        ...prev,
+        {
+          id: `gen-save-${Date.now()}`,
+          role: "system",
+          content: `Project saved to your workspace as "${generatedProject.projectName}". You can open it from the Projects tab.`,
+        },
+      ]);
+    } catch (err) {
+      setMessages(prev => [
+        ...prev,
+        {
+          id: `gen-save-fail-${Date.now()}`,
+          role: "system",
+          content: `Failed to save project: ${err instanceof Error ? err.message : "Unknown error"}`,
+        },
+      ]);
+    } finally {
+      setIsSavingProject(false);
+    }
+  }, [generatedProject, isSavingProject]);
+
+  const handleDownloadZip = useCallback(async () => {
+    if (!generatedProject) return;
+    try {
+      const blob = await api.downloadProjectZip(generatedProject.projectName);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        Alert.alert("ZIP ready", "Download is not wired in this build. You can save the project instead.");
+      };
+      reader.readAsDataURL(blob);
+    } catch {
+      Alert.alert("Download failed", "Could not download the project ZIP. Try saving to workspace instead.");
+    }
+  }, [generatedProject]);
 
   const currentModelObj = models.find(m => m.id === selectedModel);
   const isInitialChat = messages.length <= 1;
@@ -509,6 +657,25 @@ export default function ChatScreen() {
             <Text style={styles.generatedMeta}>
               {generatedProject.files.length} files
             </Text>
+            <TouchableOpacity
+              style={styles.generatedAction}
+              onPress={handleCopyDependencies}
+              accessibilityLabel="Copy dependencies"
+            >
+              <Ionicons name="copy-outline" size={16} color="#94A3B8" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.generatedAction}
+              onPress={handleSaveProject}
+              disabled={isSavingProject}
+              accessibilityLabel="Save project"
+            >
+              {isSavingProject ? (
+                <Ionicons name="reload" size={16} color="#94A3B8" style={{ transform: [{ rotate: "45deg" }] }} />
+              ) : (
+                <Ionicons name="save-outline" size={16} color="#94A3B8" />
+              )}
+            </TouchableOpacity>
           </View>
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.dependenciesRow}>
@@ -821,6 +988,14 @@ const styles = StyleSheet.create({
   },
   actionButtonDisabled: {
     opacity: 0.5,
+  },
+  generatedAction: {
+    marginLeft: 8,
+    padding: 6,
+    borderRadius: 6,
+    backgroundColor: "#0F172A",
+    borderWidth: 1,
+    borderColor: "#334155",
   },
   generatedContainer: {
     marginHorizontal: 16,
