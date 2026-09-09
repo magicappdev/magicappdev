@@ -13,11 +13,15 @@ import {
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as WebBrowser from "expo-web-browser";
+import * as Sharing from "expo-sharing";
+import * as FileSystem from "expo-file-system/legacy";
+import { downloadAsync } from "expo-file-system/legacy";
 import { useTheme } from "../../context/ThemeContext";
 import { api, secureStorage, API_BASE_URL } from "../../lib/api";
 import { getTemplateById } from "../../lib/templates";
 import { SyntaxHighlightedText } from "../../components/SyntaxHighlightedText";
 import { usePreviewErrorListener } from "../../lib/agent-websocket";
+import { Toast } from "../../components/Toast";
 import type { Project } from "@magicappdev/shared";
 
 interface ProjectFile {
@@ -182,8 +186,20 @@ export default function ProjectDetailScreen() {
     if (!id || !project) return;
     try {
       const token = await secureStorage.getItem("magicappdev_access_token");
-      const url = `${API_BASE_URL}/projects/${id}/export/zip${token ? `?token=${token}` : ""}`;
-      await WebBrowser.openBrowserAsync(url);
+      const zipUrl = `${API_BASE_URL}/projects/${id}/export/zip${token ? `?token=${token}` : ""}`;
+      const downloadPath = `${(FileSystem as any).cacheDirectory ?? ""}${project.name.replace(/[^a-zA-Z0-9_-]/g, "_")}.zip`;
+      const downloadResult = await downloadAsync(zipUrl, downloadPath);
+      if (downloadResult.uri) {
+        const canShare = await Sharing.isAvailableAsync();
+        if (canShare) {
+          await Sharing.shareAsync(downloadResult.uri, {
+            mimeType: "application/zip",
+            dialogTitle: `Share ${project.name}`,
+          });
+        } else {
+          Alert.alert("Downloaded", "ZIP saved. Sharing is not available on this device.");
+        }
+      }
     } catch {
       Alert.alert("Error", "Failed to download ZIP");
     }
@@ -232,6 +248,7 @@ export default function ProjectDetailScreen() {
 
   return (
     <View style={styles.container}>
+      <Toast />
       <PushGitHubModal
         visible={showPushModal}
         projectName={project.name}

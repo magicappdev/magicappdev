@@ -14,9 +14,12 @@ import {
 import { useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../context/ThemeContext";
-import { api, API_BASE_URL } from "../../lib/api";
+import { api, API_BASE_URL, secureStorage } from "../../lib/api";
 import { getPromptPresets, type PromptPreset } from "@magicappdev/shared/utils";
 import { useAgentConnection, useAgentMessages } from "../../lib/agent-websocket";
+import * as Sharing from "expo-sharing";
+import { documentDirectory, downloadAsync } from "expo-file-system/legacy";
+import { showToast, Toast } from "../../components/Toast";
 
 interface MessageItem {
   id: string;
@@ -438,16 +441,9 @@ export default function ChatScreen() {
       .join("\n");
     try {
       await Clipboard.setString(depText);
-      setMessages(prev => [
-        ...prev,
-        {
-          id: `gen-copy-${Date.now()}`,
-          role: "system",
-          content: "Dependencies copied to clipboard.",
-        },
-      ]);
+      showToast("Dependencies copied to clipboard", { kind: "success" });
     } catch {
-      Alert.alert("Clipboard unavailable", "Please copy the dependencies manually from below.");
+      showToast("Clipboard unavailable", { kind: "error" });
     }
   }, [generatedProject]);
 
@@ -485,12 +481,21 @@ export default function ChatScreen() {
   const handleDownloadZip = useCallback(async () => {
     if (!generatedProject) return;
     try {
-      const blob = await api.downloadProjectZip(generatedProject.projectName);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        Alert.alert("ZIP ready", "Download is not wired in this build. You can save the project instead.");
-      };
-      reader.readAsDataURL(blob);
+      const token = await secureStorage.getItem("magicappdev_access_token");
+      const zipUrl = `${API_BASE_URL}/projects/${generatedProject.projectName}/export/zip${token ? `?token=${token}` : ""}`;
+      const downloadPath = `${documentDirectory ?? ""}${generatedProject.projectName.replace(/[^a-zA-Z0-9_-]/g, "_")}.zip`;
+      const downloadResult = await downloadAsync(zipUrl, downloadPath);
+      if (downloadResult.uri) {
+        const canShare = await Sharing.isAvailableAsync();
+        if (canShare) {
+          await Sharing.shareAsync(downloadResult.uri, {
+            mimeType: "application/zip",
+            dialogTitle: `Share ${generatedProject.projectName}`,
+          });
+        } else {
+          showToast("ZIP downloaded. Sharing is not available on this device.", { kind: "info" });
+        }
+      }
     } catch {
       Alert.alert("Download failed", "Could not download the project ZIP. Try saving to workspace instead.");
     }
@@ -505,6 +510,7 @@ export default function ChatScreen() {
       style={styles.container}
       keyboardVerticalOffset={90}
     >
+      <Toast />
       {/* Model Selection Bar */}
       <View style={styles.modelBar}>
         <TouchableOpacity
