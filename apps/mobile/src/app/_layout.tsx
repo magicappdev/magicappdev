@@ -25,6 +25,13 @@ function StackScreens() {
           presentation: "card",
         }}
       />
+      <Stack.Screen
+        name="onboarding"
+        options={{
+          presentation: "fullScreenModal",
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 }

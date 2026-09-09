@@ -20,6 +20,11 @@ export default function LoginScreen() {
         router.replace("/projects");
       }
     });
+    secureStorage.getItem("magicappdev_onboarding_complete").then((done: string | null) => {
+      if (done !== "true" && !cancelled) {
+        router.replace("/onboarding" as any);
+      }
+    });
     return () => {
       cancelled = true;
     };
