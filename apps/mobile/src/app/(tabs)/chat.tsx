@@ -212,80 +212,6 @@ export default function ChatScreen() {
           content: `Generated ${files.length} files for ${projectName}. Use the actions below to review, copy dependencies, or save to your workspace.`,
         },
       ]);
-
-      const allDeps = {
-        ...(data.dependencies as Record<string, string>),
-        ...(data.devDependencies as Record<string, string>),
-      };
-      const depText = Object.entries(allDeps)
-        .map(([name, version]) => `${name}@${version}`)
-        .join("\n");
-
-      const copyDependencies = async () => {
-        try {
-          await Clipboard.setString(depText);
-          setMessages(prev => [
-            ...prev,
-            {
-              id: `gen-copy-${Date.now()}`,
-              role: "system",
-              content: "Dependencies copied to clipboard.",
-            },
-          ]);
-        } catch {
-          Alert.alert("Clipboard unavailable", "Please copy the dependencies manually from below.");
-        }
-      };
-
-      const saveProject = async () => {
-        if (isSavingProjectRef.current || files.length === 0) return;
-        isSavingProjectRef.current = true;
-        setIsSavingProject(true);
-        try {
-          const project = await api.createProject({ name: projectName });
-          await api.bulkSaveProjectFiles(
-            project.id,
-            files.map(f => ({ path: f.path, content: f.content })),
-          );
-          setMessages(prev => [
-            ...prev,
-            {
-              id: `gen-save-${Date.now()}`,
-              role: "system",
-              content: `Project saved to your workspace as "${projectName}". You can open it from the Projects tab.`,
-            },
-          ]);
-        } catch (err) {
-          setMessages(prev => [
-            ...prev,
-            {
-              id: `gen-save-fail-${Date.now()}`,
-              role: "system",
-              content: `Failed to save project: ${err instanceof Error ? err.message : "Unknown error"}`,
-            },
-          ]);
-        } finally {
-          isSavingProjectRef.current = false;
-          setIsSavingProject(false);
-        }
-      };
-
-      const downloadZip = async () => {
-        try {
-          const blob = await api.downloadProjectZip(projectName);
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            const base64 = (reader.result as string).split(",")[1];
-            Alert.alert("ZIP ready", "Download is not wired in this build. You can save the project instead.");
-          };
-          reader.readAsDataURL(blob);
-        } catch {
-          Alert.alert("Download failed", "Could not download the project ZIP. Try saving to workspace instead.");
-        }
-      };
-
-      void copyDependencies();
-      void saveProject();
     } else if (type === "generation_error") {
       setIsGenerating(false);
       setMessages(prev => [
@@ -541,7 +467,7 @@ export default function ChatScreen() {
         }
       }
     } catch {
-      Alert.alert("Download failed", "Could not download the project ZIP. Try saving to workspace instead.");
+      showToast("Could not download the project ZIP. Try saving to workspace instead.", { kind: "error" });
     }
   }, [generatedProject]);
 

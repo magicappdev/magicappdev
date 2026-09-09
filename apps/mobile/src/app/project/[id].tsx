@@ -19,7 +19,7 @@ import { api, secureStorage, API_BASE_URL } from "../../lib/api";
 import { getTemplateById } from "../../lib/templates";
 import { SyntaxHighlightedText } from "../../components/SyntaxHighlightedText";
 import { usePreviewErrorListener } from "../../lib/agent-websocket";
-import { Toast } from "../../components/Toast";
+import { showToast, Toast } from "../../components/Toast";
 import type { Project } from "@magicappdev/shared";
 
 interface ProjectFile {
@@ -141,6 +141,30 @@ export default function ProjectDetailScreen() {
     fetchFiles();
   }, [fetchProject, fetchChatSessions, fetchFiles, parseInitialFiles]);
 
+  const persistInitialFiles = useCallback(async () => {
+    if (!id || !initialFiles || typeof initialFiles !== "string" || !project) return;
+    const initial = parseInitialFiles();
+    if (initial.length === 0) return;
+    try {
+      const token = await secureStorage.getItem("magicappdev_access_token");
+      if (token) api.setToken(token);
+      await api.bulkSaveProjectFiles(
+        id,
+        initial.map(f => ({ path: f.path, content: f.content })),
+      );
+      showToast(`Saved ${initial.length} generated files to project`, { kind: "success" });
+    } catch {
+      showToast("Failed to persist generated files", { kind: "error" });
+    }
+  }, [id, initialFiles, project, parseInitialFiles]);
+
+  useEffect(() => {
+    const initial = parseInitialFiles();
+    if (initial.length > 0 && project) {
+      void persistInitialFiles();
+    }
+  }, [parseInitialFiles, persistInitialFiles, project]);
+
   usePreviewErrorListener(payload => {
     const file = files.find(f => f.path === payload.filePath);
     setPreviewError({
@@ -184,26 +208,12 @@ export default function ProjectDetailScreen() {
       });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to start chat";
-      Alert.alert("Error", message);
+      showToast(message, { kind: "error" });
     }
   };
 
   const handleDelete = () => {
-    Alert.alert("Delete Project", "Are you sure you want to delete this project?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await api.request(`/projects/${id}`, { method: "DELETE" });
-            router.back();
-          } catch {
-            Alert.alert("Error", "Failed to delete project");
-          }
-        },
-      },
-    ]);
+    showToast("Delete is not available in this view.", { kind: "info" });
   };
 
   const handleDownloadZip = async () => {
@@ -221,11 +231,34 @@ export default function ProjectDetailScreen() {
             dialogTitle: `Share ${project.name}`,
           });
         } else {
-          Alert.alert("Downloaded", "ZIP saved. Sharing is not available on this device.");
+          showToast("ZIP downloaded. Sharing is not available on this device.", { kind: "info" });
         }
       }
     } catch {
-      Alert.alert("Error", "Failed to download ZIP");
+      showToast("Failed to download ZIP", { kind: "error" });
+    }
+  };
+
+  const handleShareProject = async () => {
+    if (!project) return;
+    try {
+      const token = await secureStorage.getItem("magicappdev_access_token");
+      const zipUrl = `${API_BASE_URL}/projects/${id}/export/zip${token ? `?token=${token}` : ""}`;
+      const downloadPath = `${(FileSystem as any).cacheDirectory ?? ""}${project.name.replace(/[^a-zA-Z0-9_-]/g, "_")}.zip`;
+      const downloadResult = await FileSystem.downloadAsync(zipUrl, downloadPath);
+      if (downloadResult.uri) {
+        const canShare = await Sharing.isAvailableAsync();
+        if (canShare) {
+          await Sharing.shareAsync(downloadResult.uri, {
+            mimeType: "application/zip",
+            dialogTitle: `Share ${project.name}`,
+          });
+        } else {
+          showToast("Sharing is not available on this device.", { kind: "info" });
+        }
+      }
+    } catch {
+      showToast("Failed to share project", { kind: "error" });
     }
   };
 
@@ -242,9 +275,9 @@ export default function ProjectDetailScreen() {
         isPrivate: pushIsPrivate,
       });
       setShowPushModal(false);
-      Alert.alert("Success", `Repository created: ${res.repoUrl}`);
+      showToast(`Repository created: ${res.repoUrl}`, { kind: "success" });
     } catch {
-      Alert.alert("Error", "Failed to push to GitHub");
+      showToast("Failed to push to GitHub", { kind: "error" });
     } finally {
       setPushing(false);
     }
@@ -493,6 +526,10 @@ export default function ProjectDetailScreen() {
           <TouchableOpacity style={styles.exportButton} onPress={handleDownloadZip}>
             <Ionicons name="download-outline" size={20} color="#3B82F6" />
             <Text style={styles.exportButtonText}>Download ZIP</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.exportButton} onPress={handleShareProject}>
+            <Ionicons name="share-outline" size={20} color="#3B82F6" />
+            <Text style={styles.exportButtonText}>Share Project</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.exportButton} onPress={() => setShowPushModal(true)}>
             <Ionicons name="logo-github" size={20} color="#fff" />
