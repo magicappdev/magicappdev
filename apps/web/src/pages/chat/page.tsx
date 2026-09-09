@@ -100,6 +100,7 @@ export default function ChatPage() {
     [],
   );
   const [respondingIds, setRespondingIds] = useState<Set<string>>(new Set());
+  const [showDependencies, setShowDependencies] = useState(false);
 
   const [canvasViewMode, setCanvasViewMode] = useState<
     "split" | "chat" | "preview"
@@ -1047,6 +1048,18 @@ export default function ChatPage() {
                       <div className="flex items-center gap-1">
                         <button
                           type="button"
+                          onClick={() => setShowDependencies(prev => !prev)}
+                          className={cn(
+                            "px-2.5 py-1 text-xs rounded-md font-medium transition-colors",
+                            showDependencies
+                              ? "bg-zinc-800 text-white"
+                              : "text-zinc-400 hover:text-white",
+                          )}
+                        >
+                          Dependencies
+                        </button>
+                        <button
+                          type="button"
                           onClick={() => setShowPreview(true)}
                           className={cn(
                             "px-2.5 py-1 text-xs rounded-md font-medium transition-colors",
@@ -1071,6 +1084,51 @@ export default function ChatPage() {
                         </button>
                       </div>
                     </div>
+
+                    {showDependencies && (
+                      <div className="px-4 py-3 border-b border-zinc-800 bg-zinc-900/40 shrink-0">
+                        {Object.keys(generatedProject.dependencies).length >
+                        0 ? (
+                          <div className="mb-2">
+                            <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1">
+                              Dependencies
+                            </p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {Object.entries(
+                                generatedProject.dependencies,
+                              ).map(([name, version]) => (
+                                <span
+                                  key={name}
+                                  className="px-2 py-0.5 rounded-md bg-zinc-800 border border-zinc-700 text-[11px] text-zinc-300 font-mono"
+                                >
+                                  {name}@{version}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        ) : null}
+                        {Object.keys(generatedProject.devDependencies).length >
+                        0 ? (
+                          <div>
+                            <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1">
+                              Dev Dependencies
+                            </p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {Object.entries(
+                                generatedProject.devDependencies,
+                              ).map(([name, version]) => (
+                                <span
+                                  key={name}
+                                  className="px-2 py-0.5 rounded-md bg-zinc-800/60 border border-zinc-700/60 text-[11px] text-zinc-400 font-mono"
+                                >
+                                  {name}@{version}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        ) : null}
+                      </div>
+                    )}
 
                     <div className="flex-1 overflow-y-auto">
                       {showPreview ? (

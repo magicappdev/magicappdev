@@ -22,6 +22,19 @@ interface MessageItem {
   content: string;
 }
 
+interface GeneratedFile {
+  path: string;
+  content: string;
+}
+
+interface GeneratedProject {
+  projectName: string;
+  templateSlug: string;
+  files: GeneratedFile[];
+  dependencies: Record<string, string>;
+  devDependencies: Record<string, string>;
+}
+
 /** Mirrors the agent's PendingApproval WS payload (see packages/agent). */
 interface PendingApproval {
   id: string;
@@ -68,6 +81,9 @@ export default function ChatScreen() {
   );
   const [respondingIds, setRespondingIds] = useState<Set<string>>(new Set());
   const respondingRef = useRef<Set<string>>(new Set());
+  const [generatedProject, setGeneratedProject] = useState<GeneratedProject | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const pendingFilesRef = useRef<GeneratedFile[]>([]);
 
   const { connected, send } = useAgentConnection();
 
@@ -160,6 +176,43 @@ export default function ChatScreen() {
         return prev;
       });
       setLoading(false);
+    } else if (type === "generation_start") {
+      setIsGenerating(true);
+      pendingFilesRef.current = [];
+      setGeneratedProject(null);
+    } else if (type === "generation_file") {
+      pendingFilesRef.current = [
+        ...pendingFilesRef.current,
+        { path: data.path as string, content: data.content as string },
+      ];
+    } else if (type === "generation_complete") {
+      const files = pendingFilesRef.current;
+      setGeneratedProject({
+        projectName: (data.projectName as string) || "generated-app",
+        templateSlug: (data.templateSlug as string) || "",
+        files,
+        dependencies: (data.dependencies as Record<string, string>) || {},
+        devDependencies: (data.devDependencies as Record<string, string>) || {},
+      });
+      setIsGenerating(false);
+      setMessages(prev => [
+        ...prev,
+        {
+          id: `gen-complete-${Date.now()}`,
+          role: "system",
+          content: `Generated ${files.length} files for ${data.projectName as string}. Tap "Files" to review.`,
+        },
+      ]);
+    } else if (type === "generation_error") {
+      setIsGenerating(false);
+      setMessages(prev => [
+        ...prev,
+        {
+          id: `gen-error-${Date.now()}`,
+          role: "system",
+          content: `Generation failed: ${(data.error as string) || "Unknown error"}`,
+        },
+      ]);
     } else if (type === "tool_pending_approval") {
       const approval = data.approval as PendingApproval | undefined;
       if (approval?.id) {
@@ -446,6 +499,50 @@ export default function ChatScreen() {
         </View>
       )}
 
+      {generatedProject && (
+        <View style={styles.generatedContainer}>
+          <View style={styles.generatedHeader}>
+            <Ionicons name="cube" size={16} color="#3B82F6" />
+            <Text style={styles.generatedTitle} numberOfLines={1}>
+              {generatedProject.projectName}
+            </Text>
+            <Text style={styles.generatedMeta}>
+              {generatedProject.files.length} files
+            </Text>
+          </View>
+
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.dependenciesRow}>
+            <View style={styles.dependencyChip}>
+              <Text style={styles.dependencyText}>
+                {generatedProject.templateSlug}
+              </Text>
+            </View>
+            {Object.entries(generatedProject.dependencies).slice(0, 6).map(([name, version]) => (
+              <View key={name} style={styles.dependencyChip}>
+                <Text style={styles.dependencyText}>
+                  {name}@{version}
+                </Text>
+              </View>
+            ))}
+            {Object.keys(generatedProject.devDependencies).length > 0 && (
+              <View style={styles.dependencyChip}>
+                <Text style={styles.dependencyText}>
+                  +{Object.keys(generatedProject.devDependencies).length} dev
+                </Text>
+              </View>
+            )}
+          </ScrollView>
+
+          <ScrollView style={styles.filesList}>
+            {generatedProject.files.map(file => (
+              <View key={file.path} style={styles.fileItem}>
+                <Text style={styles.filePath}>{file.path}</Text>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+      )}
+
       <View style={styles.inputArea}>
         <TextInput
           style={styles.input}
@@ -724,5 +821,69 @@ const styles = StyleSheet.create({
   },
   actionButtonDisabled: {
     opacity: 0.5,
+  },
+  generatedContainer: {
+    marginHorizontal: 16,
+    marginBottom: 12,
+    backgroundColor: "#1E293B",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#334155",
+    overflow: "hidden",
+  },
+  generatedHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#334155",
+  },
+  generatedTitle: {
+    color: "#F8FAFC",
+    fontSize: 13,
+    fontWeight: "700",
+    flex: 1,
+  },
+  generatedMeta: {
+    color: "#94A3B8",
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  dependenciesRow: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    gap: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#334155",
+  },
+  dependencyChip: {
+    backgroundColor: "#0F172A",
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "#334155",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  dependencyText: {
+    color: "#CBD5E1",
+    fontSize: 11,
+    fontFamily: "monospace",
+  },
+  filesList: {
+    maxHeight: 180,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  fileItem: {
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: "#334155",
+  },
+  filePath: {
+    color: "#E2E8F0",
+    fontSize: 12,
+    fontFamily: "monospace",
   },
 });
