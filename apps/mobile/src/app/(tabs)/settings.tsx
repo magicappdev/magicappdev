@@ -16,12 +16,16 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../context/ThemeContext";
 import * as FileSystem from "expo-file-system/legacy";
 import { showToast } from "../../components/Toast";
+import * as Network from "expo-network";
+import { WIFI_ONLY_KEY } from "../../lib/cache-constants";
 
 export default function SettingsScreen() {
   const { colors, theme, setTheme } = useTheme();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [cacheSize, setCacheSize] = useState<string | null>(null);
+  const [wifiOnlyCaching, setWifiOnlyCaching] = useState(false);
+  const [networkType, setNetworkType] = useState<string>("unknown");
   const router = useRouter();
 
   const isDarkMode = theme === "dark";
@@ -106,6 +110,33 @@ export default function SettingsScreen() {
   useEffect(() => {
     void loadCacheSize();
   }, [loadCacheSize]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const stored = await secureStorage.getItem(WIFI_ONLY_KEY);
+        if (!cancelled) setWifiOnlyCaching(stored === "true");
+        const state = await Network.getNetworkStateAsync();
+        if (!cancelled) setNetworkType(state.type ?? "unknown");
+      } catch {
+        // best-effort
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleWifiToggle = async (val: boolean) => {
+    setWifiOnlyCaching(val);
+    await secureStorage.setItem(WIFI_ONLY_KEY, val ? "true" : "false");
+    const state = await Network.getNetworkStateAsync();
+    setNetworkType(state.type ?? "unknown");
+    if (val && state.type !== Network.NetworkStateType.WIFI) {
+      showToast("Caching will occur only when connected to Wi-Fi", { kind: "info" });
+    }
+  };
 
   if (loading) {
     return (
@@ -192,6 +223,24 @@ export default function SettingsScreen() {
             onValueChange={handleHackerToggle}
             trackColor={{ false: "#767577", true: "#059669" }}
             thumbColor={isHackerTheme ? "#34D399" : "#f4f3f4"}
+          />
+        </View>
+
+        <View style={[styles.separator, { backgroundColor: colors.separator }]} />
+
+        <View style={styles.menuItem}>
+          <View style={[styles.iconContainer, { backgroundColor: colors.iconBg1 }]}>
+            <Ionicons name="wifi-outline" size={20} color={colors.iconColor1} />
+          </View>
+          <View style={styles.menuTextContainer}>
+            <Text style={[styles.menuTitle, { color: colors.text }]}>Wi-Fi Only Caching</Text>
+            <Text style={[styles.menuSubtitle, { color: colors.subText }]}>
+              {networkType === Network.NetworkStateType.WIFI ? "Connected to Wi-Fi" : "Not on Wi-Fi"}
+            </Text>
+          </View>
+          <Switch
+            value={wifiOnlyCaching}
+            onValueChange={handleWifiToggle}
           />
         </View>
 

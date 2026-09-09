@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
   StyleSheet,
   Text,
@@ -21,6 +21,8 @@ import { SyntaxHighlightedText } from "../../components/SyntaxHighlightedText";
 import { usePreviewErrorListener } from "../../lib/agent-websocket";
 import { showToast, Toast } from "../../components/Toast";
 import type { Project } from "@magicappdev/shared";
+import * as Network from "expo-network";
+import { CACHE_TTL_DAYS, WIFI_ONLY_KEY, CACHE_ANALYTICS_KEY, type CacheAnalytics } from "../../lib/cache-constants";
 
 interface ProjectFile {
   id: string;
@@ -56,6 +58,33 @@ export default function ProjectDetailScreen() {
   const [previewError, setPreviewError] = useState<{ filePath: string; errorMessage: string; errorType: string; fileId?: string } | null>(null);
   const [fileViewerWordWrap, setFileViewerWordWrap] = useState(true);
   const [isCachedOffline, setIsCachedOffline] = useState(false);
+  const [cacheHitCount, setCacheHitCount] = useState(0);
+  const [cacheMissCount, setCacheMissCount] = useState(0);
+  const [lastCacheCheck, setLastCacheCheck] = useState<string | null>(null);
+  const [refreshingCache, setRefreshingCache] = useState(false);
+  const cacheLock = useRef(false);
+
+  const loadAnalytics = useCallback(async () => {
+    try {
+      const stored = await secureStorage.getItem(CACHE_ANALYTICS_KEY);
+      if (stored) {
+        const analytics = JSON.parse(stored) as CacheAnalytics;
+        setCacheHitCount(analytics.hits);
+        setCacheMissCount(analytics.misses);
+        setLastCacheCheck(analytics.lastCheck);
+      }
+    } catch {
+      // best-effort
+    }
+  }, []);
+
+  const saveAnalytics = useCallback(async (analytics: CacheAnalytics) => {
+    try {
+      await secureStorage.setItem(CACHE_ANALYTICS_KEY, JSON.stringify(analytics));
+    } catch {
+      // best-effort
+    }
+  }, []);
 
   const template = project?.templateId ? getTemplateById(project.templateId) : (templateSlug ? getTemplateById(templateSlug as string) : null);
 
@@ -132,12 +161,52 @@ export default function ProjectDetailScreen() {
     if (!id) return;
     try {
       const cacheDir = `${FileSystem.cacheDirectory ?? ""}projects/${id}/`;
-      const info = await FileSystem.getInfoAsync(cacheDir);
-      setIsCachedOffline(Boolean(info.exists));
+      const manifestPath = `${cacheDir}manifest.json`;
+      const manifestInfo = await FileSystem.getInfoAsync(manifestPath);
+      if (manifestInfo.exists) {
+        const manifestContent = await FileSystem.readAsStringAsync(manifestPath);
+        const manifest = JSON.parse(manifestContent) as { cachedAt?: string; fileCount?: number };
+        if (manifest.cachedAt && typeof manifest.cachedAt === "string") {
+          const cachedAt = new Date(manifest.cachedAt);
+          const now = new Date();
+          const ageMs = now.getTime() - cachedAt.getTime();
+          const ageDays = ageMs / (1000 * 60 * 60 * 24);
+          if (ageDays > CACHE_TTL_DAYS) {
+            await FileSystem.deleteAsync(cacheDir, { idempotent: true });
+            setIsCachedOffline(false);
+            setCacheMissCount(prev => {
+              const next = prev + 1;
+              saveAnalytics({ hits: cacheHitCount, misses: next, lastCheck: new Date().toISOString() });
+              return next;
+            });
+            setLastCacheCheck(new Date().toISOString());
+            return;
+          }
+        }
+        setIsCachedOffline(true);
+        setCacheHitCount(prev => {
+          const next = prev + 1;
+          saveAnalytics({ hits: next, misses: cacheMissCount, lastCheck: new Date().toISOString() });
+          return next;
+        });
+      } else {
+        setIsCachedOffline(false);
+        setCacheMissCount(prev => {
+          const next = prev + 1;
+          saveAnalytics({ hits: cacheHitCount, misses: next, lastCheck: new Date().toISOString() });
+          return next;
+        });
+      }
+      setLastCacheCheck(new Date().toISOString());
     } catch {
       setIsCachedOffline(false);
+      setCacheMissCount(prev => {
+        const next = prev + 1;
+        saveAnalytics({ hits: cacheHitCount, misses: next, lastCheck: new Date().toISOString() });
+        return next;
+      });
     }
-  }, [id]);
+  }, [id, cacheHitCount, cacheMissCount, saveAnalytics]);
 
   useEffect(() => {
     const initial = parseInitialFiles();
@@ -147,13 +216,15 @@ export default function ProjectDetailScreen() {
       fetchProject();
       fetchChatSessions();
       checkOfflineCache();
+      loadAnalytics();
       return;
     }
     fetchProject();
     fetchChatSessions();
     fetchFiles();
     checkOfflineCache();
-  }, [fetchProject, fetchChatSessions, fetchFiles, parseInitialFiles, checkOfflineCache]);
+    loadAnalytics();
+  }, [fetchProject, fetchChatSessions, fetchFiles, parseInitialFiles, checkOfflineCache, loadAnalytics]);
 
   const persistInitialFiles = useCallback(async () => {
     if (!id || !initialFiles || typeof initialFiles !== "string" || !project) return;
@@ -193,7 +264,8 @@ export default function ProjectDetailScreen() {
   }, [parseInitialFiles, persistInitialFiles, persistTemplateSlug, project]);
 
   const refreshCache = useCallback(async () => {
-    if (!id || !project) return;
+    if (!id || !project || refreshingCache) return;
+    setRefreshingCache(true);
     try {
       const token = await secureStorage.getItem("magicappdev_access_token");
       if (token) api.setToken(token);
@@ -201,7 +273,7 @@ export default function ProjectDetailScreen() {
       const cacheDir = `${FileSystem.cacheDirectory ?? ""}projects/${id}/`;
       await FileSystem.makeDirectoryAsync(cacheDir, { intermediates: true });
       for (const file of projectFiles) {
-        const safePath = file.path.replace(/[^a-zA-Z0-9_/-]/g, "_");
+        const safePath = file.path.replace(/[^a-zA-Z0-9_/-]/g, "_").replace(/\.\.\//g, "");
         const fileUri = `${cacheDir}${safePath}`;
         await FileSystem.writeAsStringAsync(fileUri, file.content);
       }
@@ -215,8 +287,10 @@ export default function ProjectDetailScreen() {
       showToast("Offline cache refreshed", { kind: "success" });
     } catch {
       showToast("Failed to refresh cache", { kind: "error" });
+    } finally {
+      setRefreshingCache(false);
     }
-  }, [id, project]);
+  }, [id, project, refreshingCache]);
 
   usePreviewErrorListener(payload => {
     const file = files.find(f => f.path === payload.filePath);
@@ -273,19 +347,31 @@ export default function ProjectDetailScreen() {
     if (!id || !project) return;
     try {
       const token = await secureStorage.getItem("magicappdev_access_token");
-      const zipUrl = `${API_BASE_URL}/projects/${id}/export/zip${token ? `?token=${token}` : ""}`;
+      const zipUrl = `${API_BASE_URL}/projects/${id}/export/zip`;
       const downloadPath = `${(FileSystem as any).cacheDirectory ?? ""}${project.name.replace(/[^a-zA-Z0-9_-]/g, "_")}.zip`;
-      const downloadResult = await FileSystem.downloadAsync(zipUrl, downloadPath);
-      if (downloadResult.uri) {
-        const canShare = await Sharing.isAvailableAsync();
-        if (canShare) {
-          await Sharing.shareAsync(downloadResult.uri, {
-            mimeType: "application/zip",
-            dialogTitle: `Share ${project.name}`,
-          });
-        } else {
-          showToast("ZIP downloaded. Sharing is not available on this device.", { kind: "info" });
-        }
+      const response = await fetch(zipUrl, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) {
+        throw new Error(`Download failed: ${response.status}`);
+      }
+      const blob = await response.blob();
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+      const base64Data = base64.split(",")[1];
+      await FileSystem.writeAsStringAsync(downloadPath, base64Data, { encoding: FileSystem.EncodingType.Base64 });
+      const canShare = await Sharing.isAvailableAsync();
+      if (canShare) {
+        await Sharing.shareAsync(`file://${downloadPath}`, {
+          mimeType: "application/zip",
+          dialogTitle: `Share ${project.name}`,
+        });
+      } else {
+        showToast("ZIP downloaded. Sharing is not available on this device.", { kind: "info" });
       }
     } catch {
       showToast("Failed to download ZIP", { kind: "error" });
@@ -296,19 +382,31 @@ export default function ProjectDetailScreen() {
     if (!project) return;
     try {
       const token = await secureStorage.getItem("magicappdev_access_token");
-      const zipUrl = `${API_BASE_URL}/projects/${id}/export/zip${token ? `?token=${token}` : ""}`;
+      const zipUrl = `${API_BASE_URL}/projects/${id}/export/zip`;
       const downloadPath = `${(FileSystem as any).cacheDirectory ?? ""}${project.name.replace(/[^a-zA-Z0-9_-]/g, "_")}.zip`;
-      const downloadResult = await FileSystem.downloadAsync(zipUrl, downloadPath);
-      if (downloadResult.uri) {
-        const canShare = await Sharing.isAvailableAsync();
-        if (canShare) {
-          await Sharing.shareAsync(downloadResult.uri, {
-            mimeType: "application/zip",
-            dialogTitle: `Share ${project.name}`,
-          });
-        } else {
-          showToast("Sharing is not available on this device.", { kind: "info" });
-        }
+      const response = await fetch(zipUrl, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) {
+        throw new Error(`Download failed: ${response.status}`);
+      }
+      const blob = await response.blob();
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+      const base64Data = base64.split(",")[1];
+      await FileSystem.writeAsStringAsync(downloadPath, base64Data, { encoding: FileSystem.EncodingType.Base64 });
+      const canShare = await Sharing.isAvailableAsync();
+      if (canShare) {
+        await Sharing.shareAsync(`file://${downloadPath}`, {
+          mimeType: "application/zip",
+          dialogTitle: `Share ${project.name}`,
+        });
+      } else {
+        showToast("Sharing is not available on this device.", { kind: "info" });
       }
     } catch {
       showToast("Failed to share project", { kind: "error" });
@@ -360,15 +458,24 @@ export default function ProjectDetailScreen() {
   };
 
   const cacheProjectFilesOffline = useCallback(async () => {
-    if (!id || !project || files.length === 0) return;
+    if (!id || !project || files.length === 0 || cacheLock.current) return;
+    cacheLock.current = true;
     try {
+      const wifiOnly = await secureStorage.getItem(WIFI_ONLY_KEY);
+      const shouldCacheOnWifiOnly = wifiOnly === "true";
+      if (shouldCacheOnWifiOnly) {
+        const state = await Network.getNetworkStateAsync();
+        if (state.type !== Network.NetworkStateType.WIFI) {
+          return;
+        }
+      }
       const token = await secureStorage.getItem("magicappdev_access_token");
       if (token) api.setToken(token);
       const projectFiles = await api.getProjectFiles(id);
       const cacheDir = `${FileSystem.cacheDirectory ?? ""}projects/${id}/`;
       await FileSystem.makeDirectoryAsync(cacheDir, { intermediates: true });
       for (const file of projectFiles) {
-        const safePath = file.path.replace(/[^a-zA-Z0-9_/-]/g, "_");
+        const safePath = file.path.replace(/[^a-zA-Z0-9_/-]/g, "_").replace(/\.\.\//g, "");
         const fileUri = `${cacheDir}${safePath}`;
         await FileSystem.writeAsStringAsync(fileUri, file.content);
       }
@@ -380,6 +487,8 @@ export default function ProjectDetailScreen() {
       }));
     } catch {
       // offline caching is best-effort
+    } finally {
+      cacheLock.current = false;
     }
   }, [id, project, files]);
 
@@ -562,6 +671,12 @@ export default function ProjectDetailScreen() {
             })}
             last
           />
+          <DetailRow
+            icon="analytics-outline"
+            label="Cache Stats"
+            value={`Hits: ${cacheHitCount} | Misses: ${cacheMissCount}${lastCacheCheck ? ` | Checked: ${new Date(lastCacheCheck).toLocaleTimeString()}` : ""}`}
+            last
+          />
         </View>
 
         {/* Project Files Card */}
@@ -668,9 +783,11 @@ export default function ProjectDetailScreen() {
             <Ionicons name="list-outline" size={20} color="#3B82F6" />
             <Text style={styles.exportButtonText}>Share Dependencies</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.exportButton} onPress={refreshCache}>
-            <Ionicons name="refresh-outline" size={20} color="#3B82F6" />
-            <Text style={styles.exportButtonText}>Refresh Cache</Text>
+          <TouchableOpacity style={styles.exportButton} onPress={refreshCache} disabled={refreshingCache}>
+            <Ionicons name={refreshingCache ? "hourglass-outline" : "refresh-outline"} size={20} color={refreshingCache ? "#64748B" : "#3B82F6"} />
+            <Text style={[styles.exportButtonText, refreshingCache && { color: "#64748B" }]}>
+              {refreshingCache ? "Refreshing..." : "Refresh Cache"}
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.exportButton} onPress={() => setShowPushModal(true)}>
             <Ionicons name="logo-github" size={20} color="#fff" />
