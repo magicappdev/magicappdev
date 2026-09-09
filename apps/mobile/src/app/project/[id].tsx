@@ -12,10 +12,8 @@ import {
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import * as WebBrowser from "expo-web-browser";
 import * as Sharing from "expo-sharing";
 import * as FileSystem from "expo-file-system/legacy";
-import { downloadAsync } from "expo-file-system/legacy";
 import { useTheme } from "../../context/ThemeContext";
 import { api, secureStorage, API_BASE_URL } from "../../lib/api";
 import { getTemplateById } from "../../lib/templates";
@@ -44,7 +42,7 @@ interface ChatSession {
 
 export default function ProjectDetailScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, initialFiles } = useLocalSearchParams<{ id: string; initialFiles?: string }>();
   const [project, setProject] = useState<Project | null>(null);
   const [files, setFiles] = useState<ProjectFile[]>([]);
   const [selectedFile, setSelectedFile] = useState<ProjectFile | null>(null);
@@ -59,6 +57,25 @@ export default function ProjectDetailScreen() {
   const [fileViewerWordWrap, setFileViewerWordWrap] = useState(true);
 
   const template = project?.templateId ? getTemplateById(project.templateId) : null;
+
+  const parseInitialFiles = useCallback((): ProjectFile[] => {
+    if (!initialFiles || typeof initialFiles !== "string") return [];
+    try {
+      const parsed = JSON.parse(initialFiles) as Array<{ path: string; content: string; language?: string }>;
+      return parsed.map((f, index) => ({
+        id: `initial-${index}`,
+        projectId: id,
+        path: f.path,
+        content: f.content,
+        language: f.language || "plaintext",
+        size: f.content.length,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }));
+    } catch {
+      return [];
+    }
+  }, [id, initialFiles]);
 
   const fetchProject = useCallback(async () => {
     if (!id) return;
@@ -89,7 +106,6 @@ export default function ProjectDetailScreen() {
 
       const data = await api.unwrap<ChatSession[]>("/chat/sessions");
       const linked = data.filter((s: ChatSession) => {
-        // Match sessions that reference this project by title pattern or id
         return s.title?.includes(id) || s.id.includes(id);
       });
       setChatSessions(linked);
@@ -112,10 +128,18 @@ export default function ProjectDetailScreen() {
   }, [id]);
 
   useEffect(() => {
+    const initial = parseInitialFiles();
+    if (initial.length > 0) {
+      setFiles(initial);
+      setLoading(false);
+      fetchProject();
+      fetchChatSessions();
+      return;
+    }
     fetchProject();
     fetchChatSessions();
     fetchFiles();
-  }, [fetchProject, fetchChatSessions, fetchFiles]);
+  }, [fetchProject, fetchChatSessions, fetchFiles, parseInitialFiles]);
 
   usePreviewErrorListener(payload => {
     const file = files.find(f => f.path === payload.filePath);
@@ -188,7 +212,7 @@ export default function ProjectDetailScreen() {
       const token = await secureStorage.getItem("magicappdev_access_token");
       const zipUrl = `${API_BASE_URL}/projects/${id}/export/zip${token ? `?token=${token}` : ""}`;
       const downloadPath = `${(FileSystem as any).cacheDirectory ?? ""}${project.name.replace(/[^a-zA-Z0-9_-]/g, "_")}.zip`;
-      const downloadResult = await downloadAsync(zipUrl, downloadPath);
+      const downloadResult = await FileSystem.downloadAsync(zipUrl, downloadPath);
       if (downloadResult.uri) {
         const canShare = await Sharing.isAvailableAsync();
         if (canShare) {

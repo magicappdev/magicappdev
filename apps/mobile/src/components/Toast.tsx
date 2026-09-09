@@ -1,17 +1,21 @@
 import React, { useState, useEffect, useRef } from "react";
-import { View, Text, Animated, StyleSheet, Easing } from "react-native";
+import { View, Text, Animated, StyleSheet, Easing, TouchableOpacity } from "react-native";
 
 type ToastKind = "info" | "success" | "error";
 
 type ToastOptions = {
   kind?: ToastKind;
   durationMs?: number;
+  actionLabel?: string;
+  onAction?: () => void;
 };
 
 type ToastState = {
   visible: boolean;
   message: string;
   kind: ToastKind;
+  actionLabel?: string;
+  onAction?: () => void;
 };
 
 let toastCallback: ((toast: ToastState) => void) | null = null;
@@ -20,9 +24,15 @@ export function showToast(message: string, options?: ToastOptions) {
   const kind = options?.kind ?? "info";
   const durationMs = options?.durationMs ?? 2500;
   if (toastCallback) {
-    toastCallback({ visible: true, message, kind });
+    toastCallback({
+      visible: true,
+      message,
+      kind,
+      actionLabel: options?.actionLabel,
+      onAction: options?.onAction,
+    });
     setTimeout(() => {
-      toastCallback?.({ visible: false, message: "", kind });
+      toastCallback?.({ visible: false, message: "", kind: "info" });
     }, durationMs);
   }
 }
@@ -85,6 +95,17 @@ export function Toast() {
         ]}
       >
         <Text style={styles.message}>{state.message}</Text>
+        {state.actionLabel ? (
+          <TouchableOpacity
+            onPress={() => {
+              state.onAction?.();
+              toastCallback?.({ visible: false, message: "", kind: "info" });
+            }}
+            style={styles.actionButton}
+          >
+            <Text style={styles.actionButtonText}>{state.actionLabel}</Text>
+          </TouchableOpacity>
+        ) : null}
       </Animated.View>
     </View>
   );
@@ -112,5 +133,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     textAlign: "center",
+  },
+  actionButton: {
+    marginLeft: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+    backgroundColor: "#ffffff22",
+    borderWidth: 1,
+    borderColor: "#ffffff44",
+  },
+  actionButtonText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "700",
   },
 });

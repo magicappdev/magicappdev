@@ -11,14 +11,14 @@ import {
   Clipboard,
   Alert,
 } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../context/ThemeContext";
 import { api, API_BASE_URL, secureStorage } from "../../lib/api";
 import { getPromptPresets, type PromptPreset } from "@magicappdev/shared/utils";
 import { useAgentConnection, useAgentMessages } from "../../lib/agent-websocket";
 import * as Sharing from "expo-sharing";
-import { documentDirectory, downloadAsync } from "expo-file-system/legacy";
+import * as FileSystem from "expo-file-system/legacy";
 import { showToast, Toast } from "../../components/Toast";
 
 interface MessageItem {
@@ -66,6 +66,7 @@ interface AIModel {
 
 export default function ChatScreen() {
   const { sessionId, projectId } = useLocalSearchParams<{ sessionId?: string; projectId?: string }>();
+  const router = useRouter();
   const [messages, setMessages] = useState<MessageItem[]>([
     { id: "init-1", role: "assistant", content: "Hello! What would you like to build today?" },
   ]);
@@ -447,6 +448,34 @@ export default function ChatScreen() {
     }
   }, [generatedProject]);
 
+  const handleShareDependencies = useCallback(async () => {
+    if (!generatedProject) return;
+    const allDeps = {
+      ...generatedProject.dependencies,
+      ...generatedProject.devDependencies,
+    };
+    const depText = Object.entries(allDeps)
+      .map(([name, version]) => `${name}@${version}`)
+      .join("\n");
+    try {
+      await Clipboard.setString(depText);
+      const canShare = await Sharing.isAvailableAsync();
+      if (canShare) {
+        const fileName = `${generatedProject.projectName.replace(/[^a-zA-Z0-9_-]/g, "_")}-dependencies.txt`;
+        const fileUri = `${FileSystem.documentDirectory ?? ""}${fileName}`;
+        await FileSystem.writeAsStringAsync(fileUri, depText);
+        await Sharing.shareAsync(fileUri, {
+          mimeType: "text/plain",
+          dialogTitle: `Share dependencies for ${generatedProject.projectName}`,
+        });
+      } else {
+        showToast("Dependencies copied to clipboard. Sharing not available.", { kind: "info" });
+      }
+    } catch {
+      showToast("Failed to share dependencies", { kind: "error" });
+    }
+  }, [generatedProject]);
+
   const handleSaveProject = useCallback(async () => {
     if (!generatedProject || isSavingProject || generatedProject.files.length === 0) return;
     setIsSavingProject(true);
@@ -464,6 +493,21 @@ export default function ChatScreen() {
           content: `Project saved to your workspace as "${generatedProject.projectName}". You can open it from the Projects tab.`,
         },
       ]);
+      showToast(`Saved "${generatedProject.projectName}"`, {
+        kind: "success",
+        durationMs: 4000,
+        actionLabel: "Open Project",
+        onAction: () => {
+          router.push({
+            pathname: `/project/${project.id}` as any,
+            params: {
+              initialFiles: JSON.stringify(
+                generatedProject.files.map(f => ({ path: f.path, content: f.content })),
+              ),
+            },
+          });
+        },
+      });
     } catch (err) {
       setMessages(prev => [
         ...prev,
@@ -476,15 +520,15 @@ export default function ChatScreen() {
     } finally {
       setIsSavingProject(false);
     }
-  }, [generatedProject, isSavingProject]);
+  }, [generatedProject, isSavingProject, router]);
 
   const handleDownloadZip = useCallback(async () => {
     if (!generatedProject) return;
     try {
       const token = await secureStorage.getItem("magicappdev_access_token");
       const zipUrl = `${API_BASE_URL}/projects/${generatedProject.projectName}/export/zip${token ? `?token=${token}` : ""}`;
-      const downloadPath = `${documentDirectory ?? ""}${generatedProject.projectName.replace(/[^a-zA-Z0-9_-]/g, "_")}.zip`;
-      const downloadResult = await downloadAsync(zipUrl, downloadPath);
+      const downloadPath = `${FileSystem.documentDirectory ?? ""}${generatedProject.projectName.replace(/[^a-zA-Z0-9_-]/g, "_")}.zip`;
+      const downloadResult = await FileSystem.downloadAsync(zipUrl, downloadPath);
       if (downloadResult.uri) {
         const canShare = await Sharing.isAvailableAsync();
         if (canShare) {
@@ -669,6 +713,13 @@ export default function ChatScreen() {
               accessibilityLabel="Copy dependencies"
             >
               <Ionicons name="copy-outline" size={16} color="#94A3B8" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.generatedAction}
+              onPress={handleShareDependencies}
+              accessibilityLabel="Share dependencies"
+            >
+              <Ionicons name="share-outline" size={16} color="#94A3B8" />
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.generatedAction}
