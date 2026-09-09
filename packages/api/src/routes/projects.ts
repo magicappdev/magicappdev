@@ -192,6 +192,7 @@ projectsRoutes.patch("/:id", async c => {
     name?: string;
     description?: string;
     status?: (typeof PROJECT_STATUS)[number];
+    templateId?: string | null;
     config?: Record<string, unknown>;
   }>();
   const db = c.var.db;
@@ -228,6 +229,7 @@ projectsRoutes.patch("/:id", async c => {
       name: body.name,
       description: body.description,
       status: body.status,
+      templateId: body.templateId ?? undefined,
       config: body.config,
       updatedAt: new Date().toISOString(),
     })

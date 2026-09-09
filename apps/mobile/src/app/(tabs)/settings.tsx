@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   ActivityIndicator,
   ScrollView,
@@ -21,6 +21,7 @@ export default function SettingsScreen() {
   const { colors, theme, setTheme } = useTheme();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [cacheSize, setCacheSize] = useState<string | null>(null);
   const router = useRouter();
 
   const isDarkMode = theme === "dark";
@@ -80,11 +81,31 @@ export default function SettingsScreen() {
       if (info.exists) {
         await FileSystem.deleteAsync(cacheDir, { idempotent: true });
       }
+      setCacheSize(null);
       showToast("Offline cache cleared", { kind: "success" });
     } catch {
       showToast("Failed to clear cache", { kind: "error" });
     }
   };
+
+  const loadCacheSize = useCallback(async () => {
+    try {
+      const cacheDir = `${FileSystem.cacheDirectory ?? ""}projects/`;
+      const info = await FileSystem.getInfoAsync(cacheDir);
+      if (info.exists && info.size) {
+        const mb = (info.size / (1024 * 1024)).toFixed(1);
+        setCacheSize(`${mb} MB`);
+      } else {
+        setCacheSize(null);
+      }
+    } catch {
+      setCacheSize(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadCacheSize();
+  }, [loadCacheSize]);
 
   if (loading) {
     return (
@@ -184,7 +205,11 @@ export default function SettingsScreen() {
             <Text style={[styles.menuTitle, { color: colors.text }]}>Clear Offline Cache</Text>
             <Text style={[styles.menuSubtitle, { color: colors.subText }]}>Free up storage used by cached project files</Text>
           </View>
-          <Ionicons name="chevron-forward" size={18} color={colors.subText} />
+          {cacheSize ? (
+            <Text style={[styles.cacheSizeText, { color: colors.subText }]}>{cacheSize}</Text>
+          ) : (
+            <Ionicons name="chevron-forward" size={18} color={colors.subText} />
+          )}
         </TouchableOpacity>
       </View>
 
@@ -284,6 +309,11 @@ const styles = StyleSheet.create({
   },
   menuSubtitle: {
     fontSize: 12,
+  },
+  cacheSizeText: {
+    fontSize: 12,
+    fontWeight: "600",
+    marginRight: 4,
   },
   separator: {
     height: 1,

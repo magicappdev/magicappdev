@@ -172,12 +172,51 @@ export default function ProjectDetailScreen() {
     }
   }, [id, initialFiles, project, parseInitialFiles]);
 
+  const persistTemplateSlug = useCallback(async () => {
+    if (!id || !templateSlug || !project || project.templateId) return;
+    try {
+      const token = await secureStorage.getItem("magicappdev_access_token");
+      if (token) api.setToken(token);
+      await api.updateProject(id, { templateId: templateSlug as string });
+      setProject(prev => prev ? { ...prev, templateId: templateSlug as string } : prev);
+    } catch {
+      // best-effort persistence
+    }
+  }, [id, templateSlug, project]);
+
   useEffect(() => {
     const initial = parseInitialFiles();
     if (initial.length > 0 && project) {
       void persistInitialFiles();
+      void persistTemplateSlug();
     }
-  }, [parseInitialFiles, persistInitialFiles, project]);
+  }, [parseInitialFiles, persistInitialFiles, persistTemplateSlug, project]);
+
+  const refreshCache = useCallback(async () => {
+    if (!id || !project) return;
+    try {
+      const token = await secureStorage.getItem("magicappdev_access_token");
+      if (token) api.setToken(token);
+      const projectFiles = await api.getProjectFiles(id);
+      const cacheDir = `${FileSystem.cacheDirectory ?? ""}projects/${id}/`;
+      await FileSystem.makeDirectoryAsync(cacheDir, { intermediates: true });
+      for (const file of projectFiles) {
+        const safePath = file.path.replace(/[^a-zA-Z0-9_/-]/g, "_");
+        const fileUri = `${cacheDir}${safePath}`;
+        await FileSystem.writeAsStringAsync(fileUri, file.content);
+      }
+      await FileSystem.writeAsStringAsync(`${cacheDir}manifest.json`, JSON.stringify({
+        projectId: id,
+        projectName: project.name,
+        cachedAt: new Date().toISOString(),
+        fileCount: projectFiles.length,
+      }));
+      setIsCachedOffline(true);
+      showToast("Offline cache refreshed", { kind: "success" });
+    } catch {
+      showToast("Failed to refresh cache", { kind: "error" });
+    }
+  }, [id, project]);
 
   usePreviewErrorListener(payload => {
     const file = files.find(f => f.path === payload.filePath);
@@ -342,7 +381,7 @@ export default function ProjectDetailScreen() {
     } catch {
       // offline caching is best-effort
     }
-  }, [id, project, files, api]);
+  }, [id, project, files]);
 
   useEffect(() => {
     if (files.length > 0) {
@@ -628,6 +667,10 @@ export default function ProjectDetailScreen() {
           <TouchableOpacity style={styles.exportButton} onPress={handleShareDependencies}>
             <Ionicons name="list-outline" size={20} color="#3B82F6" />
             <Text style={styles.exportButtonText}>Share Dependencies</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.exportButton} onPress={refreshCache}>
+            <Ionicons name="refresh-outline" size={20} color="#3B82F6" />
+            <Text style={styles.exportButtonText}>Refresh Cache</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.exportButton} onPress={() => setShowPushModal(true)}>
             <Ionicons name="logo-github" size={20} color="#fff" />

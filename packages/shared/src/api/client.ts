@@ -308,6 +308,22 @@ export class ApiClient {
     await this.unwrap<void>(`/projects/${id}`, { method: "DELETE" });
   }
 
+  async updateProject(
+    id: string,
+    data: {
+      name?: string;
+      description?: string;
+      status?: "draft" | "active" | "archived" | "deployed";
+      templateId?: string;
+      config?: Record<string, unknown>;
+    },
+  ): Promise<Project> {
+    return this.unwrap<Project>(`/projects/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  }
+
   async sendMessage(messages: AiMessage[]): Promise<AiMessage> {
     const res = await this.unwrap<AiChatResponse>("/ai/chat", {
       method: "POST",
