@@ -246,6 +246,26 @@ export default function SettingsScreen() {
 
         <View style={[styles.separator, { backgroundColor: colors.separator }]} />
 
+        {user?.role === "admin" && (
+          <>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => router.push("/admin" as unknown as never)}
+            >
+              <View style={[styles.iconContainer, { backgroundColor: colors.iconBg2 }]}>
+                <Ionicons name="shield-checkmark-outline" size={20} color={colors.iconColor2} />
+              </View>
+              <View style={styles.menuTextContainer}>
+                <Text style={[styles.menuTitle, { color: colors.text }]}>Admin Dashboard</Text>
+                <Text style={[styles.menuSubtitle, { color: colors.subText }]}>Manage users, logs, and platform settings</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={colors.subText} />
+            </TouchableOpacity>
+
+            <View style={[styles.separator, { backgroundColor: colors.separator }]} />
+          </>
+        )}
+
         <TouchableOpacity style={styles.menuItem} onPress={handleClearCache}>
           <View style={[styles.iconContainer, { backgroundColor: colors.iconBg3 }]}>
             <Ionicons name="trash-outline" size={20} color={colors.iconColor3} />
