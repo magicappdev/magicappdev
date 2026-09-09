@@ -8,6 +8,8 @@ type ToastOptions = {
   durationMs?: number;
   actionLabel?: string;
   onAction?: () => void;
+  secondaryActionLabel?: string;
+  onSecondaryAction?: () => void;
 };
 
 type ToastState = {
@@ -16,6 +18,8 @@ type ToastState = {
   kind: ToastKind;
   actionLabel?: string;
   onAction?: () => void;
+  secondaryActionLabel?: string;
+  onSecondaryAction?: () => void;
 };
 
 let toastCallback: ((toast: ToastState) => void) | null = null;
@@ -30,6 +34,8 @@ export function showToast(message: string, options?: ToastOptions) {
       kind,
       actionLabel: options?.actionLabel,
       onAction: options?.onAction,
+      secondaryActionLabel: options?.secondaryActionLabel,
+      onSecondaryAction: options?.onSecondaryAction,
     });
     setTimeout(() => {
       toastCallback?.({ visible: false, message: "", kind: "info" });
@@ -96,15 +102,28 @@ export function Toast() {
       >
         <Text style={styles.message}>{state.message}</Text>
         {state.actionLabel ? (
-          <TouchableOpacity
-            onPress={() => {
-              state.onAction?.();
-              toastCallback?.({ visible: false, message: "", kind: "info" });
-            }}
-            style={styles.actionButton}
-          >
-            <Text style={styles.actionButtonText}>{state.actionLabel}</Text>
-          </TouchableOpacity>
+          <View style={styles.actionRow}>
+            <TouchableOpacity
+              onPress={() => {
+                state.onAction?.();
+                toastCallback?.({ visible: false, message: "", kind: "info" });
+              }}
+              style={styles.actionButton}
+            >
+              <Text style={styles.actionButtonText}>{state.actionLabel}</Text>
+            </TouchableOpacity>
+            {state.secondaryActionLabel ? (
+              <TouchableOpacity
+                onPress={() => {
+                  state.onSecondaryAction?.();
+                  toastCallback?.({ visible: false, message: "", kind: "info" });
+                }}
+                style={styles.secondaryActionButton}
+              >
+                <Text style={styles.secondaryActionButtonText}>{state.secondaryActionLabel}</Text>
+              </TouchableOpacity>
+            ) : null}
+          </View>
         ) : null}
       </Animated.View>
     </View>
@@ -147,5 +166,24 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 12,
     fontWeight: "700",
+  },
+  actionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 8,
+  },
+  secondaryActionButton: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+    backgroundColor: "#ffffff11",
+    borderWidth: 1,
+    borderColor: "#ffffff22",
+  },
+  secondaryActionButtonText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "600",
   },
 });

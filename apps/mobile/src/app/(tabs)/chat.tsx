@@ -91,6 +91,7 @@ export default function ChatScreen() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSavingProject, setIsSavingProject] = useState(false);
   const isSavingProjectRef = useRef(false);
+  const lastSavedProjectIdRef = useRef<string | null>(null);
   const pendingFilesRef = useRef<GeneratedFile[]>([]);
 
   const { connected, send } = useAgentConnection();
@@ -411,6 +412,7 @@ export default function ChatScreen() {
         project.id,
         generatedProject.files.map(f => ({ path: f.path, content: f.content })),
       );
+      lastSavedProjectIdRef.current = project.id;
       setMessages(prev => [
         ...prev,
         {
@@ -433,6 +435,23 @@ export default function ChatScreen() {
             },
           });
         },
+        secondaryActionLabel: "Undo",
+        onSecondaryAction: async () => {
+          try {
+            await api.deleteProject(project.id);
+            setMessages(prev => [
+              ...prev,
+              {
+                id: `gen-undo-${Date.now()}`,
+                role: "system",
+                content: `Undid save for "${generatedProject.projectName}".`,
+              },
+            ]);
+            showToast("Save undone", { kind: "info" });
+          } catch {
+            showToast("Failed to undo save", { kind: "error" });
+          }
+        },
       });
     } catch (err) {
       setMessages(prev => [
@@ -446,7 +465,7 @@ export default function ChatScreen() {
     } finally {
       setIsSavingProject(false);
     }
-  }, [generatedProject, isSavingProject, router]);
+  }, [generatedProject, isSavingProject, router, api]);
 
   const handleDownloadZip = useCallback(async () => {
     if (!generatedProject) return;

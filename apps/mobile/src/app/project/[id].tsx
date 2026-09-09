@@ -262,6 +262,80 @@ export default function ProjectDetailScreen() {
     }
   };
 
+  const handleShareDependencies = async () => {
+    if (!project || files.length === 0) return;
+    try {
+      const token = await secureStorage.getItem("magicappdev_access_token");
+      if (token) api.setToken(token);
+      const projectFiles = await api.getProjectFiles(id);
+      const deps = new Set<string>();
+      for (const file of projectFiles) {
+        if (file.path.endsWith("package.json")) {
+          try {
+            const pkg = JSON.parse(file.content) as { dependencies?: Record<string, string>; devDependencies?: Record<string, string> };
+            if (pkg.dependencies) {
+              for (const [name, version] of Object.entries(pkg.dependencies)) {
+                deps.add(`${name}@${version}`);
+              }
+            }
+            if (pkg.devDependencies) {
+              for (const [name, version] of Object.entries(pkg.devDependencies)) {
+                deps.add(`${name}@${version}`);
+              }
+            }
+          } catch {
+            // skip malformed package.json
+          }
+        }
+      }
+      const depText = Array.from(deps).join("\n");
+      const fileName = `${project.name.replace(/[^a-zA-Z0-9_-]/g, "_")}-dependencies.txt`;
+      const fileUri = `${FileSystem.documentDirectory ?? ""}${fileName}`;
+      await FileSystem.writeAsStringAsync(fileUri, depText);
+      const canShare = await Sharing.isAvailableAsync();
+      if (canShare) {
+        await Sharing.shareAsync(fileUri, {
+          mimeType: "text/plain",
+          dialogTitle: `Share dependencies for ${project.name}`,
+        });
+      } else {
+        showToast("Dependencies extracted. Sharing is not available on this device.", { kind: "info" });
+      }
+    } catch {
+      showToast("Failed to share dependencies", { kind: "error" });
+    }
+  };
+
+  const cacheProjectFilesOffline = useCallback(async () => {
+    if (!id || !project || files.length === 0) return;
+    try {
+      const token = await secureStorage.getItem("magicappdev_access_token");
+      if (token) api.setToken(token);
+      const projectFiles = await api.getProjectFiles(id);
+      const cacheDir = `${FileSystem.cacheDirectory ?? ""}projects/${id}/`;
+      await FileSystem.makeDirectoryAsync(cacheDir, { intermediates: true });
+      for (const file of projectFiles) {
+        const safePath = file.path.replace(/[^a-zA-Z0-9_/-]/g, "_");
+        const fileUri = `${cacheDir}${safePath}`;
+        await FileSystem.writeAsStringAsync(fileUri, file.content);
+      }
+      await FileSystem.writeAsStringAsync(`${cacheDir}manifest.json`, JSON.stringify({
+        projectId: id,
+        projectName: project.name,
+        cachedAt: new Date().toISOString(),
+        fileCount: projectFiles.length,
+      }));
+    } catch {
+      // offline caching is best-effort
+    }
+  }, [id, project, files, api]);
+
+  useEffect(() => {
+    if (files.length > 0) {
+      void cacheProjectFilesOffline();
+    }
+  }, [files, cacheProjectFilesOffline]);
+
   const handlePushToGitHub = async () => {
     if (!id || !project || !pushRepoName.trim()) return;
     setPushing(true);
@@ -530,6 +604,10 @@ export default function ProjectDetailScreen() {
           <TouchableOpacity style={styles.exportButton} onPress={handleShareProject}>
             <Ionicons name="share-outline" size={20} color="#3B82F6" />
             <Text style={styles.exportButtonText}>Share Project</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.exportButton} onPress={handleShareDependencies}>
+            <Ionicons name="list-outline" size={20} color="#3B82F6" />
+            <Text style={styles.exportButtonText}>Share Dependencies</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.exportButton} onPress={() => setShowPushModal(true)}>
             <Ionicons name="logo-github" size={20} color="#fff" />
