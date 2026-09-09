@@ -42,7 +42,7 @@ interface ChatSession {
 
 export default function ProjectDetailScreen() {
   const router = useRouter();
-  const { id, initialFiles } = useLocalSearchParams<{ id: string; initialFiles?: string }>();
+  const { id, initialFiles, templateSlug } = useLocalSearchParams<{ id: string; initialFiles?: string; templateSlug?: string }>();
   const [project, setProject] = useState<Project | null>(null);
   const [files, setFiles] = useState<ProjectFile[]>([]);
   const [selectedFile, setSelectedFile] = useState<ProjectFile | null>(null);
@@ -55,8 +55,9 @@ export default function ProjectDetailScreen() {
   const [pushing, setPushing] = useState(false);
   const [previewError, setPreviewError] = useState<{ filePath: string; errorMessage: string; errorType: string; fileId?: string } | null>(null);
   const [fileViewerWordWrap, setFileViewerWordWrap] = useState(true);
+  const [isCachedOffline, setIsCachedOffline] = useState(false);
 
-  const template = project?.templateId ? getTemplateById(project.templateId) : null;
+  const template = project?.templateId ? getTemplateById(project.templateId) : (templateSlug ? getTemplateById(templateSlug as string) : null);
 
   const parseInitialFiles = useCallback((): ProjectFile[] => {
     if (!initialFiles || typeof initialFiles !== "string") return [];
@@ -127,6 +128,17 @@ export default function ProjectDetailScreen() {
     }
   }, [id]);
 
+  const checkOfflineCache = useCallback(async () => {
+    if (!id) return;
+    try {
+      const cacheDir = `${FileSystem.cacheDirectory ?? ""}projects/${id}/`;
+      const info = await FileSystem.getInfoAsync(cacheDir);
+      setIsCachedOffline(Boolean(info.exists));
+    } catch {
+      setIsCachedOffline(false);
+    }
+  }, [id]);
+
   useEffect(() => {
     const initial = parseInitialFiles();
     if (initial.length > 0) {
@@ -134,12 +146,14 @@ export default function ProjectDetailScreen() {
       setLoading(false);
       fetchProject();
       fetchChatSessions();
+      checkOfflineCache();
       return;
     }
     fetchProject();
     fetchChatSessions();
     fetchFiles();
-  }, [fetchProject, fetchChatSessions, fetchFiles, parseInitialFiles]);
+    checkOfflineCache();
+  }, [fetchProject, fetchChatSessions, fetchFiles, parseInitialFiles, checkOfflineCache]);
 
   const persistInitialFiles = useCallback(async () => {
     if (!id || !initialFiles || typeof initialFiles !== "string" || !project) return;
@@ -442,6 +456,12 @@ export default function ProjectDetailScreen() {
         <Text style={styles.headerTitle} numberOfLines={1}>
           {project.name}
         </Text>
+        {isCachedOffline && (
+          <View style={styles.offlineBadge}>
+            <Ionicons name="cloud-offline-outline" size={12} color="#FBBF24" />
+            <Text style={styles.offlineBadgeText}>Cached</Text>
+          </View>
+        )}
         <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
           <Ionicons name="trash-outline" size={20} color="#EF4444" />
         </TouchableOpacity>
@@ -691,6 +711,22 @@ const styles = StyleSheet.create({
     height: 40,
     alignItems: "center",
     justifyContent: "center",
+  },
+  offlineBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    backgroundColor: "#422006",
+    borderWidth: 1,
+    borderColor: "#B45309",
+  },
+  offlineBadgeText: {
+    color: "#FBBF24",
+    fontSize: 11,
+    fontWeight: "700",
   },
   scrollArea: {
     flex: 1,

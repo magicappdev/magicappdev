@@ -14,6 +14,8 @@ import { api, secureStorage } from "../../lib/api";
 import type { User } from "@magicappdev/shared";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../context/ThemeContext";
+import * as FileSystem from "expo-file-system/legacy";
+import { showToast } from "../../components/Toast";
 
 export default function SettingsScreen() {
   const { colors, theme, setTheme } = useTheme();
@@ -69,6 +71,19 @@ export default function SettingsScreen() {
 
   const handleHackerToggle = (val: boolean) => {
     setTheme(val ? "hacker" : isDarkMode ? "dark" : "light");
+  };
+
+  const handleClearCache = async () => {
+    try {
+      const cacheDir = `${FileSystem.cacheDirectory ?? ""}projects/`;
+      const info = await FileSystem.getInfoAsync(cacheDir);
+      if (info.exists) {
+        await FileSystem.deleteAsync(cacheDir, { idempotent: true });
+      }
+      showToast("Offline cache cleared", { kind: "success" });
+    } catch {
+      showToast("Failed to clear cache", { kind: "error" });
+    }
   };
 
   if (loading) {
@@ -158,6 +173,19 @@ export default function SettingsScreen() {
             thumbColor={isHackerTheme ? "#34D399" : "#f4f3f4"}
           />
         </View>
+
+        <View style={[styles.separator, { backgroundColor: colors.separator }]} />
+
+        <TouchableOpacity style={styles.menuItem} onPress={handleClearCache}>
+          <View style={[styles.iconContainer, { backgroundColor: colors.iconBg3 }]}>
+            <Ionicons name="trash-outline" size={20} color={colors.iconColor3} />
+          </View>
+          <View style={styles.menuTextContainer}>
+            <Text style={[styles.menuTitle, { color: colors.text }]}>Clear Offline Cache</Text>
+            <Text style={[styles.menuSubtitle, { color: colors.subText }]}>Free up storage used by cached project files</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.subText} />
+        </TouchableOpacity>
       </View>
 
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>

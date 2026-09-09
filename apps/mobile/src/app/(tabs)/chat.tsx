@@ -432,6 +432,7 @@ export default function ChatScreen() {
               initialFiles: JSON.stringify(
                 generatedProject.files.map(f => ({ path: f.path, content: f.content })),
               ),
+              templateSlug: generatedProject.templateSlug,
             },
           });
         },
