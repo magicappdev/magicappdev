@@ -9,6 +9,13 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { secureStorage } from "../lib/api";
+import {
+  trackOnboardingStart,
+  trackOnboardingComplete,
+  trackOnboardingSkip,
+  trackOnboardingSlideChange,
+  type OnboardingAnalytics,
+} from "../lib/onboarding-analytics";
 import { Ionicons } from "@expo/vector-icons";
 import type { ComponentProps } from "react";
 
@@ -39,6 +46,7 @@ const ONBOARDING_KEY = "magicappdev_onboarding_complete";
 
 export default function OnboardingScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [analytics, setAnalytics] = useState<OnboardingAnalytics | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -46,9 +54,18 @@ export default function OnboardingScreen() {
       const done = await secureStorage.getItem(ONBOARDING_KEY);
       if (done === "true") {
         router.replace("/projects");
+        return;
       }
+      const tracked = await trackOnboardingStart(slides.length);
+      setAnalytics(tracked);
     })();
   }, [router]);
+
+  useEffect(() => {
+    if (analytics) {
+      void trackOnboardingSlideChange(analytics, currentIndex);
+    }
+  }, [currentIndex, analytics]);
 
   const handleNext = () => {
     if (currentIndex < slides.length - 1) {
@@ -58,11 +75,18 @@ export default function OnboardingScreen() {
     }
   };
 
-  const handleSkip = () => {
-    handleDone();
+  const handleSkip = async () => {
+    if (analytics) {
+      await trackOnboardingSkip(analytics);
+    }
+    await secureStorage.setItem(ONBOARDING_KEY, "true");
+    router.replace("/projects");
   };
 
   const handleDone = async () => {
+    if (analytics) {
+      await trackOnboardingComplete(analytics);
+    }
     await secureStorage.setItem(ONBOARDING_KEY, "true");
     router.replace("/projects");
   };
