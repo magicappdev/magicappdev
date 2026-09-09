@@ -15,7 +15,6 @@ import {
 } from "./lib/agent-utils.js";
 import type { Template, TemplateMetadata } from "@magicappdev/templates-engine";
 import { createDatabase, projectFiles, eq, and } from "@magicappdev/database";
-import { generateFromTemplate } from "@magicappdev/templates-engine";
 import { registry } from "@magicappdev/templates-engine/registry";
 import { upsertProjectFile } from "./lib/project-files.js";
 import { MessageType } from "@magicappdev/shared/types";
@@ -669,6 +668,9 @@ export class MagicAgent extends Agent<Env, AgentState> {
     );
 
     try {
+      const projectId = this.state.projectId;
+      const db = createDatabase(this.env.DB);
+
       // Get the template
       const template = registry.get(templateSlug) as Template | undefined;
       if (!template) {
@@ -715,6 +717,24 @@ export class MagicAgent extends Agent<Env, AgentState> {
         return;
       }
 
+      // Persist files to D1 if a project is selected
+      if (projectId) {
+        for (const file of result.files) {
+          try {
+            validateProjectFilePath(file.path);
+          } catch (err) {
+            connection.send(
+              JSON.stringify({
+                type: MessageType.GENERATION_ERROR,
+                error: err instanceof Error ? err.message : "Invalid file path",
+              }),
+            );
+            return;
+          }
+          await this.upsertProjectFile(db, projectId, file.path, file.content);
+        }
+      }
+
       // Send each file to the client
       for (const file of result.files) {
         connection.send(
@@ -747,7 +767,6 @@ export class MagicAgent extends Agent<Env, AgentState> {
       );
     }
   }
-
   /**
    * Handle tool approval/rejection
    */
@@ -1012,29 +1031,53 @@ export class MagicAgent extends Agent<Env, AgentState> {
         const directory = (parameters.directory as string) || "src";
         const componentType = (parameters.type as string) || "react";
 
-        // Find a matching template
-        const templates = registry.filter({
-          category: "component",
-          search: componentType,
-        });
-
-        if (templates.length === 0) {
+        let template = registry.getBySlug(componentType);
+        if (!template) {
+          const matches = registry.filter({
+            category: "component",
+            search: componentType,
+          });
+          template = matches[0];
+        }
+        if (!template) {
           return {
             error: `No component template found for type "${componentType}"`,
-            suggestion: "Available types: react, expo, ionic",
+            suggestion:
+              "Available types: button, card, input, modal, navbar, badge",
           };
         }
 
-        const template = templates[0];
-        const result = await generateFromTemplate(template, {
-          outputDir: directory,
-          variables: { name, componentName: name },
-          dryRun: false,
-          overwrite: true,
+        const slug = template.slug || template.id;
+        const result = registry.generate(slug, name, {
+          name,
+          componentName: name,
         });
 
+        if (!result.success) {
+          return { error: result.error };
+        }
+
+        if (projectId) {
+          for (const file of result.files) {
+            try {
+              validateProjectFilePath(file.path);
+            } catch (err) {
+              return {
+                error: err instanceof Error ? err.message : "Invalid file path",
+              };
+            }
+            await this.upsertProjectFile(
+              db,
+              projectId,
+              file.path,
+              file.content,
+            );
+          }
+        }
+
         return {
-          created: result.files,
+          success: true,
+          created: result.files.map(f => f.path),
           template: template.name,
           directory,
         };
