@@ -168,3 +168,13 @@ export interface GitHubConnectResponse {
   username?: string;
   repos?: GitHubRepo[];
 }
+
+/** Analytics summary */
+export interface AnalyticsSummary {
+  totalEvents: number;
+  onboarding: {
+    complete: number;
+    skipped: number;
+    completionRate: number;
+  };
+}

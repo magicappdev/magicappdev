@@ -59,6 +59,7 @@ export type {
   AiMessage,
   AiMessageRole,
   AiProvider,
+  AnalyticsSummary,
   ApiErrorResponse,
   ApiResponse,
   AuthResponse,

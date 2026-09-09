@@ -199,6 +199,20 @@ export class ApiClient {
     return response.data;
   }
 
+  async trackEvent(
+    event: string,
+    category: string,
+    properties?: Record<string, unknown>,
+  ): Promise<void> {
+    await this.request("/analytics", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ event, category, properties }),
+    });
+  }
+
   getGitHubLoginUrl(
     platform: "web" | "mobile" = "web",
     redirectUri?: string,
@@ -393,6 +407,24 @@ export class ApiClient {
       userGrowth: string;
       ticketUrgency: string;
     }>("/admin/stats");
+  }
+
+  async getAnalyticsSummary(): Promise<{
+    totalEvents: number;
+    onboarding: {
+      complete: number;
+      skipped: number;
+      completionRate: number;
+    };
+  }> {
+    return this.unwrap<{
+      totalEvents: number;
+      onboarding: {
+        complete: number;
+        skipped: number;
+        completionRate: number;
+      };
+    }>("/analytics/summary");
   }
 
   async updateUserRole(id: string, role: "admin" | "user"): Promise<void> {

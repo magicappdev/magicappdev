@@ -6,6 +6,7 @@ import { requestLoggerMiddleware } from "./middlewares/request-logger.js";
 import { rateLimitMiddleware } from "./middlewares/rate-limit.js";
 import { projectFilesRoutes } from "./routes/project-files.js";
 import { chatContextRoutes } from "./routes/chat-context.js";
+import { analyticsRoutes } from "./routes/analytics.js";
 import { createDatabase } from "@magicappdev/database";
 import { authMiddleware } from "./middlewares/auth.js";
 import { verifyTurnstile } from "./utils/turnstile.js";
@@ -120,6 +121,9 @@ export function createApp() {
 
   app.use("/admin*", authMiddleware);
   app.route("/admin", adminRoutes);
+
+  app.use("/analytics*", authMiddleware);
+  app.route("/analytics", analyticsRoutes);
 
   app.use("/github*", authMiddleware);
   app.route("/github", githubRoutes);

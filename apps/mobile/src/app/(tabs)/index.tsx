@@ -4,6 +4,7 @@ import * as WebBrowser from "expo-web-browser";
 import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
 import { api, secureStorage } from "../../lib/api";
+import { getOnboardingAnalytics } from "../../lib/onboarding-analytics";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -88,6 +89,22 @@ export default function LoginScreen() {
             api.setRefreshToken(refreshToken);
             await secureStorage.setItem("magicappdev_refresh_token", refreshToken);
           }
+
+          // Sync onboarding analytics to backend
+          const onboardingAnalytics = await getOnboardingAnalytics();
+          if (onboardingAnalytics) {
+            try {
+              await api.trackEvent("onboarding_synced", "onboarding", {
+                completedAt: onboardingAnalytics.completedAt,
+                skippedAt: onboardingAnalytics.skippedAt,
+                lastSlideIndex: onboardingAnalytics.lastSlideIndex,
+                totalSlides: onboardingAnalytics.totalSlides,
+              });
+            } catch {
+              // best-effort
+            }
+          }
+
           router.replace("/projects");
           return;
         }

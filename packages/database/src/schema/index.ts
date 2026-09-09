@@ -9,6 +9,7 @@ import { adminApiKeys } from "./admin-api-keys.js";
 import { projectFiles } from "./project-files.js";
 import { chatSessions } from "./chat-sessions.js";
 import { chatMessages } from "./chat-messages.js";
+import { analyticsEvents } from "./analytics.js";
 import { fileHistory } from "./file-history.js";
 import { userAiKeys } from "./user-ai-keys.js";
 import { systemLogs } from "./system-logs.js";
@@ -37,6 +38,7 @@ export const schema = {
   chatSessions,
   chatMessages,
   userAiKeys,
+  analyticsEvents,
 };
 
 export * from "./accounts.js";
@@ -55,3 +57,4 @@ export * from "./project-errors.js";
 export * from "./chat-sessions.js";
 export * from "./chat-messages.js";
 export * from "./user-ai-keys.js";
+export * from "./analytics.js";

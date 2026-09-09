@@ -13,11 +13,13 @@ import {
   Settings as SettingsIcon,
   LayoutGrid,
   type LucideIcon,
+  BarChart3,
 } from "lucide-react";
 import type {
   AdminUser,
   SystemLog,
   GlobalConfig,
+  AnalyticsSummary,
 } from "@magicappdev/shared/api";
 import { TemplateCustomizer } from "../../components/admin/TemplateCustomizer";
 import { registry } from "@magicappdev/templates-engine";
@@ -44,14 +46,15 @@ export default function AdminDashboard() {
   const [permissionsError, setPermissionsError] = useState<string | null>(null);
 
   // View states
-  const [view, setView] = useState<"users" | "logs" | "config" | "templates">(
-    "users",
-  );
+  const [view, setView] = useState<
+    "users" | "logs" | "config" | "templates" | "analytics"
+  >("users");
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(
     null,
   );
   const [logs, setLogs] = useState<SystemLog[]>([]);
   const [config, setConfig] = useState<GlobalConfig | null>(null);
+  const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [hasAdminAccess, setHasAdminAccess] = useState(false);
 
@@ -85,6 +88,19 @@ export default function AdminDashboard() {
       setView("config");
     } catch (err) {
       console.error("Failed to fetch config", err);
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  const fetchAnalytics = async () => {
+    setIsActionLoading(true);
+    try {
+      const analyticsData = await api.getAnalyticsSummary();
+      setAnalytics(analyticsData);
+      setView("analytics");
+    } catch (err) {
+      console.error("Failed to fetch analytics", err);
     } finally {
       setIsActionLoading(false);
     }
@@ -276,6 +292,19 @@ export default function AdminDashboard() {
           >
             <LayoutGrid size={16} className="mr-2" />
             Templates
+          </Button>
+          <Button
+            variant={view === "analytics" ? "tonal" : "outlined"}
+            size="sm"
+            onClick={fetchAnalytics}
+            disabled={isActionLoading}
+          >
+            {isActionLoading && view === "analytics" ? (
+              <Loader2 size={16} className="animate-spin mr-2" />
+            ) : (
+              <BarChart3 size={16} className="mr-2" />
+            )}
+            Analytics
           </Button>
           {view !== "users" && (
             <Button variant="text" size="sm" onClick={() => setView("users")}>
@@ -664,6 +693,42 @@ export default function AdminDashboard() {
             templateId={selectedTemplateId}
             onClose={() => setSelectedTemplateId(null)}
           />
+        </Card>
+      )}
+
+      {view === "analytics" && (
+        <Card className="p-6 space-y-6 animate-in slide-in-from-bottom-4 duration-300">
+          <div className="flex items-center gap-2 mb-2">
+            <BarChart3 className="text-primary" size={20} />
+            <Typography variant="title">Onboarding Analytics</Typography>
+          </div>
+
+          {analytics ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <StatsCard
+                title="Total Events"
+                value={analytics.totalEvents.toString()}
+                subValue="All time"
+                icon={Activity}
+              />
+              <StatsCard
+                title="Completed Onboarding"
+                value={analytics.onboarding.complete.toString()}
+                subValue={`${analytics.onboarding.completionRate.toFixed(1)}% completion rate`}
+                icon={Shield}
+              />
+              <StatsCard
+                title="Skipped Onboarding"
+                value={analytics.onboarding.skipped.toString()}
+                subValue="Users who skipped"
+                icon={X}
+              />
+            </div>
+          ) : (
+            <div className="text-center py-8 opacity-60">
+              No analytics data available yet.
+            </div>
+          )}
         </Card>
       )}
     </div>
